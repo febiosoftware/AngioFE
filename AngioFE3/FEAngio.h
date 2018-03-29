@@ -1,7 +1,6 @@
 #pragma once
 #include "StdAfx.h"
 #include "Fileout.h"
-#include "Grid.h"
 #include "Elem.h"
 #include "FEAngioMaterial.h"
 #include "Segment.h"

@@ -1,6 +1,5 @@
 #include "StdAfx.h"
 #include "Culture.h"
-#include "Grid.h"
 #include "Elem.h"
 #include "FEAngio.h"
 #include "angio3d.h"
