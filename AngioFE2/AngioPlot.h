@@ -147,4 +147,9 @@ public:
 	bool Save(FEDomain& d, FEDataStream& str) override;
 };
 
-	
+class FEPlotFace1Normal : public FEDomainData
+{
+public:
+	explicit FEPlotFace1Normal(FEModel * pfem) : FEDomainData(PLT_VEC3F, FMT_ITEM) {}
+	bool Save(FEDomain& d, FEDataStream& str) override;
+};

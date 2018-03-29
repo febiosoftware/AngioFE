@@ -5,7 +5,6 @@
 #include "StdAfx.h"
 #include "FEAngio.h"
 #include "Segment.h"
-#include "FESproutBodyForce.h"
 #include "FECore/FECoreKernel.h"
 #include "FECore/FEDataLoadCurve.h"
 #include "FEBioMech/FEElasticMaterial.h"

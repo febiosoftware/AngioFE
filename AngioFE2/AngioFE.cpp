@@ -9,10 +9,8 @@
 #include "FECore/FECoreKernel.h"
 #include "AngioFETask.h"
 #include "FECore/FECoreFactory.h"
-#include "FESproutBodyForce.h"
 #include "FEAngioMaterial.h"
 #include "AngioPlot.h"
-#include "FEPressureMaterial.h"
 #include "VesselDirectionContributions.h"
 #ifdef SVN
 #include "svnrev.h"
@@ -22,9 +20,7 @@
 
 //-----------------------------------------------------------------------------
 FEPluginFactory_T<AngioFETask       , FETASK_ID    > angiofe_task_factory("angio"   );
-FEPluginFactory_T<FESproutBodyForce , FEBODYLOAD_ID> angio_sprout_factory("sprout"  );
 FEPluginFactory_T<FEAngioMaterial   , FEMATERIAL_ID> angio_mat_factory   ("angio_mat"   );
-FEPluginFactory_T<FEPressureMaterial, FEMATERIAL_ID> pressure_mat_factory("pressure");
 FEPluginFactory_T<CommonAngioProperties, FEMATERIAL_ID> common_angio_properties_factory("angio_properties");
 
 FEPluginFactory_T<NoFragmentBranching           , FEMATERIAL_ID> no_fragment_branching_factory            ("no_branch"            );
@@ -147,8 +143,8 @@ FECORE_EXPORT  void GetPluginVersion(int & major, int & minor, int & patch)
 FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 {
 	std::vector<FECoreFactory *> addon_classes{ 
-		&angiofe_task_factory, &angio_sprout_factory, &angio_mat_factory,
-		&angio_mat_factory, &pressure_mat_factory,
+		&angiofe_task_factory, &angio_mat_factory,
+		&angio_mat_factory,
 		//plot classes
 		&plot_angio_stress, &plot_angio_stress,
 		&plot_angio_ecm, &plot_angio_alpha, &plot_angio_gradient, &plot_angio_gradient_center,
