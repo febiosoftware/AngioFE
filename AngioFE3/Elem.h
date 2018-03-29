@@ -30,11 +30,3 @@ public:
 	std::vector<int> surfacesIndices;
 	int flags;//used for boolean flags bit 0 is segment crossed entire material
 };
-
-//-----------------------------------------------------------------------------
-inline double max3(double a, double b, double c)
-{
-	if ((a >= b)&&(a >= c)) return a;
-	if ((b >= a)&&(b >= c)) return b;
-	return c;
-}

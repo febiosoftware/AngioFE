@@ -37,16 +37,6 @@ protected:
 	double initial_vessel_length = 20.0;
 	DECLARE_PARAMETER_LIST();
 };
-
-class ClassicFragmentSeeder : public FragmentSeeder
-{
-public:
-	bool SeedFragments(SimulationTime& time, Culture * culture) override;
-	explicit ClassicFragmentSeeder(FEModel * model);
-private:
-	// Seed an initial fragment within the grid
-	bool createInitFrag(Segment& Seg);
-};
 class MultiDomainFragmentSeeder : public FragmentSeeder
 {
 public:

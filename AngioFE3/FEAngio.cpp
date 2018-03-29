@@ -37,8 +37,8 @@ bool CreateDensityMap(vector<double>& density, vector<double>& anisotropy, FEMat
 bool CreateConcentrationMap(vector<double>& concentration, FEMaterial* pmat, int vegfID);
 
 //-----------------------------------------------------------------------------
-FEAngio::FEAngio(FEModel& fem) : ztopi(std::uniform_real_distribution<double>(0, pi)), 
-	zto2pi(std::uniform_real_distribution<double>(0, 2 * pi)), n1to1(std::uniform_real_distribution<double>(-1, 1))
+FEAngio::FEAngio(FEModel& fem) : ztopi(std::uniform_real_distribution<double>(0, PI)), 
+	zto2pi(std::uniform_real_distribution<double>(0, 2 * PI)), n1to1(std::uniform_real_distribution<double>(-1, 1))
 {
 	// Body force counter
 	total_bdyf = 0;

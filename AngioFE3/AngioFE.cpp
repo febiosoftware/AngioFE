@@ -80,8 +80,6 @@ FEPluginFactory_T<NodalDataGGP, FEMATERIAL_ID> nodal_data_ggp_factory("nodal_dat
 FEPluginFactory_T<NodalDataGradientGGP, FEMATERIAL_ID> nodal_data_gradient_ggp_factory("nodal_data_gradient_ggp");
 FEPluginFactory_T<DirectionChangeGGP, FEMATERIAL_ID> direction_change_ggp_factory("direction_change_ggp");
 
-
-FEPluginFactory_T<ClassicFragmentSeeder      , FEMATERIAL_ID> classic_fragment_seeder_factory("classic"   );
 FEPluginFactory_T<MDByVolumeFragmentSeeder   , FEMATERIAL_ID> mdbyvol_fragment_seeder_factory("MDbyVolume");
 FEPluginFactory_T<MultiDomainFragmentSeeder  , FEMATERIAL_ID> md_fragment_seeder_factory     ("MD"        );
 FEPluginFactory_T<MDAngVessFileFragmentSeeder, FEMATERIAL_ID> md_file_seeder_factory         ("from_file" );
@@ -177,7 +175,7 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		&arbitrary_vessel_direction_contribution_factory,
 
 		//fragment seeders
-		&classic_fragment_seeder_factory,  &md_fragment_seeder_factory, &mdbyvol_fragment_seeder_factory,
+		&md_fragment_seeder_factory, &mdbyvol_fragment_seeder_factory,
 		&md_file_seeder_factory,
 		//boundary conditions
 		&stopbc_factory, &bouncybc_factory, &same_mbc_factory,

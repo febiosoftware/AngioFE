@@ -301,12 +301,12 @@ void Culture::AddSegment(Segment& seg)
 
 	vec3d rpo = m_angio.Position(seg.tip(0).pt);
 	vec3d rp = seg.tip(0).pt.r;
-	double dist = distance(rpo.x, rp.x, rpo.y, rp.y, rpo.z, rp.z);
+	double dist = (rpo - rp).norm();
 	assert(dist < 1.0);
 
 	rpo = m_angio.Position(seg.tip(1).pt);
 	rp = seg.tip(1).pt.r;
-	dist = distance(rpo.x, rp.x, rpo.y, rp.y, rpo.z, rp.z);
+	dist = (rpo - rp).norm();
 	assert(dist < 1.0);
 
 	seg.m_nid = m_nsegs;

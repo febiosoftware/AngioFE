@@ -119,12 +119,8 @@ vec3d AnastamosisGrowDirectionModifier::GrowModifyGrowDirection(vec3d previous_d
 		return previous_dir;
 	}
 
-	if (nearest_valid_target && (distance(nearest_valid_target->tip_c(1).pos().x,
-			tip.parent->tip_c(1).pos().x,
-		nearest_valid_target->tip_c(1).pos().y,
-		tip.parent->tip_c(1).pos().y,
-		nearest_valid_target->tip_c(1).pos().z, 
-		tip.parent->tip_c(1).pos().z) > (search_radius + search_multiplier * seg_length )))
+	if (nearest_valid_target && (nearest_valid_target->tip_c(1).pos() -
+			tip.parent->tip_c(1).pos()).norm() > (search_radius + search_multiplier * seg_length ))
 	{
 		nearest_valid_target = nullptr;
 	}
