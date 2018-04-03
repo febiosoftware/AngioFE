@@ -1,9 +1,9 @@
-SRC = $(wildcard $(ANGDIR)AngioFE2/*.cpp)
-OBJ = $(patsubst $(ANGDIR)AngioFE2/%.cpp, %.o, $(SRC))
-DEP = $(patsubst $(ANGDIR)AngioFE2/%.cpp, %.d, $(SRC))
+SRC = $(wildcard $(ANGDIR)AngioFE3/*.cpp)
+OBJ = $(patsubst $(ANGDIR)AngioFE3/%.cpp, %.o, $(SRC))
+DEP = $(patsubst $(ANGDIR)AngioFE3/%.cpp, %.d, $(SRC))
 
 
-SO = libangiofe2_$(PLAT).$(SFX)
+SO = libangiofe3_$(PLAT).$(SFX)
 LIB = $(ANGDIR)build/lib/$(SO)
 
 FECORE = $(FEBLIB)/libfecore_$(PLAT).a
@@ -47,7 +47,7 @@ else
 		$(CC) -dynamiclib $(FLG) -o $(LIB) $(OBJ) $(FEBIOLIBSO) $(LIBS)
 endif
 
-%.o: $(ANGDIR)AngioFE2/%.cpp
+%.o: $(ANGDIR)AngioFE3/%.cpp
 	$(CC) $(INC) $(DBGFLG) $(FLG) -MMD -c -o $@ $<
 
 clean:

@@ -49,24 +49,24 @@ gcc: export LNKFLG = -lz
 sky: export LNKFLG = -lz
 
 lnx64 lnx32 gcc sky:
-	( export DBGFLG=-DNDEBUG; cd $(PLAT)/AngioFE2; $(MAKE) -f ../../angiofe2.mk SFX="so" )
+	( export DBGFLG=-DNDEBUG; cd $(PLAT)/AngioFE3; $(MAKE) -f ../../angiofe3.mk SFX="so" )
 
 lnx64d:
-	( cd $(PLAT)/AngioFE2; $(MAKE) -f ../../angiofe2.mk SFX="so" )
+	( cd $(PLAT)/AngioFE3; $(MAKE) -f ../../angiofe3.mk SFX="so" )
 
 lnx64s:
-	( cd $(PLAT); $(MAKE) -f ../angiofe2.mk SFX="so" )
+	( cd $(PLAT); $(MAKE) -f ../angiofe3.mk SFX="so" )
 
 osx osxs:
-	( cd $(PLAT); $(MAKE) -f ../angiofe2.mk SFX="dylib" )
+	( cd $(PLAT); $(MAKE) -f ../angiofe3.mk SFX="dylib" )
 
 lnx64clean lnx32clean gccclean lnx64dclean lnx32dclean skyclean:
-	( cd $(PLAT)/AngioFE2; $(MAKE) -f ../../angiofe2.mk SFX="so" clean )
+	( cd $(PLAT)/AngioFE3; $(MAKE) -f ../../angiofe3.mk SFX="so" clean )
 
 lnx64sclean:
-	( cd $(PLAT); $(MAKE) -f ../angiofe2.mk SFX="so" clean )
+	( cd $(PLAT); $(MAKE) -f ../angiofe3.mk SFX="so" clean )
 
 osxclean osxsclean:
-	( cd $(PLAT); $(MAKE) -f ../angiofe2.mk SFX="dylib" clean )
+	( cd $(PLAT); $(MAKE) -f ../angiofe3.mk SFX="dylib" clean )
 
 .PHONY: lnx64 lnx32 osx osxs gcc lnx64d lnx64s lnx32d 
