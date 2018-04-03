@@ -582,3 +582,15 @@ bool FEPlotMatrixSBMConectration::Save(FEDomain &d, FEDataStream& str)
 	}
 	return false;
 }
+
+//-----------------------------------------------------------------------------
+bool FEPlotFace1Normal::Save(FEDomain &d, FEDataStream& str)
+{
+	FEMesh & mesh = pfeangio->m_fem->GetMesh();
+	for (int i = 0; i < mesh.Nodes(); i++)
+	{
+
+			str << vec3d(0, 0, 0);
+	}
+	return true;
+}
