@@ -100,7 +100,7 @@ END_PARAMETER_LIST();
 void FEProbabilityDistribution::SetLoadCurveToStep(const char * param)
 {
 	//if load curves are used they must use step interpolation
-	FEParam * m = GetParameter(ParamString(param));
+	FEParam * m = FindParameter(ParamString(param));
 
 	int mlci = m->GetLoadCurve();
 
@@ -115,7 +115,7 @@ void FEProbabilityDistribution::SetLoadCurveToStep(const char * param)
 
 bool FEProbabilityDistribution::ChangeInParam(const char * param, double time, double & prev, double & new_p)
 {
-	FEParam * m = GetParameter(ParamString(param));
+	FEParam * m = FindParameter(ParamString(param));
 
 	int mlci = m->GetLoadCurve();
 
