@@ -1,7 +1,6 @@
 #pragma once
 #include "StdAfx.h"
 #include "Fileout.h"
-#include "Elem.h"
 #include "FEAngioMaterial.h"
 #include "Segment.h"
 #include "FECore/FESolidDomain.h" //isd this include correct or should i just forward declare the class
@@ -11,7 +10,6 @@
 
 //-----------------------------------------------------------------------------
 class FEModel;
-class Culture;
 class FEAngioMaterial;
 class FEAngioMaterialBase;
 
@@ -61,12 +59,6 @@ public:
 	vec3d ReferenceCoords(const GridPoint& pt) const;
 
 	static FEAngioMaterial * GetAngioComponent(FEMaterial * mat);
-	// Creates a vector of specified paramenter
-	std::vector<double> createVectorOfMaterialParameters(FEElement * elem,
-		double FEAngioNodeData::*materialparam);
-	// gets the value of a parameter at a given point interpolated from the shape function
-	double genericProjectToPoint(FESolidElement * elem,
-		double FEAngioNodeData::*materialparam,const vec3d & pos);
 	
 	//some funtions to replace the loops everywhere in the code
 	//for each excludes non-angio materials
@@ -135,10 +127,6 @@ private:
 
 public:	// parameters read directly from file
 
-	//consider converting these to vectors or arrays as the multidomain simulations require the nde/element ids to be sequential
-	std::unordered_map<int, FEAngioNodeData> m_fe_node_data;
-	std::unordered_map<int, FEAngioElementData> m_fe_element_data;
-
 	// miscellaneous
 	unsigned int	m_irseed;			// Seed number for the random number generator
     
@@ -166,7 +154,6 @@ private:
 	Timer grow_timer;
 	Timer mesh_stiffness_timer;
 	Timer update_sprout_stress_scaling_timer;
-	Timer update_sprout_stress_timer;
 	Timer update_gdms_timer;
 	Timer update_ecm_timer;
 	Timer material_update_timer;

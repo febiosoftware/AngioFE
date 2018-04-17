@@ -279,67 +279,7 @@ FEPlotAngioGradientCenter::FEPlotAngioGradientCenter(FEModel* pfem): FEDomainDat
 
 bool FEPlotAngioGradientCenter::Save(FEDomain& d, FEDataStream& str)
 {
-	//note the interpolation in postview may make this look incorrect
-	FEAngioMaterial* pmat = pfeangio->GetAngioComponent(d.GetMaterial());
-	if (pmat == nullptr) return false;
 
-	FESolidDomain& dom = dynamic_cast<FESolidDomain&>(d);
-	int NE = dom.Elements();
-	for (int i = 0; i<NE; ++i)
-	{
-		FESolidElement& el = dom.Element(i);
-		
-		vec3d zero;
-		std::vector<double> densities;
-		densities = pfeangio->createVectorOfMaterialParameters(&el, &FEAngioNodeData::m_ecm_den);
-		vec3d grad = pfeangio->gradient(&el, densities, zero);
-
-		str << grad;
-	}
-	return true;
-};
-FEPlotAngioMaterialHop::FEPlotAngioMaterialHop(FEModel* pfem) : FEDomainData(PLT_FLOAT, FMT_ITEM)
-{
-};
-
-bool FEPlotAngioMaterialHop::Save(FEDomain& d, FEDataStream& str)
-{
-	//note the interpolation in postview may make this look incorrect
-	FEAngioMaterial* pmat = pfeangio->GetAngioComponent(d.GetMaterial());
-	if (pmat == nullptr) return false;
-
-	FESolidDomain& dom = dynamic_cast<FESolidDomain&>(d);
-	int NE = dom.Elements();
-	for (int i = 0; i<NE; ++i)
-	{
-		FESolidElement& el = dom.Element(i);
-
-		float val =  static_cast<float>((pmat->m_pangio->m_fe_element_data[el.GetID()].flags & 1));
-
-		str << val;
-	}
-	return true;
-};
-FEPlotAngioSegmentBadGrowth::FEPlotAngioSegmentBadGrowth(FEModel* pfem) : FEDomainData(PLT_FLOAT, FMT_ITEM)
-{
-};
-
-bool FEPlotAngioSegmentBadGrowth::Save(FEDomain& d, FEDataStream& str)
-{
-	//note the interpolation in postview may make this look incorrect
-	FEAngioMaterial* pmat = pfeangio->GetAngioComponent(d.GetMaterial());
-	if (pmat == nullptr) return false;
-
-	FESolidDomain& dom = dynamic_cast<FESolidDomain&>(d);
-	int NE = dom.Elements();
-	for (int i = 0; i<NE; ++i)
-	{
-		FESolidElement& el = dom.Element(i);
-
-		float val = static_cast<float>((pmat->m_pangio->m_fe_element_data[el.GetID()].flags & 2));
-
-		str << val;
-	}
 	return true;
 };
 
@@ -374,9 +314,6 @@ bool FEPlotAngioGradient::Save(FEMesh & m, FEDataStream & a)
 		se.project_to_nodes(gs, ns);
 		se.project_to_nodes(gt, nt);
 		std::vector<double> densities;
-		densities = pfeangio->createVectorOfMaterialParameters(&se, &FEAngioNodeData::m_ecm_den);
-
-
 		
 		for (size_t i = 0; i < se.m_node.size(); i++)
 		{
@@ -413,14 +350,7 @@ bool FEPlotAngioECMDensity::Save(FEMesh& m, FEDataStream& a)
 	//multiple materials average their ecm denisties so this reflects that
 	for (int i = 0; i < pfeangio->m_fem->GetMesh().Nodes(); i++)
 	{
-		if (pfeangio->m_fe_node_data.count(pfeangio->m_fem->GetMesh().Node(i).GetID()))
-		{
-			a << pfeangio->m_fe_node_data[pfeangio->m_fem->GetMesh().Node(i).GetID()].m_ecm_den;
-		}
-		else
-		{
-			a << 0.0;//is zero okay for this parameter
-		}
+
 	}
 
 	return true;
@@ -432,14 +362,6 @@ bool FEPlotAngioECMAlpha::Save(FEMesh& m, FEDataStream& a)
 	//multiple materials average their *
 	for (int i = 0; i < pfeangio->m_fem->GetMesh().Nodes(); i++)
 	{
-		if (pfeangio->m_fe_node_data.count(pfeangio->m_fem->GetMesh().Node(i).GetID()))
-		{
-			a << pfeangio->m_fe_node_data[pfeangio->m_fem->GetMesh().Node(i).GetID()].alpha;
-		}
-		else
-		{
-			a << 0.0;//is zero okay for this parameter
-		}
 	}
 
 	return true;

@@ -7,11 +7,12 @@
 #include <FECore/Archive.h>
 #include "FEBioPlot/FEBioPlotFile2.h"
 class FEAngioMaterialBase;
-class Culture;
 class FEAngio;
 
 const double PI = 3.141592653589793;
 
+
+/*
 //the interface for all operations that modify the growth direction
 //some examples of this include deflection due to gradient and change in direction for anastamosis
 //in the future this can be used to change the direction based on vegf concentrations, also consider a modifier for the weight of the previous direction
@@ -147,8 +148,6 @@ class GradientPlot2GGP : public Plot2GGP
 public:
 	explicit GradientPlot2GGP(FEModel * model) : Plot2GGP(model) {  }
 
-	void SetCulture(Culture * cp) override;
-
 	virtual ~GradientPlot2GGP() {}
 	//will be called once before growth per FE timestep
 	mat3d Operation(mat3d in, vec3d fin, FEAngioMaterialBase* mat, Segment::TIP& tip) override;
@@ -168,7 +167,6 @@ public:
 	void Update() override;
 	mat3d Operation(mat3d in, vec3d fin, FEAngioMaterialBase* mat, Segment::TIP& tip) override;
 
-	void SetCulture(Culture * cp) override;
 private:
 	char field_name[DataRecord::MAX_STRING];
 	int offset = 0;
@@ -185,7 +183,6 @@ public:
 	void Update() override;
 	mat3d Operation(mat3d in, vec3d fin, FEAngioMaterialBase* mat, Segment::TIP& tip) override;
 
-	void SetCulture(Culture * cp) override;
 private:
 	char field_name[DataRecord::MAX_STRING];
 	int offset = 0;
@@ -220,11 +217,6 @@ public:
 	void Update() override { 
 		GGP::Update();
 		nest->Update();
-	}
-	void SetCulture(Culture * cp) override
-	{
-		nest->SetCulture(cp);
-		GGP::SetCulture(cp);
 	}
 	bool Init() override
 	{
@@ -511,174 +503,4 @@ private:
 	DECLARE_PARAMETER_LIST();
 };
 
-//begin bind points
-//will ignore the previous direction and generate the direction a segmetn should grow based on collagen direction
-class DefaultGrowDirectionModifier : public GrowDirectionModifier
-{
-public:
-	explicit DefaultGrowDirectionModifier(FEModel * model);
-	vec3d GrowModifyGrowDirection(vec3d previous_dir, Segment::TIP& tip, FEAngioMaterialBase* mat, bool branch, double start_time, double grow_time, double& seg_length) override;
-	void Update() override;
-	void SetCulture(Culture * cp) override;
-private:
-	FEPropertyT<GGP> collagen_direction;
-	FEPropertyT<GGP> previous_direction;
-	FEPropertyT<GGP> weight_interpolation;
-};
-
-class SelectingGrowDirectionModifier : public GrowDirectionModifier
-{
-public:
-	explicit SelectingGrowDirectionModifier(FEModel * model);
-	vec3d GrowModifyGrowDirection(vec3d previous_dir, Segment::TIP& tip, FEAngioMaterialBase* mat, bool branch, double start_time, double grow_time, double& seg_length) override;
-	void Update() override;
-	void SetCulture(Culture * cp) override;
-private:
-	FEPropertyT<GGP> collagen_direction;
-	FEPropertyT<GGP> previous_direction;
-	FEPropertyT<GGP> weight_interpolation;
-};
-
-//will ignore the previous direction and generate the direction a segmetn should grow based on collagen direction and current stretch
-class BaseFiberAwareGrowDirectionModifier : public GrowDirectionModifier
-{
-public:
-	explicit BaseFiberAwareGrowDirectionModifier(FEModel * model);
-	vec3d GrowModifyGrowDirection(vec3d previous_dir, Segment::TIP& tip, FEAngioMaterialBase* mat, bool branch, double start_time, double grow_time, double& seg_length) override;
-};
-
-//this class changes the grow direction if the segment is a branch
-class BranchGrowDirectionModifier : public GrowDirectionModifier
-{
-public:
-	explicit BranchGrowDirectionModifier(FEModel * model);
-	vec3d GrowModifyGrowDirection(vec3d previous_dir, Segment::TIP& tip, FEAngioMaterialBase* mat, bool branch, double start_time, double grow_time, double& seg_length) override;
-	void Update() override;
-	void SetCulture(Culture * cp) override;
-private:
-	FEPropertyT<GGP> collagen_direction;
-	FEPropertyT<GGP> previous_direction;
-	
-};
-
-//this class changes the grow direction if the segment is a branch
-class RandomThetaBranchGrowDirectionModifier : public GrowDirectionModifier
-{
-public:
-	explicit RandomThetaBranchGrowDirectionModifier(FEModel * model);
-	vec3d GrowModifyGrowDirection(vec3d previous_dir, Segment::TIP& tip, FEAngioMaterialBase* mat, bool branch, double start_time, double grow_time, double& seg_length) override;
-	void Update() override;
-	void SetCulture(Culture * cp) override;
-private:
-	FEPropertyT<GGP> collagen_direction;
-	FEPropertyT<GGP> previous_direction;
-	std::uniform_real_distribution<double> angles;
-};
-
-//this class changes the grow direction if the segment is a branch
-class RandomBranchGrowDirectionModifier : public GrowDirectionModifier
-{
-public:
-	explicit RandomBranchGrowDirectionModifier(FEModel * model);
-	vec3d GrowModifyGrowDirection(vec3d previous_dir, Segment::TIP& tip, FEAngioMaterialBase* mat, bool branch, double start_time, double grow_time, double& seg_length) override;
-	void Update() override;
-	void SetCulture(Culture * cp) override;
-private:
-	FEPropertyT<GGP> collagen_direction;
-	FEPropertyT<GGP> previous_direction;
-};
-
-//this sets the segment length to 1
-class UnitLengthGrowDirectionModifier : public GrowDirectionModifier
-{
-public:
-	explicit UnitLengthGrowDirectionModifier(FEModel * model);
-	vec3d GrowModifyGrowDirection(vec3d previous_dir, Segment::TIP& tip, FEAngioMaterialBase* mat, bool branch, double start_time, double grow_time, double& seg_length) override;
-	bool Init() override
-	{
-		if (length_modifier)
-			return length_modifier->Init();
-		return true;
-	}
-
-	void Update() override
-	{
-		if(length_modifier)
-		{
-			length_modifier->Update();
-		}
-	}
-	void SetCulture(Culture * cp) override
-	{
-		if(length_modifier)
-		{
-			length_modifier->SetCulture(cp);
-		}
-	}
-
-private:
-	FEPropertyT<GGP> length_modifier;
-};
-
-//this class modifies the segment length by the density factor
-class DensityScaleGrowDirectionModifier : public GrowDirectionModifier
-{
-public:
-	explicit DensityScaleGrowDirectionModifier(FEModel * model);
-	bool Init() override
-	{
-		if(density_scale)
-			return density_scale->Init();
-		return true;
-	}
-	vec3d GrowModifyGrowDirection(vec3d previous_dir, Segment::TIP& tip, FEAngioMaterialBase* mat, bool branch, double start_time, double grow_time, double& seg_length) override;
-	void Update() override;
-	void SetCulture(Culture * cp) override;
-private:
-	FEPropertyT<GGP> density_scale;
-};
-//this class changes the segment length based on the average segment length load curve, cannot be the inital segment_length modifier
-class SegmentLengthGrowDirectionModifier : public GrowDirectionModifier
-{
-public:
-	explicit SegmentLengthGrowDirectionModifier(FEModel * model);
-	vec3d GrowModifyGrowDirection(vec3d previous_dir, Segment::TIP& tip, FEAngioMaterialBase* mat, bool branch, double start_time, double grow_time, double& seg_length) override;
-};
-
-//the class modifies the grow dierction if the gradeint is above a given threshold
-class GradientGrowDirectionModifier : public GrowDirectionModifier
-{
-public:
-	explicit GradientGrowDirectionModifier(FEModel * model);
-	vec3d GrowModifyGrowDirection(vec3d previous_dir, Segment::TIP& tip, FEAngioMaterialBase* mat, bool branch, double start_time, double grow_time, double& seg_length) override;
-	void Update() override;
-	void SetCulture(Culture * cp) override;
-private:
-	double threshold = 0.01;//the threshold over which vessels will deflect on the gradient
-	FEPropertyT<GGP> threshold_scale;
-	DECLARE_PARAMETER_LIST();
-};
-//modifies the direction a segment grows based on its proximity to other segments if a tip is within the radius specified the vessels direction will be set to grow towards that segment
-class AnastamosisGrowDirectionModifier : public GrowDirectionModifier
-{
-public:
-	explicit AnastamosisGrowDirectionModifier(FEModel * model);
-	vec3d GrowModifyGrowDirection(vec3d previous_dir, Segment::TIP& tip, FEAngioMaterialBase* mat, bool branch, double start_time, double grow_time, double& seg_length) override;
-
-private:
-	double search_radius = 100.0;
-	double search_multiplier = 1.0;
-	DECLARE_PARAMETER_LIST();
-};
-
-class EdgeDeflectorGrowDirectionModifier : public GrowDirectionModifier
-{
-public:
-	explicit EdgeDeflectorGrowDirectionModifier(FEModel * model);
-
-	void SetCulture(Culture * cp) override;
-	vec3d GrowModifyGrowDirection(vec3d previous_dir, Segment::TIP& tip, FEAngioMaterialBase* mat, bool branch, double start_time, double grow_time, double& seg_length) override;
-	//used to sort these by priority
-private:
-	std::unordered_map<int,bool> edge_element;
-};
+*/

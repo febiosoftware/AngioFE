@@ -82,23 +82,6 @@ public:
 	bool Save(FEDomain& d, FEDataStream& str) override;
 };
 
-//-----------------------------------------------------------------------------
-class FEPlotAngioMaterialHop : public FEDomainData
-{
-public:
-	explicit FEPlotAngioMaterialHop(FEModel* pfem);
-	bool Save(FEDomain& d, FEDataStream& str) override;
-};
-
-
-//-----------------------------------------------------------------------------
-class FEPlotAngioSegmentBadGrowth : public FEDomainData
-{
-public:
-	explicit FEPlotAngioSegmentBadGrowth(FEModel* pfem);
-	bool Save(FEDomain& d, FEDataStream& str) override;
-};
-
 class FEPlotAngioGradient : public FENodeData
 {
 public:

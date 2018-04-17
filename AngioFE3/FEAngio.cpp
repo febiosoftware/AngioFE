@@ -18,7 +18,6 @@
 #include "FECore/FESolidDomain.h"
 #include "FEAngioMaterial.h"
 #include "FEBioMech/FEElasticMixture.h"
-#include "Elem.h"
 #include "angio3d.h"
 #include <ctime>
 #include <future>
@@ -90,18 +89,6 @@ bool FEAngio::Init()
 	rengine.seed(m_irseed);
 	srand(m_irseed);
 
-	ForEachNode([this](FENode & node)
-	{
-		//nodes may be accessed multiple times by the current implementation
-		FEAngioNodeData nd;
-		m_fe_node_data[node.GetID()] = nd;
-	});
-	ForEachElement([this](FEElement & e, FEDomain & d)
-	               {
-		               if (m_fe_element_data.count(e.GetID())) assert(false);
-		               FEAngioElementData ed;
-		               m_fe_element_data[e.GetID()] = ed;
-	               });
 
 
 	for (size_t i = 0; i < m_pmat.size(); i++)
@@ -119,15 +106,6 @@ bool FEAngio::Init()
 	CallInFutures(surface_futures);
 	// assign concentration values to grid nodes
 	//if (InitSoluteConcentration() == false) return false;
-
-	// NOTE: must be done after InitECMDensity() and InitCollagenFibers().
-	bool rv = true;
-	for (size_t i = 0; i < m_pmat.size(); i++)
-	{
-		rv &= m_pmat[i]->InitCulture();
-	}
-	if (!rv)
-		return false;
 
 
 	FinalizeFEM();
@@ -202,7 +180,6 @@ void FEAngio::FinalizeFEM()
 	for (size_t i = 0; i < m_pmat.size(); i++)
 	{
 		//TODO: remove this constant or make it a user parameter
-		m_pmat[i]->CreateSprouts(0.5,m_pmat[i]->GetMatrixMaterial()->GetElasticMaterial());
 		m_pmat[i]->AdjustMeshStiffness(m_pmat[i]->GetMaterial());
 		m_pmat[i]->UpdateFiberManager();
 		m_pmat[i]->InitializeFibers();
@@ -232,8 +209,7 @@ bool FEAngio::InitECMDensity()
 {
 	ForEachNode([&](FENode & node)
 	{
-		m_fe_node_data[node.GetID()].m_collfib = vec3d(0, 0, 0);
-		m_fe_node_data[node.GetID()].m_ecm_den = 0.0;
+
 	});
 	bool rv = true;
 	for (size_t i = 0; i < m_pmat.size(); i++)
@@ -248,12 +224,7 @@ bool FEAngio::InitECMDensity()
 	// normalize fiber vector and average ecm density
 	ForEachNode([&](FENode & node)
 	{
-		//nneds to be run only once per node
-		if (m_fe_node_data[node.GetID()].m_ntag)
-		{
-			m_fe_node_data[node.GetID()].m_ecm_den = m_fe_node_data[node.GetID()].m_ecm_den0;
-			m_fe_node_data[node.GetID()].m_ntag = 0;
-		}
+
 	});
 	return true;
 }
@@ -275,9 +246,7 @@ void FEAngio::UpdateECM()
 
 	ForEachNode([&](FENode & node)
 	{
-		m_fe_node_data[node.GetID()].m_collfib = vec3d(0, 0, 0);
-		m_fe_node_data[node.GetID()].m_ecm_den = 0.0;
-		m_fe_node_data[node.GetID()].m_ntag = 0;
+
 		//REFACTOR: why reset not just overwrite
 	});
 
@@ -291,15 +260,7 @@ void FEAngio::UpdateECM()
 	// normalize fiber vector and average ecm density
 	ForEachNode([this](FENode & node)
 	{
-		//nneds to be run only once per node
-		if (m_fe_node_data[node.GetID()].m_ntag)
-		{
-			m_fe_node_data[node.GetID()].m_ecm_den /= (double)m_fe_node_data[node.GetID()].m_ntag;
-			m_fe_node_data[node.GetID()].m_collfib.unit();
-			m_fe_node_data[node.GetID()].m_ntag = 0;
-			//maybe worry about density creep
-			//m_fe_node_data[node.GetID_ang()].m_ecm_den0 = m_fe_node_data[node.GetID_ang()].m_ecm_den;
-		}
+
 	});
 }
 
@@ -1002,73 +963,10 @@ FEAngioMaterial * FEAngio::GetAngioComponent(FEMaterial * mat)
 	return angm;
 }
 
-//TODO: consider having multiple projection methods
-std::vector<double> FEAngio::createVectorOfMaterialParameters(FEElement * elem,
-	double FEAngioNodeData::*materialparam)
-{
-	FEMesh * mesh = GetMesh();
-	std::vector<double> gx(elem->m_node.size());
-	for (size_t i = 0; i < elem->m_node.size(); i++)
-	{
-		gx[i] = this->m_fe_node_data[mesh->Node(elem->m_node[i]).GetID()].*materialparam;
-	}
-	return gx;
-}
-double FEAngio::genericProjectToPoint(FESolidElement * elem,
-	double FEAngioNodeData::*materialparam,const vec3d & pos)
-{
-	assert(elem);
-	std::vector<double> gx = createVectorOfMaterialParameters( elem, materialparam);
-	//same as project to point that function is not used eleswhere so it has been eliminated
-	double H[FEElement::MAX_NODES];
-	double val = 0.0;
-	//should be zero to proprly accumulate the values
-
-	elem->shape_fnc(H, pos.x, pos.y, pos.z);
-	for (size_t i = 0; i < elem->m_node.size(); i++)
-	{
-		val += gx[i] * H[i];
-	}
-	return val;
-}
 
 double FEAngio::FindECMDensity(const GridPoint& pt)
 {
-	assert(pt.nelem != -1 && pt.nelem != 0);
-	FEMesh & mesh = m_fem->GetMesh();
 
-	//TODO: replace with a check if it is in the same element before doing a search
-	//the element may change between accesses
-	/*
-	double rez[3];
-	FESolidElement* se = mesh.FindSolidElement(pt.r, rez);//TODO uses spatial coordinates
-	assert(se->GetID_ang() == pt.nelem);//verify that migration is not happening
-	*/
-	FESolidElement * se = nullptr;
-	if (pt.elemindex >= 0)
-		se = dynamic_cast<FESolidElement*>(&pt.ndomain->ElementRef(pt.elemindex));
-	else
-		assert(false);
-	double rez[3];
-	rez[0] = pt.q.x; rez[1] = pt.q.y; rez[2] = pt.q.z;
-
-	if (se)
-	{
-		//double * shapef = new double[se->Nodes()];
-		double shapef[FEElement::MAX_NODES];
-		se->shape_fnc(shapef, rez[0], rez[1], rez[2]);
-
-		double coll_den = 0.0;
-		for (int i = 0; i < se->Nodes(); i++)
-		{
-			int nn = se->m_node[i];
-			nn = mesh.Node(nn).GetID();
-			coll_den += m_fe_node_data[nn].m_ecm_den* shapef[i];
-		}
-
-		//delete[] shapef;
-		return coll_den;
-	}
 	return 0.0;
 }
 
@@ -1113,10 +1011,7 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		//new function to find the start time grow time and if this is the final iteration this timestep
 		grow_timer.start();
 		
-		for (size_t i = 0; i < times.size(); i++)
-		{
-			FragmentBranching::Grow(times[i].first, times[i].second); //new grow method
-		}
+
 
 		grow_timer.stop();
 		
@@ -1133,13 +1028,6 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 			m_pmat[i]->UpdateSproutStressScaling();
 		}
 		update_sprout_stress_scaling_timer.stop();
-
-		update_sprout_stress_timer.start();
-		for (size_t i = 0; i < m_pmat.size(); i++)
-		{
-			m_pmat[i]->UpdateSprouts(1.0, m_pmat[i]->GetMatrixMaterial()->GetElasticMaterial());
-		}
-		update_sprout_stress_timer.stop();
 
 		for (size_t i = 0; i < m_pmat.size(); i++)
 		{
@@ -1195,7 +1083,6 @@ void FEAngio::ResetTimers()
 	grow_timer.reset();
 	mesh_stiffness_timer.reset();
 	update_sprout_stress_scaling_timer.reset();
-	update_sprout_stress_timer.reset();
 	update_gdms_timer.reset();
 	update_ecm_timer.reset();
 	material_update_timer.reset();

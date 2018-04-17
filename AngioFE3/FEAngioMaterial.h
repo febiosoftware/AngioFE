@@ -5,7 +5,6 @@
 #include <FECore/FESurface.h>
 #include <FECore/FENormalProjection.h>
 #include "FEAngio.h"
-#include "Culture.h"
 #include "FEProbabilityDistribution.h"
 #include "KDTree/kdtree.h"
 #include "FiberManager.h"
@@ -81,9 +80,6 @@ public:
 	void SetLocalCoordinateSystem(FEElement& el, int n, FEMaterialPoint& mp) override;
 
 	double StrainEnergyDensity(FEMaterialPoint& mp) override;
-
-	// we use this to define a sprout in the material section of the input file
-	void SetParameter(FEParam& p) override;
 	
 	void SetupSurface() override;
 private:

@@ -40,8 +40,7 @@ void ECMInitializer::updateECMdensity(FEAngioMaterialBase* mat)
 			int nnum = elem.m_node[j];
 			nnum = mesh->Node(nnum).GetID();
 			// get the ecm density and collagen fiber
-			double ecm_den = mat->m_pangio->m_fe_node_data[nnum].m_ecm_den0;
-			vec3d coll_fib = mat->m_pangio->m_fe_node_data[nnum].m_collfib0;
+			//TODO
 
 			/*
 			//clamp n* to [1,-1]
@@ -71,21 +70,6 @@ void ECMInitializer::updateECMdensity(FEAngioMaterialBase* mat)
 			//make sure the function is differentiable and preserves orientation
 			assert(Jacob > 0.0);
 
-			// Update the collagen fiber orientation vector into the current configuration using F		
-			coll_fib = F*coll_fib;
-			coll_fib.unit();
-
-			// Update matrix density using the Jacobian
-			ecm_den = ecm_den / Jacob;
-
-			// accumulate fiber directions and densities
-			{
-				mat->m_pangio->m_fe_node_data[nnum].m_collfib += coll_fib;
-				mat->m_pangio->m_fe_node_data[nnum].m_ecm_den += ecm_den;
-
-				// increment counter
-				mat->m_pangio->m_fe_node_data[nnum].m_ntag++;
-			}
 		}
 	}, matls);
 }
@@ -96,9 +80,7 @@ void ECMInitializerConstant::seedECMDensity(FEAngioMaterialBase * mat)
 	matls.emplace_back(mat->GetID_ang());
 	mat->m_pangio->ForEachNode([&](FENode & node)
 	{
-		mat->m_pangio->m_fe_node_data[node.GetID()].m_ecm_den0 = mat->m_cultureParams.m_matrix_density;
-		mat->m_pangio->m_fe_node_data[node.GetID()].m_ecm_den = mat->m_cultureParams.m_matrix_density;
-		mat->m_pangio->m_fe_node_data[node.GetID()].m_da = mat->GetAnisotropy();
+
 	}, matls);
 }
 
@@ -125,9 +107,6 @@ void ECMInitializerSpecified::seedECMDensity(FEAngioMaterialBase * mat)
 		se.project_to_nodes(anis, panis);
 		for (int k = 0; k < se.Nodes(); k++)
 		{
-			mat->m_pangio->m_fe_node_data[mesh->Node(se.m_node[k]).GetID()].m_ecm_den0 += pden[k];
-			mat->m_pangio->m_fe_node_data[mesh->Node(se.m_node[k]).GetID()].m_ntag++;
-			mat->m_pangio->m_fe_node_data[mesh->Node(se.m_node[k]).GetID()].m_da += panis[k];
 		}
 	}, matls);
 }
@@ -138,11 +117,6 @@ void ECMInitializerNoOverwrite::seedECMDensity(FEAngioMaterialBase * mat)
 	matls.emplace_back(mat->GetID_ang());
 	mat->m_pangio->ForEachNode([&](FENode & node)
 	{
-		if (mat->m_pangio->m_fe_node_data[node.GetID()].m_ecm_den0 == 0.0)
-		{
-			mat->m_pangio->m_fe_node_data[node.GetID()].m_ecm_den0 = mat->m_cultureParams.m_matrix_density;
-			mat->m_pangio->m_fe_node_data[node.GetID()].m_ecm_den = mat->m_cultureParams.m_matrix_density;
-			mat->m_pangio->m_fe_node_data[node.GetID()].m_da = mat->GetAnisotropy();
-		}
+
 	}, matls);
 }

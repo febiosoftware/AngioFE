@@ -23,8 +23,6 @@ FEPluginFactory_T<AngioFETask       , FETASK_ID    > angiofe_task_factory("angio
 FEPluginFactory_T<FEAngioMaterial   , FEMATERIAL_ID> angio_mat_factory   ("angio_mat"   );
 FEPluginFactory_T<CommonAngioProperties, FEMATERIAL_ID> common_angio_properties_factory("angio_properties");
 
-FEPluginFactory_T<NoFragmentBranching           , FEMATERIAL_ID> no_fragment_branching_factory            ("no_branch"            );
-FEPluginFactory_T<PsuedoDeferedFragmentBranching, FEMATERIAL_ID> psuedo_defered_fragment_branching_factory("psuedo_defered_branch");
 
 FEPluginFactory_T<FENormalDistribution     , FEMATERIAL_ID> normal_distribution_factory     ("normal_distribution"     );
 FEPluginFactory_T<FEUniformDistribution    , FEMATERIAL_ID> uniform_distribution_factory    ("uniform_distribution"    );
@@ -34,29 +32,9 @@ FEPluginFactory_T<FEChiSquaredDistribution , FEMATERIAL_ID> chi_squared_distribu
 FEPluginFactory_T<FEWeibullDistribution    , FEMATERIAL_ID> weibull_distribution_factory    ("weibull_distribution"    );
 FEPluginFactory_T<FEGammaDistribution      , FEMATERIAL_ID> gamma_distribution_factory      ("gamma_distribution"      );
 
-
+/*
 FEPluginFactory_T<GrowDirectionModifiers, FEMATERIAL_ID> grow_direction_modifiers_factory("grow_direction_modifiers");
 
-FEPluginFactory_T<DefaultGrowDirectionModifier    , FEMATERIAL_ID> default_grow_direction_modifier_factory    ("default_grow_direction"    );
-FEPluginFactory_T<SelectingGrowDirectionModifier, FEMATERIAL_ID> selecting_grow_direction_modifier_factory("selecting_grow_direction");
-FEPluginFactory_T<BaseFiberAwareGrowDirectionModifier, FEMATERIAL_ID> base_fiber_grow_direction_modifier_factory("base_fiber_grow_direction");
-FEPluginFactory_T<BranchGrowDirectionModifier     , FEMATERIAL_ID> branch_grow_direction_modifier_factory     ("branch_grow_direction"     );
-FEPluginFactory_T<RandomBranchGrowDirectionModifier, FEMATERIAL_ID> random_branch_grow_direction_modifier_factory("random_branch_grow_direction");
-FEPluginFactory_T<RandomBranchGrowDirectionModifier, FEMATERIAL_ID> random_theta_branch_grow_direction_modifier_factory("random_theta_branch_grow_direction");
-
-FEPluginFactory_T<GradientGrowDirectionModifier   , FEMATERIAL_ID> gradient_grow_direction_modifier_factory   ("density_gradient_grow_direction"   );
-FEPluginFactory_T<AnastamosisGrowDirectionModifier, FEMATERIAL_ID> anastamosis_grow_direction_modifier_factory("anastamosis_grow_direction");
-FEPluginFactory_T<EdgeDeflectorGrowDirectionModifier, FEMATERIAL_ID> edge_deflector_grow_direction_modifier_factory("edge_deflector_grow_direction");
-FEPluginFactory_T<VesselDirectionContributionsDirectionModifier, FEMATERIAL_ID> vessel_direction_contributions_grow_direction_modifier_factory("vessel_direction_contributions");
-
-
-FEPluginFactory_T<PreviousVesselDirectionContribution, FEMATERIAL_ID> previous_vessel_direction_contribution_factory("previous_vessel_direction");
-FEPluginFactory_T<FiberVesselDirectionContribution, FEMATERIAL_ID> fiber_vessel_direction_contribution_factory("fiber_vessel_direction");
-FEPluginFactory_T<ArbitraryVesselDirectionContribution, FEMATERIAL_ID> arbitrary_vessel_direction_contribution_factory("arbitrary_vessel_direction");
-
-FEPluginFactory_T<UnitLengthGrowDirectionModifier, FEMATERIAL_ID> unit_length_grow_direction_modifier_factory("unit_length");
-FEPluginFactory_T<DensityScaleGrowDirectionModifier, FEMATERIAL_ID> density_scale_grow_direction_modifier_factory("density_length");
-FEPluginFactory_T<SegmentLengthGrowDirectionModifier, FEMATERIAL_ID> segment_length_grow_direction_modifier_factory("segment_length");
 
 FEPluginFactory_T<Plot2GGP, FEMATERIAL_ID> plot2_ggp_factory("plot2_ggp");
 FEPluginFactory_T<GradientPlot2GGP, FEMATERIAL_ID> gradient_plot2_ggp_factory("gradient_plot2_ggp");
@@ -79,16 +57,9 @@ FEPluginFactory_T<AssertGGP, FEMATERIAL_ID> assert_ggp_factory("assert_ggp");
 FEPluginFactory_T<NodalDataGGP, FEMATERIAL_ID> nodal_data_ggp_factory("nodal_data_ggp");
 FEPluginFactory_T<NodalDataGradientGGP, FEMATERIAL_ID> nodal_data_gradient_ggp_factory("nodal_data_gradient_ggp");
 FEPluginFactory_T<DirectionChangeGGP, FEMATERIAL_ID> direction_change_ggp_factory("direction_change_ggp");
+*/
 
-FEPluginFactory_T<MDByVolumeFragmentSeeder   , FEMATERIAL_ID> mdbyvol_fragment_seeder_factory("MDbyVolume");
-FEPluginFactory_T<MultiDomainFragmentSeeder  , FEMATERIAL_ID> md_fragment_seeder_factory     ("MD"        );
-FEPluginFactory_T<MDAngVessFileFragmentSeeder, FEMATERIAL_ID> md_file_seeder_factory         ("from_file" );
 
-FEPluginFactory_T<BouncyBC, FEMATERIAL_ID> bouncybc_factory("bouncy");
-FEPluginFactory_T<StopBC  , FEMATERIAL_ID> stopbc_factory  ("stop"  );
-
-FEPluginFactory_T<SameMBC       , FEMATERIAL_ID> same_mbc_factory       ("same"        );
-FEPluginFactory_T<PassThroughMBC, FEMATERIAL_ID> passthrough_mbc_factory("pass_through");
 
 FEPluginFactory_T<FEPlotAngioStress          , FEPLOTDATA_ID> plot_angio_stress            ("angio stress"          );
 FEPluginFactory_T<FEPlotVesselStress         , FEPLOTDATA_ID> plot_vessel_stress           ("vessel stress"         );
@@ -103,8 +74,6 @@ FEPluginFactory_T<FEPlotAngioECMDensity      , FEPLOTDATA_ID> plot_angio_ecm    
 FEPluginFactory_T<FEPlotAngioECMAlpha        , FEPLOTDATA_ID> plot_angio_alpha             ("angio ECM alpha"       );
 FEPluginFactory_T<FEPlotAngioGradient        , FEPLOTDATA_ID> plot_angio_gradient          ("angio gradient"        );
 FEPluginFactory_T<FEPlotAngioGradientCenter  , FEPLOTDATA_ID> plot_angio_gradient_center   ("angio gradient center" );
-FEPluginFactory_T<FEPlotAngioMaterialHop     , FEPLOTDATA_ID> plot_angio_material_hop      ("angio material hop"    );
-FEPluginFactory_T<FEPlotAngioSegmentBadGrowth, FEPLOTDATA_ID> plot_angio_segment_bad_growth("angio bad growth"      );
 FEPluginFactory_T<FEPlotMatrixConectrationGradient, FEPLOTDATA_ID> plot_matrix_concentration_gradient("matrix concecntration gradient");
 FEPluginFactory_T<FEPlotMatrixSBMConectration, FEPLOTDATA_ID> plot_matrix_sbm_concentration("matrix sbm concecntration");
 
@@ -146,7 +115,7 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		//plot classes
 		&plot_angio_stress, &plot_angio_stress,
 		&plot_angio_ecm, &plot_angio_alpha, &plot_angio_gradient, &plot_angio_gradient_center,
-		&plot_angio_material_hop, &plot_angio_segment_bad_growth, &plot_vessel_stress, &plot_matrix_stress,
+		&plot_vessel_stress, &plot_matrix_stress,
 		&plot_vessel_weight, &plot_matrix_weight, &plot_matrix_tangent, &plot_matrix_visco_stress,
 		&plot_matrix_elastic_m_Q, &plot_matrix_elastic_stress,
 
@@ -159,32 +128,20 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		&random_fiber_initializer_pe, &ellipsoidal_fiber_initializer,
 		
 		//branching factories
-		&no_fragment_branching_factory, &psuedo_defered_fragment_branching_factory,
+
 		//grow direction modifiers
-		&grow_direction_modifiers_factory, &base_fiber_grow_direction_modifier_factory,
-		&unit_length_grow_direction_modifier_factory, &segment_length_grow_direction_modifier_factory,
-		&default_grow_direction_modifier_factory, &selecting_grow_direction_modifier_factory,
-		&branch_grow_direction_modifier_factory,
-		&random_branch_grow_direction_modifier_factory, &random_theta_branch_grow_direction_modifier_factory,
-		&gradient_grow_direction_modifier_factory, &anastamosis_grow_direction_modifier_factory,
-		&density_scale_grow_direction_modifier_factory, &edge_deflector_grow_direction_modifier_factory,
-		&vessel_direction_contributions_grow_direction_modifier_factory,
 
 		//vessel contribution modifiers
-		&previous_vessel_direction_contribution_factory, &fiber_vessel_direction_contribution_factory,
-		&arbitrary_vessel_direction_contribution_factory,
 
 		//fragment seeders
-		&md_fragment_seeder_factory, &mdbyvol_fragment_seeder_factory,
-		&md_file_seeder_factory,
+		
 		//boundary conditions
-		&stopbc_factory, &bouncybc_factory, &same_mbc_factory,
-		&passthrough_mbc_factory, 
 		//random distribution
 		&cauchy_distribution_factory, &chi_squared_distribution_factory, &weibull_distribution_factory,
 		&gamma_distribution_factory,&normal_distribution_factory, &exponential_distribution_factory,
 		&uniform_distribution_factory,
 		//ggp's
+		/*
 		&plot2_ggp_factory, &gradient_plot2_ggp_factory,
 		&matrix_converter_ggp_factory, &forked_ggp_factory, &cross_ggp_factory,
 		&threshold_ggp_factory, &nodal_data_ggp_factory, &nodal_data_gradient_ggp_factory,
@@ -193,7 +150,7 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		&setter_ggp_factory, &matrix_setter_ggp_factory,
 		&assert_ggp_factory, &unit_diagonal_factory, &direction_change_ggp_factory,
 		&matrix_mix_ggp_factory,
-
+		*/
 		//other needed items
 		&common_angio_properties_factory
 	};
