@@ -69,6 +69,31 @@ FEMesh * FEAngio::GetMesh() const
 	return &m_fem->GetMesh();
 }
 
+//consider moving this to FEBio
+std::pair<int, int> FEAngio::GetMinMaxElementIDs() const
+{
+	FEMesh * mesh = GetMesh();
+	assert(mesh);
+
+	// get the ID ranges
+	int m_minID = -1;
+	int m_maxID = -1;
+	int NDOM = mesh->Domains();
+	for (int i = 0; i<NDOM; ++i)
+	{
+		FEDomain& dom = mesh->Domain(i);
+		int NE = dom.Elements();
+		for (int j = 0; j<NE; ++j)
+		{
+			FEElement& el = dom.ElementRef(j);
+			int eid = el.GetID();
+			if ((eid < m_minID) || (m_minID == -1)) m_minID = eid;
+			if ((eid > m_maxID) || (m_maxID == -1)) m_maxID = eid;
+		}
+	}
+	return { m_minID, m_maxID };
+}
+
 //-----------------------------------------------------------------------------
 // Initializes the FEAngio object.
 bool FEAngio::Init()
@@ -79,32 +104,38 @@ bool FEAngio::Init()
 	//must be done first initializes material
 	if (InitFEM() == false) return false;
 
-	// Seed the random number generator based on the sum of the seeds of the materials ie set the seed only once in any material
-	unsigned int posseed = static_cast<unsigned int>(m_fem->GetGlobalConstant("seed"));
-	if (!posseed)
+	//setup the element access data structure
+	auto min_max = GetMinMaxElementIDs();
+	auto min_elementID = std::get<0>(min_max);
+	//initiialize the FEAngioElementData Structures
+	FEMesh * mesh = GetMesh();
+	FEModel * model = GetFEModel();
+	//we are using the lut in FEMesh so the speed should be good
+	//the table now contains only angio elements
+	for(int i=0; i < mesh->Elements();i++)
 	{
-		posseed = static_cast<unsigned int>(time(0));
+		auto elem = mesh->FindElementFromID(min_elementID + i);
+		FEMaterial * mat = model->FindMaterial(elem->GetMatID());
+		FEAngioMaterial*angio_mat = GetAngioComponent(mat);
+
+		if(angio_mat)
+		{
+			angio_elements.emplace_back(elem, angio_mat, mat);
+		}
 	}
-	m_irseed = posseed;
-	rengine.seed(m_irseed);
-	srand(m_irseed);
+
+	
 
 
 
-	for (size_t i = 0; i < m_pmat.size(); i++)
-	{
-		m_pmat[i]->FinalizeInit();
-	}
-	//setup the exterior_surface
-
-	// assign ECM densities to grid nodes
-	//TODO: degree of anisotropy values will only get initialized if density is set to 0
+	// assign ECM densities
 	if (InitECMDensity() == false) return false;
-	// assign concentration values to grid nodes
-	//if (InitSoluteConcentration() == false) return false;
+
 
 
 	FinalizeFEM();
+
+
 	
 	// start timer
 	time(&m_start);
@@ -367,7 +398,7 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 	{
 		for (size_t i = 0; i < m_pmat.size(); i++)
 		{
-			m_pmat[i]->Update();
+			
 		}
 		for (size_t i = 0; i < m_pmat.size(); i++)
 		{
@@ -419,7 +450,7 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		material_update_timer.start();
 		for (size_t i = 0; i < m_pmat.size(); i++)
 		{
-			m_pmat[i]->Update();
+			
 		}
 		material_update_timer.stop();
 

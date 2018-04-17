@@ -35,13 +35,10 @@ public:
 	// Calculate the active Angio stress
 	mat3ds AngioStress(FEAngioMaterialPoint& mp);
 
-	void FinalizeInit();
-
 	void UpdateGDMs();
 
 	void UpdateAngioStresses();
 
-	void Update(){}
 	void SetFEAngio(FEAngio * ctl)
 	{
 		m_pangio = ctl;

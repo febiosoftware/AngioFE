@@ -82,25 +82,6 @@ bool FEAngioMaterial::Init()
 
 	return true;
 }
-void FEAngioMaterial::FinalizeInit()
-{
-	FEMesh * mesh = m_pangio->GetMesh();
-	// initialize material point data
-	vec3d x[FEElement::MAX_NODES];
-
-	for (int n = 0; n<mesh->Domains(); ++n)
-	{
-		FESolidDomain& dom = reinterpret_cast<FESolidDomain&>(mesh->Domain(n));
-		FEMaterial* pm = dom.GetMaterial();
-		FEAngioMaterial* pam = m_pangio->GetAngioComponent(pm);
-
-		if (pam == this)
-		{
-			//TODO: 
-		}
-	}
-}
-
 
 
 void FEAngioMaterial::SetLocalCoordinateSystem(FEElement& el, int n, FEMaterialPoint& mp)

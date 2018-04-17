@@ -6,6 +6,7 @@
 #include "FECore/FESolidDomain.h" //isd this include correct or should i just forward declare the class
 #include <FEBioLib/FEBioModel.h>
 #include <future>
+#include "AngioElement.h"
 
 
 //-----------------------------------------------------------------------------
@@ -35,6 +36,8 @@ public:
 	// initialize the FEAnio class
 	bool Init();
 
+	std::pair<int, int> GetMinMaxElementIDs() const;
+
 	// Get the FE model
 	FEBioModel* GetFEModel() const;
 
@@ -45,6 +48,7 @@ public:
 
 	static FEAngioMaterial * GetAngioComponent(FEMaterial * mat);
 	
+
 
 	mat3d unifromRandomRotationMatrix();
 	mat3d rotationMatrix(double alpha, double beta, double gamma);
@@ -120,4 +124,6 @@ private:
 	Timer update_gdms_timer;
 	Timer update_ecm_timer;
 	Timer material_update_timer;
+
+	std::vector<AngioElement> angio_elements;
 };
