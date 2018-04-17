@@ -13,6 +13,7 @@
 #include "ECMInitializer.h"
 #include "CommonAngioProperites.h"
 #include <FEBioMix/FEMultiphasic.h>
+#include "CultureParameters.h"
 
 
 //-----------------------------------------------------------------------------

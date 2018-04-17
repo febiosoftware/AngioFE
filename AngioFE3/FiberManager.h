@@ -1,10 +1,11 @@
 #pragma once
 
 #include "StdAfx.h"
-#include "Segment.h"
 #include "FECore/FEMaterial.h"
 #include "FEProbabilityDistribution.h"
 
+
+/*
 class FEAngioMaterialBase;
 class FiberManager;
 
@@ -117,3 +118,4 @@ private:
 	friend class EllipsoidalFiberInitializer;
 };
 
+*/

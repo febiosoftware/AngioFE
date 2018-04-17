@@ -1,7 +1,6 @@
 #pragma once
 #include "StdAfx.h"
 #include <FECore/FEMaterialPoint.h>
-#include "Segment.h"
 
 //-----------------------------------------------------------------------------
 // A new material point class is defined to store the elastic parameters for 
@@ -21,10 +20,8 @@ public:
 	//! copy material point data (for running restarts) todo Is this still used?
 	void Serialize(DumpStream& dmp) override;
 
-	// These are the material parameters
-	double		m_D;		// collagen density (?)
-	double		m_DA;		// degree of anisotropy (?)
-							//TODO: consider adding a custom weigth parameter per element 
+	double density_multiplier = 1.0;
+
 	//the temporary to store angio stress
 	mat3ds m_as;
 

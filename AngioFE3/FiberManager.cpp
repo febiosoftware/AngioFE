@@ -1,9 +1,7 @@
 #include "FiberManager.h"
-#include <FEBioMech/FESPRProjection.h>
-#include <FEBioMech/FEFiberMaterialPoint.h>
-#include "FEAngioMaterial.h"
-#include "angio3d.h"
 
+
+/*
 
 void FiberManager::Update()
 {
@@ -108,3 +106,4 @@ ADD_PARAMETER(theta_slice , FE_PARAM_DOUBLE, "theta_slice");
 ADD_PARAMETER(phi_slice, FE_PARAM_DOUBLE, "a");
 END_PARAMETER_LIST();
 
+*/

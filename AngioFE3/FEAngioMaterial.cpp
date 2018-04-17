@@ -8,6 +8,8 @@
 #include "FEBioMech/FESPRProjection.h"
 #include <iostream>
 #include "angio3d.h"
+#include "Segment.h"
+#include "Tip.h"
 
 
 //-----------------------------------------------------------------------------

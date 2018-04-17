@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <cfloat> 
 #include <FEBioMix/FETriphasic.h>
+#include "GrowDirectionModifier.h"
 
 
 //-----------------------------------------------------------------------------
@@ -601,8 +602,6 @@ bool CreateDensityMap(vector<double>& density, vector<double>& anisotropy, FEMat
 				// generate a coordinate transformation at this integration point
 				FEMaterialPoint* mpoint = el.GetMaterialPoint(n);
 				FEAngioMaterialPoint* angioPt = FEAngioMaterialPoint::FindAngioMaterialPoint(mpoint);
-				den[n] = angioPt->m_D;
-				anis[n] = angioPt->m_DA;
 			}
 
 			// now that we have the values at the integration points

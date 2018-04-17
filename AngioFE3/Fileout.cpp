@@ -4,7 +4,6 @@
 
 #include "StdAfx.h"
 #include "Fileout.h"
-#include "Segment.h"
 #include "FEAngio.h"
 #include <iostream>
 #include <FECore/FEModel.h>

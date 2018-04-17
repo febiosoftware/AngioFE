@@ -5,8 +5,6 @@
 //-----------------------------------------------------------------------------
 FEAngioMaterialPoint::FEAngioMaterialPoint(FEMaterialPoint* pt, FEMaterialPoint* vesselPt, FEMaterialPoint *matrixPt) : FEMaterialPoint(pt)
 {
-	m_D = 0.0;
-	m_DA = 1.0;
 	vessPt = vesselPt;
 	matPt = matrixPt;
 	matrix_weight = 1.0;
@@ -29,8 +27,7 @@ void FEAngioMaterialPoint::Init()
 //-----------------------------------------------------------------------------
 // define the material parameters
 BEGIN_PARAMETER_LIST(FEAngioMaterialPoint, FEMaterialPoint)
-ADD_PARAMETER(m_D, FE_PARAM_DOUBLE, "dens");
-ADD_PARAMETER(m_DA, FE_PARAM_DOUBLE, "anisotropy");
+ADD_PARAMETER(density_multiplier, FE_PARAM_DOUBLE, "density_multiplier");
 END_PARAMETER_LIST();
 
 
@@ -51,14 +48,7 @@ FEMaterialPoint* FEAngioMaterialPoint::Copy()
 //! copy material point data (for running restarts) \todo Is this still used?
 void FEAngioMaterialPoint::Serialize(DumpStream& dmp)
 {
-	if (dmp.IsSaving())
-	{
-		dmp << m_D;
-	}
-	else
-	{
-		dmp >> m_D;
-	}
+
 	FEMaterialPoint::Serialize(dmp);
 }
 

@@ -79,13 +79,14 @@ FEPluginFactory_T<FEPlotMatrixSBMConectration, FEPLOTDATA_ID> plot_matrix_sbm_co
 
 FEPluginFactory_T<FEPlotMatrixElastic_m_Q, FEPLOTDATA_ID> plot_matrix_elastic_m_Q("matrix elastic mQ");
 
-
+/*
 FEPluginFactory_T<NullFiberInitializer, FEMATERIAL_ID> null_fiber_initializer("null_fiber_initializer");
 FEPluginFactory_T<RandomFiberInitializer, FEMATERIAL_ID> random_fiber_initializer("random_fiber_initializer");
 FEPluginFactory_T<RandomFiberInitializerNonMangling, FEMATERIAL_ID> random_fiber_initializer_non_mangling("random_fiber_initializer_non_mangling");
 FEPluginFactory_T<ExplicitDistributionsFiberInitializer, FEMATERIAL_ID> explicit_distribution_fiber_initializer("explicit_distribution_fiber_initializer");
 FEPluginFactory_T<RandomFiberInitializerPE, FEMATERIAL_ID> random_fiber_initializer_pe("random_fiber_initializer_pe");
 FEPluginFactory_T<EllipsoidalFiberInitializer, FEMATERIAL_ID> ellipsoidal_fiber_initializer("ellipsoidal_fiber_initializer");
+*/
 
 //-----------------------------------------------------------------------------
 FECORE_EXPORT  unsigned int GetSDKVersion()
@@ -122,11 +123,13 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		//stopgap plot classes
 		&plot_matrix_concentration_gradient, &plot_matrix_sbm_concentration,
 
+		/*
 		//fiber initializers
 		&null_fiber_initializer, &random_fiber_initializer,
 		&random_fiber_initializer_non_mangling, &explicit_distribution_fiber_initializer,
 		&random_fiber_initializer_pe, &ellipsoidal_fiber_initializer,
-		
+		*/
+
 		//branching factories
 
 		//grow direction modifiers

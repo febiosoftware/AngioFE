@@ -1,6 +1,6 @@
 #pragma once
 #include "FiberManager.h"
-
+/*
 class FEAngioMaterialBase;
 
 //needs to set the intitial ecm density and anisotropy
@@ -23,3 +23,4 @@ class ECMInitializerNoOverwrite : public ECMInitializer
 {
 	bool overwrite() override { return false; }
 };
+*/
