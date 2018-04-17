@@ -17,7 +17,6 @@ public:
 	virtual void InitializeFibers(FiberManager * fman) = 0;
 
 	void nodeToInt(FiberManager * fman);
-	void GridPointOfIntPoint(FESolidElement * se, int ei, int intp, GridPoint & gp);
 };
 //does nothing the fiber direction will be unchanged
 class NullFiberInitializer : public FiberInitializer
@@ -96,9 +95,6 @@ public:
 	explicit FiberManager(FEAngioMaterialBase * mat) : material(mat){  }
 	virtual ~FiberManager(){}
 
-	vec3d GetFiberDirection(GridPoint & pt, double& lambda);
-	vec3d GetMinorAxisDirection1(GridPoint & pt, double  &lambda);
-	vec3d GetMinorAxisDirection2(GridPoint & pt, double & lambda);
 	vec3d GetFiberAtNode(int node, double & lambda);
 	vec3d GetMinor1AtNode(int node, double  &lambda);
 	vec3d GetMinor2AtNode(int node, double  &lambda);

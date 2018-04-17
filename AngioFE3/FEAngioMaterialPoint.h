@@ -30,8 +30,6 @@ public:
 
 	double ref_ecm_density;
 
-	GridPoint	m_pt;	// grid point location of this material point
-
 	double vessel_weight;
 	double matrix_weight;
 	FEMaterialPoint* vessPt;

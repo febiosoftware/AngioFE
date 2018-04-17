@@ -6,7 +6,6 @@
 #include "FragmentSeeder.h"
 #include "GrowDirectionModifier.h"
 
-class BC;
 
 class CommonAngioProperties :public FEMaterial
 {

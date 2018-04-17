@@ -11,14 +11,13 @@
 #include "FEAngioMaterialPoint.h"
 #include <FEBioMix/FEBiphasic.h>
 #include "ECMInitializer.h"
-#include "FEAngioMaterialBase.h"
 #include "CommonAngioProperites.h"
 #include <FEBioMix/FEMultiphasic.h>
 
 
 //-----------------------------------------------------------------------------
 // Class implementing a stress induced by a non-local point force
-class FEAngioMaterial : public FEElasticMaterial, public FEAngioMaterialBase
+class FEAngioMaterial : public FEElasticMaterial
 {
 public:
 	
@@ -34,25 +33,25 @@ public:
 	//begin functions from FEAngioMaterialBase
 
 	// Calculate the active Angio stress
-	mat3ds AngioStress(FEAngioMaterialPoint& mp) override;
+	mat3ds AngioStress(FEAngioMaterialPoint& mp);
 
-	void FinalizeInit() override;
+	void FinalizeInit();
 
-	void UpdateECM() override;
+	void UpdateGDMs();
 
-	void UpdateGDMs() override;
+	void UpdateAngioStresses();
 
-	void UpdateAngioStresses() override;
-
-	bool InitECMDensity(FEAngio * angio)  override;
-
-	void InitializeFibers() override;
+	void Update(){}
+	void SetFEAngio(FEAngio * ctl)
+	{
+		m_pangio = ctl;
+	}
 	
-	FEMaterial * GetMatrixMaterial() override { return matrix_material; }
+	FEMaterial * GetMatrixMaterial()  { return matrix_material; }
 
-	CommonAngioProperties * GetCommonAngioProperties() override { return common_properties; };
+	CommonAngioProperties * GetCommonAngioProperties()  { return common_properties; };
 
-	int GetID_ang() override { 
+	int GetID_ang() { 
 		FECoreBase  * base = GetParent();
 		if(base)
 		{
@@ -60,7 +59,7 @@ public:
 		}
 		return FEElasticMaterial::GetID(); };
 
-	FEMaterial * GetMaterial()override { return dynamic_cast<FEMaterial*>(this); }
+	FEMaterial * GetMaterial() { return dynamic_cast<FEMaterial*>(this); }
 	//begin functions from FEMaterial
 
 	// material initialization
@@ -80,15 +79,15 @@ public:
 	void SetLocalCoordinateSystem(FEElement& el, int n, FEMaterialPoint& mp) override;
 
 	double StrainEnergyDensity(FEMaterialPoint& mp) override;
-	
-	void SetupSurface() override;
+
 private:
 	DECLARE_PARAMETER_LIST();
 
 	FEPropertyT<FESolidMaterial> matrix_material;
 	FEPropertyT<CommonAngioProperties> common_properties;
+	CultureParameters m_cultureParams;
+	FEAngio*	m_pangio = nullptr;
 public:
-	void ApplySym() override;
 	
 	
 	

@@ -36,7 +36,7 @@ BEGIN_PARAMETER_LIST(FEAngioMaterial, FEElasticMaterial)
 END_PARAMETER_LIST();
 
 //-----------------------------------------------------------------------------
-FEAngioMaterial::FEAngioMaterial(FEModel* pfem) : FEElasticMaterial(pfem), FEAngioMaterialBase()
+FEAngioMaterial::FEAngioMaterial(FEModel* pfem) : FEElasticMaterial(pfem)
 {
 	AddProperty(&common_properties, "common_properties");
 	AddProperty(&matrix_material, "matrix");
@@ -50,17 +50,7 @@ FEAngioMaterial::~FEAngioMaterial()
 bool FEAngioMaterial::Init()
 {
 	// Create symmetry vectors
-	sym_planes[0] = 0; sym_planes[1] = 0; sym_planes[2] = 0; sym_planes[3] = 0; sym_planes[4] = 0; sym_planes[5] = 0; sym_planes[6] = 0;
 
-	sym_vects[0][0] = 1.; sym_vects[0][1] = 0.; sym_vects[0][2] = 0.;
-	sym_vects[1][0] = 0.; sym_vects[1][1] = 1.; sym_vects[1][2] = 0.;
-	sym_vects[2][0] = 0.; sym_vects[2][1] = 0.; sym_vects[2][2] = 1.;
-	sym_vects[3][0] = 1.; sym_vects[3][1] = 1.; sym_vects[3][2] = 0.;
-	sym_vects[4][0] = 1.; sym_vects[4][1] = 0.; sym_vects[4][2] = 1.;
-	sym_vects[5][0] = 0.; sym_vects[5][1] = 1.; sym_vects[5][2] = 1.;
-	sym_vects[6][0] = 1.; sym_vects[6][1] = 1.; sym_vects[6][2] = 1.;
-
-	sym_on = false;
 
 	if(!matrix_material->Init()) return false;
 
@@ -71,20 +61,7 @@ bool FEAngioMaterial::Init()
 	//culture must be initialized here  so pangio is defined
 	assert(m_pangio);
 
-	switch (m_cultureParams.ecm_control)
-	{
-	case 0:
-		ecm_initializer = new ECMInitializerConstant();
-		break;
-	case 1:
-		ecm_initializer = new ECMInitializerSpecified();
-		break;
-	case 2:
-		ecm_initializer = new ECMInitializerNoOverwrite();
-		break;
-	default:
-		assert(false);
-	}
+
 
 	// add the user sprouts
 	std::vector<int> matls;
@@ -101,38 +78,7 @@ bool FEAngioMaterial::Init()
 		matls.emplace_back(this->GetID_ang());
 	}
 
-	mesh.DomainListFromMaterial(matls, domains);
-	for (size_t i = 0; i < domains.size(); i++)
-	{
-		domainptrs.emplace_back(&mesh.Domain(domains[i]));
-	}
-	for(int i = 0; i < domainptrs.size();i++)
-	{
-		if(domainptrs[i]->Elements())
-		{
-			//ideal call followed by actual call
-			//domainptrs[i]->GetElementType()
-			auto ty = domainptrs[i]->ElementRef(0).Type();
-			if (ty != FE_HEX8G8)
-			{
-				printf("\nAngioFE only supports hex8 elements\n");
-				return false;
-			}
-				
-		}
-	}
 
-	int co = 0;
-	for (auto i = 0; i < mesh.Domains(); i++)
-	{
-		if (std::find(domainptrs.begin(), domainptrs.end(),&mesh.Domain(i)) != domainptrs.end())
-		{
-			meshOffsets[&mesh.Domain(i)] = co;
-		}
-		co += mesh.Domain(i).Elements();
-	}
-
-	fiber_manager = new FiberManager(this);
 
 	return true;
 }
@@ -153,25 +99,9 @@ void FEAngioMaterial::FinalizeInit()
 			//TODO: 
 		}
 	}
-	if(domainptrs.size()==0)
-	{
-		return;
-	}
-	for (int i = 0; i < domainptrs[0]->Nodes(); i++)
-	{
-		int nn = domainptrs[0]->NodeIndex(i);
-		node_map[nn] = i;
-	}
-}
-void FEAngioMaterial::SetupSurface()
-{
-
 }
 
-void FEAngioMaterial::InitializeFibers()
-{
-	common_properties->InitializeFibers(fiber_manager);
-}
+
 
 void FEAngioMaterial::SetLocalCoordinateSystem(FEElement& el, int n, FEMaterialPoint& mp)
 {
@@ -212,68 +142,10 @@ mat3ds FEAngioMaterial::AngioStress(FEAngioMaterialPoint& angioPt)
 	return val;
 }
 
-void FEAngioMaterial::UpdateECM()
-{
-	ecm_initializer->updateECMdensity(this);
-}
-
-//this function accumulates the the anistropy and ecm_density, n_tag is incremented to be used to take the average
-bool FEAngioMaterial::InitECMDensity(FEAngio * angio)
-{
-	ecm_initializer->seedECMDensity(this);
-	return true;
-}
 
 void FEAngioMaterial::UpdateAngioStresses()
 {
 	
-	unsigned int mms = static_cast<unsigned int>(m_pangio->m_fem->GetGlobalConstant("mms"));
-	if(!mms)
-	{
-		for (int i = 0; i < domainptrs.size(); i++)
-		{
-			const int NE = domainptrs[i]->Elements();
-#pragma omp parallel for shared(NE)
-			for (int j = 0; j < NE; j++)
-			{
-				FEElement * el = &domainptrs[i]->ElementRef(j);
-				for (int k = 0; k < el->GaussPoints(); k++)
-				{
-					FEAngioMaterialPoint* angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(el->GetMaterialPoint(k));
-					assert(angio_pt);
-					angio_pt->m_as = AngioStress(*angio_pt);
-				}
-			}
-
-		}
-	}
-	else
-	{
-		for (int i = 0; i < domainptrs.size(); i++)
-		{
-			const int NE = domainptrs[i]->Elements();
-#pragma omp parallel for shared(NE)
-			for (int j = 0; j < NE; j++)
-			{
-				FEElement * el = &domainptrs[i]->ElementRef(j);
-				for (int k = 0; k < el->GaussPoints(); k++)
-				{
-					FEAngioMaterialPoint* angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(el->GetMaterialPoint(k));
-					assert(angio_pt);
-					angio_pt->m_as.zero();
-					for(int ii=0; ii < domainptrs.size();ii++)
-					{
-						FEAngioMaterialBase * angio_mat = dynamic_cast<FEAngioMaterialBase*>(domainptrs[i]->GetMaterial());
-						if(angio_mat)
-						{
-							angio_pt->m_as += angio_mat->AngioStress(*angio_pt);
-						}
-					}
-				}
-			}
-
-		}
-	}
 	
 }
 
@@ -363,39 +235,6 @@ void FEAngioMaterial::UpdateGDMs()
 	common_properties->UpdateGDMs();
 }
 
-
-///////////////////////////////////////////////////////////////////////
-// FEAngioMaterial - ApplySym
-//      Determine if symmetry is turned on, if so create the symmetry vectors
-///////////////////////////////////////////////////////////////////////
-void FEAngioMaterial::ApplySym()
-{
-	if (m_cultureParams.m_symmetry_plane.x != 0)															// Turn on x symmetry
-		sym_planes[0] = 1;
-
-	if (m_cultureParams.m_symmetry_plane.y != 0)															// Turn on y symmetry
-		sym_planes[1] = 1;
-
-	if (m_cultureParams.m_symmetry_plane.z != 0)															// Turn on z symmetry
-		sym_planes[2] = 1;
-
-	if ((m_cultureParams.m_symmetry_plane.x != 0) && (m_cultureParams.m_symmetry_plane.y != 0))												// Turn on x and y symmetry
-		sym_planes[3] = 1;
-
-	if ((m_cultureParams.m_symmetry_plane.x != 0) && (m_cultureParams.m_symmetry_plane.z != 0))												// Turn on x and z symmetry
-		sym_planes[4] = 1;
-
-	if ((m_cultureParams.m_symmetry_plane.y != 0) && (m_cultureParams.m_symmetry_plane.z != 0))												// Turn on y and z symmetry
-		sym_planes[5] = 1;
-
-	if ((m_cultureParams.m_symmetry_plane.x != 0) && (m_cultureParams.m_symmetry_plane.y != 0) && (m_cultureParams.m_symmetry_plane.z != 0))								// Turn on x y and z symmetry
-		sym_planes[6] = 1;
-	
-	if (sym_planes[0] + sym_planes[1] + sym_planes[2] + sym_planes[3] + sym_planes[4] + sym_planes[5] + sym_planes[6] != 0)
-		sym_on = true;														
-
-	return;
-}
 
 //-----------------------------------------------------------------------------
 FEMaterialPoint* FEAngioMaterial::CreateMaterialPointData()

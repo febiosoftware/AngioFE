@@ -3,21 +3,6 @@
 #include <FECore/FEDomain.h>
 #include <FECore/FESolidDomain.h>
 
-//-----------------------------------------------------------------------------
-// A helper class for locating points on the grid using an element number and
-// a natural coordinates
-class GridPoint
-{
-public:
-	int		nelem;		// element id
-	int		elemindex = -1;
-	FESolidDomain *		ndomain=nullptr;    //domain id
-	vec3d	q;			// natural coordinates
-	vec3d	r;			// spatial position
-
-	GridPoint() : nelem(-1) { }
-	GridPoint(int ne, vec3d& k) : q(k), nelem(ne) { }
-};
 
 //-----------------------------------------------------------------------------
 // Microvessels are represented by a collection of line segments. 
@@ -40,8 +25,6 @@ public:
 	{
 	public:
 		bool		bactive;	// flag if tip is active
-		int			BC;			// something to do with body forces?
-		GridPoint	pt;			// point in grid where this tip lies
 		vec3d		u;			// sprout force vector
 		Segment * parent;//segment that contains this tip
 		Segment * connected = nullptr;//the segment that is connected to this tip
@@ -51,7 +34,6 @@ public:
 		double length_to_branch = 0.0;//determines hwo much farther the tip must grow before it branches
 		double wait_time_to_branch = 0.0;//determines how long a segment waits before the branch grows
 
-		const vec3d& pos() const { return pt.r; }
 
 		TIP();
 	};
@@ -61,9 +43,6 @@ public:
 	void operator = (Segment& seg);
 	~Segment();
     
-	// update the segment data
-	// Call this each time the position of the nodes has changed
-    void Update();
 
 	// get the segment length
 	double length() const { return m_length; }

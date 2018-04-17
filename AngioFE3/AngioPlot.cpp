@@ -291,42 +291,6 @@ bool FEPlotAngioGradient::Save(FEMesh & m, FEDataStream & a)
 	if (pfeangio == nullptr) return false;
 	//
 	FEMesh & mesh = pfeangio->m_fem->GetMesh();
-	pfeangio->ForEachElement([&mesh, &gradients](FESolidElement & se, FESolidDomain & d)
-	{
-		//these will hold the natural coordinates once the project to nodes is complete 
-		double nr[FEElement::MAX_NODES];
-		double ns[FEElement::MAX_NODES];
-		double nt[FEElement::MAX_NODES];
-		//these hold the natural coordinates of the integration points (r,s,t)
-		double gr[FEElement::MAX_NODES];
-		double gs[FEElement::MAX_NODES];
-		double gt[FEElement::MAX_NODES];
-
-			
-		for (int i = 0; i < se.Nodes(); i++)
-		{
-			gr[i] = se.gr(i);
-			gs[i] = se.gs(i);
-			gt[i] = se.gt(i);
-		}
-
-		se.project_to_nodes(gr, nr);
-		se.project_to_nodes(gs, ns);
-		se.project_to_nodes(gt, nt);
-		std::vector<double> densities;
-		
-		for (size_t i = 0; i < se.m_node.size(); i++)
-		{
-			vec3d pt = vec3d(nr[i], ns[i], nt[i]);
-			FENode & node = mesh.Node(se.m_node[i]);
-			
-			if (pfeangio->GetAngioComponent(d.GetMaterial())->Overwrite() || (gradients.count(node.GetID()) == 0 ))
-			{
-				gradients[node.GetID()] = pfeangio->gradient(&se, densities, pt);
-			}
-		}
-		
-	});
 
 
 	for (int i = 0; i < mesh.Nodes(); i++)

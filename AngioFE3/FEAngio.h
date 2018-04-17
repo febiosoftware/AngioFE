@@ -41,34 +41,10 @@ public:
 	//check the get FEModel above it may not be useful in any way
 	FEMesh * GetMesh() const;
 
-	// get the run time (in secs)
-	double RunTime() const;
-
-	// get the simulation time
-	SimulationTime& CurrentSimTime() { return m_time; }
-
 	void ResetTimers();
-
-	void adjust_mesh_stiffness();
-	void update_sprout_stress_scaling();
-	double FindECMDensity(const GridPoint& pt);
-	vec3d LocalToGlobal(FESolidElement * se, vec3d & rst) const;
-	vec3d FindRST(const vec3d & r, vec2d rs, FESolidElement * elem) const;
-	GridPoint FindGridPoint(FESolidDomain * domain, int nelem, vec3d& q) const;
-	vec3d Position(const GridPoint& pt)  const;
-	vec3d ReferenceCoords(const GridPoint& pt) const;
 
 	static FEAngioMaterial * GetAngioComponent(FEMaterial * mat);
 	
-	//some funtions to replace the loops everywhere in the code
-	//for each excludes non-angio materials
-	//Par are the parrallel version fo functions these lambdas must be openmp compatible
-	void ForEachNode(std::function<void(FENode &)> f);
-	void ForEachNode(std::function<void(FENode &)> f, std::vector<int> & matls);
-	void ForEachElement(std::function<void(FESolidElement&, FESolidDomain&)> f);
-	void ForEachElement(std::function<void(FESolidElement&, FESolidDomain&)> f, std::vector<int> & matls);
-	void ForEachDomain(std::function<void(FESolidDomain&)> f);
-	void ForEachDomain(std::function<void(FESolidDomain&)> f, std::vector<int> & matls);
 
 	mat3d unifromRandomRotationMatrix();
 	mat3d rotationMatrix(double alpha, double beta, double gamma);
@@ -81,8 +57,6 @@ public:
 	//calcualtes the gradient at the given natural coordinates
 	static vec3d gradient(FESolidElement * se, std::vector<double> & fn, vec3d pt, int size =1,int offset=0);
 
-	static bool IsInsideHex8(FESolidElement * se, vec3d y, FEMesh * mesh, double r[3]);
-
 	//these freindships are for displaying/reading the data and are okay
 	friend class Fileout;
 	friend class FEPlotAngioECMDensity;
@@ -92,29 +66,18 @@ public:
 	//TODO: remove the freindship, creation in the old way requires this
 	//or consider making the node and element data public
 	friend class FEAngioMaterial;
-	friend class BC;
 private:
 	
 	// Initialize the nodal ECM values
 	bool InitECMDensity();
-	void UpdateECM();
-	//will set the times and whether or not this is the final angio step in this mechanical step
-	int FindGrowTimes(std::vector<std::pair<double, double>> & time_pairs, int start_index);
-
 
 	// Init FE stuff
 	bool InitFEM();
 
 	void FinalizeFEM();
 
-	void SetupSurface(std::vector<future<void>> & futures);
-
-	void CallInFutures(std::vector<future<void>> & futures);
-
 	// do the final output
 	void Output();
-
-	void UpdateTimeOutput();
 
 	static bool feangio_callback(FEModel* pfem, unsigned int nwhen, void* pd)
 	{
@@ -133,7 +96,7 @@ public:	// parameters read directly from file
 	int		total_bdyf;
 	int		FE_state;			// State counter to count the number of solved FE states
 
-	std::vector<FEAngioMaterialBase*>	m_pmat;	//!< the angio-material pointer
+	std::vector<FEAngioMaterial*>	m_pmat;	//!< the angio-material pointer
 	std::vector<int>                m_pmat_ids;
 
 	angiofe_random_engine rengine;

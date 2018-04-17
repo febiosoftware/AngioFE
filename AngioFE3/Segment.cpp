@@ -7,7 +7,6 @@
 Segment::TIP::TIP()
 {
 	bactive = false;
-	BC = 0;
 	nseed = -1;
 	nvessel = -1;
 	parent = nullptr;
@@ -52,16 +51,4 @@ void Segment::operator = (Segment& seg)
 Segment::~Segment()
 {
 
-}
-
-//-----------------------------------------------------------------------------
-// Update the segment data (i.e. length and unit vector).
-// Call this each time the position of one of the nodes has changed.
-void Segment::Update()
-{	
-	m_uvect = m_tip[1].pos() - m_tip[0].pos();
-	m_length = m_uvect.unit();
-
-	m_tip[0].u = -m_uvect;
-	m_tip[1].u =  m_uvect;
 }
