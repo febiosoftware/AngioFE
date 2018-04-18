@@ -90,14 +90,14 @@ public:
 	void SetLocalCoordinateSystem(FEElement& el, int n, FEMaterialPoint& mp) override;
 
 	double StrainEnergyDensity(FEMaterialPoint& mp) override;
-
+	FEAngio*	m_pangio = nullptr;
 private:
 	DECLARE_PARAMETER_LIST();
 
 	FEPropertyT<FESolidMaterial> matrix_material;
 	FEPropertyT<CommonAngioProperties> common_properties;
 	CultureParameters m_cultureParams;
-	FEAngio*	m_pangio = nullptr;
+	
 public:
 	
 	

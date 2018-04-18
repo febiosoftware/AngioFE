@@ -130,4 +130,5 @@ private:
 	Timer material_update_timer;
 
 	std::vector<AngioElement> angio_elements;
+	std::unordered_map < FEAngioMaterial *, std::vector<AngioElement *>> elements_by_material;
 };

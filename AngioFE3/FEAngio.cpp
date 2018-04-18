@@ -155,13 +155,22 @@ bool FEAngio::Init()
 	//the table now contains only angio elements
 	for(int i=0; i < mesh->Elements();i++)
 	{
-		auto elem = mesh->FindElementFromID(min_elementID + i);
-		FEMaterial * mat = model->FindMaterial(elem->GetMatID());
-		FEAngioMaterial*angio_mat = GetAngioComponent(mat);
-
-		if(angio_mat)
+		FESolidElement * elem = dynamic_cast<FESolidElement*>(mesh->FindElementFromID(min_elementID + i));
+		if(elem)
 		{
-			angio_elements.emplace_back(elem, angio_mat, mat);
+			FEMaterial * mat = model->FindMaterial(elem->GetMatID());
+			FEAngioMaterial*angio_mat = GetAngioComponent(mat);
+
+			if (angio_mat)
+			{
+				angio_elements.emplace_back(elem, angio_mat, mat);
+				if (elements_by_material.find(angio_mat) == elements_by_material.end())
+				{
+					std::vector<AngioElement *> ang_elem;
+					elements_by_material[angio_mat] = ang_elem;
+				}
+				elements_by_material[angio_mat].push_back(&angio_elements.back());
+			}
 		}
 	}
 

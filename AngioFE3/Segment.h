@@ -16,9 +16,11 @@ public:
 
 
     Segment(){}
-
-private:
-	Tip * front, * back;
-	Segment * parent;
+	vec3d Direction(FEMesh * mesh);
+	Tip * front = nullptr;
+	Tip * back = nullptr;
+	Segment * parent = nullptr;
 	bool is_branch_base = false;
+private:
+	
 };

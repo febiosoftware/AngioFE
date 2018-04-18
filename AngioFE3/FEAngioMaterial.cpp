@@ -229,7 +229,13 @@ double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem)
 
 void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double dt)
 {
-	
+	switch(angio_elem->_elem->Type())
+	{
+	case ET_HEX8:
+		break;
+	default:
+		assert(false);//element type not supported
+	}
 }
 
 void FEAngioMaterial::PostGrowthUpdate(AngioElement* angio_elem, double dt)
