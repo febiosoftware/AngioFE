@@ -15,6 +15,7 @@
 #include <FEBioMix/FEMultiphasic.h>
 #include "CultureParameters.h"
 
+class AngioElement;
 
 //-----------------------------------------------------------------------------
 // Class implementing a stress induced by a non-local point force
@@ -35,6 +36,8 @@ public:
 
 	// Calculate the active Angio stress
 	mat3ds AngioStress(FEAngioMaterialPoint& mp);
+
+	void SetSeeds(AngioElement* angio_elem);
 
 	void UpdateGDMs();
 

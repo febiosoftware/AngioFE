@@ -23,5 +23,9 @@ public:
 	std::vector<AngioElement *> adjacency_list;
 	std::vector<Segment *> grown_segments;
 	std::vector<Segment *> recent_segments;
-	std::vector<Tip *> active_tips;
+	std::vector<std::vector<Tip *>> active_tips[2];
+	int active_tips_index = 0;
+
+	std::vector<FESurfaceElement*>  inner_faces;
+
 };

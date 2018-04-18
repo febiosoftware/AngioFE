@@ -36,6 +36,14 @@ bool CreateDensityMap(vector<double>& density, vector<double>& anisotropy, FEMat
 
 bool CreateConcentrationMap(vector<double>& concentration, FEMaterial* pmat, int vegfID);
 
+void FEAngio::SetSeeds()
+{
+	for(int i=0; i <angio_elements.size();i++)
+	{
+		angio_elements[i]._angio_mat->SetSeeds(&angio_elements[i]);
+	}
+}
+
 //-----------------------------------------------------------------------------
 FEAngio::FEAngio(FEModel& fem) : ztopi(std::uniform_real_distribution<double>(0, PI)), 
 	zto2pi(std::uniform_real_distribution<double>(0, 2 * PI)), n1to1(std::uniform_real_distribution<double>(-1, 1))

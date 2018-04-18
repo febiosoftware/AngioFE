@@ -8,6 +8,7 @@
 #include "FEBioMech/FESPRProjection.h"
 #include <iostream>
 #include "angio3d.h"
+#include "AngioElement.h"
 #include "Segment.h"
 #include "Tip.h"
 
@@ -211,6 +212,14 @@ double FEAngioMaterial::StrainEnergyDensity(FEMaterialPoint& mp)
 		sed = angioPt->vessel_weight*common_properties->vessel_material->GetElasticMaterial()->StrainEnergyDensity(*angioPt->vessPt) + angioPt->matrix_weight*matrix_material->GetElasticMaterial()->StrainEnergyDensity(*angioPt->matPt);
 	}
 	return sed;
+}
+
+void FEAngioMaterial::SetSeeds(AngioElement* angio_elem)
+{
+	static int offset = 0;
+	static int seed = m_pangio->m_fem->GetGlobalConstant("seed");
+	angio_elem->_rengine.seed(offset + seed);
+	offset++;
 }
 
 void FEAngioMaterial::UpdateGDMs()

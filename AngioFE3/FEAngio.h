@@ -80,6 +80,8 @@ private:
 
 	void FinalizeFEM();
 
+
+	void SetSeeds();
 	// do the final output
 	void Output();
 
