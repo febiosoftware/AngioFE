@@ -37,7 +37,17 @@ public:
 	// Calculate the active Angio stress
 	mat3ds AngioStress(FEAngioMaterialPoint& mp);
 
+	//not threadsafe
 	void SetSeeds(AngioElement* angio_elem);
+
+
+	//should be const and threadsafe
+	double GetMin_dt(AngioElement* angio_elem);
+
+	void GrowSegments(AngioElement * angio_elem, double dt);
+
+	//should be const and threadsafe
+	void PostGrowthUpdate(AngioElement* angio_elem, double dt);
 
 	void UpdateGDMs();
 

@@ -25,6 +25,7 @@
 #include <cfloat> 
 #include <FEBioMix/FETriphasic.h>
 #include "GrowDirectionModifier.h"
+#include <omp.h>
 
 
 //-----------------------------------------------------------------------------
@@ -41,6 +42,37 @@ void FEAngio::SetSeeds()
 	for(int i=0; i <angio_elements.size();i++)
 	{
 		angio_elements[i]._angio_mat->SetSeeds(&angio_elements[i]);
+	}
+}
+
+void FEAngio::GrowSegments()
+{
+	double min_dt = std::numeric_limits<double>::max();
+	size_t angio_element_count = angio_elements.size();
+	#pragma omp parallel for shared(min_dt)
+	for (int i = 0; i < angio_element_count; ++i)
+	{
+		double temp_dt = angio_elements[i]._angio_mat->GetMin_dt(&angio_elements[i]);
+		#pragma omp critical
+		{
+			min_dt = std::min(min_dt, temp_dt);
+		}
+	}
+
+	int n = 3;
+	for(int i=0; i <n; i++)
+	{
+		#pragma omp parallel for
+		for(int j=0; j <angio_element_count;j++)
+		{
+			angio_elements[i]._angio_mat->GrowSegments(&angio_elements[i], min_dt);
+		}
+
+		#pragma omp parallel for
+		for (int j = 0; j <angio_element_count; j++)
+		{
+			angio_elements[i]._angio_mat->PostGrowthUpdate(&angio_elements[i],min_dt);
+		}
 	}
 }
 
@@ -133,13 +165,7 @@ bool FEAngio::Init()
 		}
 	}
 
-	
-
-
-
-	// assign ECM densities
-	if (InitECMDensity() == false) return false;
-
+	SetSeeds();
 
 
 	FinalizeFEM();
@@ -208,12 +234,6 @@ void FEAngio::FinalizeFEM()
 	}
 }
 
-//-----------------------------------------------------------------------------
-// Initialize the nodal ECM values
-bool FEAngio::InitECMDensity()
-{
-	return true;
-}
 
 double FEAngio::GetDoubleFromDataStore(int record, int elem_id, int item)
 {

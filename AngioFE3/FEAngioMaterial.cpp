@@ -222,6 +222,21 @@ void FEAngioMaterial::SetSeeds(AngioElement* angio_elem)
 	offset++;
 }
 
+double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem)
+{
+	return 0.0;
+}
+
+void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double dt)
+{
+	
+}
+
+void FEAngioMaterial::PostGrowthUpdate(AngioElement* angio_elem, double dt)
+{
+	
+}
+
 void FEAngioMaterial::UpdateGDMs()
 {
 	common_properties->UpdateGDMs();

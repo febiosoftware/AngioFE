@@ -82,6 +82,8 @@ private:
 
 
 	void SetSeeds();
+
+	void GrowSegments();
 	// do the final output
 	void Output();
 
