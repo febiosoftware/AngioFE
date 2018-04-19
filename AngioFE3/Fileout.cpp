@@ -114,6 +114,7 @@ void Fileout::save_feangio_stats(FEAngio& angio)
 	char material_update_time[STR_SIZE];
 	angio.grow_timer.time_str(grow_time);
 	angio.update_sprout_stress_scaling_timer.time_str(update_stress_scaling_time);
+	angio.update_sprout_stress_scaling_timer.time_str(update_stress_time);//TODO: fix this
 	angio.mesh_stiffness_timer.time_str(mesh_stiffnesss_time);
 	angio.update_gdms_timer.time_str(gdm_update_time);
 	angio.update_ecm_timer.time_str(ecm_update_time);

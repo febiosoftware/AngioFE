@@ -524,7 +524,7 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 			
 		}
 		material_update_timer.stop();
-
+		fileout->save_feangio_stats(*this);
 		ResetTimers();
 		++FE_state;
 		if (!m_fem->GetGlobalConstant("no_io"))
@@ -538,6 +538,7 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 			// Print the status of angio3d to the user    
 			fileout->printStatus(*this);
 		}
+		
 	}
 	else if (nwhen == CB_SOLVED)
 	{
