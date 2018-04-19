@@ -18,6 +18,7 @@
 #include "FECore/FESolidDomain.h"
 #include "FEAngioMaterial.h"
 #include "FEBioMech/FEElasticMixture.h"
+#include "FECore/FEElemElemList.h"
 #include "angio3d.h"
 #include <ctime>
 #include <future>
@@ -55,6 +56,22 @@ bool FEAngio::SeedFragments()
 	return rv;
 }
 
+void FEAngio::ApplydtToTimestepper(double dt)
+{
+	FETimeStepController &tsc = m_fem->GetCurrentStep()->m_timeController;
+	if(tsc.m_nmplc == -1)
+	{
+		//there is no load curve being used, just set dtmax
+		tsc.m_dtmax = dt;
+	}
+	else
+	{
+		//not implemented yet
+		//use the lower of the loadcurve vs dt
+		assert(false);
+	}
+}
+
 void FEAngio::GrowSegments()
 {
 	double min_dt = std::numeric_limits<double>::max();
@@ -86,6 +103,7 @@ void FEAngio::GrowSegments()
 	}
 
 	printf("\nangio dt chosen is: %lg\n", min_dt);
+	ApplydtToTimestepper(min_dt);
 }
 
 //-----------------------------------------------------------------------------
@@ -156,36 +174,8 @@ bool FEAngio::Init()
 	// Init all the FE stuff
 	//must be done first initializes material
 	if (InitFEM() == false) return false;
-
-	//setup the element access data structure
-	auto min_max = GetMinMaxElementIDs();
-	auto min_elementID = std::get<0>(min_max);
-	//initiialize the FEAngioElementData Structures
-	FEMesh * mesh = GetMesh();
-	FEModel * model = GetFEModel();
-	//we are using the lut in FEMesh so the speed should be good
-	//the table now contains only angio elements
-	for(int i=0; i < mesh->Elements();i++)
-	{
-		FESolidElement * elem = dynamic_cast<FESolidElement*>(mesh->FindElementFromID(min_elementID + i));
-		if(elem)
-		{
-			FEMaterial * mat = model->GetMaterial(elem->GetMatID());
-			FEAngioMaterial*angio_mat = GetAngioComponent(mat);
-
-			if (angio_mat)
-			{
-				AngioElement * angio_element = new AngioElement(elem, angio_mat, mat);
-				angio_elements.push_back(angio_element);
-				if (elements_by_material.find(angio_mat) == elements_by_material.end())
-				{
-					std::vector<AngioElement *> ang_elem;
-					elements_by_material[angio_mat] = ang_elem;
-				}
-				elements_by_material[angio_mat].push_back(angio_element);
-			}
-		}
-	}
+	
+	SetupAngioElements();
 
 	SetSeeds();
 
@@ -259,6 +249,77 @@ void FEAngio::FinalizeFEM()
 		// save active tips
 		fileout->save_active_tips(*this);
 	}
+}
+
+void FEAngio::FillInAdjacencyInfo(FEMesh * mesh,FEElemElemList * eel, AngioElement *angio_element, int elem_index)
+{
+	//one element of adjaceny per face
+	FESolidElement * se = angio_element->_elem;
+	assert(se);
+	for(int i=0; i < mesh->Faces(*se);i++)
+	{
+		FEElement * elem = eel->Neighbor(elem_index, i);
+		FESolidElement * nse = dynamic_cast<FESolidElement*>(elem);
+		if(nse)
+		{
+			//next look to see if there is an angio element that uses this element
+			auto ae_iter = se_to_angio_elem.find(nse);
+			if(ae_iter != se_to_angio_elem.end())
+			{
+				angio_element->adjacency_list.push_back(ae_iter->second.first);
+			}
+			else
+			{
+				angio_element->adjacency_list.push_back(nullptr);
+			}
+		}
+	}
+}
+
+void FEAngio::SetupAngioElements()
+{
+	//setup the element access data structure
+	auto min_max = GetMinMaxElementIDs();
+	auto min_elementID = std::get<0>(min_max);
+	//initiialize the FEAngioElementData Structures
+
+	FEMesh * mesh = GetMesh();
+	FEModel * model = GetFEModel();
+	//this stores the element adjacency information
+	FEElemElemList eel;
+	eel.Create(mesh);
+
+	//we are using the lut in FEMesh so the speed should be good
+	//the table now contains only angio elements
+	for (int i = 0; i < mesh->Elements(); i++)
+	{
+		FESolidElement * elem = dynamic_cast<FESolidElement*>(mesh->FindElementFromID(min_elementID + i));
+		if (elem)
+		{
+			FEMaterial * mat = model->GetMaterial(elem->GetMatID());
+			FEAngioMaterial*angio_mat = GetAngioComponent(mat);
+			AngioElement * angio_element = nullptr;
+			if (angio_mat)
+			{
+				angio_element = new AngioElement(elem, angio_mat, mat);
+				angio_elements.push_back(angio_element);
+				if (elements_by_material.find(angio_mat) == elements_by_material.end())
+				{
+					std::vector<AngioElement *> ang_elem;
+					elements_by_material[angio_mat] = ang_elem;
+				}
+				elements_by_material[angio_mat].push_back(angio_element);
+				se_to_angio_elem[elem] = { angio_element,i };
+			}
+			//now fill in the version with holes
+			angio_elements_with_holes.push_back(angio_element);
+		}
+	}
+	for(int i=0; i < angio_elements.size();i++)
+	{
+		FillInAdjacencyInfo(mesh, &eel,  angio_elements[i], se_to_angio_elem[angio_elements[i]->_elem].second);
+	}
+	
 }
 
 

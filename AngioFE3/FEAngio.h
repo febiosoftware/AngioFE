@@ -9,6 +9,7 @@
 #include "AngioElement.h"
 
 
+class FEElemElemList;
 //-----------------------------------------------------------------------------
 class FEModel;
 class FEAngioMaterial;
@@ -82,10 +83,15 @@ private:
 
 	void FinalizeFEM();
 
+	void FillInAdjacencyInfo(FEMesh * mesh, FEElemElemList * eel, AngioElement *angio_element, int elem_index);
+
+	void SetupAngioElements();
 
 	void SetSeeds();
 
 	bool SeedFragments();
+
+	void ApplydtToTimestepper(double dt);
 
 	void GrowSegments();
 	// do the final output
@@ -133,6 +139,8 @@ private:
 	Timer update_ecm_timer;
 	Timer material_update_timer;
 
-	std::vector<AngioElement *> angio_elements;
+	std::vector<AngioElement *> angio_elements;//the dense list of angio elements
+	std::unordered_map<FESolidElement*,std::pair<AngioElement *,int>> se_to_angio_elem;//the int is the index which is used in neighbor lookups
+	std::vector<AngioElement *> angio_elements_with_holes;//the possibly sparse list of elements .. used to serialize data
 	std::unordered_map < FEAngioMaterial *, std::vector<AngioElement *>> elements_by_material;
 };
