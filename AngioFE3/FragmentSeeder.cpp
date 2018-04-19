@@ -12,6 +12,11 @@ ADD_PARAMETER(number_fragments, FE_PARAM_INT, "number_fragments");
 ADD_PARAMETER(initial_vessel_length, FE_PARAM_DOUBLE, "initial_vessel_length");
 END_PARAMETER_LIST();
 
+ByElementFragmentSeeder::ByElementFragmentSeeder(FEModel * model) :FragmentSeeder(model)
+{
+	
+}
+
 bool ByElementFragmentSeeder::SeedFragments(std::vector<AngioElement *> &angio_elements, FEAngioMaterial* angio_mat)
 {
 	FEMesh * mesh = angio_mat->m_pangio->GetMesh();
@@ -24,12 +29,15 @@ bool ByElementFragmentSeeder::SeedFragments(std::vector<AngioElement *> &angio_e
 
 	for (int i = 0; i < number_fragments; ++i)
 	{
-		Tip t;
-		t.local_pos = angio_mat->m_pangio->uniformInUnitCube();
-		t.angio_element = angio_elements[edist(angio_mat->m_pangio->rengine)];
-		t.time = 0;
-		t.is_branch = true;
-		t.direction = angio_mat->m_pangio->uniformRandomDirection();
+		Tip* t = new Tip();
+		t->local_pos = angio_mat->m_pangio->uniformInUnitCube();
+		t->angio_element = angio_elements[edist(angio_mat->m_pangio->rengine)];
+		t->time = 0;
+		t->is_branch = true;
+		t->direction = angio_mat->m_pangio->uniformRandomDirection();
+		t->face = t->angio_element;
+		//finally add this to the AngioElement
+		(t->angio_element->active_tips[t->angio_element->active_tips_index])[t->angio_element] = t;
 	}
 
 	return true;

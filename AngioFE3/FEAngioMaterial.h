@@ -49,6 +49,8 @@ public:
 	//should be const and threadsafe
 	void PostGrowthUpdate(AngioElement* angio_elem, double dt);
 
+	bool SeedFragments(std::vector<AngioElement *>& angio_elements);
+
 	void UpdateGDMs();
 
 	void UpdateAngioStresses();
@@ -79,6 +81,7 @@ public:
 	// Calculate Cauchy-stress
 	mat3ds Stress(FEMaterialPoint& mp) override;
 
+	double GetGrowthLengthOverUnitTime(AngioElement * angio_element, vec3d local_pos);
 
 	// Calculate spatial elasticity tangent
 	tens4ds Tangent(FEMaterialPoint& mp) override;

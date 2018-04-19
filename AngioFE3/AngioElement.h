@@ -13,7 +13,10 @@ class AngioElement
 {
 public:
 	AngioElement() {};
-	AngioElement(FESolidElement * elem, FEAngioMaterial * angio_mat, FEMaterial * mat) : _elem(elem), _angio_mat(angio_mat), _mat(mat) {};
+	AngioElement(FESolidElement * elem, FEAngioMaterial * angio_mat, FEMaterial * mat) : _elem(elem), _angio_mat(angio_mat), _mat(mat)
+	{
+		//active_tips[0][this]
+	};
 	//  
 	FESolidElement * _elem=nullptr;
 	FEAngioMaterial * _angio_mat=nullptr;

@@ -11,7 +11,8 @@ public:
 	AngioElement * angio_element;
 	double time;
 	vec3d growth_velocity;
-	int face;//-1 for inside the element
+	//int face;//-1 for inside the element
+	AngioElement* face= nullptr;//the element where growth will take place in on the next growth step
 	Segment * parent=nullptr;//may be nullptr for no parent segment
 	int initial_fragment_id;
 	bool is_branch = false;

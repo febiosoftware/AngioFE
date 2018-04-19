@@ -4,6 +4,7 @@
 #include <FECore/FESolidDomain.h>
 #include "FEBioMech/FEElasticMixture.h"
 #include "FEBioMech/FEFiberMaterialPoint.h"
+#include "FECore/FEElementTraits.h"
 #include "FEBioMech/FEViscoElasticMaterial.h"
 #include "FEBioMech/FESPRProjection.h"
 #include <iostream>
@@ -222,25 +223,65 @@ void FEAngioMaterial::SetSeeds(AngioElement* angio_elem)
 	offset++;
 }
 
+double FEAngioMaterial::GetGrowthLengthOverUnitTime(AngioElement * angio_element, vec3d local_pos)
+{
+	return 140.0;
+}
+
 double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem)
 {
-	return 0.0;
+	assert(angio_elem);
+	assert(angio_elem->_elem);
+
+	double V = m_pangio->GetMesh()->ElementVolume(*angio_elem->_elem);
+
+	double max_grow_length = 0.0;
+	for (int i = 0; i < angio_elem->_elem->GaussPoints();i++)
+	{
+		vec3d pos(angio_elem->_elem->gr(i), angio_elem->_elem->gs(i), angio_elem->_elem->gt(i));
+		double len = angio_elem->_angio_mat->GetGrowthLengthOverUnitTime(angio_elem, pos);
+		max_grow_length = std::max(max_grow_length, len);
+
+	}
+	//get the smallest of the 12 possible edges
+	//lut for the corners
+	const vec3d const corners[] = { {1,1,1}, {-1,1,1},{-1,-1,1}, {-1,1,-1}, {-1,-1,-1},{1,-1,1},{1,1,-1}, {1,-1,-1} };
+	//lut for adjacency
+	const std::pair<const size_t, const size_t> adjacency[] = { {0,1},{0,5},{0,6},
+	{1,2},{1,3},
+	{2,5},{2,4},
+	{3,4},{3,6},
+	{4,7},
+	{5,7},
+	{6,7}
+	};
+	double min_side_length = std::numeric_limits<double>::max();
+	for(int i=0; i< sizeof(adjacency)/sizeof(adjacency[0]);i++)
+	{
+		vec3d p0 = m_pangio->Position(angio_elem->_elem, corners[adjacency[i].first]);
+		vec3d p1 = m_pangio->Position(angio_elem->_elem, corners[adjacency[i].second]);
+		vec3d res = p0 - p1;
+		double len = res.norm();//consider using norm2 is possible
+		assert(len != 0.0);
+		min_side_length = std::min(min_side_length, len);
+	}
+	return (min_side_length*0.5)/max_grow_length;
 }
 
 void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double dt)
 {
-	switch(angio_elem->_elem->Type())
-	{
-	case ET_HEX8:
-		break;
-	default:
-		assert(false);//element type not supported
-	}
+
+	
 }
 
 void FEAngioMaterial::PostGrowthUpdate(AngioElement* angio_elem, double dt)
 {
 	
+}
+
+bool FEAngioMaterial::SeedFragments(std::vector<AngioElement *>& angio_elements)
+{
+	return common_properties->fseeder->SeedFragments(angio_elements, this);
 }
 
 void FEAngioMaterial::UpdateGDMs()

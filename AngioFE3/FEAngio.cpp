@@ -41,8 +41,18 @@ void FEAngio::SetSeeds()
 {
 	for(int i=0; i <angio_elements.size();i++)
 	{
-		angio_elements[i]._angio_mat->SetSeeds(&angio_elements[i]);
+		angio_elements[i]->_angio_mat->SetSeeds(angio_elements[i]);
 	}
+}
+
+bool FEAngio::SeedFragments()
+{
+	bool rv = true;
+	for(auto iter = elements_by_material.begin(); iter != elements_by_material.end(); ++iter)
+	{
+		rv &= iter->first->SeedFragments(iter->second);
+	}
+	return rv;
 }
 
 void FEAngio::GrowSegments()
@@ -52,7 +62,7 @@ void FEAngio::GrowSegments()
 	#pragma omp parallel for shared(min_dt)
 	for (int i = 0; i < angio_element_count; ++i)
 	{
-		double temp_dt = angio_elements[i]._angio_mat->GetMin_dt(&angio_elements[i]);
+		double temp_dt = angio_elements[i]->_angio_mat->GetMin_dt(angio_elements[i]);
 		#pragma omp critical
 		{
 			min_dt = std::min(min_dt, temp_dt);
@@ -65,15 +75,17 @@ void FEAngio::GrowSegments()
 		#pragma omp parallel for
 		for(int j=0; j <angio_element_count;j++)
 		{
-			angio_elements[i]._angio_mat->GrowSegments(&angio_elements[i], min_dt);
+			angio_elements[i]->_angio_mat->GrowSegments(angio_elements[i], min_dt);
 		}
 
 		#pragma omp parallel for
 		for (int j = 0; j <angio_element_count; j++)
 		{
-			angio_elements[i]._angio_mat->PostGrowthUpdate(&angio_elements[i],min_dt);
+			angio_elements[i]->_angio_mat->PostGrowthUpdate(angio_elements[i],min_dt);
 		}
 	}
+
+	printf("\nangio dt chosen is: %lg\n", min_dt);
 }
 
 //-----------------------------------------------------------------------------
@@ -158,18 +170,19 @@ bool FEAngio::Init()
 		FESolidElement * elem = dynamic_cast<FESolidElement*>(mesh->FindElementFromID(min_elementID + i));
 		if(elem)
 		{
-			FEMaterial * mat = model->FindMaterial(elem->GetMatID());
+			FEMaterial * mat = model->GetMaterial(elem->GetMatID());
 			FEAngioMaterial*angio_mat = GetAngioComponent(mat);
 
 			if (angio_mat)
 			{
-				angio_elements.emplace_back(elem, angio_mat, mat);
+				AngioElement * angio_element = new AngioElement(elem, angio_mat, mat);
+				angio_elements.push_back(angio_element);
 				if (elements_by_material.find(angio_mat) == elements_by_material.end())
 				{
 					std::vector<AngioElement *> ang_elem;
 					elements_by_material[angio_mat] = ang_elem;
 				}
-				elements_by_material[angio_mat].push_back(&angio_elements.back());
+				elements_by_material[angio_mat].push_back(angio_element);
 			}
 		}
 	}
@@ -179,8 +192,13 @@ bool FEAngio::Init()
 
 	FinalizeFEM();
 
+	//do the seeding of the tips/segments
+	if(!SeedFragments())
+	{
+		printf("fragment seeding failed\n");
+		return false;
+	}
 
-	
 	// start timer
 	time(&m_start);
 
@@ -423,6 +441,21 @@ FEAngioMaterial * FEAngio::GetAngioComponent(FEMaterial * mat)
 	return angm;
 }
 
+vec3d FEAngio::Position(FESolidElement * se, vec3d local) const
+{
+	double arr[FEElement::MAX_NODES];
+	assert(se);
+	se->shape_fnc(arr, local.x, local.y, local.z);
+	vec3d rc(0, 0, 0);
+
+	auto mesh = GetMesh();
+	for (int j = 0; j < se->Nodes(); j++)
+	{
+		rc += mesh->Node(se->m_node[j]).m_rt* arr[j];
+	}
+	return rc;
+}
+
 //-----------------------------------------------------------------------------
 void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 {
@@ -434,10 +467,10 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 	static bool start = false;
 	if (!start)
 	{
-		for (size_t i = 0; i < m_pmat.size(); i++)
-		{
-			
-		}
+		grow_timer.start();
+		GrowSegments();
+		grow_timer.stop();
+		
 		for (size_t i = 0; i < m_pmat.size(); i++)
 		{
 			//expermentally calculate the stress from the vessels here
@@ -451,6 +484,8 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		static int index = 0;
 		// grab the time information
 		
+		
+
 		update_gdms_timer.start();
 		for (size_t i = 0; i < m_pmat.size(); i++)
 		{
@@ -461,9 +496,7 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 
 		//new function to find the start time grow time and if this is the final iteration this timestep
 		grow_timer.start();
-		
-
-
+		GrowSegments();
 		grow_timer.stop();
 		
 		mesh_stiffness_timer.start();

@@ -92,19 +92,7 @@ void Fileout::save_active_tips(FEAngio& angio) const
 void Fileout::save_timeline(FEAngio& angio)
 {
 #ifndef NDEBUG
-	auto iter = FragmentBranching::timeline.begin();
 
-	//consider how these shoudl be named to avoid collisions
-	FILE * timeline_file = fopen("timeline.csv", "wt");
-	assert(timeline_file);
-	fprintf(timeline_file, "emerge_time,epoch_time,percent_of_parent,priority,callsite,branch\n");
-
-	while (iter != FragmentBranching::timeline.end())
-	{
-		fprintf(timeline_file, "%-12.7f,%-12.7f,%-12.7f,%d\n", iter->emerge_time, iter->epoch_time, iter->percent_of_parent, iter->priority);
-		++iter;
-	}
-	fclose(timeline_file);
 #endif
 }
 

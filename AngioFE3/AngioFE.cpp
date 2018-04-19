@@ -32,6 +32,9 @@ FEPluginFactory_T<FEChiSquaredDistribution , FEMATERIAL_ID> chi_squared_distribu
 FEPluginFactory_T<FEWeibullDistribution    , FEMATERIAL_ID> weibull_distribution_factory    ("weibull_distribution"    );
 FEPluginFactory_T<FEGammaDistribution      , FEMATERIAL_ID> gamma_distribution_factory      ("gamma_distribution"      );
 
+
+
+FEPluginFactory_T<ByElementFragmentSeeder, FEMATERIAL_ID> by_element_fragment_seeder_factory("by element fragment seeder");
 /*
 FEPluginFactory_T<GrowDirectionModifiers, FEMATERIAL_ID> grow_direction_modifiers_factory("grow_direction_modifiers");
 
@@ -137,7 +140,7 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		//vessel contribution modifiers
 
 		//fragment seeders
-		
+		&by_element_fragment_seeder_factory,
 		//boundary conditions
 		//random distribution
 		&cauchy_distribution_factory, &chi_squared_distribution_factory, &weibull_distribution_factory,

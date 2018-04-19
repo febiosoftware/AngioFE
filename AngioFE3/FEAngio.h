@@ -48,6 +48,8 @@ public:
 
 	static FEAngioMaterial * GetAngioComponent(FEMaterial * mat);
 	
+	//gets the global position of the local coordinates given an element
+	vec3d Position(FESolidElement * se, vec3d local) const;
 
 
 	mat3d unifromRandomRotationMatrix();
@@ -82,6 +84,8 @@ private:
 
 
 	void SetSeeds();
+
+	bool SeedFragments();
 
 	void GrowSegments();
 	// do the final output
@@ -129,6 +133,6 @@ private:
 	Timer update_ecm_timer;
 	Timer material_update_timer;
 
-	std::vector<AngioElement> angio_elements;
+	std::vector<AngioElement *> angio_elements;
 	std::unordered_map < FEAngioMaterial *, std::vector<AngioElement *>> elements_by_material;
 };
