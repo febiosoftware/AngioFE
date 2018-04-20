@@ -92,14 +92,15 @@ void FEAngio::GrowSegments()
 		#pragma omp parallel for
 		for(int j=0; j <angio_element_count;j++)
 		{
-			angio_elements[i]->_angio_mat->GrowSegments(angio_elements[i], min_dt);
+			angio_elements[i]->_angio_mat->GrowSegments(angio_elements[i], min_dt,buffer_index);
 		}
 
 		#pragma omp parallel for
 		for (int j = 0; j <angio_element_count; j++)
 		{
-			angio_elements[i]->_angio_mat->PostGrowthUpdate(angio_elements[i],min_dt);
+			angio_elements[i]->_angio_mat->PostGrowthUpdate(angio_elements[i],min_dt,buffer_index);
 		}
+		buffer_index = (buffer_index + 1) % 2;
 	}
 
 	printf("\nangio dt chosen is: %lg\n", min_dt);
@@ -270,8 +271,12 @@ void FEAngio::FillInAdjacencyInfo(FEMesh * mesh,FEElemElemList * eel, AngioEleme
 			}
 			else
 			{
-				angio_element->adjacency_list.push_back(nullptr);
+				assert(false);
 			}
+		}
+		else
+		{
+			angio_element->adjacency_list.push_back(nullptr);
 		}
 	}
 }

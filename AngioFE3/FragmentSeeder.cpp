@@ -17,7 +17,7 @@ ByElementFragmentSeeder::ByElementFragmentSeeder(FEModel * model) :FragmentSeede
 	
 }
 
-bool ByElementFragmentSeeder::SeedFragments(std::vector<AngioElement *> &angio_elements, FEAngioMaterial* angio_mat)
+bool ByElementFragmentSeeder::SeedFragments(std::vector<AngioElement *> &angio_elements, FEAngioMaterial* angio_mat, int buffer_index)
 {
 	FEMesh * mesh = angio_mat->m_pangio->GetMesh();
 	std::uniform_int_distribution<int> edist(0, angio_elements.size());
@@ -37,7 +37,7 @@ bool ByElementFragmentSeeder::SeedFragments(std::vector<AngioElement *> &angio_e
 		t->direction = angio_mat->m_pangio->uniformRandomDirection();
 		t->face = t->angio_element;
 		//finally add this to the AngioElement
-		(t->angio_element->active_tips[t->angio_element->active_tips_index])[t->angio_element] = t;
+		(t->angio_element->active_tips[buffer_index])[t->angio_element].push_back(t);
 	}
 
 	return true;

@@ -44,10 +44,12 @@ public:
 	//should be const and threadsafe
 	double GetMin_dt(AngioElement* angio_elem);
 
-	void GrowSegments(AngioElement * angio_elem, double dt);
+	void GrowSegments(AngioElement * angio_elem, double dt, int buffer_index);
+
+	void GrowthInElement(AngioElement * angio_element, double endtime, Tip * active_tip, int source_index);
 
 	//should be const and threadsafe
-	void PostGrowthUpdate(AngioElement* angio_elem, double dt);
+	void PostGrowthUpdate(AngioElement* angio_elem, double dt, int buffer_index);
 
 	bool SeedFragments(std::vector<AngioElement *>& angio_elements);
 

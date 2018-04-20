@@ -9,7 +9,7 @@
 class FragmentSeeder : public FEMaterial
 {
 public:
-	virtual bool SeedFragments(std::vector<AngioElement *> &angio_elements, FEAngioMaterial* angio_mat) = 0;
+	virtual bool SeedFragments(std::vector<AngioElement *> &angio_elements, FEAngioMaterial* angio_mat, int buffer_index) = 0;
 	explicit FragmentSeeder(FEModel * model);
 	virtual ~FragmentSeeder() {}
 protected:
@@ -22,12 +22,12 @@ class ByElementFragmentSeeder :public FragmentSeeder
 {
 public:
 	explicit ByElementFragmentSeeder(FEModel * model);
-	bool SeedFragments(std::vector<AngioElement *> &angio_elements, FEAngioMaterial* angio_mat)override;
+	bool SeedFragments(std::vector<AngioElement *> &angio_elements, FEAngioMaterial* angio_mat, int buffer_index)override;
 };
 
 class ByVolumeFragmentSeeder :public FragmentSeeder
 {
 public:
 	explicit ByVolumeFragmentSeeder(FEModel * model);
-	bool SeedFragments(std::vector<AngioElement *> &angio_elements, FEAngioMaterial* angio_mat)override;
+	bool SeedFragments(std::vector<AngioElement *> &angio_elements, FEAngioMaterial* angio_mat, int buffer_index)override;
 };

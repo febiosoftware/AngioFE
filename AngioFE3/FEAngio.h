@@ -143,4 +143,6 @@ private:
 	std::unordered_map<FESolidElement*,std::pair<AngioElement *,int>> se_to_angio_elem;//the int is the index which is used in neighbor lookups
 	std::vector<AngioElement *> angio_elements_with_holes;//the possibly sparse list of elements .. used to serialize data
 	std::unordered_map < FEAngioMaterial *, std::vector<AngioElement *>> elements_by_material;
+	int buffer_index = 0;
+
 };

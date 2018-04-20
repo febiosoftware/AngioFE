@@ -268,20 +268,80 @@ double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem)
 	return (min_side_length*0.5)/max_grow_length;
 }
 
-void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double dt)
+void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double dt, int buffer_index)
 {
-
-	
+	assert(angio_elem);
+	for(int i=0; i < angio_elem->adjacency_list.size();i++)
+	{
+		if(angio_elem->adjacency_list[i])
+		{
+			std::vector<Tip*> & tips = angio_elem->adjacency_list[i]->active_tips[buffer_index][angio_elem];
+			for(int j=0; j < tips.size();j++)
+			GrowthInElement(angio_elem, dt, tips[j], i);
+		}
+		
+	}
+	std::vector<Tip*> & tips = angio_elem->active_tips[buffer_index][angio_elem];
+	for(int j=0; j < tips.size();j++)
+	{
+		GrowthInElement(angio_elem, dt, tips[j], -1);
+	}
 }
 
-void FEAngioMaterial::PostGrowthUpdate(AngioElement* angio_elem, double dt)
+void FEAngioMaterial::GrowthInElement(AngioElement * angio_element, double endtime, Tip * active_tip, int source_index)
+{
+	assert(active_tip);
+	auto mesh = m_pangio->GetMesh();
+	const double eps = 0.01;
+	const double min_segm_len = 0.1;
+	int next_buffer_index = (source_index + 1) % 2;
+	//exclude the source index face from the raycasts, -1 for the same element
+	for(int i=0; i < angio_element->inner_faces.Elements();i++)
+	{
+		if (i == source_index)
+			continue;
+		auto fse = angio_element->inner_faces.Element(i);
+		double len;
+		double rs[2];
+		if(angio_element->inner_faces.Intersect(fse, active_tip->GetPosition(mesh), active_tip->GetDirection(mesh) , rs, len, eps))
+		{
+			
+			if(len > min_segm_len)
+			{
+				//add the segment and add the new tip to the appropriate buffer/bucket
+				Tip * next = new Tip();
+				Segment * seg = new Segment();
+				angio_element->recent_segments.push_back(seg);
+				
+			}
+			else if(len >=0)
+			{
+				active_tip->angio_element = angio_element;
+				//active_tip->local_pos = 
+				//just move the tip to the face
+				if(source_index != -1)
+				{
+					angio_element->active_tips[next_buffer_index][angio_element->adjacency_list[source_index]].push_back(active_tip);
+				}
+				else
+				{
+					angio_element->active_tips[next_buffer_index][angio_element].push_back(active_tip);
+				}
+				
+			}
+			//if len is negative do nothing
+		}
+	}
+}
+
+void FEAngioMaterial::PostGrowthUpdate(AngioElement* angio_elem, double dt, int buffer_index)
 {
 	
 }
 
 bool FEAngioMaterial::SeedFragments(std::vector<AngioElement *>& angio_elements)
 {
-	return common_properties->fseeder->SeedFragments(angio_elements, this);
+	return common_properties->fseeder->SeedFragments(angio_elements, this,0);
 }
 
 void FEAngioMaterial::UpdateGDMs()

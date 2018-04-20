@@ -29,8 +29,7 @@ public:
 	std::vector<Segment *> recent_segments;
 	//this might be further optimized to a lookup into a constant lookup table given the element type that is doing the looking up ... its possible to do this at compile time
 	//this should reduce this to a jump based on the element type
-	std::unordered_map<AngioElement*, Tip *> active_tips[2];
-	int active_tips_index = 0;
+	std::unordered_map<AngioElement*, std::vector<Tip *>> active_tips[2];
 
 	//std::vector<FESurfaceElement*>  inner_faces;
 	FESurface inner_faces;
