@@ -3,6 +3,7 @@
 #include <random>
 #include <FECore/FEMaterial.h>
 #include <unordered_map>
+#include <FECore/FESurface.h>
 
 
 class FEAngioMaterial;
@@ -12,8 +13,7 @@ class Tip;
 class AngioElement
 {
 public:
-	AngioElement() {};
-	AngioElement(FESolidElement * elem, FEAngioMaterial * angio_mat, FEMaterial * mat) : _elem(elem), _angio_mat(angio_mat), _mat(mat)
+	AngioElement(FESolidElement * elem, FEAngioMaterial * angio_mat, FEMaterial * mat, FEMesh * mesh) : _elem(elem), _angio_mat(angio_mat), _mat(mat), inner_faces(mesh)
 	{
 		//active_tips[0][this]
 	};
@@ -32,6 +32,7 @@ public:
 	std::unordered_map<AngioElement*, Tip *> active_tips[2];
 	int active_tips_index = 0;
 
-	std::vector<FESurfaceElement*>  inner_faces;
+	//std::vector<FESurfaceElement*>  inner_faces;
+	FESurface inner_faces;
 
 };

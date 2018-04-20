@@ -250,7 +250,7 @@ void FEAngio::FinalizeFEM()
 		fileout->save_active_tips(*this);
 	}
 }
-
+//fills in the adjacnecy information 
 void FEAngio::FillInAdjacencyInfo(FEMesh * mesh,FEElemElemList * eel, AngioElement *angio_element, int elem_index)
 {
 	//one element of adjaceny per face
@@ -274,6 +274,36 @@ void FEAngio::FillInAdjacencyInfo(FEMesh * mesh,FEElemElemList * eel, AngioEleme
 			}
 		}
 	}
+}
+
+void FillInFaces(FEMesh * mesh, AngioElement * angio_element)
+{
+	//for hex elements the faces produced have the normals pointing outwards with a CCW winding ... verify this is true for other elements
+	int nodes[FEElement::MAX_NODES];
+	int faces = mesh->Faces(*angio_element->_elem);
+	FEFacetSet fs(mesh);
+	fs.Create(faces);
+	for(int i=0; i < faces;i++)
+	{
+		FEFacetSet::FACET& face = fs.Face(i);
+		int face_nodes = mesh->GetFace(*angio_element->_elem, i, nodes);
+		face.ntype = face_nodes;
+		//do any remapping of nodes here
+		//might do most of the remappings .. will fail if there is a central node in a face
+		assert(face_nodes>=3);
+		std::vector<int> v_nodes;
+		for(int j=0; j < face_nodes;j++)
+		{
+			v_nodes.push_back(nodes[j]);
+		}
+		std::reverse(v_nodes.begin() + 1, v_nodes.end());
+		for(int j=0; j < v_nodes.size();j++)
+		{
+			face.node[j] = v_nodes[j];
+		}
+
+	}
+	angio_element->inner_faces.BuildFromSet(fs);
 }
 
 void FEAngio::SetupAngioElements()
@@ -301,7 +331,7 @@ void FEAngio::SetupAngioElements()
 			AngioElement * angio_element = nullptr;
 			if (angio_mat)
 			{
-				angio_element = new AngioElement(elem, angio_mat, mat);
+				angio_element = new AngioElement(elem, angio_mat, mat, mesh);
 				angio_elements.push_back(angio_element);
 				if (elements_by_material.find(angio_mat) == elements_by_material.end())
 				{
@@ -319,7 +349,10 @@ void FEAngio::SetupAngioElements()
 	{
 		FillInAdjacencyInfo(mesh, &eel,  angio_elements[i], se_to_angio_elem[angio_elements[i]->_elem].second);
 	}
-	
+	for (int i = 0; i < angio_elements.size(); i++)
+	{
+		FillInFaces(mesh, angio_elements[i]);
+	}
 }
 
 
