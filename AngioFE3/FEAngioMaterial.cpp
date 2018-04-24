@@ -245,7 +245,7 @@ double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem)
 	}
 	//get the smallest of the 12 possible edges
 	//lut for the corners
-	const vec3d const corners[] = { {1,1,1}, {-1,1,1},{-1,-1,1}, {-1,1,-1}, {-1,-1,-1},{1,-1,1},{1,1,-1}, {1,-1,-1} };
+	const vec3d corners[] = { {1,1,1}, {-1,1,1},{-1,-1,1}, {-1,1,-1}, {-1,-1,-1},{1,-1,1},{1,1,-1}, {1,-1,-1} };
 	//lut for adjacency
 	const std::pair<const size_t, const size_t> adjacency[] = { {0,1},{0,5},{0,6},
 	{1,2},{1,3},
@@ -268,7 +268,7 @@ double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem)
 	return (min_side_length*0.5)/max_grow_length;
 }
 
-void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double dt, int buffer_index)
+void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index)
 {
 	assert(angio_elem);
 	for(int i=0; i < angio_elem->adjacency_list.size();i++)
@@ -277,66 +277,102 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double dt, int buf
 		{
 			std::vector<Tip*> & tips = angio_elem->adjacency_list[i]->active_tips[buffer_index][angio_elem];
 			for(int j=0; j < tips.size();j++)
-			GrowthInElement(angio_elem, dt, tips[j], i);
+			{
+				GrowthInElement(angio_elem, end_time, tips[j], i, buffer_index);
+			}
+			
 		}
 		
 	}
 	std::vector<Tip*> & tips = angio_elem->active_tips[buffer_index][angio_elem];
 	for(int j=0; j < tips.size();j++)
 	{
-		GrowthInElement(angio_elem, dt, tips[j], -1);
+		GrowthInElement(angio_elem, end_time, tips[j], -1, buffer_index);
 	}
 }
 
-void FEAngioMaterial::GrowthInElement(AngioElement * angio_element, double endtime, Tip * active_tip, int source_index)
+void FEAngioMaterial::GrowthInElement(AngioElement * angio_element, double end_time, Tip * active_tip, int source_index, int buffer_index)
 {
+	
 	assert(active_tip);
 	auto mesh = m_pangio->GetMesh();
 	const double eps = 0.01;
 	const double min_segm_len = 0.1;
-	int next_buffer_index = (source_index + 1) % 2;
+	int next_buffer_index = (buffer_index + 1) % 2;
+	double grow_len = this->GetGrowthLengthOverUnitTime(angio_element, active_tip->local_pos);
+	double dt = end_time - active_tip->time;
+
+	vec3d dir = active_tip->GetDirection(mesh);
+	double Gr[FEElement::MAX_NODES];
+	double Gs[FEElement::MAX_NODES];
+	double Gt[FEElement::MAX_NODES];
+	angio_element->_elem->shape_deriv(Gr, Gs, Gt, active_tip->local_pos.x, active_tip->local_pos.y, active_tip->local_pos.z);
+		//mat3d natc_to_global =
+		//vec3d natc_dir;
 	//exclude the source index face from the raycasts, -1 for the same element
 	for(int i=0; i < angio_element->inner_faces.Elements();i++)
 	{
-		if (i == source_index)
-			continue;
-		auto fse = angio_element->inner_faces.Element(i);
-		double len;
-		double rs[2];
-		if(angio_element->inner_faces.Intersect(fse, active_tip->GetPosition(mesh), active_tip->GetDirection(mesh) , rs, len, eps))
+		if (i != source_index)
 		{
-			
-			if(len > min_segm_len)
+			FESurfaceElement & fse = angio_element->inner_faces.Element(i);
+			double len;
+			double rs[2];
+			//TODO: fix direction
+
+			//TODO: intersect only works for linear elements 
+			if (angio_element->inner_faces.Intersect(fse, active_tip->GetPosition(mesh), dir, rs, len, eps))
 			{
-				//add the segment and add the new tip to the appropriate buffer/bucket
-				Tip * next = new Tip();
-				Segment * seg = new Segment();
-				angio_element->recent_segments.push_back(seg);
-				
-			}
-			else if(len >=0)
-			{
-				active_tip->angio_element = angio_element;
-				//active_tip->local_pos = 
-				//just move the tip to the face
-				if(source_index != -1)
+				double tip_time_start = -1;
+				if (len >= grow_len)
 				{
-					angio_element->active_tips[next_buffer_index][angio_element->adjacency_list[source_index]].push_back(active_tip);
+					len = grow_len;
+					tip_time_start = end_time;
+
+					if (len > min_segm_len)
+					{
+						//add the segment and add the new tip to the current angio element
+						Tip * next = new Tip();
+						next->time = tip_time_start;
+						next->angio_element = angio_element;
+						next->local_pos;
+
+						//move next to use the rest of the remaining dt
+						Segment * seg = new Segment();
+						angio_element->recent_segments.push_back(seg);
+
+					}
 				}
-				else
+				else if(len > min_segm_len)
 				{
-					angio_element->active_tips[next_buffer_index][angio_element].push_back(active_tip);
+					tip_time_start = active_tip->time + (len / grow_len) * dt;
+					//grow len should always be nonzero so this division should be okay
+					//this segment is growing into a new element do the work to do this
+
 				}
-				
+				if ((len >= 0) && (len < min_segm_len))
+				{
+					active_tip->angio_element = angio_element;
+					//active_tip->local_pos = 
+					//just move the tip to the face
+					if (source_index != -1)
+					{
+						angio_element->active_tips[next_buffer_index][angio_element->adjacency_list[source_index]].push_back(active_tip);
+					}
+					else
+					{
+						angio_element->active_tips[next_buffer_index][angio_element].push_back(active_tip);
+					}
+
+				}
+				//if len is negative do nothing
 			}
-			//if len is negative do nothing
 		}
 	}
 }
 
 void FEAngioMaterial::PostGrowthUpdate(AngioElement* angio_elem, double dt, int buffer_index)
 {
-	
+	angio_elem->active_tips[buffer_index].clear();
 }
 
 bool FEAngioMaterial::SeedFragments(std::vector<AngioElement *>& angio_elements)

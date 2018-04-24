@@ -9,7 +9,7 @@ class Tip
 public:
 	vec3d local_pos;
 	AngioElement * angio_element;
-	double time;
+	double time=0.0;
 	vec3d growth_velocity;
 	//int face;//-1 for inside the element
 	AngioElement* face= nullptr;//the element where growth will take place in on the next growth step

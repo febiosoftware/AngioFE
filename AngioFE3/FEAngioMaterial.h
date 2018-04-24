@@ -44,9 +44,9 @@ public:
 	//should be const and threadsafe
 	double GetMin_dt(AngioElement* angio_elem);
 
-	void GrowSegments(AngioElement * angio_elem, double dt, int buffer_index);
+	void GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index);
 
-	void GrowthInElement(AngioElement * angio_element, double endtime, Tip * active_tip, int source_index);
+	void GrowthInElement(AngioElement * angio_element, double end_time, Tip * active_tip, int source_index, int buffer_index);
 
 	//should be const and threadsafe
 	void PostGrowthUpdate(AngioElement* angio_elem, double dt, int buffer_index);

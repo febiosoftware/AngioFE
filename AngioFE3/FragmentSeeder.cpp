@@ -31,7 +31,8 @@ bool ByElementFragmentSeeder::SeedFragments(std::vector<AngioElement *> &angio_e
 	{
 		Tip* t = new Tip();
 		t->local_pos = angio_mat->m_pangio->uniformInUnitCube();
-		t->angio_element = angio_elements[edist(angio_mat->m_pangio->rengine)];
+		int elem_index = edist(angio_mat->m_pangio->rengine);
+		t->angio_element = angio_elements[elem_index];
 		t->time = 0;
 		t->is_branch = true;
 		t->direction = angio_mat->m_pangio->uniformRandomDirection();

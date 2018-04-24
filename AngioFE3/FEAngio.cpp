@@ -85,25 +85,29 @@ void FEAngio::GrowSegments()
 			min_dt = std::min(min_dt, temp_dt);
 		}
 	}
-
-	int n = 3;
-	for(int i=0; i <n; i++)
-	{
-		#pragma omp parallel for
-		for(int j=0; j <angio_element_count;j++)
-		{
-			angio_elements[i]->_angio_mat->GrowSegments(angio_elements[i], min_dt,buffer_index);
-		}
-
-		#pragma omp parallel for
-		for (int j = 0; j <angio_element_count; j++)
-		{
-			angio_elements[i]->_angio_mat->PostGrowthUpdate(angio_elements[i],min_dt,buffer_index);
-		}
-		buffer_index = (buffer_index + 1) % 2;
-	}
-
+	
 	printf("\nangio dt chosen is: %lg\n", min_dt);
+
+#pragma omp parallel
+	{
+		int n = 3;
+		for (int i = 0; i <n; i++)
+		{
+			#pragma omp for
+			for (int j = 0; j <angio_element_count; j++)
+			{
+				angio_elements[j]->_angio_mat->GrowSegments(angio_elements[j], min_dt, buffer_index);
+			}
+
+			#pragma omp for
+			for (int j = 0; j <angio_element_count; j++)
+			{
+				angio_elements[j]->_angio_mat->PostGrowthUpdate(angio_elements[j], min_dt, buffer_index);
+			}
+			buffer_index = (buffer_index + 1) % 2;
+		}
+	}
+	
 	ApplydtToTimestepper(min_dt);
 }
 

@@ -21,6 +21,7 @@ public:
 	Tip * back = nullptr;
 	Segment * parent = nullptr;
 	bool is_branch_base = false;
+	bool processed = false;//used by the brancher to determine if branches can grow from this segment
 private:
 	
 };
