@@ -145,4 +145,6 @@ private:
 	std::unordered_map < FEAngioMaterial *, std::vector<AngioElement *>> elements_by_material;
 	int buffer_index = 0;
 
+	double next_time = 0.0;
+
 };

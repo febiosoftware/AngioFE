@@ -291,6 +291,39 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, i
 	}
 }
 
+void remapp_local_cooridnates(vec3d & local_pos)
+{
+	const double high_threshold = 0.99;
+	const double low_threshold = -0.99;
+	if(local_pos.x > high_threshold)
+	{
+		local_pos.x = -1;
+	}
+	else if(local_pos.x < low_threshold)
+	{
+		local_pos.x = 1;
+	}
+
+	if (local_pos.y > high_threshold)
+	{
+		local_pos.y = -1;
+	}
+	else if (local_pos.y < low_threshold)
+	{
+		local_pos.y = 1;
+	}
+
+	if (local_pos.z > high_threshold)
+	{
+		local_pos.z = -1;
+	}
+	else if (local_pos.z < low_threshold)
+	{
+		local_pos.z = 1;
+	}
+
+}
+
 void FEAngioMaterial::GrowthInElement(AngioElement * angio_element, double end_time, Tip * active_tip, int source_index, int buffer_index)
 {
 	
@@ -302,13 +335,33 @@ void FEAngioMaterial::GrowthInElement(AngioElement * angio_element, double end_t
 	double grow_len = this->GetGrowthLengthOverUnitTime(angio_element, active_tip->local_pos);
 	double dt = end_time - active_tip->time;
 
-	vec3d dir = active_tip->GetDirection(mesh);
 	double Gr[FEElement::MAX_NODES];
 	double Gs[FEElement::MAX_NODES];
 	double Gt[FEElement::MAX_NODES];
 	angio_element->_elem->shape_deriv(Gr, Gs, Gt, active_tip->local_pos.x, active_tip->local_pos.y, active_tip->local_pos.z);
-		//mat3d natc_to_global =
-		//vec3d natc_dir;
+	vec3d er, es, et;//basis vectors of the natural coordinates
+	for (int j = 0; j < angio_element->_elem->Nodes(); j++)
+	{
+		er += mesh->Node(angio_element->_elem->m_node[j]).m_rt* Gr[j];
+	}
+	for (int j = 0; j < angio_element->_elem->Nodes(); j++)
+	{
+		es += mesh->Node(angio_element->_elem->m_node[j]).m_rt* Gs[j];
+	}
+	for (int j = 0; j < angio_element->_elem->Nodes(); j++)
+	{
+		et += mesh->Node(angio_element->_elem->m_node[j]).m_rt* Gt[j];
+	}
+	mat3d natc_to_global(er, es, et);// multiply by 2? ucrrently vectors of half side length
+	mat3d global_to_natc = natc_to_global.inverse();
+	vec3d global_dir = active_tip->GetDirection(mesh);
+	vec3d global_pos;
+	double H[FEElement::MAX_NODES];
+	angio_element->_elem->shape_fnc(H, active_tip->local_pos.x, active_tip->local_pos.y, active_tip->local_pos.z);
+	for (int j = 0; j < angio_element->_elem->Nodes(); j++)
+	{
+		global_pos += mesh->Node(angio_element->_elem->m_node[j]).m_rt* H[j];
+	}
 	//exclude the source index face from the raycasts, -1 for the same element
 	for(int i=0; i < angio_element->inner_faces.Elements();i++)
 	{
@@ -317,10 +370,9 @@ void FEAngioMaterial::GrowthInElement(AngioElement * angio_element, double end_t
 			FESurfaceElement & fse = angio_element->inner_faces.Element(i);
 			double len;
 			double rs[2];
-			//TODO: fix direction
-
+			
 			//TODO: intersect only works for linear elements 
-			if (angio_element->inner_faces.Intersect(fse, active_tip->GetPosition(mesh), dir, rs, len, eps))
+			if (angio_element->inner_faces.Intersect(fse, global_pos ,global_dir, rs, len, eps))
 			{
 				double tip_time_start = -1;
 				if (len >= grow_len)
@@ -330,24 +382,67 @@ void FEAngioMaterial::GrowthInElement(AngioElement * angio_element, double end_t
 
 					if (len > min_segm_len)
 					{
+						vec3d natc_grow_vec = global_to_natc * (global_dir * len);
 						//add the segment and add the new tip to the current angio element
 						Tip * next = new Tip();
+						Segment * seg = new Segment();
 						next->time = tip_time_start;
 						next->angio_element = angio_element;
-						next->local_pos;
+						next->local_pos = active_tip->local_pos + natc_grow_vec;
+						next->parent = seg;
+						next->face = angio_element;
+						next->initial_fragment_id = active_tip->initial_fragment_id;
+						next->time = end_time;
+						angio_element->active_tips[next_buffer_index][angio_element].push_back(next);
 
 						//move next to use the rest of the remaining dt
-						Segment * seg = new Segment();
+						
+						seg->back = active_tip;
+						seg->front = next;
+						if(active_tip->parent)
+						{
+							seg->parent = active_tip->parent;
+						}
+						
 						angio_element->recent_segments.push_back(seg);
 
 					}
 				}
+				//hitting the face add the segment, then add the tip to the appropiate bucket
 				else if(len > min_segm_len)
 				{
 					tip_time_start = active_tip->time + (len / grow_len) * dt;
 					//grow len should always be nonzero so this division should be okay
 					//this segment is growing into a new element do the work to do this
 
+					vec3d natc_grow_vec = global_to_natc * (global_dir * len);
+					//add the segment and add the new tip to the current angio element
+					Tip * next = new Tip();
+					Segment * seg = new Segment();
+					next->time = tip_time_start;
+
+					//need to change the angio element and update the local position z
+					next->angio_element = angio_element->adjacency_list[i];
+					//still need to update the local position of the tip
+					next->local_pos = active_tip->local_pos + natc_grow_vec;
+					remapp_local_cooridnates(next->local_pos);
+
+					next->parent = seg;
+					next->face = angio_element->adjacency_list[i];
+					next->initial_fragment_id = active_tip->initial_fragment_id;
+					next->time = end_time;
+					angio_element->active_tips[next_buffer_index][angio_element->adjacency_list[i]].push_back(next);
+
+					//move next to use the rest of the remaining dt
+
+					seg->back = active_tip;
+					seg->front = next;
+					if (active_tip->parent)
+					{
+						seg->parent = active_tip->parent;
+					}
+
+					angio_element->recent_segments.push_back(seg);
 				}
 				if ((len >= 0) && (len < min_segm_len))
 				{

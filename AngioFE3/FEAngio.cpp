@@ -74,41 +74,47 @@ void FEAngio::ApplydtToTimestepper(double dt)
 
 void FEAngio::GrowSegments()
 {
-	double min_dt = std::numeric_limits<double>::max();
-	size_t angio_element_count = angio_elements.size();
-	#pragma omp parallel for shared(min_dt)
-	for (int i = 0; i < angio_element_count; ++i)
+	auto time_info = m_fem->GetTime();
+	//is it valid for this to run more than once?
+	while(time_info.currentTime >= next_time)
 	{
-		double temp_dt = angio_elements[i]->_angio_mat->GetMin_dt(angio_elements[i]);
-		#pragma omp critical
+		double min_dt = std::numeric_limits<double>::max();
+		size_t angio_element_count = angio_elements.size();
+#pragma omp parallel for shared(min_dt)
+		for (int i = 0; i < angio_element_count; ++i)
 		{
-			min_dt = std::min(min_dt, temp_dt);
+			double temp_dt = angio_elements[i]->_angio_mat->GetMin_dt(angio_elements[i]);
+#pragma omp critical
+			{
+				min_dt = std::min(min_dt, temp_dt);
+			}
 		}
-	}
-	
-	printf("\nangio dt chosen is: %lg\n", min_dt);
+		next_time += min_dt;
+		printf("\nangio dt chosen is: %lg next angio time\n", min_dt);
 
 #pragma omp parallel
-	{
-		int n = 3;
-		for (int i = 0; i <n; i++)
 		{
-			#pragma omp for
-			for (int j = 0; j <angio_element_count; j++)
+			int n = 3;
+			for (int i = 0; i <n; i++)
 			{
-				angio_elements[j]->_angio_mat->GrowSegments(angio_elements[j], min_dt, buffer_index);
-			}
+#pragma omp for
+				for (int j = 0; j <angio_element_count; j++)
+				{
+					angio_elements[j]->_angio_mat->GrowSegments(angio_elements[j], min_dt, buffer_index);
+				}
 
-			#pragma omp for
-			for (int j = 0; j <angio_element_count; j++)
-			{
-				angio_elements[j]->_angio_mat->PostGrowthUpdate(angio_elements[j], min_dt, buffer_index);
+#pragma omp for
+				for (int j = 0; j <angio_element_count; j++)
+				{
+					angio_elements[j]->_angio_mat->PostGrowthUpdate(angio_elements[j], min_dt, buffer_index);
+				}
+				buffer_index = (buffer_index + 1) % 2;
 			}
-			buffer_index = (buffer_index + 1) % 2;
 		}
+
+		ApplydtToTimestepper(min_dt);
 	}
 	
-	ApplydtToTimestepper(min_dt);
 }
 
 //-----------------------------------------------------------------------------
