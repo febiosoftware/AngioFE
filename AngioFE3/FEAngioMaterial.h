@@ -49,7 +49,9 @@ public:
 	void GrowthInElement(AngioElement * angio_element, double end_time, Tip * active_tip, int source_index, int buffer_index);
 
 	//should be const and threadsafe
-	void PostGrowthUpdate(AngioElement* angio_elem, double dt, int buffer_index);
+	void PostGrowthUpdate(AngioElement* angio_elem, double end_time, int buffer_index);
+
+	void Cleanup(AngioElement* angio_elem, double end_time, int buffer_index);
 
 	bool SeedFragments(std::vector<AngioElement *>& angio_elements);
 

@@ -94,6 +94,8 @@ private:
 	void ApplydtToTimestepper(double dt);
 
 	void GrowSegments();
+
+	vec3d ReferenceCoordinates(Tip * tip) const;
 	// do the final output
 	void Output();
 

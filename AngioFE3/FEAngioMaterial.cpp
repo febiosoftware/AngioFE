@@ -265,7 +265,7 @@ double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem)
 		assert(len != 0.0);
 		min_side_length = std::min(min_side_length, len);
 	}
-	return (min_side_length*0.5)/max_grow_length;
+	return (min_side_length*0.25)/max_grow_length;
 }
 
 void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index)
@@ -293,8 +293,8 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, i
 
 void remapp_local_cooridnates(vec3d & local_pos)
 {
-	const double high_threshold = 0.99;
-	const double low_threshold = -0.99;
+	const double high_threshold = 0.9999;
+	const double low_threshold = -0.9999;
 	if(local_pos.x > high_threshold)
 	{
 		local_pos.x = -1;
@@ -405,7 +405,7 @@ void FEAngioMaterial::GrowthInElement(AngioElement * angio_element, double end_t
 						}
 						
 						angio_element->recent_segments.push_back(seg);
-
+						assert(next->angio_element);
 					}
 				}
 				//hitting the face add the segment, then add the tip to the appropiate bucket
@@ -425,13 +425,24 @@ void FEAngioMaterial::GrowthInElement(AngioElement * angio_element, double end_t
 					next->angio_element = angio_element->adjacency_list[i];
 					//still need to update the local position of the tip
 					next->local_pos = active_tip->local_pos + natc_grow_vec;
-					remapp_local_cooridnates(next->local_pos);
+					
 
 					next->parent = seg;
 					next->face = angio_element->adjacency_list[i];
 					next->initial_fragment_id = active_tip->initial_fragment_id;
 					next->time = end_time;
-					angio_element->active_tips[next_buffer_index][angio_element->adjacency_list[i]].push_back(next);
+					if(next->angio_element)
+					{
+						angio_element->active_tips[next_buffer_index][angio_element->adjacency_list[i]].push_back(next);
+						remapp_local_cooridnates(next->local_pos);
+					}
+					else
+					{
+						//the tip would grow out of angio elements reset the element that contains it 
+						//don't remap the local coordinates and dont add the tip to be grown again
+						next->angio_element = angio_element;
+					}
+					
 
 					//move next to use the rest of the remaining dt
 
@@ -443,12 +454,14 @@ void FEAngioMaterial::GrowthInElement(AngioElement * angio_element, double end_t
 					}
 
 					angio_element->recent_segments.push_back(seg);
+					assert(next->angio_element);
 				}
 				if ((len >= 0) && (len < min_segm_len))
 				{
 					active_tip->angio_element = angio_element;
 					//active_tip->local_pos = 
 					//just move the tip to the face
+					//remap the local coordiantes to the new element
 					if (source_index != -1)
 					{
 						angio_element->active_tips[next_buffer_index][angio_element->adjacency_list[source_index]].push_back(active_tip);
@@ -465,9 +478,18 @@ void FEAngioMaterial::GrowthInElement(AngioElement * angio_element, double end_t
 	}
 }
 
-void FEAngioMaterial::PostGrowthUpdate(AngioElement* angio_elem, double dt, int buffer_index)
+void FEAngioMaterial::PostGrowthUpdate(AngioElement* angio_elem, double end_time, int buffer_index)
 {
 	angio_elem->active_tips[buffer_index].clear();
+}
+
+void FEAngioMaterial::Cleanup(AngioElement* angio_elem, double end_time, int buffer_index)
+{
+	for(int i=0;i < angio_elem->recent_segments.size();i++)
+	{
+		angio_elem->grown_segments.push_back(angio_elem->recent_segments[i]);
+	}
+	angio_elem->recent_segments.clear();
 }
 
 bool FEAngioMaterial::SeedFragments(std::vector<AngioElement *>& angio_elements)

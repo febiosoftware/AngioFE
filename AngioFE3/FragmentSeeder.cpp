@@ -20,7 +20,7 @@ ByElementFragmentSeeder::ByElementFragmentSeeder(FEModel * model) :FragmentSeede
 bool ByElementFragmentSeeder::SeedFragments(std::vector<AngioElement *> &angio_elements, FEAngioMaterial* angio_mat, int buffer_index)
 {
 	FEMesh * mesh = angio_mat->m_pangio->GetMesh();
-	std::uniform_int_distribution<int> edist(0, angio_elements.size());
+	std::uniform_int_distribution<int> edist(0, angio_elements.size()-1);
 
 	if(angio_elements.size() == 0)
 	{

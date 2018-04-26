@@ -75,38 +75,40 @@ void FEAngio::ApplydtToTimestepper(double dt)
 void FEAngio::GrowSegments()
 {
 	auto time_info = m_fem->GetTime();
+	double min_dt = std::numeric_limits<double>::max();
+	size_t angio_element_count = angio_elements.size();
 	//is it valid for this to run more than once?
-	while(time_info.currentTime >= next_time)
+	if(time_info.currentTime >= next_time)
 	{
-		double min_dt = std::numeric_limits<double>::max();
-		size_t angio_element_count = angio_elements.size();
-#pragma omp parallel for shared(min_dt)
+		
+		
+		#pragma omp parallel for shared(min_dt)
 		for (int i = 0; i < angio_element_count; ++i)
 		{
 			double temp_dt = angio_elements[i]->_angio_mat->GetMin_dt(angio_elements[i]);
-#pragma omp critical
+			#pragma omp critical
 			{
 				min_dt = std::min(min_dt, temp_dt);
 			}
 		}
-		next_time += min_dt;
-		printf("\nangio dt chosen is: %lg next angio time\n", min_dt);
+		
+		double ctime = time_info.currentTime + min_dt;
 
-#pragma omp parallel
+//#pragma omp parallel
 		{
 			int n = 3;
 			for (int i = 0; i <n; i++)
 			{
-#pragma omp for
+//#pragma omp  parallel for schedule(dynamic, 16)
 				for (int j = 0; j <angio_element_count; j++)
 				{
-					angio_elements[j]->_angio_mat->GrowSegments(angio_elements[j], min_dt, buffer_index);
+					angio_elements[j]->_angio_mat->GrowSegments(angio_elements[j], ctime, buffer_index);
 				}
 
-#pragma omp for
+#pragma omp parallel for schedule(dynamic, 16)
 				for (int j = 0; j <angio_element_count; j++)
 				{
-					angio_elements[j]->_angio_mat->PostGrowthUpdate(angio_elements[j], min_dt, buffer_index);
+					angio_elements[j]->_angio_mat->PostGrowthUpdate(angio_elements[j], ctime, buffer_index);
 				}
 				buffer_index = (buffer_index + 1) % 2;
 			}
@@ -114,7 +116,39 @@ void FEAngio::GrowSegments()
 
 		ApplydtToTimestepper(min_dt);
 	}
-	
+	//do the output
+	fileout->save_vessel_state(*this);
+
+	//do the cleanup if needed
+	if(time_info.currentTime >= next_time)
+	{
+		next_time += min_dt;
+		printf("\nangio dt chosen is: %lg next angio time\n", min_dt);
+		#pragma omp parallel for schedule(dynamic, 16)
+		for (int j = 0; j <angio_element_count; j++)
+		{
+			angio_elements[j]->_angio_mat->Cleanup(angio_elements[j], next_time, buffer_index);
+		}
+		buffer_index = (buffer_index + 1) % 2;
+	}
+
+}
+
+vec3d FEAngio::ReferenceCoordinates(Tip * tip) const
+{
+	vec3d r(0, 0, 0);
+	FEMesh & mesh = m_fem->GetMesh();
+	//Point has already been positioned
+	FESolidElement * se= tip->angio_element->_elem;
+
+	double arr[FEElement::MAX_NODES];
+	se->shape_fnc(arr, tip->local_pos.x, tip->local_pos.y, tip->local_pos.z);
+	for (int j = 0; j < se->Nodes(); j++)
+	{
+		r += mesh.Node(se->m_node[j]).m_r0* arr[j];
+	}
+
+	return r;
 }
 
 //-----------------------------------------------------------------------------
