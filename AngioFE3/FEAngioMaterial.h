@@ -53,6 +53,8 @@ public:
 
 	void Cleanup(AngioElement* angio_elem, double end_time, int buffer_index);
 
+	void PrepBuffers(AngioElement* angio_elem, double end_time, int buffer_index);
+
 	bool SeedFragments(std::vector<AngioElement *>& angio_elements);
 
 	void UpdateGDMs();

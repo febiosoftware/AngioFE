@@ -94,6 +94,12 @@ void FEAngio::GrowSegments()
 		
 		double ctime = time_info.currentTime + min_dt;
 
+		#pragma omp parallel for schedule(dynamic, 16)
+		for (int j = 0; j <angio_element_count; j++)
+		{
+			angio_elements[j]->_angio_mat->PrepBuffers(angio_elements[j], next_time, buffer_index);
+		}
+
 //#pragma omp parallel
 		{
 			int n = 3;

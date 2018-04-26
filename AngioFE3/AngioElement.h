@@ -30,6 +30,8 @@ public:
 	//this might be further optimized to a lookup into a constant lookup table given the element type that is doing the looking up ... its possible to do this at compile time
 	//this should reduce this to a jump based on the element type
 	std::unordered_map<AngioElement*, std::vector<Tip *>> active_tips[2];
+	std::unordered_map<AngioElement*, std::vector<Tip *>> next_tips;
+	std::vector<Tip *> current_tips;//to be used in stress calculations
 
 	//std::vector<FESurfaceElement*>  inner_faces;
 	FESurface inner_faces;

@@ -332,8 +332,9 @@ void FEAngioMaterial::GrowthInElement(AngioElement * angio_element, double end_t
 	const double eps = 0.01;
 	const double min_segm_len = 0.1;
 	int next_buffer_index = (buffer_index + 1) % 2;
-	double grow_len = this->GetGrowthLengthOverUnitTime(angio_element, active_tip->local_pos);
 	double dt = end_time - active_tip->time;
+	double grow_len = this->GetGrowthLengthOverUnitTime(angio_element, active_tip->local_pos) *dt;
+	
 
 	double Gr[FEElement::MAX_NODES];
 	double Gs[FEElement::MAX_NODES];
@@ -393,7 +394,7 @@ void FEAngioMaterial::GrowthInElement(AngioElement * angio_element, double end_t
 						next->face = angio_element;
 						next->initial_fragment_id = active_tip->initial_fragment_id;
 						next->time = end_time;
-						angio_element->active_tips[next_buffer_index][angio_element].push_back(next);
+						angio_element->next_tips[angio_element].push_back(next);
 
 						//move next to use the rest of the remaining dt
 						
@@ -412,6 +413,7 @@ void FEAngioMaterial::GrowthInElement(AngioElement * angio_element, double end_t
 				else if(len > min_segm_len)
 				{
 					tip_time_start = active_tip->time + (len / grow_len) * dt;
+					assert(tip_time_start < end_time);
 					//grow len should always be nonzero so this division should be okay
 					//this segment is growing into a new element do the work to do this
 
@@ -490,6 +492,12 @@ void FEAngioMaterial::Cleanup(AngioElement* angio_elem, double end_time, int buf
 		angio_elem->grown_segments.push_back(angio_elem->recent_segments[i]);
 	}
 	angio_elem->recent_segments.clear();
+}
+
+void FEAngioMaterial::PrepBuffers(AngioElement* angio_elem, double end_time, int buffer_index)
+{
+	angio_elem->next_tips.swap(angio_elem->active_tips[buffer_index]);
+	angio_elem->next_tips.clear();
 }
 
 bool FEAngioMaterial::SeedFragments(std::vector<AngioElement *>& angio_elements)
