@@ -621,10 +621,11 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 	static bool start = false;
 	if (!start)
 	{
+		/*
 		grow_timer.start();
 		GrowSegments();
 		grow_timer.stop();
-		
+		*/
 		for (size_t i = 0; i < m_pmat.size(); i++)
 		{
 			//expermentally calculate the stress from the vessels here

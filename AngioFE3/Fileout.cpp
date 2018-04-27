@@ -95,8 +95,8 @@ void Fileout::save_vessel_state(FEAngio& angio)
 	{
 		for(int j=0; j <  angio.angio_elements[i]->recent_segments.size();j++)
 		{
-			vec3d r0 = angio.ReferenceCoordinates(angio.angio_elements[i]->recent_segments[j]->front);
-			vec3d r1 = angio.ReferenceCoordinates(angio.angio_elements[i]->recent_segments[j]->back);
+			vec3d r0 = angio.ReferenceCoordinates(angio.angio_elements[i]->recent_segments[j]->back);
+			vec3d r1 = angio.ReferenceCoordinates(angio.angio_elements[i]->recent_segments[j]->front);
 			//consider checking fwrites return values
 			float cur = static_cast<float>(r0.x);
 			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
