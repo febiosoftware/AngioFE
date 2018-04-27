@@ -3,7 +3,7 @@
 
 vec3d Tip::GetDirection(FEMesh* mesh) const
 {
-	if(is_branch)
+	if(is_branch || use_direction)
 	{
 		return direction;
 	}
@@ -32,4 +32,16 @@ vec3d Tip::GetPosition(FEMesh * mesh) const
 		rc += mesh->Node(angio_element->_elem->m_node[j]).m_rt* arr[j];
 	}
 	return rc;
+}
+
+Tip::Tip(Tip * other, FEMesh * mesh)
+{
+	local_pos = other->local_pos;
+	angio_element = other->angio_element;
+	time = other->time;
+	growth_velocity = other->growth_velocity;
+	face = other->face;
+	//deparent the new tip
+	initial_fragment_id = other->initial_fragment_id;
+	direction = other->GetDirection(mesh);
 }

@@ -329,6 +329,11 @@ void FEAngio::FillInAdjacencyInfo(FEMesh * mesh,FEElemElemList * eel, AngioEleme
 			angio_element->adjacency_list.push_back(nullptr);
 		}
 	}
+	for(int i=0;i< angio_element->adjacency_list.size();i++)
+	{
+		angio_element->angio_element_to_adjacency_index[angio_element->adjacency_list[i]] = i;
+	}
+
 }
 
 void FillInFaces(FEMesh * mesh, AngioElement * angio_element)

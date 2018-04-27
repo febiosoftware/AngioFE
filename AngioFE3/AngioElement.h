@@ -25,6 +25,7 @@ public:
 
 	//begin buffers
 	std::vector<AngioElement *> adjacency_list;
+	std::unordered_map<AngioElement *, int> angio_element_to_adjacency_index;
 	std::vector<Segment *> grown_segments;
 	std::vector<Segment *> recent_segments;
 	//this might be further optimized to a lookup into a constant lookup table given the element type that is doing the looking up ... its possible to do this at compile time
