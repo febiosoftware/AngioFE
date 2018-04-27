@@ -39,6 +39,7 @@ bool ByElementFragmentSeeder::SeedFragments(std::vector<AngioElement *> &angio_e
 		t->face = t->angio_element;
 		//finally add this to the AngioElement
 		t->angio_element->next_tips[t->angio_element].push_back(t);
+		t->PrintTipInfo(mesh, "fragment seeder");
 	}
 
 	return true;

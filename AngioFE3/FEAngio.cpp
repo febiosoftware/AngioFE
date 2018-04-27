@@ -92,7 +92,7 @@ void FEAngio::GrowSegments()
 			}
 		}
 		
-		double ctime = time_info.currentTime + min_dt;
+		double ctime = next_time + min_dt;
 
 		#pragma omp parallel for schedule(dynamic, 16)
 		for (int j = 0; j <angio_element_count; j++)
