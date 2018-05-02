@@ -75,6 +75,12 @@ void Fileout::printStatus(FEAngio& angio)
 	}
 }
 
+void PrintSegment(vec3d r0, vec3d r1)
+{
+	std::cout << "r0: " << r0.x << "," << r0.y << "," << r0.z << std::endl;
+	std::cout << "r1: " << r1.x << "," << r1.y << "," << r1.z << std::endl;
+}
+
 //-----------------------------------------------------------------------------
 // Save microvessel position at the current time point
 void Fileout::save_vessel_state(FEAngio& angio)
@@ -91,12 +97,16 @@ void Fileout::save_vessel_state(FEAngio& angio)
 	float rtime = static_cast<float>(ti.currentTime);
 	fwrite(&rtime, sizeof(float), 1, vessel_state_stream);
 
+	unsigned int crc_segcount = 0;
 	for (int i = 0; i <angio.angio_elements.size(); i++)
 	{
 		for(int j=0; j <  angio.angio_elements[i]->recent_segments.size();j++)
 		{
+			crc_segcount++;
 			vec3d r0 = angio.ReferenceCoordinates(angio.angio_elements[i]->recent_segments[j]->back);
 			vec3d r1 = angio.ReferenceCoordinates(angio.angio_elements[i]->recent_segments[j]->front);
+
+			PrintSegment(r0, r1);
 			//consider checking fwrites return values
 			float cur = static_cast<float>(r0.x);
 			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
@@ -113,6 +123,7 @@ void Fileout::save_vessel_state(FEAngio& angio)
 			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
 		}
 	}
+	assert(crc_segcount == new_seg_count);
 }
 
 //-----------------------------------------------------------------------------

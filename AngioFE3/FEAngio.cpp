@@ -684,9 +684,6 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		++FE_state;
 		if (!m_fem->GetGlobalConstant("no_io"))
 		{
-			// Save the current vessel state
-			fileout->save_vessel_state(*this);
-
 			// save active tips
 			fileout->save_active_tips(*this);
 

@@ -46,7 +46,7 @@ public:
 
 	void GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index);
 
-	void GrowthInElement(AngioElement * angio_element, double end_time, Tip * active_tip, int source_index, int buffer_index);
+	void GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index);
 
 	//should be const and threadsafe
 	void PostGrowthUpdate(AngioElement* angio_elem, double end_time, int buffer_index);

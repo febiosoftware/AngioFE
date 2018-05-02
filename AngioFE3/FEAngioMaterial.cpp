@@ -278,7 +278,8 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, i
 			std::vector<Tip*> & tips = angio_elem->adjacency_list[i]->active_tips[buffer_index][angio_elem];
 			for(int j=0; j < tips.size();j++)
 			{
-				GrowthInElement(angio_elem, end_time, tips[j], i, buffer_index);
+				assert(tips[j]->angio_element == angio_elem);
+				GrowthInElement(end_time, tips[j], i, buffer_index);
 			}
 			
 		}
@@ -287,13 +288,14 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, i
 	std::vector<Tip*> & tips = angio_elem->active_tips[buffer_index][angio_elem];
 	for(int j=0; j < tips.size();j++)
 	{
-		GrowthInElement(angio_elem, end_time, tips[j], -1, buffer_index);
+		assert(tips[j]->angio_element == angio_elem);
+		GrowthInElement(end_time, tips[j], -1, buffer_index);
 	}
 }
 
-void FEAngioMaterial::GrowthInElement(AngioElement * angio_element, double end_time, Tip * active_tip, int source_index, int buffer_index)
+void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index)
 {
-	
+	auto angio_element = active_tip->angio_element;
 	assert(active_tip);
 	auto mesh = m_pangio->GetMesh();
 	const double eps = 0.01;
@@ -320,7 +322,7 @@ void FEAngioMaterial::GrowthInElement(AngioElement * angio_element, double end_t
 	{
 		et += mesh->Node(angio_element->_elem->m_node[j]).m_rt* Gt[j];
 	}
-	mat3d natc_to_global(er, es, et);// multiply by 2? ucrrently vectors of half side length
+	mat3d natc_to_global(er, es, et);
 	mat3d global_to_natc = natc_to_global.inverse();
 	vec3d global_dir = active_tip->GetDirection(mesh);
 	vec3d global_pos;
@@ -343,6 +345,7 @@ void FEAngioMaterial::GrowthInElement(AngioElement * angio_element, double end_t
 			if (angio_element->inner_faces.Intersect(fse, global_pos ,global_dir, rs, len, eps))
 			{
 				double tip_time_start = -1;
+				//in element growth
 				if (len >= grow_len)
 				{
 					len = grow_len;
@@ -370,6 +373,7 @@ void FEAngioMaterial::GrowthInElement(AngioElement * angio_element, double end_t
 						{
 							seg->parent = active_tip->parent;
 						}
+
 						
 						angio_element->recent_segments.push_back(seg);
 						assert(next->angio_element);
@@ -392,13 +396,13 @@ void FEAngioMaterial::GrowthInElement(AngioElement * angio_element, double end_t
 					next->time = tip_time_start;
 
 					//need to change the angio element and update the local position z
-					next->angio_element = angio_element;
+					next->angio_element = angio_element->adjacency_list[i];
 					//still need to update the local position of the tip
 					next->local_pos = active_tip->local_pos + natc_grow_vec;
 					
 
 					next->parent = seg;
-					next->face = angio_element->adjacency_list[i];
+					next->face = angio_element;
 					next->initial_fragment_id = active_tip->initial_fragment_id;
 					//move next to use the rest of the remaining dt
 					
@@ -409,10 +413,10 @@ void FEAngioMaterial::GrowthInElement(AngioElement * angio_element, double end_t
 					{
 						seg->parent = active_tip->parent;
 					}
-					next->PrintTipInfo(mesh, "next tip(collision with face)");
+					
 
 					angio_element->recent_segments.push_back(seg);
-					assert(next->angio_element);
+					
 
 					if(angio_element->adjacency_list[i])
 					{
@@ -432,11 +436,17 @@ void FEAngioMaterial::GrowthInElement(AngioElement * angio_element, double end_t
 
 						adj->PrintTipInfo(mesh, "adj tip");
 					}
+					else
+					{
+						next->angio_element = angio_element;
+					}
+					next->PrintTipInfo(mesh, "next tip(collision with face)");
+					assert(next->angio_element);
 				}
 				if ((len >= 0) && (len < min_segm_len))
 				{
-					assert(false);
-					//make a copy of the tip and remap it to another element
+					//assert(false);
+					//make a copy of the tip and remap it to all valid elements
 
 				}
 				//if len is negative do nothing
