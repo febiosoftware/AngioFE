@@ -20,6 +20,10 @@ Fileout::Fileout(FEAngio& angio)
 	//write the headers
 	logstream << "Time,Material,Segments,Total Length,Vessels,Branch Points,Anastamoses,Active Tips,Sprouts" << endl;
 
+	vessel_csv_stream.open("vessels.csv");
+
+	vessel_csv_stream << "x0,y0,z0,x1,y1,z1,time " << endl;
+
 	vessel_state_stream = fopen("out_vess_state.ang2" , "wb");//check the parameters consider setting the compression level
 	unsigned int magic = 0xfdb97531;
 	unsigned int version = 1;
@@ -95,7 +99,7 @@ void Fileout::save_vessel_state(FEAngio& angio)
 	fwrite(&new_seg_count, sizeof(unsigned int), 1, vessel_state_stream);
 	auto ti = angio.GetFEModel()->GetTime();
 	float rtime = static_cast<float>(ti.currentTime);
-	fwrite(&rtime, sizeof(float), 1, vessel_state_stream);
+	fwrite(&rtime, sizeof(float), 1, vessel_state_stream) == sizeof(float);
 
 	unsigned int crc_segcount = 0;
 	for (int i = 0; i <angio.angio_elements.size(); i++)
@@ -121,6 +125,8 @@ void Fileout::save_vessel_state(FEAngio& angio)
 			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
 			cur = static_cast<float>(r1.z);
 			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
+
+			vessel_csv_stream << r0.x << "," << r0.y << "," << r0.z << "," << r1.x << "," << r1.y << "," << r1.z << "," << rtime << std::endl;
 		}
 	}
 	assert(crc_segcount == new_seg_count);

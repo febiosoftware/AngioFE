@@ -29,17 +29,22 @@ bool ByElementFragmentSeeder::SeedFragments(std::vector<AngioElement *> &angio_e
 
 	for (int i = 0; i < number_fragments; ++i)
 	{
-		Tip* t = new Tip();
-		t->local_pos = angio_mat->m_pangio->uniformInUnitCube();
+		Tip* r0 = new Tip();
+		r0->local_pos = angio_mat->m_pangio->uniformInUnitCube();
 		int elem_index = edist(angio_mat->m_pangio->rengine);
-		t->angio_element = angio_elements[elem_index];
-		t->time = 0;
-		t->is_branch = true;
-		t->direction = angio_mat->m_pangio->uniformRandomDirection();
-		t->face = t->angio_element;
+		r0->angio_element = angio_elements[elem_index];
+		r0->time = 0;
+		r0->use_direction = true;
+		r0->direction = angio_mat->m_pangio->uniformRandomDirection();
+		r0->face = r0->angio_element;
 		//finally add this to the AngioElement
-		t->angio_element->next_tips[t->angio_element].push_back(t);
-		t->PrintTipInfo(mesh, "fragment seeder");
+
+		//repeat the step if not placed correctly
+		if(r0->angio_element->_angio_mat->ProtoGrowthInElement(r0, -1, initial_vessel_length))
+		{
+			i--;
+			continue;
+		}
 	}
 
 	return true;

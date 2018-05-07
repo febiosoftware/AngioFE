@@ -239,6 +239,7 @@ bool FEAngio::Init()
 		printf("fragment seeding failed\n");
 		return false;
 	}
+	fileout->save_vessel_state(*this);
 
 	// start timer
 	time(&m_start);
@@ -295,7 +296,6 @@ void FEAngio::FinalizeFEM()
 	if (!m_fem->GetGlobalConstant("no_io"))
 	{
 		// Output initial microvessel state
-		fileout->save_vessel_state(*this);
 
 		// save active tips
 		fileout->save_active_tips(*this);
@@ -685,7 +685,6 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		if (!m_fem->GetGlobalConstant("no_io"))
 		{
 			// save active tips
-			fileout->save_active_tips(*this);
 
 			// Print the status of angio3d to the user    
 			fileout->printStatus(*this);

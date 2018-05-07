@@ -32,4 +32,5 @@ private:
 	FILE*	m_stream4 = 0;	// active tips
 	FILE*  vessel_state_stream=0;
 	FILE*  feangio_state_stream=0;
+	std::ofstream vessel_csv_stream;
 };

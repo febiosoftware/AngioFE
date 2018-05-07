@@ -295,6 +295,12 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, i
 
 void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index)
 {
+	if(active_tip->time >= end_time)
+	{
+		active_tip->angio_element->next_tips[active_tip->face].push_back(active_tip);
+		return;
+	}
+
 	auto angio_element = active_tip->angio_element;
 	assert(active_tip);
 	auto mesh = m_pangio->GetMesh();
@@ -453,6 +459,111 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 			}
 		}
 	}
+}
+
+bool FEAngioMaterial::ProtoGrowthInElement(Tip * active_tip, int source_index, double initial_length)
+{
+	auto angio_element = active_tip->angio_element;
+	assert(active_tip);
+	auto mesh = m_pangio->GetMesh();
+	const double eps = 0.01;
+	const double min_segm_len = 0.1;
+
+
+
+	double Gr[FEElement::MAX_NODES];
+	double Gs[FEElement::MAX_NODES];
+	double Gt[FEElement::MAX_NODES];
+	angio_element->_elem->shape_deriv(Gr, Gs, Gt, active_tip->local_pos.x, active_tip->local_pos.y, active_tip->local_pos.z);
+	vec3d er, es, et;//basis vectors of the natural coordinates
+	for (int j = 0; j < angio_element->_elem->Nodes(); j++)
+	{
+		er += mesh->Node(angio_element->_elem->m_node[j]).m_rt* Gr[j];
+	}
+	for (int j = 0; j < angio_element->_elem->Nodes(); j++)
+	{
+		es += mesh->Node(angio_element->_elem->m_node[j]).m_rt* Gs[j];
+	}
+	for (int j = 0; j < angio_element->_elem->Nodes(); j++)
+	{
+		et += mesh->Node(angio_element->_elem->m_node[j]).m_rt* Gt[j];
+	}
+	mat3d natc_to_global(er, es, et);
+	mat3d global_to_natc = natc_to_global.inverse();
+	vec3d global_dir = active_tip->GetDirection(mesh);
+	vec3d global_pos;
+	double H[FEElement::MAX_NODES];
+	angio_element->_elem->shape_fnc(H, active_tip->local_pos.x, active_tip->local_pos.y, active_tip->local_pos.z);
+	for (int j = 0; j < angio_element->_elem->Nodes(); j++)
+	{
+		global_pos += mesh->Node(angio_element->_elem->m_node[j]).m_rt* H[j];
+	}
+	//exclude the source index face from the raycasts, -1 for the same element
+	for (int i = 0; i < angio_element->inner_faces.Elements(); i++)
+	{
+		if (i != source_index)
+		{
+			FESurfaceElement & fse = angio_element->inner_faces.Element(i);
+			double len;
+			double rs[2];
+
+			//TODO: intersect only works for linear elements 
+			if (angio_element->inner_faces.Intersect(fse, global_pos, global_dir, rs, len, eps))
+			{
+				double tip_time_start = -1;
+				//in element growth
+				if (len >= initial_length)
+				{
+					len = initial_length;
+					tip_time_start = 0;
+
+					if (len > min_segm_len)
+					{
+						vec3d natc_grow_vec = global_to_natc * (global_dir * len);
+						//add the segment and add the new tip to the current angio element
+						Tip * next = new Tip(active_tip, mesh);
+						Segment * seg = new Segment();
+						next->time = tip_time_start;
+						next->local_pos = active_tip->local_pos + natc_grow_vec;
+						next->parent = seg;
+						next->face = angio_element;
+						next->angio_element = angio_element;
+						next->initial_fragment_id = active_tip->initial_fragment_id;
+						angio_element->next_tips[angio_element].push_back(next);
+
+						//move next to use the rest of the remaining dt
+
+						seg->back = active_tip;
+						seg->front = next;
+						if (active_tip->parent)
+						{
+							seg->parent = active_tip->parent;
+						}
+
+
+						angio_element->recent_segments.push_back(seg);
+						assert(next->angio_element);
+						next->PrintTipInfo(mesh, "next tip(no collision with faces)");
+						return false;
+					}
+				}
+				//hitting the face add the segment, then add the tip to the appropiate bucket
+				//two tips will be created as the 
+				else if (len > min_segm_len)
+				{
+					return true;
+				}
+				if ((len >= 0) && (len < min_segm_len))
+				{
+					//assert(false);
+					//make a copy of the tip and remap it to all valid elements
+					
+				}
+				//if len is negative do nothing
+			}
+		}
+	}
+	return true;
 }
 
 void FEAngioMaterial::PostGrowthUpdate(AngioElement* angio_elem, double end_time, int buffer_index)
