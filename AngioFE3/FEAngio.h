@@ -99,6 +99,15 @@ private:
 	// do the final output
 	void Output();
 
+	//returns the scale factor that would project this direction onto the unit cube if the direction was a ray that started at pt, pt must be within the unit cube
+	double ScaleFactorToProjectToUnitCube(vec3d & dir, vec3d & pt) const;
+
+	//returns the length between the two points as if they are conencted by a line segment in the natrual coordinates of the element
+	//only the difference between the points if the elements are linear
+	double InElementLength(FESolidElement * se, vec3d pt0, vec3d pt1) const;
+
+	bool IsInBounds(double r[3]);
+
 	static bool feangio_callback(FEModel* pfem, unsigned int nwhen, void* pd)
 	{
 		FEAngio* pfa = reinterpret_cast<FEAngio*>(pd);

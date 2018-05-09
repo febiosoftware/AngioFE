@@ -727,6 +727,86 @@ void FEAngio::Output()
 	fileout->save_final_vessel_csv(*this);
 }
 
+//returns the scale factor needed to scale the ray to grow to the boundary of the unit cube
+double FEAngio::ScaleFactorToProjectToUnitCube(vec3d & dir, vec3d & pt) const
+{
+	std::vector<double> possible_values;
+
+	if(dir.x > 0)
+	{
+		double temp = (1 - pt.x) / dir.x;
+		if (temp >= 0)
+			possible_values.push_back(temp);
+	}
+	else if(dir.x < 0)
+	{
+		double temp = (-1 - pt.x) / dir.x;
+		if (temp >= 0)
+			possible_values.push_back(temp);
+	}
+	if (dir.y > 0)
+	{
+		double temp = (1 - pt.y) / dir.y;
+		if (temp >= 0)
+			possible_values.push_back(temp);
+	}
+	else if (dir.y < 0)
+	{
+		double temp = (-1 - pt.y) / dir.y;
+		if (temp >= 0)
+			possible_values.push_back(temp);
+	}
+
+	if (dir.z > 0)
+	{
+		double temp = (1 - pt.z) / dir.z;
+		if (temp >= 0)
+			possible_values.push_back(temp);
+	}
+	else if (dir.z < 0)
+	{
+		double temp = (-1 - pt.z) / dir.z;
+		if (temp >= 0)
+			possible_values.push_back(temp);
+	}
+	if(possible_values.size())
+	{
+		return *std::min_element(possible_values.begin(), possible_values.end());
+	}
+	else
+	{
+		assert(false);
+		return std::numeric_limits<double>::max();
+	}
+}
+
+double FEAngio::InElementLength(FESolidElement * se, vec3d pt0, vec3d pt1) const
+{
+	auto mesh = GetMesh();
+	double H[FEElement::MAX_NODES];
+	vec3d g_pt0, g_pt1;
+	se->shape_fnc(H, pt0.x, pt0.y, pt0.z);
+	for (int j = 0; j < se->Nodes(); j++)
+	{
+		g_pt0 += mesh->Node(se->m_node[j]).m_rt* H[j];
+	}
+	se->shape_fnc(H, pt1.x, pt1.y, pt1.z);
+	for (int j = 0; j < se->Nodes(); j++)
+	{
+		g_pt1 += mesh->Node(se->m_node[j]).m_rt* H[j];
+	}
+
+	return (g_pt0 - g_pt1).norm();
+}
+
+bool FEAngio::IsInBounds(double r[3])
+{
+	//consider doing this with tolerances
+	return (r[0] <= 1.0) && (r[0] >= -1.0) &&
+		(r[1] <= 1.0) && (r[1] >= -1.0) &&
+		(r[2] <= 1.0) && (r[2] >= -1.0);
+}
+
 
 //-----------------------------------------------------------------------------
 // create a map of fiber vectors based on the material's orientation.

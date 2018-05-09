@@ -65,11 +65,8 @@ void Tip::PrintTipInfo(FEMesh *mesh) const
 
 Tip::Tip(Tip * other, FEMesh * mesh)
 {
-	local_pos = other->local_pos;
-	angio_element = other->angio_element;
 	time = other->time;
 	growth_velocity = other->growth_velocity;
-	face = other->face;
 	//deparent the new tip
 	initial_fragment_id = other->initial_fragment_id;
 	direction = other->GetDirection(mesh);
