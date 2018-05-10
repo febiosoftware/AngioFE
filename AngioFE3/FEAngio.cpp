@@ -728,7 +728,7 @@ void FEAngio::Output()
 }
 
 //returns the scale factor needed to scale the ray to grow to the boundary of the unit cube
-double FEAngio::ScaleFactorToProjectToUnitCube(vec3d & dir, vec3d & pt) const
+bool FEAngio::ScaleFactorToProjectToUnitCube(vec3d & dir, vec3d & pt, double & sf) const
 {
 	std::vector<double> possible_values;
 
@@ -771,12 +771,12 @@ double FEAngio::ScaleFactorToProjectToUnitCube(vec3d & dir, vec3d & pt) const
 	}
 	if(possible_values.size())
 	{
-		return *std::min_element(possible_values.begin(), possible_values.end());
+		sf = *std::min_element(possible_values.begin(), possible_values.end());
+		return true;
 	}
 	else
 	{
-		assert(false);
-		return std::numeric_limits<double>::max();
+		return false;
 	}
 }
 

@@ -341,10 +341,11 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 
 		//just do the transformations
 		vec3d nat_dir = global_to_natc * global_dir;
-		double factor = m_pangio->ScaleFactorToProjectToUnitCube(nat_dir, active_tip->local_pos);
+		double factor;
+		bool proj_sucess = m_pangio->ScaleFactorToProjectToUnitCube(nat_dir, active_tip->local_pos, factor);
 		vec3d possible_natc = active_tip->local_pos + (nat_dir*factor);
 		double possible_grow_length = m_pangio->InElementLength(active_tip->angio_element->_elem, active_tip->local_pos, possible_natc);
-		if (possible_grow_length >= grow_len)
+		if ((possible_grow_length >= grow_len) && proj_sucess)
 		{
 			//this is still in the same element
 			vec3d real_natc = active_tip->local_pos + (nat_dir * (factor * (grow_len / possible_grow_length)));
