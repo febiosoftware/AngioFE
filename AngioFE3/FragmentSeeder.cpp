@@ -30,9 +30,10 @@ bool ByElementFragmentSeeder::SeedFragments(std::vector<AngioElement *> &angio_e
 	for (int i = 0; i < number_fragments; ++i)
 	{
 		Tip* r0 = new Tip();
-		r0->local_pos = angio_mat->m_pangio->uniformInUnitCube();
 		int elem_index = edist(angio_mat->m_pangio->rengine);
 		r0->angio_element = angio_elements[elem_index];
+		std::uniform_real_distribution<double> dist(FEAngio::NaturalCoordinatesLowerBound(r0->angio_element->_elem->Type()), FEAngio::NaturalCoordinatesUpperBound(r0->angio_element->_elem->Type()));
+		r0->local_pos =  vec3d(dist(angio_mat->m_pangio->rengine), dist(angio_mat->m_pangio->rengine), dist(angio_mat->m_pangio->rengine));
 		r0->time = 0;
 		r0->use_direction = true;
 		r0->direction = angio_mat->m_pangio->uniformRandomDirection();

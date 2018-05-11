@@ -3,12 +3,15 @@
 #include "AngioElement.h"
 
 class Segment;
+class FEAngio;
 
 class Tip
 {
 public:
 	Tip(){}
 	Tip(Tip * other, FEMesh * mesh);//used to copy another tip
+	//sets the local positions clamps the values to -1 to 1
+	void SetLocalPosition(vec3d pos);
 	vec3d local_pos;
 	AngioElement * angio_element= nullptr;//the element that contains the local_pos coordinates
 	double time=0.0;

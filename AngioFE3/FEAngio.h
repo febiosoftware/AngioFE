@@ -73,6 +73,9 @@ public:
 	//TODO: remove the freindship, creation in the old way requires this
 	//or consider making the node and element data public
 	friend class FEAngioMaterial;
+
+	static double NaturalCoordinatesUpperBound(int et);
+	static double NaturalCoordinatesLowerBound(int et);
 private:
 	
 	// Initialize the nodal ECM values
@@ -96,17 +99,21 @@ private:
 	void GrowSegments();
 
 	vec3d ReferenceCoordinates(Tip * tip) const;
+
+	
+
+
 	// do the final output
 	void Output();
 
 	//returns the scale factor that would project this ray onto the unit cube, pt must be within the unit cube
-	bool ScaleFactorToProjectToUnitCube(vec3d & dir, vec3d & pt, double & sf) const;
+	bool ScaleFactorToProjectToUnitCube(FESolidElement* se, vec3d & dir, vec3d & pt, double & sf) const;
 
 	//returns the length between the two points as if they are conencted by a line segment in the natrual coordinates of the element
 	//only the difference between the points if the elements are linear
 	double InElementLength(FESolidElement * se, vec3d pt0, vec3d pt1) const;
 
-	bool IsInBounds(double r[3]);
+	static bool IsInBounds(FESolidElement* se, double r[3]);
 
 	static bool feangio_callback(FEModel* pfem, unsigned int nwhen, void* pd)
 	{

@@ -157,6 +157,36 @@ vec3d FEAngio::ReferenceCoordinates(Tip * tip) const
 	return r;
 }
 
+double FEAngio::NaturalCoordinatesUpperBound(int et)
+{
+	switch(et)
+	{
+	case FE_HEX8G8:
+		return 1.0;
+	case FE_TET4G1:
+	case FE_TET4G4:
+		return 1.0;
+	default:
+		assert(false);
+	}
+	return std::numeric_limits<double>::max();
+}
+
+double FEAngio::NaturalCoordinatesLowerBound(int et)
+{
+	switch (et)
+	{
+	case FE_HEX8G8:
+		return -1.0;
+	case FE_TET4G1:
+	case FE_TET4G4:
+		return 0.0;
+	default:
+		assert(false);
+	}
+	return std::numeric_limits<double>::max();
+}
+
 //-----------------------------------------------------------------------------
 FEAngio::FEAngio(FEModel& fem) : ztopi(std::uniform_real_distribution<double>(0, PI)), 
 	zto2pi(std::uniform_real_distribution<double>(0, 2 * PI)), n1to1(std::uniform_real_distribution<double>(-1, 1))
@@ -728,31 +758,34 @@ void FEAngio::Output()
 }
 
 //returns the scale factor needed to scale the ray to grow to the boundary of the unit cube
-bool FEAngio::ScaleFactorToProjectToUnitCube(vec3d & dir, vec3d & pt, double & sf) const
+bool FEAngio::ScaleFactorToProjectToUnitCube(FESolidElement* se, vec3d & dir, vec3d & pt, double & sf) const
 {
 	std::vector<double> possible_values;
 
+	const double ub = FEAngio::NaturalCoordinatesUpperBound(se->Type());
+	const double lb = FEAngio::NaturalCoordinatesLowerBound(se->Type());
+
 	if(dir.x > 0)
 	{
-		double temp = (1 - pt.x) / dir.x;
+		double temp = (ub - pt.x) / dir.x;
 		if (temp >= 0)
 			possible_values.push_back(temp);
 	}
 	else if(dir.x < 0)
 	{
-		double temp = (-1 - pt.x) / dir.x;
+		double temp = (lb - pt.x) / dir.x;
 		if (temp >= 0)
 			possible_values.push_back(temp);
 	}
 	if (dir.y > 0)
 	{
-		double temp = (1 - pt.y) / dir.y;
+		double temp = (ub - pt.y) / dir.y;
 		if (temp >= 0)
 			possible_values.push_back(temp);
 	}
 	else if (dir.y < 0)
 	{
-		double temp = (-1 - pt.y) / dir.y;
+		double temp = (lb - pt.y) / dir.y;
 		if (temp >= 0)
 			possible_values.push_back(temp);
 	}
@@ -765,7 +798,7 @@ bool FEAngio::ScaleFactorToProjectToUnitCube(vec3d & dir, vec3d & pt, double & s
 	}
 	else if (dir.z < 0)
 	{
-		double temp = (-1 - pt.z) / dir.z;
+		double temp = (lb - pt.z) / dir.z;
 		if (temp >= 0)
 			possible_values.push_back(temp);
 	}
@@ -799,12 +832,12 @@ double FEAngio::InElementLength(FESolidElement * se, vec3d pt0, vec3d pt1) const
 	return (g_pt0 - g_pt1).norm();
 }
 
-bool FEAngio::IsInBounds(double r[3])
+bool FEAngio::IsInBounds(FESolidElement* se, double r[3])
 {
 	//consider doing this with tolerances
-	return (r[0] <= 1.0) && (r[0] >= -1.0) &&
-		(r[1] <= 1.0) && (r[1] >= -1.0) &&
-		(r[2] <= 1.0) && (r[2] >= -1.0);
+	return (r[0] <= NaturalCoordinatesUpperBound(se->Type())) && (r[0] >= NaturalCoordinatesLowerBound(se->Type())) &&
+		(r[1] <= NaturalCoordinatesUpperBound(se->Type())) && (r[1] >= NaturalCoordinatesLowerBound(se->Type())) &&
+		(r[2] <= NaturalCoordinatesUpperBound(se->Type())) && (r[2] >= NaturalCoordinatesLowerBound(se->Type()));
 }
 
 

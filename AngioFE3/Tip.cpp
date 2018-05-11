@@ -1,6 +1,8 @@
 #include "Tip.h"
 #include "Segment.h"
 #include <iostream>
+#include <algorithm>
+#include "FEAngio.h"
 
 vec3d Tip::GetDirection(FEMesh* mesh) const
 {
@@ -70,4 +72,13 @@ Tip::Tip(Tip * other, FEMesh * mesh)
 	//deparent the new tip
 	initial_fragment_id = other->initial_fragment_id;
 	direction = other->GetDirection(mesh);
+}
+
+void Tip::SetLocalPosition(vec3d pos)
+{
+	assert(angio_element);
+	local_pos = pos;
+	local_pos.x = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound(angio_element->_elem->Type()), local_pos.x), FEAngio::NaturalCoordinatesLowerBound(angio_element->_elem->Type()));
+	local_pos.y = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound(angio_element->_elem->Type()), local_pos.y), FEAngio::NaturalCoordinatesLowerBound(angio_element->_elem->Type()));
+	local_pos.z = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound(angio_element->_elem->Type()), local_pos.z), FEAngio::NaturalCoordinatesLowerBound(angio_element->_elem->Type()));
 }

@@ -342,7 +342,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		//just do the transformations
 		vec3d nat_dir = global_to_natc * global_dir;
 		double factor;
-		bool proj_sucess = m_pangio->ScaleFactorToProjectToUnitCube(nat_dir, active_tip->local_pos, factor);
+		bool proj_sucess = m_pangio->ScaleFactorToProjectToUnitCube(active_tip->angio_element->_elem, nat_dir, active_tip->local_pos, factor);
 		vec3d possible_natc = active_tip->local_pos + (nat_dir*factor);
 		double possible_grow_length = m_pangio->InElementLength(active_tip->angio_element->_elem, active_tip->local_pos, possible_natc);
 		if ((possible_grow_length >= grow_len) && proj_sucess)
@@ -353,10 +353,10 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 			Tip * next = new Tip(active_tip, mesh);
 			Segment * seg = new Segment();
 			next->time = end_time;
-			next->local_pos = real_natc;
+			next->angio_element = angio_element;
+			next->SetLocalPosition(real_natc);
 			next->parent = seg;
 			next->face = angio_element;
-			next->angio_element = angio_element;
 			next->initial_fragment_id = active_tip->initial_fragment_id;
 			angio_element->next_tips[angio_element].push_back(next);
 
@@ -389,7 +389,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 			next->angio_element = angio_element;
 
 			//still need to update the local position of the tip
-			next->local_pos = active_tip->local_pos + (nat_dir * possible_grow_length);
+			next->SetLocalPosition(active_tip->local_pos + (nat_dir * possible_grow_length));
 
 
 			next->parent = seg;
@@ -417,12 +417,12 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 						double r[3];//new natural coordinates
 						vec3d pos = next->GetPosition(mesh);
 						sd->ProjectToElement(*ang_elem->_elem,pos,r);
-						if(m_pangio->IsInBounds(r))
+						if(m_pangio->IsInBounds(ang_elem->_elem, r))
 						{
 							Tip * adj = new Tip(next, mesh);
 							adj->angio_element = angio_element->adjacency_list[i];
 							adj->face = angio_element;
-							adj->local_pos = vec3d(r[0], r[1], r[2]);
+							adj->SetLocalPosition(vec3d(r[0], r[1], r[2]));
 							adj->use_direction = true;
 
 							angio_element->active_tips[next_buffer_index][angio_element->adjacency_list[i]].push_back(adj);
@@ -498,10 +498,10 @@ bool FEAngioMaterial::ProtoGrowthInElement(Tip * active_tip, int source_index, d
 						Tip * next = new Tip(active_tip, mesh);
 						Segment * seg = new Segment();
 						next->time = tip_time_start;
-						next->local_pos = active_tip->local_pos + natc_grow_vec;
+						next->angio_element = angio_element;
+						next->SetLocalPosition(active_tip->local_pos + natc_grow_vec);
 						next->parent = seg;
 						next->face = angio_element;
-						next->angio_element = angio_element;
 						next->initial_fragment_id = active_tip->initial_fragment_id;
 						angio_element->next_tips[angio_element].push_back(next);
 
