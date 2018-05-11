@@ -107,11 +107,13 @@ private:
 	void Output();
 
 	//returns the scale factor that would project this ray onto the unit cube, pt must be within the unit cube
-	bool ScaleFactorToProjectToUnitCube(FESolidElement* se, vec3d & dir, vec3d & pt, double & sf) const;
+	bool ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d & dir, vec3d & pt, double & sf) const;
 
 	//returns the length between the two points as if they are conencted by a line segment in the natrual coordinates of the element
 	//only the difference between the points if the elements are linear
 	double InElementLength(FESolidElement * se, vec3d pt0, vec3d pt1) const;
+
+	void GetElementsContainingNode(FENode * node, std::vector<FESolidElement*> & elements);
 
 	static bool IsInBounds(FESolidElement* se, double r[3]);
 
@@ -162,6 +164,8 @@ private:
 	std::vector<AngioElement *> angio_elements_with_holes;//the possibly sparse list of elements .. used to serialize data
 	std::unordered_map < FEAngioMaterial *, std::vector<AngioElement *>> elements_by_material;
 	int buffer_index = 0;
+
+	std::unordered_map<FENode *, std::vector<FESolidElement*>> nodes_to_elements;
 
 	double next_time = 0.0;
 

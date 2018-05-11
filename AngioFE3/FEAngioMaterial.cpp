@@ -427,7 +427,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 
 							angio_element->active_tips[next_buffer_index][angio_element->adjacency_list[i]].push_back(adj);
 
-							break;//place the tip in exactly one element
+							//break;//place the tip in exactly one element
 						}
 					}
 				}

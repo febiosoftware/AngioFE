@@ -409,6 +409,8 @@ void FEAngio::SetupAngioElements()
 	FEElemElemList eel;
 	eel.Create(mesh);
 
+	SetupNodesToElement(min_elementID);
+
 	//we are using the lut in FEMesh so the speed should be good
 	//the table now contains only angio elements
 	for (int i = 0; i < mesh->Elements(); i++)
@@ -758,7 +760,7 @@ void FEAngio::Output()
 }
 
 //returns the scale factor needed to scale the ray to grow to the boundary of the unit cube
-bool FEAngio::ScaleFactorToProjectToUnitCube(FESolidElement* se, vec3d & dir, vec3d & pt, double & sf) const
+bool FEAngio::ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d & dir, vec3d & pt, double & sf) const
 {
 	std::vector<double> possible_values;
 
@@ -830,6 +832,28 @@ double FEAngio::InElementLength(FESolidElement * se, vec3d pt0, vec3d pt1) const
 	}
 
 	return (g_pt0 - g_pt1).norm();
+}
+
+void FEAngio::SetupNodesToElement(int min_element_id)
+{
+	auto mesh = GetMesh();
+	for (int i = 0; i < mesh->Elements(); i++)
+	{
+		FESolidElement * elem = dynamic_cast<FESolidElement*>(mesh->FindElementFromID(min_element_id + i));
+		if(elem)
+		{
+			for(int j=0;j < elem->Nodes();j++)
+			{
+				FENode & node = mesh->Node(elem->m_node[j]);
+				nodes_to_elements[&node].push_back(elem);
+			}
+		}
+	}
+}
+
+void FEAngio::GetElementsContainingNode(FENode * node, std::vector<FESolidElement*> & elements)
+{
+	elements = nodes_to_elements[node];
 }
 
 bool FEAngio::IsInBounds(FESolidElement* se, double r[3])
