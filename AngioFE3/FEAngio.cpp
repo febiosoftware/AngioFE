@@ -759,60 +759,92 @@ void FEAngio::Output()
 	fileout->save_final_vessel_csv(*this);
 }
 
-//returns the scale factor needed to scale the ray to grow to the boundary of the unit cube
+//returns the scale factor needed to scale the ray to grow to the boundary of the natural coordinates
 bool FEAngio::ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d & dir, vec3d & pt, double & sf) const
 {
 	std::vector<double> possible_values;
 
 	const double ub = FEAngio::NaturalCoordinatesUpperBound(se->Type());
 	const double lb = FEAngio::NaturalCoordinatesLowerBound(se->Type());
+	//this is computed differently depending on the element type
+	switch (se->Type())
+	{
+	case FE_Element_Type::FE_HEX8G1:
+	case FE_Element_Type::FE_HEX8G8:
+	case FE_Element_Type::FE_HEX8RI:
+		if (dir.x > 0)
+		{
+			double temp = (ub - pt.x) / dir.x;
+			if (temp >= 0)
+				possible_values.push_back(temp);
+		}
+		else if (dir.x < 0)
+		{
+			double temp = (lb - pt.x) / dir.x;
+			if (temp >= 0)
+				possible_values.push_back(temp);
+		}
+		if (dir.y > 0)
+		{
+			double temp = (ub - pt.y) / dir.y;
+			if (temp >= 0)
+				possible_values.push_back(temp);
+		}
+		else if (dir.y < 0)
+		{
+			double temp = (lb - pt.y) / dir.y;
+			if (temp >= 0)
+				possible_values.push_back(temp);
+		}
 
-	if(dir.x > 0)
-	{
-		double temp = (ub - pt.x) / dir.x;
-		if (temp >= 0)
-			possible_values.push_back(temp);
-	}
-	else if(dir.x < 0)
-	{
-		double temp = (lb - pt.x) / dir.x;
-		if (temp >= 0)
-			possible_values.push_back(temp);
-	}
-	if (dir.y > 0)
-	{
-		double temp = (ub - pt.y) / dir.y;
-		if (temp >= 0)
-			possible_values.push_back(temp);
-	}
-	else if (dir.y < 0)
-	{
-		double temp = (lb - pt.y) / dir.y;
-		if (temp >= 0)
-			possible_values.push_back(temp);
-	}
+		if (dir.z > 0)
+		{
+			double temp = (1 - pt.z) / dir.z;
+			if (temp >= 0)
+				possible_values.push_back(temp);
+		}
+		else if (dir.z < 0)
+		{
+			double temp = (lb - pt.z) / dir.z;
+			if (temp >= 0)
+				possible_values.push_back(temp);
+		}
+		if (possible_values.size())
+		{
+			sf = *std::min_element(possible_values.begin(), possible_values.end());
 
-	if (dir.z > 0)
-	{
-		double temp = (1 - pt.z) / dir.z;
-		if (temp >= 0)
-			possible_values.push_back(temp);
+			return true;
+		}
+		break;
+	case FE_Element_Type::FE_TET4G1:
+	case FE_Element_Type::FE_TET4G4:
+		assert(pt.norm() < 1.01);
+		//project onto unit sphere
+		//0 = factor^2 dir *dir + factor *2 *dir *pt + (pt *pt -1)
+		double a = dir * dir;
+		double b = 2 * (dir * pt);
+		double c = (pt*pt) -1.0;
+		//now use the quadratic formula to solve for factor
+
+		double us = b*b - 4 * a*c;
+		if(us < 0)
+		{
+			//fail imaginary roots
+			return false;
+		}
+		double sol0 = (-b + sqrt(us)) / (2 * a);
+		double sol1 = (-b - sqrt(us)) / (2 * a);
+		double bsol = std::max(sol0, sol1);
+		//does the correct thing on nan 
+		if(bsol > 0)
+		{
+			sf = bsol;
+			return true;
+		}
+		break;
 	}
-	else if (dir.z < 0)
-	{
-		double temp = (lb - pt.z) / dir.z;
-		if (temp >= 0)
-			possible_values.push_back(temp);
-	}
-	if(possible_values.size())
-	{
-		sf = *std::min_element(possible_values.begin(), possible_values.end());
-		return true;
-	}
-	else
-	{
-		return false;
-	}
+	
+	return false;
 }
 
 double FEAngio::InElementLength(FESolidElement * se, vec3d pt0, vec3d pt1) const
@@ -858,6 +890,17 @@ void FEAngio::GetElementsContainingNode(FENode * node, std::vector<FESolidElemen
 
 bool FEAngio::IsInBounds(FESolidElement* se, double r[3])
 {
+	vec3d nat_pos(r[0], r[1], r[2]);
+	switch(se->Type())
+	{
+	case FE_Element_Type::FE_TET4G1:
+	case FE_Element_Type::FE_TET4G4:
+
+		return (r[0] <= NaturalCoordinatesUpperBound(se->Type())) && (r[0] >= NaturalCoordinatesLowerBound(se->Type())) &&
+			(r[1] <= NaturalCoordinatesUpperBound(se->Type())) && (r[1] >= NaturalCoordinatesLowerBound(se->Type())) &&
+			(r[2] <= NaturalCoordinatesUpperBound(se->Type())) && (r[2] >= NaturalCoordinatesLowerBound(se->Type())) && (nat_pos.norm() <= 1);
+
+	}
 	//consider doing this with tolerances
 	return (r[0] <= NaturalCoordinatesUpperBound(se->Type())) && (r[0] >= NaturalCoordinatesLowerBound(se->Type())) &&
 		(r[1] <= NaturalCoordinatesUpperBound(se->Type())) && (r[1] >= NaturalCoordinatesLowerBound(se->Type())) &&

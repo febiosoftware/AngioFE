@@ -123,11 +123,12 @@ void Fileout::save_vessel_state(FEAngio& angio)
 
 			cur = static_cast<float>(r1.x);
 			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
-			r1 = angio.ReferenceCoordinates(front_tip);
 			cur = static_cast<float>(r1.y);
 			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
 			cur = static_cast<float>(r1.z);
 			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
+
+			r1 = angio.ReferenceCoordinates(front_tip);
 
 			vessel_csv_stream << r0.x << "," << r0.y << "," << r0.z << "," << r1.x << "," << r1.y << "," << r1.z << "," << rtime << std::endl;
 		}

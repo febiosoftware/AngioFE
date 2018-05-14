@@ -100,7 +100,7 @@ private:
 
 	vec3d ReferenceCoordinates(Tip * tip) const;
 
-	
+	void SetupNodesToElement(int min_element_id);
 
 
 	// do the final output
