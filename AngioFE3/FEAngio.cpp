@@ -818,27 +818,57 @@ bool FEAngio::ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d
 		break;
 	case FE_Element_Type::FE_TET4G1:
 	case FE_Element_Type::FE_TET4G4:
-		assert(pt.norm() < 1.01);
-		//project onto unit sphere
-		//0 = factor^2 dir *dir + factor *2 *dir *pt + (pt *pt -1)
-		double a = dir * dir;
-		double b = 2 * (dir * pt);
-		double c = (pt*pt) -1.0;
-		//now use the quadratic formula to solve for factor
-
-		double us = b*b - 4 * a*c;
-		if(us < 0)
+		assert((pt.x + pt.y + pt.z) < 1.01);
+		double sol0 = (1 - (pt.x + pt.y + pt.z)) / (dir.x + dir.y + dir.z);
+		mat3d temp1(dir, vec3d(0, 0, -1), vec3d(-1, 0, 0));
+		vec3d sol1;
+		double det1 = temp1.det();
+		if(det1 != 0.0)
 		{
-			//fail imaginary roots
-			return false;
+			temp1 = temp1.inverse();
+			sol1 = temp1* (-pt);
 		}
-		double sol0 = (-b + sqrt(us)) / (2 * a);
-		double sol1 = (-b - sqrt(us)) / (2 * a);
-		double bsol = std::max(sol0, sol1);
-		//does the correct thing on nan 
-		if(bsol > 0)
+		
+
+		mat3d temp2(dir, vec3d(0, -1, 0), vec3d(-1, 0, 0));
+		double det2 = temp2.det();
+		vec3d sol2;
+		if(det2 != 0.0)
 		{
-			sf = bsol;
+			temp2 = temp2.inverse();
+			sol2 = temp2* (-pt);
+		}
+
+
+		mat3d temp3(dir, vec3d(0, 0, -1), vec3d(0, -1, 0));
+		vec3d sol3;
+		double det3 = temp3.det();
+		if(det3 != 0.0)
+		{
+			temp3 = temp3.inverse();
+			sol3 = temp3* (-pt);
+		}
+		
+
+
+		if(sol0 > 0)
+		{
+			sf = sol0;
+			return true;
+		}
+		if(sol1.x > 0 && (sol1.y <= 1.0) && (sol1.y >= 0) && (sol1.z <= 1.0) && (sol1.z >= 0) && det1 != 0.0)
+		{
+			sf = sol1.x;
+			return true;
+		}
+		if (sol2.x > 0 && (sol2.y <= 1.0) && (sol2.y >= 0) && (sol2.z <= 1.0) && (sol2.z >= 0) && det2 != 0.0)
+		{
+			sf = sol2.x;
+			return true;
+		}
+		if (sol3.x > 0 && (sol3.y <= 1.0) && (sol3.y >= 0) && (sol3.z <= 1.0) && (sol3.z >= 0) && det3 != 0.0)
+		{
+			sf = sol3.x;
 			return true;
 		}
 		break;
@@ -898,7 +928,7 @@ bool FEAngio::IsInBounds(FESolidElement* se, double r[3])
 
 		return (r[0] <= NaturalCoordinatesUpperBound(se->Type())) && (r[0] >= NaturalCoordinatesLowerBound(se->Type())) &&
 			(r[1] <= NaturalCoordinatesUpperBound(se->Type())) && (r[1] >= NaturalCoordinatesLowerBound(se->Type())) &&
-			(r[2] <= NaturalCoordinatesUpperBound(se->Type())) && (r[2] >= NaturalCoordinatesLowerBound(se->Type())) && (nat_pos.norm() <= 1);
+			(r[2] <= NaturalCoordinatesUpperBound(se->Type())) && (r[2] >= NaturalCoordinatesLowerBound(se->Type())) && ((nat_pos.x + nat_pos.y + nat_pos.z) <= 1);
 
 	}
 	//consider doing this with tolerances

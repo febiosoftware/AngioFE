@@ -46,7 +46,7 @@ public:
 
 	void GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index);
 
-	void GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index);
+	void GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double override_grow_length=10, bool grow_len_overrride=false);
 
 	//used to do the growth in the fragmetn seeder returns whther or not any segment hit a wall
 	bool ProtoGrowthInElement(Tip * active_tip, int source_index, double intial_length);

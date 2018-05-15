@@ -293,22 +293,33 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, i
 	}
 }
 
-void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index)
+void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double override_grow_length, bool grow_len_overrride)
 {
 	if(active_tip->time >= end_time)
 	{
 		active_tip->angio_element->next_tips[active_tip->face].push_back(active_tip);
 		return;
 	}
-
+	
 	auto angio_element = active_tip->angio_element;
 	assert(active_tip);
+	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (active_tip->local_pos.x + active_tip->local_pos.y + active_tip->local_pos.z) < 1.01 : true );
+	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (active_tip->local_pos.x + active_tip->local_pos.y + active_tip->local_pos.z) < 1.01 : true);
 	auto mesh = m_pangio->GetMesh();
 	const double eps = 0.001;
 	const double min_segm_len = 0.1;
 	int next_buffer_index = (buffer_index + 1) % 2;
 	double dt = end_time - active_tip->time;
-	double grow_len = this->GetGrowthLengthOverUnitTime(angio_element, active_tip->local_pos) *dt;
+	double grow_len;
+	if(grow_len_overrride)
+	{
+		grow_len = override_grow_length;
+	}
+	else
+	{
+		grow_len = this->GetGrowthLengthOverUnitTime(angio_element, active_tip->local_pos) *dt;
+	}
+	 
 	
 
 	double Gr[FEElement::MAX_NODES];
@@ -339,101 +350,101 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		global_pos += mesh->Node(angio_element->_elem->m_node[j]).m_rt* H[j];
 	}
 
-		//just do the transformations
-		vec3d nat_dir = global_to_natc * global_dir;
-		double factor;
-		bool proj_sucess = m_pangio->ScaleFactorToProjectToNaturalCoordinates(active_tip->angio_element->_elem, nat_dir, active_tip->local_pos, factor);
-		vec3d possible_natc = active_tip->local_pos + (nat_dir*factor);
-		double natc_len = possible_natc.norm();
-		double possible_grow_length = m_pangio->InElementLength(active_tip->angio_element->_elem, active_tip->local_pos, possible_natc);
-		if ((possible_grow_length >= grow_len) && proj_sucess)
+	//just do the transformations
+	vec3d nat_dir = global_to_natc * global_dir;
+	double factor;
+	bool proj_sucess = m_pangio->ScaleFactorToProjectToNaturalCoordinates(active_tip->angio_element->_elem, nat_dir, active_tip->local_pos, factor);
+	vec3d possible_natc = active_tip->local_pos + (nat_dir*factor);
+	double natc_len = possible_natc.norm();
+	double possible_grow_length = m_pangio->InElementLength(active_tip->angio_element->_elem, active_tip->local_pos, possible_natc);
+	if ((possible_grow_length >= grow_len) && proj_sucess)
+	{
+		//this is still in the same element
+		vec3d real_natc = active_tip->local_pos + (nat_dir * (factor * (grow_len / possible_grow_length)));
+		//add the segment and add the new tip to the current angio element
+		Tip * next = new Tip(active_tip, mesh);
+		Segment * seg = new Segment();
+		next->time = end_time;
+		next->angio_element = angio_element;
+		next->SetLocalPosition(real_natc);
+		next->parent = seg;
+		next->face = angio_element;
+		next->initial_fragment_id = active_tip->initial_fragment_id;
+		angio_element->next_tips[angio_element].push_back(next);
+
+		//move next to use the rest of the remaining dt
+
+		seg->back = active_tip;
+		seg->front = next;
+		if (active_tip->parent)
 		{
-			//this is still in the same element
-			vec3d real_natc = active_tip->local_pos + (nat_dir * (factor * (grow_len / possible_grow_length)));
-			//add the segment and add the new tip to the current angio element
-			Tip * next = new Tip(active_tip, mesh);
-			Segment * seg = new Segment();
-			next->time = end_time;
-			next->angio_element = angio_element;
-			next->SetLocalPosition(real_natc);
-			next->parent = seg;
-			next->face = angio_element;
-			next->initial_fragment_id = active_tip->initial_fragment_id;
-			angio_element->next_tips[angio_element].push_back(next);
-
-			//move next to use the rest of the remaining dt
-
-			seg->back = active_tip;
-			seg->front = next;
-			if (active_tip->parent)
-			{
-				seg->parent = active_tip->parent;
-			}
-
-
-			angio_element->recent_segments.push_back(seg);
-			assert(next->angio_element);
+			seg->parent = active_tip->parent;
 		}
-		else if(proj_sucess)
+
+
+		angio_element->recent_segments.push_back(seg);
+		assert(next->angio_element);
+	}
+	else if(proj_sucess)
+	{
+		//the segment only grows for a portion of dt
+		double tip_time_start = active_tip->time + (possible_grow_length / grow_len) * dt;
+		assert(tip_time_start < end_time);
+		//grow len should always be nonzero so this division should be okay
+		//this segment is growing into a new element do the work to do this
+
+		//next is just the end of the segment not the begining of the next segment
+		Tip * next = new Tip();
+		Segment * seg = new Segment();
+		next->time = tip_time_start;
+
+		next->angio_element = angio_element;
+
+		//still need to update the local position of the tip
+		next->SetLocalPosition(active_tip->local_pos + (nat_dir * possible_grow_length));
+
+
+		next->parent = seg;
+		next->face = angio_element;
+		next->initial_fragment_id = active_tip->initial_fragment_id;
+
+		seg->back = active_tip;
+		seg->front = next;
+		if (active_tip->parent)
 		{
-			//the segment only grows for a portion of dt
-			double tip_time_start = active_tip->time + (possible_grow_length / grow_len) * dt;
-			assert(tip_time_start < end_time);
-			//grow len should always be nonzero so this division should be okay
-			//this segment is growing into a new element do the work to do this
-
-			//next is just the end of the segment not the begining of the next segment
-			Tip * next = new Tip();
-			Segment * seg = new Segment();
-			next->time = tip_time_start;
-
-			next->angio_element = angio_element;
-
-			//still need to update the local position of the tip
-			next->SetLocalPosition(active_tip->local_pos + (nat_dir * possible_grow_length));
+			seg->parent = active_tip->parent;
+		}
 
 
-			next->parent = seg;
-			next->face = angio_element;
-			next->initial_fragment_id = active_tip->initial_fragment_id;
+		angio_element->recent_segments.push_back(seg);
 
-			seg->back = active_tip;
-			seg->front = next;
-			if (active_tip->parent)
+		for(int i=0; i < angio_element->adjacency_list.size();i++)
+		{
+			AngioElement * ang_elem = angio_element->adjacency_list[i];
+			if(ang_elem)
 			{
-				seg->parent = active_tip->parent;
-			}
-
-
-			angio_element->recent_segments.push_back(seg);
-
-			for(int i=0; i < angio_element->adjacency_list.size();i++)
-			{
-				AngioElement * ang_elem = angio_element->adjacency_list[i];
-				if(ang_elem)
+				FESolidDomain * sd = dynamic_cast<FESolidDomain*>(ang_elem->_elem->GetDomain());
+				if(sd)
 				{
-					FESolidDomain * sd = dynamic_cast<FESolidDomain*>(ang_elem->_elem->GetDomain());
-					if(sd)
+					double r[3];//new natural coordinates
+					vec3d pos = next->GetPosition(mesh);
+					sd->ProjectToElement(*ang_elem->_elem,pos,r);
+					if(m_pangio->IsInBounds(ang_elem->_elem, r))
 					{
-						double r[3];//new natural coordinates
-						vec3d pos = next->GetPosition(mesh);
-						sd->ProjectToElement(*ang_elem->_elem,pos,r);
-						if(m_pangio->IsInBounds(ang_elem->_elem, r))
-						{
-							Tip * adj = new Tip(next, mesh);
-							adj->angio_element = angio_element->adjacency_list[i];
-							adj->face = angio_element;
-							adj->SetLocalPosition(vec3d(r[0], r[1], r[2]));
-							adj->use_direction = true;
+						Tip * adj = new Tip(next, mesh);
+						adj->angio_element = angio_element->adjacency_list[i];
+						adj->face = angio_element;
+						adj->SetLocalPosition(vec3d(r[0], r[1], r[2]));
+						adj->use_direction = true;
 
-							angio_element->active_tips[next_buffer_index][angio_element->adjacency_list[i]].push_back(adj);
+						angio_element->active_tips[next_buffer_index][angio_element->adjacency_list[i]].push_back(adj);
 
-							//break;//place the tip in exactly one element
-						}
+						//break;//place the tip in exactly one element
 					}
 				}
 			}
 		}
+	}
 }
 
 bool FEAngioMaterial::ProtoGrowthInElement(Tip * active_tip, int source_index, double initial_length)
