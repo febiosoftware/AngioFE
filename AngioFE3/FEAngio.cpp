@@ -799,7 +799,7 @@ bool FEAngio::ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d
 
 		if (dir.z > 0)
 		{
-			double temp = (1 - pt.z) / dir.z;
+			double temp = (ub - pt.z) / dir.z;
 			if (temp >= 0)
 				possible_values.push_back(temp);
 		}
@@ -924,7 +924,7 @@ void FEAngio::GetElementsContainingNode(FENode * node, std::vector<FESolidElemen
 	elements = nodes_to_elements[node];
 }
 
-bool FEAngio::IsInBounds(FESolidElement* se, double r[3])
+bool FEAngio::IsInBounds(FESolidElement* se, double r[3], double eps)
 {
 	vec3d nat_pos(r[0], r[1], r[2]);
 	switch(se->Type())
@@ -932,15 +932,15 @@ bool FEAngio::IsInBounds(FESolidElement* se, double r[3])
 	case FE_Element_Type::FE_TET4G1:
 	case FE_Element_Type::FE_TET4G4:
 
-		return (r[0] <= NaturalCoordinatesUpperBound(se->Type())) && (r[0] >= NaturalCoordinatesLowerBound(se->Type())) &&
-			(r[1] <= NaturalCoordinatesUpperBound(se->Type())) && (r[1] >= NaturalCoordinatesLowerBound(se->Type())) &&
-			(r[2] <= NaturalCoordinatesUpperBound(se->Type())) && (r[2] >= NaturalCoordinatesLowerBound(se->Type())) && ((nat_pos.x + nat_pos.y + nat_pos.z) <= 1);
+		return (r[0] <= NaturalCoordinatesUpperBound(se->Type()) + eps) && (r[0] >= NaturalCoordinatesLowerBound(se->Type())-eps) &&
+			(r[1] <= NaturalCoordinatesUpperBound(se->Type())+ eps) && (r[1] >= NaturalCoordinatesLowerBound(se->Type())-eps) &&
+			(r[2] <= NaturalCoordinatesUpperBound(se->Type())+ eps) && (r[2] >= NaturalCoordinatesLowerBound(se->Type())- eps) && ((nat_pos.x + nat_pos.y + nat_pos.z) <= 1 + eps);
 
 	}
 	//consider doing this with tolerances
-	return (r[0] <= NaturalCoordinatesUpperBound(se->Type())) && (r[0] >= NaturalCoordinatesLowerBound(se->Type())) &&
-		(r[1] <= NaturalCoordinatesUpperBound(se->Type())) && (r[1] >= NaturalCoordinatesLowerBound(se->Type())) &&
-		(r[2] <= NaturalCoordinatesUpperBound(se->Type())) && (r[2] >= NaturalCoordinatesLowerBound(se->Type()));
+	return (r[0] <= NaturalCoordinatesUpperBound(se->Type())+ eps) && (r[0] >= NaturalCoordinatesLowerBound(se->Type())-eps) &&
+		(r[1] <= NaturalCoordinatesUpperBound(se->Type()) + eps) && (r[1] >= NaturalCoordinatesLowerBound(se->Type())-eps) &&
+		(r[2] <= NaturalCoordinatesUpperBound(se->Type()) + eps) && (r[2] >= NaturalCoordinatesLowerBound(se->Type())- eps);
 }
 
 

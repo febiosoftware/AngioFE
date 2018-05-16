@@ -117,7 +117,7 @@ private:
 
 	void GetElementsContainingNode(FENode * node, std::vector<FESolidElement*> & elements);
 
-	static bool IsInBounds(FESolidElement* se, double r[3]);
+	static bool IsInBounds(FESolidElement* se, double r[3], double eps= 0.0001);
 
 	void FillInFaces(FEMesh * mesh, AngioElement * angio_element);
 
@@ -174,4 +174,6 @@ private:
 	std::unordered_map<AngioElement *, std::vector<AngioElement *>> angio_elements_to_all_adjacent_elements;//adjacent is shares a node with the element
 	double next_time = 0.0;
 
+
+	const double eps = 0.001;
 };

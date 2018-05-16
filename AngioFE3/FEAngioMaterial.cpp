@@ -306,7 +306,6 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (active_tip->local_pos.x + active_tip->local_pos.y + active_tip->local_pos.z) < 1.01 : true );
 	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (active_tip->local_pos.x + active_tip->local_pos.y + active_tip->local_pos.z) < 1.01 : true);
 	auto mesh = m_pangio->GetMesh();
-	const double eps = 0.001;
 	const double min_segm_len = 0.1;
 	int next_buffer_index = (buffer_index + 1) % 2;
 	double dt = end_time - active_tip->time;
@@ -355,7 +354,6 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	double factor;
 	bool proj_sucess = m_pangio->ScaleFactorToProjectToNaturalCoordinates(active_tip->angio_element->_elem, nat_dir, active_tip->local_pos, factor);
 	vec3d possible_natc = active_tip->local_pos + (nat_dir*factor);
-	double natc_len = possible_natc.norm();
 	double possible_grow_length = m_pangio->InElementLength(active_tip->angio_element->_elem, active_tip->local_pos, possible_natc);
 	if ((possible_grow_length >= grow_len) && proj_sucess)
 	{
@@ -415,7 +413,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 			seg->parent = active_tip->parent;
 		}
 
-
+		vec3d pos = next->GetPosition(mesh);
 		angio_element->recent_segments.push_back(seg);
 
 		for(int i=0; i < angio_element->adjacency_list.size();i++)
@@ -427,7 +425,6 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 				if(sd)
 				{
 					double r[3];//new natural coordinates
-					vec3d pos = next->GetPosition(mesh);
 					sd->ProjectToElement(*ang_elem->_elem,pos,r);
 					if(m_pangio->IsInBounds(ang_elem->_elem, r))
 					{
@@ -437,7 +434,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 						adj->SetLocalPosition(vec3d(r[0], r[1], r[2]));
 						adj->use_direction = true;
 
-						angio_element->active_tips[next_buffer_index][angio_element->adjacency_list[i]].push_back(adj);
+						angio_element->active_tips[next_buffer_index][ang_elem].push_back(adj);
 
 						//break;//place the tip in exactly one element
 					}
