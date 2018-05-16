@@ -58,6 +58,7 @@ bool ByElementFragmentSeeder::SeedFragments(std::vector<AngioElement *> &angio_e
 		//r0->angio_element->_angio_mat->GrowthInElement(0, r0, 1, -1, initial_vessel_length, true);
 
 	}
+	//angio_mat->m_pangio->GrowSegments();
 
 	return true;
 }

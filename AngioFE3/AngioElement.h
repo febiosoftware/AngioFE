@@ -13,7 +13,7 @@ class Tip;
 class AngioElement
 {
 public:
-	AngioElement(FESolidElement * elem, FEAngioMaterial * angio_mat, FEMaterial * mat, FEMesh * mesh) : _elem(elem), _angio_mat(angio_mat), _mat(mat), inner_faces(mesh)
+	AngioElement(FESolidElement * elem, FEAngioMaterial * angio_mat, FEMaterial * mat, FEMesh * mesh) : _elem(elem), _angio_mat(angio_mat), _mat(mat)
 	{
 		//active_tips[0][this]
 	};
@@ -33,9 +33,6 @@ public:
 	std::unordered_map<AngioElement*, std::vector<Tip *>> active_tips[2];
 	std::unordered_map<AngioElement*, std::vector<Tip *>> next_tips;
 	std::vector<Tip *> current_tips;//to be used in stress calculations
-
-	//std::vector<FESurfaceElement*>  inner_faces;
-	FESurface inner_faces;
 
 	int padding[16];
 };

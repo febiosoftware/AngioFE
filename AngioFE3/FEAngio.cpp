@@ -366,34 +366,9 @@ void FEAngio::FillInAdjacencyInfo(FEMesh * mesh,FEElemElemList * eel, AngioEleme
 
 }
 
-void FillInFaces(FEMesh * mesh, AngioElement * angio_element)
+void FEAngio::FillInFaces(FEMesh * mesh, AngioElement * angio_element)
 {
-	//for hex elements the faces produced have the normals pointing outwards with a CCW winding ... verify this is true for other elements
-	int nodes[FEElement::MAX_NODES];
-	int faces = mesh->Faces(*angio_element->_elem);
-	FEFacetSet fs(mesh);
-	fs.Create(faces);
-	for(int i=0; i < faces;i++)
-	{
-		FEFacetSet::FACET& face = fs.Face(i);
-		int face_nodes = mesh->GetFace(*angio_element->_elem, i, nodes);
-		face.ntype = face_nodes;
-		//do any remapping of nodes here
-		//might do most of the remappings .. will fail if there is a central node in a face
-		assert(face_nodes>=3);
-		std::vector<int> v_nodes;
-		for(int j=0; j < face_nodes;j++)
-		{
-			v_nodes.push_back(nodes[j]);
-		}
-		std::reverse(v_nodes.begin() + 1, v_nodes.end());
-		for(int j=0; j < v_nodes.size();j++)
-		{
-			face.node[j] = v_nodes[j];
-		}
-
-	}
-	angio_element->inner_faces.BuildFromSet(fs);
+	angio_element->adjacency_list = angio_elements_to_all_adjacent_elements[angio_element];
 }
 
 void FEAngio::SetupAngioElements()
@@ -440,6 +415,31 @@ void FEAngio::SetupAngioElements()
 	for(int i=0; i < angio_elements.size();i++)
 	{
 		FillInAdjacencyInfo(mesh, &eel,  angio_elements[i], se_to_angio_elem[angio_elements[i]->_elem].second);
+	}
+	for(int i=0; i < angio_elements.size();i++)
+	{
+		se_to_angio_element[angio_elements[i]->_elem] = angio_elements[i];
+	}
+	
+	for(int i=0; i < angio_elements.size();i++)
+	{
+		for(int j=0; j < angio_elements[i]->_elem->Nodes();j++)
+		{
+			FENode & node = mesh->Node(angio_elements[i]->_elem->m_node[j]);
+			std::vector<FESolidElement *> & adj_elements = nodes_to_elements[&node];
+			for(int k=0;k< adj_elements.size();k++)
+			{
+				auto iter = se_to_angio_element.find(adj_elements[k]);
+				if(iter != se_to_angio_element.end() && (iter->second != angio_elements[i]))
+				{
+					std::vector<AngioElement*> & ang_elems = angio_elements_to_all_adjacent_elements[angio_elements[i]];
+					if(std::find(ang_elems.begin(), ang_elems.end(), iter->second) == ang_elems.end())
+					{
+						ang_elems.push_back(iter->second);
+					}
+				}	
+			}
+		}
 	}
 	for (int i = 0; i < angio_elements.size(); i++)
 	{
@@ -820,6 +820,7 @@ bool FEAngio::ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d
 	case FE_Element_Type::FE_TET4G4:
 		assert((pt.x + pt.y + pt.z) < 1.01);
 		double sol0 = (1 - (pt.x + pt.y + pt.z)) / (dir.x + dir.y + dir.z);
+
 		mat3d temp1(dir, vec3d(0, 0, -1), vec3d(-1, 0, 0));
 		vec3d sol1;
 		double det1 = temp1.det();
@@ -851,7 +852,7 @@ bool FEAngio::ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d
 		
 
 
-		if(sol0 > 0)
+		if(sol0 > 0 && (dir.x + dir.y + dir.z) != 0.0)
 		{
 			sf = sol0;
 			return true;
@@ -870,6 +871,10 @@ bool FEAngio::ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d
 		{
 			sf = sol3.x;
 			return true;
+		}
+		if((dir.x + dir.y + dir.z) == 0.0)
+		{
+			return false;
 		}
 		break;
 	}
@@ -911,6 +916,7 @@ void FEAngio::SetupNodesToElement(int min_element_id)
 			}
 		}
 	}
+	
 }
 
 void FEAngio::GetElementsContainingNode(FENode * node, std::vector<FESolidElement*> & elements)

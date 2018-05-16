@@ -76,6 +76,8 @@ public:
 
 	static double NaturalCoordinatesUpperBound(int et);
 	static double NaturalCoordinatesLowerBound(int et);
+
+	void GrowSegments();
 private:
 	
 	// Initialize the nodal ECM values
@@ -96,7 +98,7 @@ private:
 
 	void ApplydtToTimestepper(double dt);
 
-	void GrowSegments();
+	
 
 	vec3d ReferenceCoordinates(Tip * tip) const;
 
@@ -116,6 +118,8 @@ private:
 	void GetElementsContainingNode(FENode * node, std::vector<FESolidElement*> & elements);
 
 	static bool IsInBounds(FESolidElement* se, double r[3]);
+
+	void FillInFaces(FEMesh * mesh, AngioElement * angio_element);
 
 	static bool feangio_callback(FEModel* pfem, unsigned int nwhen, void* pd)
 	{
@@ -165,8 +169,9 @@ private:
 	std::unordered_map < FEAngioMaterial *, std::vector<AngioElement *>> elements_by_material;
 	int buffer_index = 0;
 
+	std::unordered_map<FESolidElement *, AngioElement *> se_to_angio_element;
 	std::unordered_map<FENode *, std::vector<FESolidElement*>> nodes_to_elements;
-
+	std::unordered_map<AngioElement *, std::vector<AngioElement *>> angio_elements_to_all_adjacent_elements;//adjacent is shares a node with the element
 	double next_time = 0.0;
 
 };
