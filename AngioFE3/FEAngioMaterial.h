@@ -14,6 +14,7 @@
 #include "CommonAngioProperites.h"
 #include <FEBioMix/FEMultiphasic.h>
 #include "CultureParameters.h"
+#include "SegmentDirectionModifier.h"
 
 class AngioElement;
 
@@ -56,6 +57,8 @@ public:
 	void PrepBuffers(AngioElement* angio_elem, double end_time, int buffer_index);
 
 	bool SeedFragments(std::vector<AngioElement *>& angio_elements);
+
+	vec3d ApplySegmentDirectionModifiers(Tip * tip, double dt);
 
 	void UpdateGDMs();
 
@@ -104,6 +107,8 @@ private:
 	DECLARE_PARAMETER_LIST();
 
 	FEPropertyT<FESolidMaterial> matrix_material;
+	FEVecPropertyT<SegmentDirectionModifier> direction_modifiers;
+	FEVecPropertyT<SegmentDirectionModifier> length_modifiers;
 	FEPropertyT<CommonAngioProperties> common_properties;
 	CultureParameters m_cultureParams;
 	

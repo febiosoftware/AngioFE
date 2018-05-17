@@ -72,6 +72,7 @@ Tip::Tip(Tip * other, FEMesh * mesh)
 	//deparent the new tip
 	initial_fragment_id = other->initial_fragment_id;
 	direction = other->GetDirection(mesh);
+	direction.unit();
 }
 
 void Tip::SetLocalPosition(vec3d pos)

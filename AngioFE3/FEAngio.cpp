@@ -818,8 +818,18 @@ bool FEAngio::ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d
 		break;
 	case FE_Element_Type::FE_TET4G1:
 	case FE_Element_Type::FE_TET4G4:
+		//currently broken
 		assert((pt.x + pt.y + pt.z) < 1.01);
-		double sol0 = (1 - (pt.x + pt.y + pt.z)) / (dir.x + dir.y + dir.z);
+		//double sol0 = (1 - (pt.x + pt.y + pt.z)) / (dir.x + dir.y + dir.z);
+		mat3d temp0(dir, vec3d(0, 0, -1), vec3d(0, -1, 0));
+		vec3d sol0;
+		double det0 = temp0.det();
+		if (det0 != 0.0)
+		{
+			temp0 = temp0.inverse();
+			sol0 = temp0* (vec3d(1,0,0)-pt);
+		}
+
 
 		mat3d temp1(dir, vec3d(0, 0, -1), vec3d(-1, 0, 0));
 		vec3d sol1;
@@ -852,9 +862,9 @@ bool FEAngio::ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d
 		
 
 
-		if(sol0 > 0 && (dir.x + dir.y + dir.z) != 0.0)
+		if (sol0.x > 0 && (sol0.y <= 1.0) && (sol0.y >= 0) && (sol0.z <= 1.0) && (sol0.z >= 0) && det0 != 0.0)
 		{
-			sf = sol0;
+			sf = sol0.x;
 			return true;
 		}
 		if(sol1.x > 0 && (sol1.y <= 1.0) && (sol1.y >= 0) && (sol1.z <= 1.0) && (sol1.z >= 0) && det1 != 0.0)

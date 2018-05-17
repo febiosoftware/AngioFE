@@ -368,6 +368,8 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		next->parent = seg;
 		next->face = angio_element;
 		next->initial_fragment_id = active_tip->initial_fragment_id;
+		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (next->local_pos.x + next->local_pos.y + next->local_pos.z) < 1.01 : true);
+		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (next->local_pos.x + next->local_pos.y + next->local_pos.z) < 1.01 : true);
 		angio_element->next_tips[angio_element].push_back(next);
 
 		//move next to use the rest of the remaining dt
@@ -405,6 +407,9 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		next->parent = seg;
 		next->face = angio_element;
 		next->initial_fragment_id = active_tip->initial_fragment_id;
+
+		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (next->local_pos.x + next->local_pos.y + next->local_pos.z) < 1.01 : true);
+		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (next->local_pos.x + next->local_pos.y + next->local_pos.z) < 1.01 : true);
 
 		seg->back = active_tip;
 		seg->front = next;
@@ -467,6 +472,11 @@ void FEAngioMaterial::PrepBuffers(AngioElement* angio_elem, double end_time, int
 bool FEAngioMaterial::SeedFragments(std::vector<AngioElement *>& angio_elements)
 {
 	return common_properties->fseeder->SeedFragments(angio_elements, this,0);
+}
+
+vec3d FEAngioMaterial::ApplySegmentDirectionModifiers(Tip * tip, double dt)
+{
+	
 }
 
 void FEAngioMaterial::UpdateGDMs()
