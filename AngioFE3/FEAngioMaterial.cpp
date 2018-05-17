@@ -312,7 +312,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	double grow_len;
 	if(grow_len_overrride)
 	{
-		grow_len = override_grow_length;
+		grow_len = override_grow_length  *dt;
 	}
 	else
 	{

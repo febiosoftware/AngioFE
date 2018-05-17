@@ -14,7 +14,7 @@
 #include "CommonAngioProperites.h"
 #include <FEBioMix/FEMultiphasic.h>
 #include "CultureParameters.h"
-#include "SegmentDirectionModifier.h"
+#include "SegmentGrowthModifiers.h"
 
 class AngioElement;
 
@@ -107,8 +107,9 @@ private:
 	DECLARE_PARAMETER_LIST();
 
 	FEPropertyT<FESolidMaterial> matrix_material;
-	FEVecPropertyT<SegmentDirectionModifier> direction_modifiers;
-	FEVecPropertyT<SegmentDirectionModifier> length_modifiers;
+	FEVecPropertyT<PositionDependentDirection> direction_modifiers;
+	FEVecPropertyT<PreviousSegmentContribution> length_modifiers;
+	FEVecPropertyT<ContributionMix> alpha_modifiers;
 	FEPropertyT<CommonAngioProperties> common_properties;
 	CultureParameters m_cultureParams;
 	
