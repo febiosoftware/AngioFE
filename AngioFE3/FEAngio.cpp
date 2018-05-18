@@ -405,6 +405,10 @@ void FEAngio::SetupAngioElements()
 					std::vector<AngioElement *> ang_elem;
 					elements_by_material[angio_mat] = ang_elem;
 				}
+				if(std::find(angio_materials.begin(), angio_materials.end() ,angio_mat) == angio_materials.end())
+				{
+					angio_materials.push_back(angio_mat);
+				}
 				elements_by_material[angio_mat].push_back(angio_element);
 				se_to_angio_elem[elem] = { angio_element,i };
 			}
@@ -649,6 +653,7 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 	FETimeInfo fti = fem.GetTime();
 	m_time.t = fti.currentTime;
 	m_time.dt = fti.timeIncrement;
+	FEMesh * mesh = GetMesh();
 	
 	static bool start = false;
 	if (!start)
@@ -658,11 +663,17 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		GrowSegments();
 		grow_timer.stop();
 		*/
-		for (size_t i = 0; i < m_pmat.size(); i++)
+		update_angio_stress_timer.start();
+		for(int i=0; i < angio_materials.size();i++)
 		{
-			//expermentally calculate the stress from the vessels here
-			m_pmat[i]->UpdateAngioStresses();
+			angio_materials[i]->angio_stress_policy->UpdateScale(m_time.t);
 		}
+		for(size_t i=0;i < angio_elements.size();i++)
+		{
+			angio_elements[i]->_angio_mat->angio_stress_policy->AngioStress(angio_elements[i], this,mesh);
+		}
+		update_angio_stress_timer.stop();
+
 		start = true;
 	}
 
@@ -693,11 +704,16 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 
 		update_sprout_stress_scaling_timer.stop();
 
-		for (size_t i = 0; i < m_pmat.size(); i++)
+		update_angio_stress_timer.start();
+		for (int i = 0; i < angio_materials.size(); i++)
 		{
-			//expermentally calculate the stress from the vessels here
-			m_pmat[i]->UpdateAngioStresses();
+			angio_materials[i]->angio_stress_policy->UpdateScale(m_time.t);
 		}
+		for (size_t i = 0; i < angio_elements.size(); i++)
+		{
+			angio_elements[i]->_angio_mat->angio_stress_policy->AngioStress(angio_elements[i], this,mesh);
+		}
+		update_angio_stress_timer.stop();
 	}
 	else if (nwhen == CB_MAJOR_ITERS)
 	{
@@ -745,6 +761,7 @@ void FEAngio::ResetTimers()
 	update_gdms_timer.reset();
 	update_ecm_timer.reset();
 	material_update_timer.reset();
+	update_angio_stress_timer.reset();
 }
 
 //-----------------------------------------------------------------------------
@@ -953,6 +970,97 @@ bool FEAngio::IsInBounds(FESolidElement* se, double r[3], double eps)
 		(r[2] <= NaturalCoordinatesUpperBound(se->Type()) + eps) && (r[2] >= NaturalCoordinatesLowerBound(se->Type())- eps);
 }
 
+
+void FEAngio::ExtremaInElement(FESolidElement * se, std::vector<vec3d> & extrema) const
+{
+	auto mesh = GetMesh();
+	double H[FEElement::MAX_NODES];
+	vec3d pos;
+	switch(se->Type())
+	{
+	case FE_Element_Type::FE_HEX8G1:
+	case FE_Element_Type::FE_HEX8G8:
+		se->shape_fnc(H, 1, 1, 1);
+		pos = vec3d(0, 0, 0);
+		for (int j = 0; j < se->Nodes(); j++)
+		{
+			pos += mesh->Node(se->m_node[j]).m_rt* H[j];
+		}
+		extrema.push_back(pos);
+		se->shape_fnc(H, -1, 1, 1);
+		pos = vec3d(0, 0, 0);
+		for (int j = 0; j < se->Nodes(); j++)
+		{
+			pos += mesh->Node(se->m_node[j]).m_rt* H[j];
+		}
+		extrema.push_back(pos);
+		se->shape_fnc(H, 1, -1, 1);
+		pos = vec3d(0, 0, 0);
+		for (int j = 0; j < se->Nodes(); j++)
+		{
+			pos += mesh->Node(se->m_node[j]).m_rt* H[j];
+		}
+		extrema.push_back(pos);
+		se->shape_fnc(H, 1, 1, -1);
+		pos = vec3d(0, 0, 0);
+		for (int j = 0; j < se->Nodes(); j++)
+		{
+			pos += mesh->Node(se->m_node[j]).m_rt* H[j];
+		}
+		extrema.push_back(pos);
+		se->shape_fnc(H, -1, -1, 1);
+		pos = vec3d(0, 0, 0);
+		for (int j = 0; j < se->Nodes(); j++)
+		{
+			pos += mesh->Node(se->m_node[j]).m_rt* H[j];
+		}
+		extrema.push_back(pos);
+		se->shape_fnc(H, -1, 1, -1);
+		pos = vec3d(0, 0, 0);
+		for (int j = 0; j < se->Nodes(); j++)
+		{
+			pos += mesh->Node(se->m_node[j]).m_rt* H[j];
+		}
+		extrema.push_back(pos);
+		se->shape_fnc(H, 1, -1, -1);
+		pos = vec3d(0, 0, 0);
+		for (int j = 0; j < se->Nodes(); j++)
+		{
+			pos += mesh->Node(se->m_node[j]).m_rt* H[j];
+		}
+		extrema.push_back(pos);
+		se->shape_fnc(H, -1, -1, -1);
+		pos = vec3d(0, 0, 0);
+		for (int j = 0; j < se->Nodes(); j++)
+		{
+			pos += mesh->Node(se->m_node[j]).m_rt* H[j];
+		}
+		extrema.push_back(pos);
+		break;
+	default:
+		assert(false);
+	}
+}
+
+double FEAngio::MinDistance(std::vector<vec3d> & element_bounds0, std::vector<vec3d>  & element_bounds1)
+{
+	assert(element_bounds0.size());
+	assert(element_bounds1.size());
+	//just do the sqrt at the end to not have to do it a lot
+	double min_dist = (element_bounds0[0] - element_bounds1[0]).norm2();
+	for(int i=0;i < element_bounds0.size();i++)
+	{
+		for(int j=0; j < element_bounds1.size();j++)
+		{
+			double dist = (element_bounds0[i] - element_bounds1[j]).norm2();
+			if (dist < min_dist)
+			{
+				min_dist = dist;
+			}
+		}
+	}
+	return sqrt(min_dist);
+}
 
 //-----------------------------------------------------------------------------
 // create a map of fiber vectors based on the material's orientation.

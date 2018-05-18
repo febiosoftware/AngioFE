@@ -34,5 +34,7 @@ public:
 	std::unordered_map<AngioElement*, std::vector<Tip *>> next_tips;
 	std::vector<Tip *> current_tips;//to be used in stress calculations
 
+	std::vector<Tip*> final_active_tips;
+
 	int padding[16];
 };

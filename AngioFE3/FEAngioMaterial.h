@@ -15,6 +15,7 @@
 #include <FEBioMix/FEMultiphasic.h>
 #include "CultureParameters.h"
 #include "SegmentGrowthModifiers.h"
+#include "AngioStressPolicy.h"
 
 class AngioElement;
 
@@ -62,7 +63,7 @@ public:
 
 	void UpdateGDMs();
 
-	void UpdateAngioStresses();
+	double FindDensityScale(FEAngioMaterialPoint * mp);
 
 	void SetFEAngio(FEAngio * ctl)
 	{
@@ -103,10 +104,12 @@ public:
 
 	double StrainEnergyDensity(FEMaterialPoint& mp) override;
 	FEAngio*	m_pangio = nullptr;
+	FEPropertyT<AngioStressPolicy> angio_stress_policy;
 private:
 	DECLARE_PARAMETER_LIST();
 
 	FEPropertyT<FESolidMaterial> matrix_material;
+	
 	FEVecPropertyT<PositionDependentDirection> direction_modifiers;
 	FEVecPropertyT<PreviousSegmentContribution> length_modifiers;
 	FEVecPropertyT<ContributionMix> alpha_modifiers;

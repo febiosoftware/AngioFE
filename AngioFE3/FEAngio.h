@@ -77,6 +77,12 @@ public:
 	static double NaturalCoordinatesUpperBound(int et);
 	static double NaturalCoordinatesLowerBound(int et);
 
+	//returns the extrema in global coordinates of the given elem
+	void ExtremaInElement(FESolidElement * se, std::vector<vec3d> & extrema) const;
+
+	//returns the minimun distance between the two sets of points
+	static double MinDistance(std::vector<vec3d> & element_bounds0, std::vector<vec3d>  & element_bounds1);
+
 	void GrowSegments();
 private:
 	
@@ -119,6 +125,8 @@ private:
 
 	static bool IsInBounds(FESolidElement* se, double r[3], double eps= 0.0001);
 
+	
+
 	void FillInFaces(FEMesh * mesh, AngioElement * angio_element);
 
 	static bool feangio_callback(FEModel* pfem, unsigned int nwhen, void* pd)
@@ -159,6 +167,7 @@ private:
 	Timer grow_timer;
 	Timer mesh_stiffness_timer;
 	Timer update_sprout_stress_scaling_timer;
+	Timer update_angio_stress_timer;
 	Timer update_gdms_timer;
 	Timer update_ecm_timer;
 	Timer material_update_timer;
@@ -167,6 +176,7 @@ private:
 	std::unordered_map<FESolidElement*,std::pair<AngioElement *,int>> se_to_angio_elem;//the int is the index which is used in neighbor lookups
 	std::vector<AngioElement *> angio_elements_with_holes;//the possibly sparse list of elements .. used to serialize data
 	std::unordered_map < FEAngioMaterial *, std::vector<AngioElement *>> elements_by_material;
+	std::vector<FEAngioMaterial*> angio_materials;
 	int buffer_index = 0;
 
 	std::unordered_map<FESolidElement *, AngioElement *> se_to_angio_element;

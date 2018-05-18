@@ -44,6 +44,7 @@ FEAngioMaterial::FEAngioMaterial(FEModel* pfem) : FEElasticMaterial(pfem)
 {
 	AddProperty(&common_properties, "common_properties");
 	AddProperty(&matrix_material, "matrix");
+	AddProperty(&angio_stress_policy, "angio_stress_policy");
 }
 
 FEAngioMaterial::~FEAngioMaterial()
@@ -127,11 +128,9 @@ mat3ds FEAngioMaterial::AngioStress(FEAngioMaterialPoint& angioPt)
 	return val;
 }
 
-
-void FEAngioMaterial::UpdateAngioStresses()
+double FEAngioMaterial::FindDensityScale(FEAngioMaterialPoint * mp)
 {
-	
-	
+	return 1.0;
 }
 
 
@@ -383,6 +382,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 
 
 		angio_element->recent_segments.push_back(seg);
+		angio_element->final_active_tips.push_back(next);
 		assert(next->angio_element);
 	}
 	else if(proj_sucess)
@@ -467,6 +467,7 @@ void FEAngioMaterial::PrepBuffers(AngioElement* angio_elem, double end_time, int
 {
 	angio_elem->next_tips.swap(angio_elem->active_tips[buffer_index]);
 	angio_elem->next_tips.clear();
+	angio_elem->final_active_tips.clear();
 }
 
 bool FEAngioMaterial::SeedFragments(std::vector<AngioElement *>& angio_elements)

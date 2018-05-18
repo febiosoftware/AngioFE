@@ -16,7 +16,7 @@ public:
 
 
     Segment(){}
-	vec3d Direction(FEMesh * mesh);
+	vec3d Direction(FEMesh * mesh) const;
 	Tip * front = nullptr;
 	Tip * back = nullptr;
 	Segment * parent = nullptr;

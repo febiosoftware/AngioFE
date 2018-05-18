@@ -33,6 +33,9 @@ FEPluginFactory_T<FEWeibullDistribution    , FEMATERIAL_ID> weibull_distribution
 FEPluginFactory_T<FEGammaDistribution      , FEMATERIAL_ID> gamma_distribution_factory      ("gamma_distribution"      );
 
 
+FEPluginFactory_T<SigmoidAngioStressPolicy, FEMATERIAL_ID> sigmoid_angio_stress_policy_factory("sigmoid_angio_stress_policy");
+FEPluginFactory_T<LoadCurveAngioStressPolicy, FEMATERIAL_ID> load_curve_angio_stress_policy_factory("load_curve_angio_stress_policy");
+
 
 FEPluginFactory_T<ByElementFragmentSeeder, FEMATERIAL_ID> by_element_fragment_seeder_factory("by element fragment seeder");
 /*
@@ -125,6 +128,9 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 
 		//stopgap plot classes
 		&plot_matrix_concentration_gradient, &plot_matrix_sbm_concentration,
+
+		//angio stress policy classes
+		&sigmoid_angio_stress_policy_factory, &load_curve_angio_stress_policy_factory,
 
 		/*
 		//fiber initializers

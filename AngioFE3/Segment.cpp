@@ -2,7 +2,7 @@
 #include "Segment.h"
 #include <FECore/vec3d.h>
 
-vec3d Segment::Direction(FEMesh * mesh)
+vec3d Segment::Direction(FEMesh * mesh) const
 {
 	vec3d p0 = front->GetPosition(mesh);
 	vec3d p1 = back->GetPosition(mesh);
