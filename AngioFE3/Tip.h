@@ -15,7 +15,7 @@ public:
 	vec3d local_pos;
 	AngioElement * angio_element= nullptr;//the element that contains the local_pos coordinates
 	double time=0.0;
-	vec3d growth_velocity;
+	double growth_velocity;
 	//int face;//-1 for inside the element
 	AngioElement* face= nullptr;//the element where growth originated from
 	Segment * parent=nullptr;//may be nullptr for no parent segment

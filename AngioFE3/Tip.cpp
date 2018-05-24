@@ -38,12 +38,15 @@ vec3d Tip::GetPosition(FEMesh * mesh) const
 }
 void Tip::PrintTipInfo(FEMesh *mesh, std::string title) const
 {
+#ifndef NDEBUG
 	std::cout << title << std::endl;
 	PrintTipInfo(mesh);
+#endif
 }
 
 void Tip::PrintTipInfo(FEMesh *mesh) const
 {
+#ifndef NDEBUG
 	std::cout << "local position: " << local_pos.x << " , " << local_pos.y << " , " << local_pos.z << std::endl;
 	vec3d pos = GetPosition(mesh);
 	std::cout << "global position: " << pos.x << " , " << pos.y << " , " << pos.z << std::endl;
@@ -63,6 +66,7 @@ void Tip::PrintTipInfo(FEMesh *mesh) const
 	std::cout << "is branch: " << is_branch << std::endl;
 	std::cout << "use direction: " << use_direction << std::endl;
 	std::cout << std::endl;
+#endif
 }
 
 Tip::Tip(Tip * other, FEMesh * mesh)

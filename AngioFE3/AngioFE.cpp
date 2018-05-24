@@ -34,6 +34,7 @@ FEPluginFactory_T<FEGammaDistribution      , FEMATERIAL_ID> gamma_distribution_f
 
 
 FEPluginFactory_T<SigmoidAngioStressPolicy, FEMATERIAL_ID> sigmoid_angio_stress_policy_factory("sigmoid_angio_stress_policy");
+FEPluginFactory_T<LoadCurveVelAngioStressPolicy, FEMATERIAL_ID> load_curve_vel_angio_stress_policy_factory("load_curve_vel_angio_stress_policy");
 FEPluginFactory_T<LoadCurveAngioStressPolicy, FEMATERIAL_ID> load_curve_angio_stress_policy_factory("load_curve_angio_stress_policy");
 
 
@@ -130,7 +131,7 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		&plot_matrix_concentration_gradient, &plot_matrix_sbm_concentration,
 
 		//angio stress policy classes
-		&sigmoid_angio_stress_policy_factory, &load_curve_angio_stress_policy_factory,
+		&sigmoid_angio_stress_policy_factory, &load_curve_vel_angio_stress_policy_factory ,&load_curve_angio_stress_policy_factory,
 
 		/*
 		//fiber initializers

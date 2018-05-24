@@ -20,9 +20,10 @@ Fileout::Fileout(FEAngio& angio)
 	//write the headers
 	logstream << "Time,Material,Segments,Total Length,Vessels,Branch Points,Anastamoses,Active Tips,Sprouts" << endl;
 
+#ifndef NDEBUG
 	vessel_csv_stream.open("vessels.csv");
-
 	vessel_csv_stream << "x0,y0,z0,x1,y1,z1,time " << endl;
+#endif
 
 	vessel_state_stream = fopen("out_vess_state.ang2" , "wb");//check the parameters consider setting the compression level
 	unsigned int magic = 0xfdb97531;
@@ -81,8 +82,10 @@ void Fileout::printStatus(FEAngio& angio)
 
 void PrintSegment(vec3d r0, vec3d r1)
 {
+#ifndef NDEBUG
 	std::cout << "r0: " << r0.x << "," << r0.y << "," << r0.z << std::endl;
 	std::cout << "r1: " << r1.x << "," << r1.y << "," << r1.z << std::endl;
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -129,8 +132,9 @@ void Fileout::save_vessel_state(FEAngio& angio)
 			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
 
 			r1 = angio.ReferenceCoordinates(front_tip);
-
+#ifndef NDEBUG
 			vessel_csv_stream << r0.x << "," << r0.y << "," << r0.z << "," << r1.x << "," << r1.y << "," << r1.z << "," << rtime << std::endl;
+#endif
 		}
 	}
 	assert(crc_segcount == new_seg_count);

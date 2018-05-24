@@ -38,16 +38,35 @@ private:
 	double sprout_radius_multiplier = 3;//multiplied by sprout range implicitly gives the cutoff for the tips that are included
 	//the default value cuts of tips stresses that are below 5% of a tip on top of a gauss point
 };
-
+//probably the right way to do this calculation
+class LoadCurveVelAngioStressPolicy : public AngioStressPolicy
+{
+public:
+	explicit LoadCurveVelAngioStressPolicy(FEModel* pfem) : AngioStressPolicy(pfem) {}
+	virtual ~LoadCurveVelAngioStressPolicy() {}
+	bool Init() override;
+	void UpdateScale(double time) override;
+	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
+	double sprout_mag = 3.72e-12;
+	double sprout_width = 2;
+	double sprout_range = 200;//used to calculate the falloff of stress
+	double sprout_radius_multiplier = 3;//multiplied by sprout range implicitly gives the cutoff for the tips that are included
+										//the default value cuts of tips stresses that are below 5% of a tip on top of a gauss point
+};
+//used to update the old code
 class LoadCurveAngioStressPolicy : public AngioStressPolicy
 {
 public:
 	explicit LoadCurveAngioStressPolicy(FEModel* pfem) : AngioStressPolicy(pfem) {}
 	virtual ~LoadCurveAngioStressPolicy() {}
-	bool Init() override { return true; }
-	void UpdateScale(double time) override{}
-	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override{}
-	double scale=0.0;
+	bool Init() override;
+	void UpdateScale(double time) override;
+	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
+	double sprout_mag = 3.72e-12;
+	double sprout_width = 2;
+	double sprout_range = 200;//used to calculate the falloff of stress
+	double sprout_radius_multiplier = 3;//multiplied by sprout range implicitly gives the cutoff for the tips that are included
+										//the default value cuts of tips stresses that are below 5% of a tip on top of a gauss point
 };
 
 class NullAngioStressPolicy : public AngioStressPolicy

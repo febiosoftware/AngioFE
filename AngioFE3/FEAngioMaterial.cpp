@@ -222,7 +222,7 @@ void FEAngioMaterial::SetSeeds(AngioElement* angio_elem)
 	offset++;
 }
 
-double FEAngioMaterial::GetGrowthLengthOverUnitTime(AngioElement * angio_element, vec3d local_pos)
+double FEAngioMaterial::GetSegmentVelocity(AngioElement * angio_element, vec3d local_pos)
 {
 	return 140.0;
 }
@@ -238,7 +238,7 @@ double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem)
 	for (int i = 0; i < angio_elem->_elem->GaussPoints();i++)
 	{
 		vec3d pos(angio_elem->_elem->gr(i), angio_elem->_elem->gs(i), angio_elem->_elem->gt(i));
-		double len = angio_elem->_angio_mat->GetGrowthLengthOverUnitTime(angio_elem, pos);
+		double len = angio_elem->_angio_mat->GetSegmentVelocity(angio_elem, pos);
 		max_grow_length = std::max(max_grow_length, len);
 
 	}
@@ -309,13 +309,15 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	int next_buffer_index = (buffer_index + 1) % 2;
 	double dt = end_time - active_tip->time;
 	double grow_len;
+	double grow_vel;
 	if(grow_len_overrride)
 	{
 		grow_len = override_grow_length  *dt;
 	}
 	else
 	{
-		grow_len = this->GetGrowthLengthOverUnitTime(angio_element, active_tip->local_pos) *dt;
+		grow_vel = this->GetSegmentVelocity(angio_element, active_tip->local_pos);
+		grow_len =  grow_vel*dt;
 	}
 	 
 	
@@ -366,6 +368,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		next->SetLocalPosition(real_natc);
 		next->parent = seg;
 		next->face = angio_element;
+		next->growth_velocity = grow_vel;
 		next->initial_fragment_id = active_tip->initial_fragment_id;
 		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (next->local_pos.x + next->local_pos.y + next->local_pos.z) < 1.01 : true);
 		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (next->local_pos.x + next->local_pos.y + next->local_pos.z) < 1.01 : true);
@@ -407,6 +410,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		next->parent = seg;
 		next->face = angio_element;
 		next->initial_fragment_id = active_tip->initial_fragment_id;
+		next->growth_velocity = grow_vel;
 
 		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (next->local_pos.x + next->local_pos.y + next->local_pos.z) < 1.01 : true);
 		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (next->local_pos.x + next->local_pos.y + next->local_pos.z) < 1.01 : true);
@@ -438,6 +442,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 						adj->face = angio_element;
 						adj->SetLocalPosition(vec3d(r[0], r[1], r[2]));
 						adj->use_direction = true;
+						adj->growth_velocity = grow_vel;
 
 						angio_element->active_tips[next_buffer_index][ang_elem].push_back(adj);
 
