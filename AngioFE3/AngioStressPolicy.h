@@ -14,8 +14,9 @@ public:
 	virtual ~AngioStressPolicy() {}
 	//will set m_as for all gauss points of the element
 	virtual void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) = 0;
-	virtual void UpdateScale(double time) = 0;
+	virtual void UpdateScale() = 0;
 	static void GetActiveFinalTipsInRadius(AngioElement* angio_element, double radius, FEAngio* pangio, std::vector<Tip *> & tips);
+	void UpdateToLoadCurve(const char* param_name, double & value);
 protected:
 	double radius = 1000;
 };
@@ -26,7 +27,7 @@ public:
 	explicit SigmoidAngioStressPolicy(FEModel* pfem) : AngioStressPolicy(pfem) {}
 	virtual ~SigmoidAngioStressPolicy() {}
 	bool Init() override;
-	void UpdateScale(double time) override;
+	void UpdateScale() override;
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
 	
 private:
@@ -45,8 +46,11 @@ public:
 	explicit LoadCurveVelAngioStressPolicy(FEModel* pfem) : AngioStressPolicy(pfem) {}
 	virtual ~LoadCurveVelAngioStressPolicy() {}
 	bool Init() override;
-	void UpdateScale(double time) override;
+	void UpdateScale() override;
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
+protected:
+	DECLARE_PARAMETER_LIST();
+private:
 	double sprout_mag = 3.72e-12;
 	double sprout_width = 2;
 	double sprout_range = 200;//used to calculate the falloff of stress
@@ -60,8 +64,11 @@ public:
 	explicit LoadCurveAngioStressPolicy(FEModel* pfem) : AngioStressPolicy(pfem) {}
 	virtual ~LoadCurveAngioStressPolicy() {}
 	bool Init() override;
-	void UpdateScale(double time) override;
+	void UpdateScale() override;
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
+protected:
+	DECLARE_PARAMETER_LIST();
+private:
 	double sprout_mag = 3.72e-12;
 	double sprout_width = 2;
 	double sprout_range = 200;//used to calculate the falloff of stress
@@ -75,7 +82,7 @@ public:
 	explicit NullAngioStressPolicy(FEModel* pfem) : AngioStressPolicy(pfem) {}
 	virtual ~NullAngioStressPolicy() {}
 	bool Init() override { return true; }
-	void UpdateScale(double time) override {}
+	void UpdateScale() override {}
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override {}
 	double scale = 0.0;
 };

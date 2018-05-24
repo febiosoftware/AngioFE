@@ -2,6 +2,7 @@
 #include "AngioElement.h"
 #include "FEAngio.h"
 #include "Tip.h"
+#include <FECore/FEDataLoadCurve.h>
 
 void AngioStressPolicy::GetActiveFinalTipsInRadius(AngioElement* angio_element, double radius, FEAngio* pangio, std::vector<Tip *> & tips)
 {
@@ -41,14 +42,31 @@ void AngioStressPolicy::GetActiveFinalTipsInRadius(AngioElement* angio_element, 
 		}
 	}
 }
+void AngioStressPolicy::UpdateToLoadCurve(const char* param_name, double& value)
+{
+	//if load curves are used they must use step interpolation
+	FEParam * m = FindParameter(ParamString(param_name));
+	assert(m);
+	int mlci = m->GetLoadCurve();
+
+	FEModel * model = GetFEModel();
+	if (mlci >= 0)
+	{
+		FEDataLoadCurve * mlc = dynamic_cast<FEDataLoadCurve*>(model->GetLoadCurve(mlci));
+		assert(mlc);
+		value = mlc->Value(model->GetTime().currentTime);
+	}
+}
+
 
 bool SigmoidAngioStressPolicy::Init()
 {
 	return true;
 }
 
-void SigmoidAngioStressPolicy::UpdateScale(double time)
+void SigmoidAngioStressPolicy::UpdateScale()
 {
+	double time = GetFEModel()->GetTime().currentTime;
 	scale = y0 + a / (1 + exp(-(time - x0) / b));;
 }
 
@@ -87,9 +105,8 @@ bool LoadCurveVelAngioStressPolicy::Init()
 	return true;
 }
 
-void LoadCurveVelAngioStressPolicy::UpdateScale(double time)
+void LoadCurveVelAngioStressPolicy::UpdateScale()
 {
-	
 }
 
 void LoadCurveVelAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
@@ -121,12 +138,20 @@ void LoadCurveVelAngioStressPolicy::AngioStress(AngioElement* angio_element, FEA
 
 }
 
+
+BEGIN_PARAMETER_LIST(LoadCurveVelAngioStressPolicy, AngioStressPolicy)
+ADD_PARAMETER(sprout_mag, FE_PARAM_DOUBLE, "sprout_mag");
+ADD_PARAMETER(sprout_width, FE_PARAM_DOUBLE, "sprout_width");
+ADD_PARAMETER(sprout_range, FE_PARAM_DOUBLE, "sprout_range");
+ADD_PARAMETER(sprout_radius_multiplier, FE_PARAM_DOUBLE, "sprout_radius_multiplier");
+END_PARAMETER_LIST();
+
 bool LoadCurveAngioStressPolicy::Init()
 {
 	return true;
 }
 
-void LoadCurveAngioStressPolicy::UpdateScale(double time)
+void LoadCurveAngioStressPolicy::UpdateScale()
 {
 
 }
@@ -159,3 +184,10 @@ void LoadCurveAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngi
 	}
 
 }
+
+BEGIN_PARAMETER_LIST(LoadCurveAngioStressPolicy, AngioStressPolicy)
+ADD_PARAMETER(sprout_mag, FE_PARAM_DOUBLE, "sprout_mag");
+ADD_PARAMETER(sprout_width, FE_PARAM_DOUBLE, "sprout_width");
+ADD_PARAMETER(sprout_range, FE_PARAM_DOUBLE, "sprout_range");
+ADD_PARAMETER(sprout_radius_multiplier, FE_PARAM_DOUBLE, "sprout_radius_multiplier");
+END_PARAMETER_LIST();

@@ -666,7 +666,7 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		update_angio_stress_timer.start();
 		for(int i=0; i < angio_materials.size();i++)
 		{
-			angio_materials[i]->angio_stress_policy->UpdateScale(m_time.t);
+			angio_materials[i]->angio_stress_policy->UpdateScale();
 		}
 		size_t angio_element_count = angio_elements.size();
 #pragma omp parallel for schedule(dynamic, 16)
@@ -709,7 +709,7 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		update_angio_stress_timer.start();
 		for (int i = 0; i < angio_materials.size(); i++)
 		{
-			angio_materials[i]->angio_stress_policy->UpdateScale(m_time.t);
+			angio_materials[i]->angio_stress_policy->UpdateScale();
 		}
 		size_t angio_element_count = angio_elements.size();
 #pragma omp parallel for schedule(static, 16)
