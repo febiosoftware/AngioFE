@@ -1,6 +1,7 @@
 #pragma once
 #include <FECore/FEMaterial.h>
 #include <FEBioMech/FESPRProjection.h>
+class FEAngio;
 class Tip;
 //the component of vessel growth that is dependent on position within the mesh
 class PositionDependentDirection : public FEMaterial
@@ -9,7 +10,7 @@ public:
 	explicit PositionDependentDirection(FEModel* pfem) : FEMaterial(pfem) {}
 	virtual ~PositionDependentDirection() {}
 	virtual vec3d ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh)=0;
-	virtual void Update(FEMesh * mesh){} //may be used to get values from loadcurves that modify the behavior as a whole
+	virtual void Update(FEMesh * mesh, FEAngio* angio){} //may be used to get values from loadcurves that modify the behavior as a whole
 };
 
 //The component of the mixture that represents the direction of the conttribution from the previous segment
@@ -41,19 +42,21 @@ public:
 	virtual double ApplyModifiers(double prev) = 0;
 };
 
-
+//Fiber direction 
 class FiberPDD :public PositionDependentDirection 
 {
 public:
 	explicit FiberPDD(FEModel* pfem) : PositionDependentDirection(pfem) {}
 	virtual ~FiberPDD() {}
 	vec3d ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh) override;
-	void Update(FEMesh * mesh) override;
+	void Update(FEMesh * mesh, FEAngio* angio) override;
 private:
 	double contribution = 1.0;
-	FESPRProjection projection;
+	FESPRProjection map;
+	std::vector<std::vector<double>> fiber_at_int_pts;
 };
 
+//
 class ConcentrationPDD :public PositionDependentDirection
 {
 public:

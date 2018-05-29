@@ -29,7 +29,8 @@ public:
 	bool Init() override;
 	void UpdateScale() override;
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
-	
+protected:
+	DECLARE_PARAMETER_LIST();
 private:
 	double scale=0.0;
 	double y0= -0.004, x0 =2, a= 1.0081, b=0.5436;

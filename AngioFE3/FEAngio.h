@@ -7,6 +7,7 @@
 #include <FEBioLib/FEBioModel.h>
 #include <future>
 #include "AngioElement.h"
+#include <random>
 
 
 class FEElemElemList;
@@ -53,9 +54,9 @@ public:
 	vec3d Position(FESolidElement * se, vec3d local) const;
 
 
-	mat3d unifromRandomRotationMatrix();
+	mat3d unifromRandomRotationMatrix(angiofe_random_engine & rengine) const;
 	mat3d rotationMatrix(double alpha, double beta, double gamma);
-	vec3d uniformRandomDirection();
+	vec3d uniformRandomDirection(angiofe_random_engine& rengine);
 	vec3d uniformInUnitCube();
 
 	//accessors for the DataStore

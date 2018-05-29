@@ -458,7 +458,7 @@ double FEAngio::GetDoubleFromDataStore(int record, int elem_id, int item)
 	return ds.GetDataRecord(record)->Evaluate(elem_id, item);
 }
 
-mat3d FEAngio::unifromRandomRotationMatrix()
+mat3d FEAngio::unifromRandomRotationMatrix(angiofe_random_engine & rengine) const
 {
 	//collagen fibers are right handed so the following transformation is legal
 	//the following will only produce right handed bases for the collagen fibers which is molecularly accurate
@@ -518,7 +518,7 @@ mat3d FEAngio::rotationMatrix(double alpha, double beta, double gamma)
 	return rv;
 }
 
-vec3d FEAngio::uniformRandomDirection()
+vec3d FEAngio::uniformRandomDirection(angiofe_random_engine& rengine)
 {
 	//to revert this set this to return vrand
 	double theta = zto2pi(rengine);

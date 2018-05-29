@@ -7,7 +7,7 @@
 
 /*
 class FEAngioMaterialBase;
-class FiberManager;
+class RandomFiberManager;
 
 //the base class for classes that initialize the fibers
 class FiberInitializer : public FEMaterial
@@ -15,9 +15,9 @@ class FiberInitializer : public FEMaterial
 public:
 	explicit FiberInitializer(FEModel * model):FEMaterial(model){}
 	virtual ~FiberInitializer(){}
-	virtual void InitializeFibers(FiberManager * fman) = 0;
+	virtual void InitializeFibers(RandomFiberManager * fman) = 0;
 
-	void nodeToInt(FiberManager * fman);
+	void nodeToInt(RandomFiberManager * fman);
 };
 //does nothing the fiber direction will be unchanged
 class NullFiberInitializer : public FiberInitializer
@@ -25,7 +25,7 @@ class NullFiberInitializer : public FiberInitializer
 public:
 	explicit NullFiberInitializer(FEModel * model) : FiberInitializer(model){}
 	virtual ~NullFiberInitializer(){}
-	void InitializeFibers(FiberManager * fman) override{}
+	void InitializeFibers(RandomFiberManager * fman) override{}
 };
 //set the fibers to a random orientation
 class RandomFiberInitializer : public FiberInitializer
@@ -33,7 +33,7 @@ class RandomFiberInitializer : public FiberInitializer
 public:
 	explicit RandomFiberInitializer(FEModel * model) : FiberInitializer(model){}
 	virtual ~RandomFiberInitializer(){}
-	void InitializeFibers(FiberManager * fman) override;
+	void InitializeFibers(RandomFiberManager * fman) override;
 };
 
 //set the fibers to a random orientation without mangling the relationship between the material axes at the integration points
@@ -42,7 +42,7 @@ class RandomFiberInitializerNonMangling : public FiberInitializer
 public:
 	explicit RandomFiberInitializerNonMangling(FEModel * model) : FiberInitializer(model) {}
 	virtual ~RandomFiberInitializerNonMangling() {}
-	void InitializeFibers(FiberManager * fman) override;
+	void InitializeFibers(RandomFiberManager * fman) override;
 };
 //set the fibers to a random orientation on a per element basis
 class RandomFiberInitializerPE : public FiberInitializer
@@ -50,7 +50,7 @@ class RandomFiberInitializerPE : public FiberInitializer
 public:
 	explicit RandomFiberInitializerPE(FEModel * model) : FiberInitializer(model) {}
 	virtual ~RandomFiberInitializerPE() {}
-	void InitializeFibers(FiberManager * fman) override;
+	void InitializeFibers(RandomFiberManager * fman) override;
 };
 class ExplicitDistributionsFiberInitializer: public FiberInitializer
 {
@@ -58,7 +58,7 @@ public:
 	explicit ExplicitDistributionsFiberInitializer(FEModel * model);
 	virtual ~ExplicitDistributionsFiberInitializer() {}
 	void Setup();
-	void InitializeFibers(FiberManager * fman) override;
+	void InitializeFibers(RandomFiberManager * fman) override;
 private:
 	FEPropertyT<FEProbabilityDistribution> alpha;
 	FEPropertyT<FEProbabilityDistribution> beta;
@@ -78,7 +78,7 @@ public:
 		if (directions)
 			delete[] directions;
 	}
-	void InitializeFibers(FiberManager * fman) override;
+	void InitializeFibers(RandomFiberManager * fman) override;
 private:
 	DECLARE_PARAMETER_LIST();
 	double a=2,b=1,c=1;
@@ -90,11 +90,11 @@ private:
 };
 
 
-class FiberManager
+class RandomFiberManager
 {
 public:
-	explicit FiberManager(FEAngioMaterialBase * mat) : material(mat){  }
-	virtual ~FiberManager(){}
+	explicit RandomFiberManager(FEAngioMaterialBase * mat) : material(mat){  }
+	virtual ~RandomFiberManager(){}
 
 	vec3d GetFiberAtNode(int node, double & lambda);
 	vec3d GetMinor1AtNode(int node, double  &lambda);

@@ -3,12 +3,12 @@
 
 /*
 
-void FiberManager::Update()
+void RandomFiberManager::Update()
 {
 
 }
 
-vec3d FiberManager::GetFiberAtNode(int node, double & lambda)
+vec3d RandomFiberManager::GetFiberAtNode(int node, double & lambda)
 {
 	vec3d rv;
 
@@ -19,7 +19,7 @@ vec3d FiberManager::GetFiberAtNode(int node, double & lambda)
 	rv.unit();
 	return rv;
 }
-vec3d FiberManager::GetMinor1AtNode(int node, double  &lambda)
+vec3d RandomFiberManager::GetMinor1AtNode(int node, double  &lambda)
 {
 	vec3d rv;
 
@@ -31,7 +31,7 @@ vec3d FiberManager::GetMinor1AtNode(int node, double  &lambda)
 	rv.unit();
 	return rv;
 }
-vec3d FiberManager::GetMinor2AtNode(int node, double  &lambda)
+vec3d RandomFiberManager::GetMinor2AtNode(int node, double  &lambda)
 {
 	vec3d rv;
 
@@ -44,7 +44,7 @@ vec3d FiberManager::GetMinor2AtNode(int node, double  &lambda)
 	return rv;
 }
 
-void RandomFiberInitializer::InitializeFibers(FiberManager * fman)
+void RandomFiberInitializer::InitializeFibers(RandomFiberManager * fman)
 {
 	//set the fiber vectors at the nodes of the fiber manager
 	//make sure the map has been generated
@@ -52,12 +52,12 @@ void RandomFiberInitializer::InitializeFibers(FiberManager * fman)
 }
 
 
-void RandomFiberInitializerNonMangling::InitializeFibers(FiberManager * fman)
+void RandomFiberInitializerNonMangling::InitializeFibers(RandomFiberManager * fman)
 {
 	
 }
 
-void RandomFiberInitializerPE::InitializeFibers(FiberManager * fman)
+void RandomFiberInitializerPE::InitializeFibers(RandomFiberManager * fman)
 {
 	
 }
@@ -75,7 +75,7 @@ void ExplicitDistributionsFiberInitializer::Setup()
 	gamma->StepToTime(0);
 }
 
-void ExplicitDistributionsFiberInitializer::InitializeFibers(FiberManager * fman)
+void ExplicitDistributionsFiberInitializer::InitializeFibers(RandomFiberManager * fman)
 {
 	
 }
@@ -87,7 +87,7 @@ vec3d EllipsoidPos(double a, double b, double c, double theta, double phi)
 		c* sin(theta));
 }
 
-void EllipsoidalFiberInitializer::InitializeFibers(FiberManager * fman)
+void EllipsoidalFiberInitializer::InitializeFibers(RandomFiberManager * fman)
 {
 
 }

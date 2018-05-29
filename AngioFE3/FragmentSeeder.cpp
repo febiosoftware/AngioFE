@@ -48,7 +48,7 @@ bool ByElementFragmentSeeder::SeedFragments(std::vector<AngioElement *> &angio_e
 		}
 		r0->time = 0;
 		r0->use_direction = true;
-		r0->direction = angio_mat->m_pangio->uniformRandomDirection();
+		r0->direction = angio_mat->m_pangio->uniformRandomDirection(angio_mat->m_pangio->rengine);
 		r0->face = r0->angio_element;
 		//finally add this to the AngioElement
 

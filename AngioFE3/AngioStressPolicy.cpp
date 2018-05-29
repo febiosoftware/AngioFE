@@ -100,6 +100,19 @@ void SigmoidAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio*
 	
 }
 
+BEGIN_PARAMETER_LIST(SigmoidAngioStressPolicy, AngioStressPolicy)
+ADD_PARAMETER(sprout_mag, FE_PARAM_DOUBLE, "sprout_mag");
+ADD_PARAMETER(sprout_width, FE_PARAM_DOUBLE, "sprout_width");
+ADD_PARAMETER(sprout_range, FE_PARAM_DOUBLE, "sprout_range");
+ADD_PARAMETER(sprout_radius_multiplier, FE_PARAM_DOUBLE, "sprout_radius_multiplier");
+ADD_PARAMETER(a, FE_PARAM_DOUBLE, "a");
+ADD_PARAMETER(b, FE_PARAM_DOUBLE, "b");
+ADD_PARAMETER(x0, FE_PARAM_DOUBLE, "x0");
+ADD_PARAMETER(y0, FE_PARAM_DOUBLE, "y0");
+
+END_PARAMETER_LIST();
+
+
 bool LoadCurveVelAngioStressPolicy::Init()
 {
 	return true;
