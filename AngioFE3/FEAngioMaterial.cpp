@@ -45,6 +45,15 @@ FEAngioMaterial::FEAngioMaterial(FEModel* pfem) : FEElasticMaterial(pfem)
 	AddProperty(&common_properties, "common_properties");
 	AddProperty(&matrix_material, "matrix");
 	AddProperty(&angio_stress_policy, "angio_stress_policy");
+
+	AddProperty(&direction_modifiers, "direction_modifier");
+	AddProperty(&psc_modifiers, "psc_modifier");
+	AddProperty(&alpha_modifiers, "alpha_modifier");
+	AddProperty(&velocity_modifiers, "velocity_modifier");
+	direction_modifiers.m_brequired = false;
+	psc_modifiers.m_brequired = false;
+	alpha_modifiers.m_brequired = false;
+	velocity_modifiers.m_brequired = false;
 }
 
 FEAngioMaterial::~FEAngioMaterial()
@@ -224,7 +233,14 @@ void FEAngioMaterial::SetSeeds(AngioElement* angio_elem)
 
 double FEAngioMaterial::GetSegmentVelocity(AngioElement * angio_element, vec3d local_pos)
 {
-	return 140.0;
+	double velocity = 1;
+
+	for (int i = 0; i < velocity_modifiers.size(); i++)
+	{
+		velocity = velocity_modifiers[i]->ApplyModifiers(velocity, local_pos, angio_element);
+	}
+
+	return velocity;
 }
 
 double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem)

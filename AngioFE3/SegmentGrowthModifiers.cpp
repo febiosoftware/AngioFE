@@ -61,6 +61,20 @@ void FiberPDD::Update(FEMesh * mesh, FEAngio* angio)
 	*/
 }
 
+double SegmentVelocityModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element)
+{
+	return prev *= segment_velocity_over_time;
+}
+
+bool SegmentVelocityModifier::Init()
+{
+	return true;
+}
+
+BEGIN_PARAMETER_LIST(SegmentVelocityModifier, SegmentGrowthVelocity)
+ADD_PARAMETER(segment_velocity_over_time, FE_PARAM_DOUBLE, "segment_velocity_over_time");
+END_PARAMETER_LIST();
+
 /*
 vec3d FiberPDD::ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh)
 {

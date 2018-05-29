@@ -39,6 +39,11 @@ FEPluginFactory_T<LoadCurveAngioStressPolicy, FEMATERIAL_ID> load_curve_angio_st
 
 
 FEPluginFactory_T<ByElementFragmentSeeder, FEMATERIAL_ID> by_element_fragment_seeder_factory("by element fragment seeder");
+
+
+// SegmentVelocityModifiers contained below.
+FEPluginFactory_T<SegmentVelocityModifier, FEMATERIAL_ID> segment_velocity_modifier_factory("segment_velocity_modifier");
+
 /*
 FEPluginFactory_T<GrowDirectionModifiers, FEMATERIAL_ID> grow_direction_modifiers_factory("grow_direction_modifiers");
 
@@ -154,6 +159,9 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		&gamma_distribution_factory,&normal_distribution_factory, &exponential_distribution_factory,
 		&uniform_distribution_factory,
 		//ggp's
+
+		// Segment Velocity Modifiers
+		&segment_velocity_modifier_factory, 
 		/*
 		&plot2_ggp_factory, &gradient_plot2_ggp_factory,
 		&matrix_converter_ggp_factory, &forked_ggp_factory, &cross_ggp_factory,

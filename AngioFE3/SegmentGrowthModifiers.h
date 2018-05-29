@@ -1,8 +1,11 @@
 #pragma once
 #include <FECore/FEMaterial.h>
 #include <FEBioMech/FESPRProjection.h>
+#include "AngioElement.h"
 class FEAngio;
+
 class Tip;
+
 //the component of vessel growth that is dependent on position within the mesh
 class PositionDependentDirection : public FEMaterial
 {
@@ -34,16 +37,27 @@ public:
 };
 
 //get the length over one unit of time at the given position
-class SegmentGrowthLength :public FEMaterial
+class SegmentGrowthVelocity : public FEMaterial
 {
 public:
-	explicit SegmentGrowthLength(FEModel* pfem) : FEMaterial(pfem) {}
-	virtual ~SegmentGrowthLength() {}
-	virtual double ApplyModifiers(double prev) = 0;
+	explicit SegmentGrowthVelocity(FEModel* pfem) : FEMaterial(pfem) {}
+	virtual ~SegmentGrowthVelocity() {}
+	virtual double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_elem) = 0;
 };
 
-//Fiber direction 
-class FiberPDD :public PositionDependentDirection 
+class SegmentVelocityModifier : public SegmentGrowthVelocity
+{
+public:
+	explicit SegmentVelocityModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) {}
+	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element) override;
+	bool Init() override;
+protected:
+	DECLARE_PARAMETER_LIST();
+private:
+	double segment_velocity_over_time = 1;
+};
+
+class FiberPDD : public PositionDependentDirection
 {
 public:
 	explicit FiberPDD(FEModel* pfem) : PositionDependentDirection(pfem) {}
