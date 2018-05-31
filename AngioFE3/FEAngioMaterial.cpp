@@ -290,7 +290,6 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, i
 	{
 		if(angio_elem->adjacency_list.at(i))
 		{
-			//probleme in mt code
 			std::vector<Tip*> & tips = angio_elem->adjacency_list.at(i)->active_tips[buffer_index].at(angio_elem);
 			for(int j=0; j < tips.size();j++)
 			{
@@ -312,14 +311,6 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, i
 void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double override_grow_length, bool grow_len_overrride)
 {
 	auto angio_element = active_tip->angio_element;
-	/*
-	if(active_tip->time >= end_time)
-	{
-		angio_element->next_tips.at(active_tip->face).push_back(active_tip);
-		return;
-	}
-	*/
-	
 	
 	assert(active_tip);
 	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (active_tip->local_pos.x + active_tip->local_pos.y + active_tip->local_pos.z) < 1.01 : true );
@@ -392,7 +383,6 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		next->initial_fragment_id = active_tip->initial_fragment_id;
 		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (next->local_pos.x + next->local_pos.y + next->local_pos.z) < 1.01 : true);
 		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (next->local_pos.x + next->local_pos.y + next->local_pos.z) < 1.01 : true);
-		//problem with multithreaded code might do an insert
 		angio_element->next_tips.at(angio_element).push_back(next);
 
 		//move next to use the rest of the remaining dt
@@ -465,7 +455,6 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 						adj->use_direction = true;
 						adj->growth_velocity = grow_vel;
 
-						//might do an insert bad in mt code
 						angio_element->active_tips[next_buffer_index].at(ang_elem).push_back(adj);
 
 						//break;//place the tip in exactly one element
