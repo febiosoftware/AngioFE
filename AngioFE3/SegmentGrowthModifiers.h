@@ -16,6 +16,17 @@ public:
 	virtual void Update(FEMesh * mesh, FEAngio* angio){} //may be used to get values from loadcurves that modify the behavior as a whole
 };
 
+class PositionDependentDirectionManager : public FEMaterial
+{
+public:
+	explicit PositionDependentDirectionManager(FEModel* pfem) : FEMaterial(pfem) { AddProperty(&pdd_modifiers, "pdd_modifier"); pdd_modifiers.m_brequired = false; }
+	virtual ~PositionDependentDirectionManager() {}
+	vec3d ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh);
+	void Update(FEMesh * mesh, FEAngio* angio) {} //may be used to get values from loadcurves that modify the behavior as a whole
+private:
+	FEVecPropertyT<PositionDependentDirection> pdd_modifiers;
+};
+
 //The component of the mixture that represents the direction of the conttribution from the previous segment
 class PreviousSegmentContribution : public FEMaterial
 {
@@ -24,6 +35,18 @@ public:
 	virtual ~PreviousSegmentContribution() {}
 	virtual vec3d ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh)=0;
 	virtual void Update(FEMesh * mesh) {}
+};
+
+//The component of the mixture that represents the direction of the conttribution from the previous segment
+class PreviousSegmentContributionManager : public FEMaterial
+{
+public:
+	explicit PreviousSegmentContributionManager(FEModel* pfem) : FEMaterial(pfem) { AddProperty(&psc_modifiers, "psc_modifier"); psc_modifiers.m_brequired = false; }
+	virtual ~PreviousSegmentContributionManager() {}
+	vec3d ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh);
+	void Update(FEMesh * mesh) {}
+private:
+	FEVecPropertyT<PreviousSegmentContribution> psc_modifiers;
 };
 
 //determines the mixture between the position dependent direction and previous segment contribution 
@@ -36,6 +59,17 @@ public:
 	virtual void Update(FEMesh * mesh) {}
 };
 
+class ContributionMixManager : public FEMaterial
+{
+public:
+	explicit ContributionMixManager(FEModel* pfem) : FEMaterial(pfem) { AddProperty(&cm_modifiers, "psc_modifier"); cm_modifiers.m_brequired = false; }
+	virtual ~ContributionMixManager() {}
+	double ApplyModifiers(double prev, Tip* tip, FEMesh* mesh);
+	void Update(FEMesh * mesh) { }
+private:
+	FEVecPropertyT<ContributionMix> cm_modifiers;
+};
+
 //get the length over one unit of time at the given position
 class SegmentGrowthVelocity : public FEMaterial
 {
@@ -43,6 +77,16 @@ public:
 	explicit SegmentGrowthVelocity(FEModel* pfem) : FEMaterial(pfem) {}
 	virtual ~SegmentGrowthVelocity() {}
 	virtual double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_elem) = 0;
+};
+
+class SegmentGrowthVelocityManager : public FEMaterial
+{
+public:
+	explicit SegmentGrowthVelocityManager(FEModel* pfem) : FEMaterial(pfem) { AddProperty(&seg_vel_modifiers, "velocity_modifier"); seg_vel_modifiers.m_brequired = false; }
+	virtual ~SegmentGrowthVelocityManager() {}
+	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_elem);
+private:
+	FEVecPropertyT<SegmentGrowthVelocity> seg_vel_modifiers;
 };
 
 class SegmentVelocityModifier : public SegmentGrowthVelocity

@@ -96,3 +96,40 @@ vec3d FiberPDD::ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh)
 	return mix(prev, fiber_direction, contribution);
 }
 */
+
+vec3d PreviousSegmentContributionManager::ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh)
+{
+	for(int i=0; i < psc_modifiers.size();i++)
+	{
+		prev = psc_modifiers[i]->ApplyModifiers(prev, tip, mesh);
+	}
+	return prev;
+}
+
+
+vec3d PositionDependentDirectionManager::ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh)
+{
+	for (int i = 0; i < pdd_modifiers.size(); i++)
+	{
+		prev = pdd_modifiers[i]->ApplyModifiers(prev, tip, mesh);
+	}
+	return prev;
+}
+
+double ContributionMixManager::ApplyModifiers(double prev, Tip* tip, FEMesh* mesh)
+{
+	for (int i = 0; i < cm_modifiers.size(); i++)
+	{
+		prev = cm_modifiers[i]->ApplyModifiers(prev, tip, mesh);
+	}
+	return prev;
+}
+
+double SegmentGrowthVelocityManager::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_elem)
+{
+	for (int i = 0; i < seg_vel_modifiers.size(); i++)
+	{
+		prev = seg_vel_modifiers[i]->ApplyModifiers(prev, natural_coords, angio_elem);
+	}
+	return prev;
+}

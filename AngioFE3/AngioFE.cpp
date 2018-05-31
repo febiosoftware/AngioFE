@@ -42,7 +42,20 @@ FEPluginFactory_T<ByElementFragmentSeeder, FEMATERIAL_ID> by_element_fragment_se
 
 
 // SegmentVelocityModifiers contained below.
+FEPluginFactory_T<SegmentGrowthVelocityManager, FEMATERIAL_ID> segment_growth_velocity_manager_factory("segment_growth_velocity_manager");
 FEPluginFactory_T<SegmentVelocityModifier, FEMATERIAL_ID> segment_velocity_modifier_factory("segment_velocity_modifier");
+
+//PSC classes
+FEPluginFactory_T<PreviousSegmentContributionManager, FEMATERIAL_ID> previous_segment_contribution_manager_factory("previous_segment_contribution_manager");
+FEPluginFactory_T<PreviousSegmentPSC, FEMATERIAL_ID> previous_segment_psc_factory("previous_segment_psc");
+
+//PDD classes
+FEPluginFactory_T<PositionDependentDirectionManager, FEMATERIAL_ID> position_dependent_direction_manager_factory("position_dependent_direction_manager");
+//FEPluginFactory_T<FiberPDD, FEMATERIAL_ID> previous_segment_psc_factory("previous_segment_psc");
+
+
+//cm classes
+FEPluginFactory_T<ContributionMixManager, FEMATERIAL_ID> contribution_mix_manager_factory("contribution_mix_manager");
 
 /*
 FEPluginFactory_T<GrowDirectionModifiers, FEMATERIAL_ID> grow_direction_modifiers_factory("grow_direction_modifiers");
@@ -161,7 +174,19 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		//ggp's
 
 		// Segment Velocity Modifiers
+		&segment_growth_velocity_manager_factory,
 		&segment_velocity_modifier_factory, 
+
+		//previous segment modifier classes
+		&previous_segment_contribution_manager_factory,
+		&previous_segment_psc_factory,
+
+		//pdd modifier classes
+		&position_dependent_direction_manager_factory,
+
+		//contribution mix classes
+		&contribution_mix_manager_factory,
+
 		/*
 		&plot2_ggp_factory, &gradient_plot2_ggp_factory,
 		&matrix_converter_ggp_factory, &forked_ggp_factory, &cross_ggp_factory,

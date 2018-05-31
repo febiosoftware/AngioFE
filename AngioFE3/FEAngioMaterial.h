@@ -110,15 +110,11 @@ private:
 
 	FEPropertyT<FESolidMaterial> matrix_material;
 	
-	FEVecPropertyT<PositionDependentDirection> direction_modifiers;
-	FEVecPropertyT<PreviousSegmentContribution> psc_modifiers;
-	FEVecPropertyT<ContributionMix> alpha_modifiers;
-	FEVecPropertyT<SegmentGrowthVelocity> velocity_modifiers;
+	FEPropertyT<PositionDependentDirectionManager> pdd_manager;
+	FEPropertyT<PreviousSegmentContributionManager> psc_manager;
+	FEPropertyT<ContributionMixManager> cm_manager;
+	FEPropertyT<SegmentGrowthVelocityManager> velocity_manager;
 	FEPropertyT<CommonAngioProperties> common_properties;
 	CultureParameters m_cultureParams;
-	
-public:
-	
-	
 	
 };

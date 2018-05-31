@@ -46,15 +46,10 @@ FEAngioMaterial::FEAngioMaterial(FEModel* pfem) : FEElasticMaterial(pfem)
 	AddProperty(&matrix_material, "matrix");
 	AddProperty(&angio_stress_policy, "angio_stress_policy");
 
-	AddProperty(&direction_modifiers, "direction_modifier");
-	AddProperty(&psc_modifiers, "psc_modifier");
-	AddProperty(&alpha_modifiers, "alpha_modifier");
-	AddProperty(&velocity_modifiers, "velocity_modifier");
-
-	direction_modifiers.m_brequired = false;
-	psc_modifiers.m_brequired = false;
-	alpha_modifiers.m_brequired = false;
-	velocity_modifiers.m_brequired = false;
+	AddProperty(&pdd_manager, "pdd_manager");
+	AddProperty(&psc_manager, "psc_manager");
+	AddProperty(&cm_manager, "cm_manager");
+	AddProperty(&velocity_manager, "velocity_manager");
 }
 
 FEAngioMaterial::~FEAngioMaterial()
@@ -234,14 +229,7 @@ void FEAngioMaterial::SetSeeds(AngioElement* angio_elem)
 
 double FEAngioMaterial::GetSegmentVelocity(AngioElement * angio_element, vec3d local_pos)
 {
-	double velocity = 1;
-
-	for (int i = 0; i < velocity_modifiers.size(); i++)
-	{
-		velocity = velocity_modifiers[i]->ApplyModifiers(velocity, local_pos, angio_element);
-	}
-
-	return velocity;
+	return velocity_manager->ApplyModifiers(1, local_pos, angio_element);
 }
 
 double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem, FEMesh* mesh)
@@ -322,6 +310,7 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, i
 		}
 		
 	}
+
 	std::vector<Tip*> & tips = angio_elem->active_tips[buffer_index].at(angio_elem);
 	for(int j=0; j < tips.size();j++)
 	{
@@ -371,7 +360,12 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	}
 	mat3d natc_to_global(er, es, et);
 	mat3d global_to_natc = natc_to_global.inverse();
-	vec3d global_dir = active_tip->GetDirection(mesh);
+	vec3d psc_dir = psc_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip, mesh);
+	vec3d pdd_dir = pdd_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip, mesh);
+	double alpha = cm_manager->ApplyModifiers(0, active_tip, mesh);
+	vec3d global_dir = mix(psc_dir, pdd_dir , alpha);
+
+
 	vec3d global_pos;
 	double H[FEElement::MAX_NODES];
 	angio_element->_elem->shape_fnc(H, local_pos.x, local_pos.y, local_pos.z);
