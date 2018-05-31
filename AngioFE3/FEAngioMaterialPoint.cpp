@@ -27,7 +27,7 @@ void FEAngioMaterialPoint::Init()
 //-----------------------------------------------------------------------------
 // define the material parameters
 BEGIN_PARAMETER_LIST(FEAngioMaterialPoint, FEMaterialPoint)
-ADD_PARAMETER(density_multiplier, FE_PARAM_DOUBLE, "density_multiplier");
+ADD_PARAMETER(ref_ecm_density, FE_PARAM_DOUBLE, "ref_ecm_density");
 END_PARAMETER_LIST();
 
 

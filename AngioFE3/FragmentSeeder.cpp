@@ -52,7 +52,7 @@ bool ByElementFragmentSeeder::SeedFragments(std::vector<AngioElement *> &angio_e
 		r0->face = r0->angio_element;
 		//finally add this to the AngioElement
 
-		r0->angio_element->next_tips[r0->angio_element].push_back(r0);
+		r0->angio_element->next_tips.at(r0->angio_element).push_back(r0);
 
 		//just shove it in growth may not be compelte
 		//r0->angio_element->_angio_mat->GrowthInElement(0, r0, 1, -1, initial_vessel_length, true);

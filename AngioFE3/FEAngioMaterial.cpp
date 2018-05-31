@@ -288,19 +288,20 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, i
 	assert(angio_elem);
 	for(int i=0; i < angio_elem->adjacency_list.size();i++)
 	{
-		if(angio_elem->adjacency_list[i])
+		if(angio_elem->adjacency_list.at(i))
 		{
-			std::vector<Tip*> & tips = angio_elem->adjacency_list[i]->active_tips[buffer_index][angio_elem];
+			//probleme in mt code
+			std::vector<Tip*> & tips = angio_elem->adjacency_list.at(i)->active_tips[buffer_index].at(angio_elem);
 			for(int j=0; j < tips.size();j++)
 			{
-				assert(tips[j]->angio_element == angio_elem);
-				GrowthInElement(end_time, tips[j], i, buffer_index);
+				assert(tips.at(j)->angio_element == angio_elem);
+				GrowthInElement(end_time, tips.at(j), i, buffer_index);
 			}
 			
 		}
 		
 	}
-	std::vector<Tip*> & tips = angio_elem->active_tips[buffer_index][angio_elem];
+	std::vector<Tip*> & tips = angio_elem->active_tips[buffer_index].at(angio_elem);
 	for(int j=0; j < tips.size();j++)
 	{
 		assert(tips[j]->angio_element == angio_elem);
@@ -310,13 +311,16 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, i
 
 void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double override_grow_length, bool grow_len_overrride)
 {
+	auto angio_element = active_tip->angio_element;
+	/*
 	if(active_tip->time >= end_time)
 	{
-		active_tip->angio_element->next_tips[active_tip->face].push_back(active_tip);
+		angio_element->next_tips.at(active_tip->face).push_back(active_tip);
 		return;
 	}
+	*/
 	
-	auto angio_element = active_tip->angio_element;
+	
 	assert(active_tip);
 	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (active_tip->local_pos.x + active_tip->local_pos.y + active_tip->local_pos.z) < 1.01 : true );
 	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (active_tip->local_pos.x + active_tip->local_pos.y + active_tip->local_pos.z) < 1.01 : true);
@@ -388,7 +392,8 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		next->initial_fragment_id = active_tip->initial_fragment_id;
 		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (next->local_pos.x + next->local_pos.y + next->local_pos.z) < 1.01 : true);
 		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (next->local_pos.x + next->local_pos.y + next->local_pos.z) < 1.01 : true);
-		angio_element->next_tips[angio_element].push_back(next);
+		//problem with multithreaded code might do an insert
+		angio_element->next_tips.at(angio_element).push_back(next);
 
 		//move next to use the rest of the remaining dt
 
@@ -460,7 +465,8 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 						adj->use_direction = true;
 						adj->growth_velocity = grow_vel;
 
-						angio_element->active_tips[next_buffer_index][ang_elem].push_back(adj);
+						//might do an insert bad in mt code
+						angio_element->active_tips[next_buffer_index].at(ang_elem).push_back(adj);
 
 						//break;//place the tip in exactly one element
 					}
@@ -472,7 +478,10 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 
 void FEAngioMaterial::PostGrowthUpdate(AngioElement* angio_elem, double end_time, int buffer_index)
 {
-	angio_elem->active_tips[buffer_index].clear();
+	for(auto iter = angio_elem->active_tips[buffer_index].begin(); iter != angio_elem->active_tips[buffer_index].end(); ++iter)
+	{
+		iter->second.clear();
+	}
 }
 
 void FEAngioMaterial::Cleanup(AngioElement* angio_elem, double end_time, int buffer_index)
@@ -487,7 +496,10 @@ void FEAngioMaterial::Cleanup(AngioElement* angio_elem, double end_time, int buf
 void FEAngioMaterial::PrepBuffers(AngioElement* angio_elem, double end_time, int buffer_index)
 {
 	angio_elem->next_tips.swap(angio_elem->active_tips[buffer_index]);
-	angio_elem->next_tips.clear();
+	for(auto iter=angio_elem->next_tips.begin(); iter != angio_elem->next_tips.end(); ++iter)
+	{
+		iter->second.clear();
+	}
 	angio_elem->final_active_tips.clear();
 }
 

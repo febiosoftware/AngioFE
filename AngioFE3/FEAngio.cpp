@@ -105,10 +105,11 @@ void FEAngio::GrowSegments()
 			int n = 3;
 			for (int i = 0; i <n; i++)
 			{
+				//some key insertion is currently happening in this loop, eliminate it to get it multithreaded
 //#pragma omp  parallel for schedule(dynamic, 16)
 				for (int j = 0; j <angio_element_count; j++)
 				{
-					angio_elements[j]->_angio_mat->GrowSegments(angio_elements[j], ctime, buffer_index);
+					angio_elements.at(j)->_angio_mat->GrowSegments(angio_elements.at(j), ctime, buffer_index);
 				}
 
 #pragma omp parallel for schedule(dynamic, 16)
@@ -448,6 +449,22 @@ void FEAngio::SetupAngioElements()
 	for (int i = 0; i < angio_elements.size(); i++)
 	{
 		FillInFaces(mesh, angio_elements[i]);
+	}
+	//make sure that no maps are inserted into during multithreaded code
+	for (int i = 0; i < angio_elements.size(); i++)
+	{
+		std::vector<AngioElement*> & adj_list = angio_elements_to_all_adjacent_elements[angio_elements[i]];
+		std::vector<Tip*> tips;
+		for(int j=0; j < adj_list.size();j++)
+		{
+			
+			angio_elements[i]->active_tips[0][adj_list[j]] = tips;
+			angio_elements[i]->active_tips[1][adj_list[j]] = tips;
+			angio_elements[i]->next_tips[adj_list[j]] = tips;
+		}
+		angio_elements[i]->active_tips[0][angio_elements[i]] = tips;
+		angio_elements[i]->active_tips[1][angio_elements[i]] = tips;
+		angio_elements[i]->next_tips[angio_elements[i]] = tips;
 	}
 }
 

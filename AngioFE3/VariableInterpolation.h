@@ -14,7 +14,7 @@ public:
 	virtual double Interpolate(FESolidElement *se, std::vector<double> & values_at_gauss_points, vec3d local_pos, FEMesh* mesh) = 0;
 };
 
-//discontinuous interp[olation of values at the gauss points to the nodes
+//discontinuous interp[olation of values at the gauss points
 class PerElementVI : public FEVariableInterpolation
 {
 public:
