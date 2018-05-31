@@ -106,7 +106,7 @@ void FEAngio::GrowSegments()
 			for (int i = 0; i <n; i++)
 			{
 				//some key insertion is currently happening in this loop, eliminate it to get it multithreaded
-//#pragma omp  parallel for schedule(dynamic, 16)
+#pragma omp  parallel for schedule(dynamic, 16)
 				for (int j = 0; j <angio_element_count; j++)
 				{
 					angio_elements.at(j)->_angio_mat->GrowSegments(angio_elements.at(j), ctime, buffer_index);
