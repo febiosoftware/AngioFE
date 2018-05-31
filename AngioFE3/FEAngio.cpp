@@ -74,18 +74,19 @@ void FEAngio::ApplydtToTimestepper(double dt)
 
 void FEAngio::GrowSegments()
 {
-	auto time_info = m_fem->GetTime();
+	auto   time_info = m_fem->GetTime();
+	auto   mesh = GetMesh();
 	double min_dt = std::numeric_limits<double>::max();
 	size_t angio_element_count = angio_elements.size();
-	//is it valid for this to run more than once?
+	
+
+	// Is it valid for this to run more than once?
 	if(time_info.currentTime >= next_time)
 	{
-		
-		
 		#pragma omp parallel for shared(min_dt)
 		for (int i = 0; i < angio_element_count; ++i)
 		{
-			double temp_dt = angio_elements[i]->_angio_mat->GetMin_dt(angio_elements[i]);
+			double temp_dt = angio_elements[i]->_angio_mat->GetMin_dt(angio_elements[i], mesh);
 			#pragma omp critical
 			{
 				min_dt = std::min(min_dt, temp_dt);
@@ -148,7 +149,8 @@ vec3d FEAngio::ReferenceCoordinates(Tip * tip) const
 	FESolidElement * se= tip->angio_element->_elem;
 
 	double arr[FEElement::MAX_NODES];
-	se->shape_fnc(arr, tip->local_pos.x, tip->local_pos.y, tip->local_pos.z);
+	vec3d local_pos = tip->GetLocalPosition();
+	se->shape_fnc(arr, local_pos.x, local_pos.y, local_pos.z);
 	for (int j = 0; j < se->Nodes(); j++)
 	{
 		r += mesh.Node(se->m_node[j]).m_r0* arr[j];
@@ -700,8 +702,6 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		static int index = 0;
 		// grab the time information
 		
-		
-
 		update_gdms_timer.start();
 		for (size_t i = 0; i < m_pmat.size(); i++)
 		{
@@ -797,8 +797,10 @@ void FEAngio::Output()
 }
 
 //returns the scale factor needed to scale the ray to grow to the boundary of the natural coordinates
-bool FEAngio::ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d & dir, vec3d & pt, double & sf) const
+bool FEAngio::ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d & dir, vec3d & pt, double & sf, double min_sf) const
 {
+	// TODO: Expose min_sf to the user.
+
 	std::vector<double> possible_values;
 
 	const double ub = FEAngio::NaturalCoordinatesUpperBound(se->Type());
@@ -855,74 +857,127 @@ bool FEAngio::ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d
 		break;
 	case FE_Element_Type::FE_TET4G1:
 	case FE_Element_Type::FE_TET4G4:
-		//currently broken
+		// Currently broken.
+		// Fix in progress.
+
 		assert((pt.x + pt.y + pt.z) < 1.01);
-		//double sol0 = (1 - (pt.x + pt.y + pt.z)) / (dir.x + dir.y + dir.z);
-		mat3d temp0(dir, vec3d(0, 0, -1), vec3d(0, -1, 0));
+		
+		// double sol0 = (1 - (pt.x + pt.y + pt.z)) / (dir.x + dir.y + dir.z);
+
+		/*
+		 * For each face of TET4G4, check to see what scale factor is needed to have the given vector (pt, dir)
+		 * reach the plane shared by the face.
+		 */
+
+		/*
+		 * FACE 0
+		 *    v0: (0, 1, 0)
+		 *    v1: (0, 0, 1)
+		 *    v2: (1, 0, 0)
+		 */
+		vec3d relative_v1 = vec3d(0, 0, 1) - vec3d(0, 1, 0); // v1 - v0
+		vec3d relative_v2 = vec3d(1, 0, 0) - vec3d(0, 1, 0); // v2 - v0
+		mat3d temp0(-dir, relative_v1, relative_v2);
 		vec3d sol0;
 		double det0 = temp0.det();
 		if (det0 != 0.0)
 		{
 			temp0 = temp0.inverse();
-			sol0 = temp0* (vec3d(1,0,0)-pt);
+			sol0 = temp0 * (pt - vec3d(0, 1, 0)); // pt - v0
 		}
 
-
-		mat3d temp1(dir, vec3d(0, 0, -1), vec3d(-1, 0, 0));
+		/*
+		 * FACE 1
+		 *    v0: (0, 0, 0)
+		 *    v1: (0, 0, 1)
+		 *    v2: (1, 0, 0)
+		 */
+		// relative_v1 = vec3d(0, 0, 1) - vec3d(0, 0, 0); // v1 - v0
+		// relative_v2 = vec3d(1, 0, 0) - vec3d(0, 0, 0); // v2 - v0
+		mat3d temp1(-dir, vec3d(0, 0, 1), vec3d(1, 0, 0));
 		vec3d sol1;
 		double det1 = temp1.det();
 		if(det1 != 0.0)
 		{
 			temp1 = temp1.inverse();
-			sol1 = temp1* (-pt);
+			sol1 = temp1 * (pt); // pt - v0
 		}
-		
 
-		mat3d temp2(dir, vec3d(0, -1, 0), vec3d(-1, 0, 0));
-		double det2 = temp2.det();
+		/*
+		 * FACE 2
+		 *    v0: (0, 0, 0)
+		 *    v1: (1, 0, 0)
+		 *    v2: (0, 1, 0)
+		 */
+		// relative_v1 = vec3d(1, 0, 0) - vec3d(0, 0, 0); // v1 - v0
+		// relative_v2 = vec3d(0, 1, 0) - vec3d(0, 0, 0); // v2 - v0
+		mat3d temp2(-dir, vec3d(1, 0, 0), vec3d(0, 1, 0));
 		vec3d sol2;
+		double det2 = temp2.det();
 		if(det2 != 0.0)
 		{
 			temp2 = temp2.inverse();
-			sol2 = temp2* (-pt);
+			sol2 = temp2 * (pt); // pt - v0
 		}
 
-
-		mat3d temp3(dir, vec3d(0, 0, -1), vec3d(0, -1, 0));
+		/*
+		* FACE 3
+		*    v0: (0, 0, 0)
+		*    v1: (0, 0, 1)
+		*    v2: (0, 1, 0)
+		*/
+		// relative_v1 = vec3d(0, 0, 1) - vec3d(0, 0, 0); // v1 - v0
+		// relative_v2 = vec3d(0, 1, 0) - vec3d(0, 0, 0); // v2 - v0
+		mat3d temp3(-dir, vec3d(0, 0, 1), vec3d(0, 1, 0));
 		vec3d sol3;
 		double det3 = temp3.det();
 		if(det3 != 0.0)
 		{
 			temp3 = temp3.inverse();
-			sol3 = temp3* (-pt);
+			sol3 = temp3 * (pt); // pt - v0
 		}
 		
-
-
-		if (sol0.x > 0 && (sol0.y <= 1.0) && (sol0.y >= 0) && (sol0.z <= 1.0) && (sol0.z >= 0) && det0 != 0.0)
+		/*
+		 *  Check to make sure that the scale factor is greater than 0 to ensure growth is simulated. Then ensure
+		 * that the v1 and v2 components are within the bounds of the face's natural coordinate system. Last, 
+		 * to ensure that the solution is within the face, the sum of v1 and v2 components must be less than 
+		 * 1.01 (scaled to account for floating point calculation inaccuracies).
+		 * 
+		 * sol.x: scale factor
+		 * sol.y: v1 component of solution
+		 * sol.z: v2 component of solution
+		 */
+		if (sol0.x > min_sf && (sol0.y <= 1.0) && (sol0.y >= 0) && (sol0.z <= 1.0) && (sol0.z >= 0) && ((sol0.y + sol0.z) < 1.01) && det0 != 0.0)
 		{
 			sf = sol0.x;
+			// assert((sol0.y + sol0.z) < 1.01);
+
 			return true;
 		}
-		if(sol1.x > 0 && (sol1.y <= 1.0) && (sol1.y >= 0) && (sol1.z <= 1.0) && (sol1.z >= 0) && det1 != 0.0)
+		if(sol1.x > min_sf && (sol1.y <= 1.0) && (sol1.y >= 0) && (sol1.z <= 1.0) && (sol1.z >= 0) && ((sol1.y + sol1.z) < 1.01) && det1 != 0.0)
 		{
 			sf = sol1.x;
+			// assert((sol1.y + sol1.z) < 1.01);
+
 			return true;
 		}
-		if (sol2.x > 0 && (sol2.y <= 1.0) && (sol2.y >= 0) && (sol2.z <= 1.0) && (sol2.z >= 0) && det2 != 0.0)
+		if (sol2.x > min_sf && (sol2.y <= 1.0) && (sol2.y >= 0) && (sol2.z <= 1.0) && (sol2.z >= 0) && ((sol2.y + sol2.z) < 1.01) && det2 != 0.0)
 		{
 			sf = sol2.x;
+			// assert((sol2.y + sol2.z) < 1.01);
+
 			return true;
 		}
-		if (sol3.x > 0 && (sol3.y <= 1.0) && (sol3.y >= 0) && (sol3.z <= 1.0) && (sol3.z >= 0) && det3 != 0.0)
+		if (sol3.x > min_sf && (sol3.y <= 1.0) && (sol3.y >= 0) && (sol3.z <= 1.0) && (sol3.z >= 0) && ((sol3.y + sol3.z) < 1.01) && det3 != 0.0)
 		{
 			sf = sol3.x;
+			// assert((sol3.y + sol3.z) < 1.01);
+
 			return true;
 		}
-		if((dir.x + dir.y + dir.z) == 0.0)
-		{
-			return false;
-		}
+
+		return false;
+
 		break;
 	}
 	
@@ -994,69 +1049,19 @@ bool FEAngio::IsInBounds(FESolidElement* se, double r[3], double eps)
 void FEAngio::ExtremaInElement(FESolidElement * se, std::vector<vec3d> & extrema) const
 {
 	auto mesh = GetMesh();
-	double H[FEElement::MAX_NODES];
-	vec3d pos;
 	switch(se->Type())
 	{
+	case FE_Element_Type::FE_TET4G1:
+	case FE_Element_Type::FE_TET4G4:
 	case FE_Element_Type::FE_HEX8G1:
 	case FE_Element_Type::FE_HEX8G8:
-		se->shape_fnc(H, 1, 1, 1);
-		pos = vec3d(0, 0, 0);
 		for (int j = 0; j < se->Nodes(); j++)
 		{
-			pos += mesh->Node(se->m_node[j]).m_rt* H[j];
+			extrema.push_back(mesh->Node(se->m_node[j]).m_rt);
 		}
-		extrema.push_back(pos);
-		se->shape_fnc(H, -1, 1, 1);
-		pos = vec3d(0, 0, 0);
-		for (int j = 0; j < se->Nodes(); j++)
-		{
-			pos += mesh->Node(se->m_node[j]).m_rt* H[j];
-		}
-		extrema.push_back(pos);
-		se->shape_fnc(H, 1, -1, 1);
-		pos = vec3d(0, 0, 0);
-		for (int j = 0; j < se->Nodes(); j++)
-		{
-			pos += mesh->Node(se->m_node[j]).m_rt* H[j];
-		}
-		extrema.push_back(pos);
-		se->shape_fnc(H, 1, 1, -1);
-		pos = vec3d(0, 0, 0);
-		for (int j = 0; j < se->Nodes(); j++)
-		{
-			pos += mesh->Node(se->m_node[j]).m_rt* H[j];
-		}
-		extrema.push_back(pos);
-		se->shape_fnc(H, -1, -1, 1);
-		pos = vec3d(0, 0, 0);
-		for (int j = 0; j < se->Nodes(); j++)
-		{
-			pos += mesh->Node(se->m_node[j]).m_rt* H[j];
-		}
-		extrema.push_back(pos);
-		se->shape_fnc(H, -1, 1, -1);
-		pos = vec3d(0, 0, 0);
-		for (int j = 0; j < se->Nodes(); j++)
-		{
-			pos += mesh->Node(se->m_node[j]).m_rt* H[j];
-		}
-		extrema.push_back(pos);
-		se->shape_fnc(H, 1, -1, -1);
-		pos = vec3d(0, 0, 0);
-		for (int j = 0; j < se->Nodes(); j++)
-		{
-			pos += mesh->Node(se->m_node[j]).m_rt* H[j];
-		}
-		extrema.push_back(pos);
-		se->shape_fnc(H, -1, -1, -1);
-		pos = vec3d(0, 0, 0);
-		for (int j = 0; j < se->Nodes(); j++)
-		{
-			pos += mesh->Node(se->m_node[j]).m_rt* H[j];
-		}
-		extrema.push_back(pos);
+
 		break;
+
 	default:
 		assert(false);
 	}

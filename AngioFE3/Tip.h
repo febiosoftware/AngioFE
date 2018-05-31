@@ -12,7 +12,7 @@ public:
 	Tip(Tip * other, FEMesh * mesh);//used to copy another tip
 	//sets the local positions clamps the values to -1 to 1
 	void SetLocalPosition(vec3d pos);
-	vec3d local_pos;
+	vec3d GetLocalPosition() const;
 	AngioElement * angio_element= nullptr;//the element that contains the local_pos coordinates
 	double time=0.0;
 	double growth_velocity;
@@ -27,5 +27,7 @@ public:
 	vec3d GetPosition(FEMesh * mesh) const;
 	void PrintTipInfo(FEMesh *mesh) const;
 	void PrintTipInfo(FEMesh *mesh, std::string title) const;
+private:
+	vec3d local_pos;
 };
 

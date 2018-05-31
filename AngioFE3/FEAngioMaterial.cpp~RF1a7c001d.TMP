@@ -284,25 +284,29 @@ double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem, FEMesh* mesh)
 			et += mesh->Node(angio_elem->_elem->m_node[j]).m_rt * Gt[j];
 		}
 
-		min_side_length_so_far = std::min(min_side_length_so_far, er.norm2()); // norm2() is magnitude without sqrt.
+		min_side_length_so_far = std::min(min_side_length_so_far, er.norm2());
 		min_side_length_so_far = std::min(min_side_length_so_far, es.norm2());
 		min_side_length_so_far = std::min(min_side_length_so_far, et.norm2());
 	}
-
-	min_side_length_so_far = sqrt(min_side_length_so_far);
 
 	// Basis vectors already represented correctly for HEX8 elements, need to take half of this value for TET4's.
 	switch(angio_elem->_elem->Type())
 	{
 		case FE_Element_Type::FE_TET4G1:
 		case FE_Element_Type::FE_TET4G4:
-			min_side_length_so_far /= 2;
+			er /= 2;
+			es /= 2;
+			et /= 2;
 		default:
 			break;
 	}
 
+	// Get the min side length.
+	double min_so_far = std::min(er.norm(), es.norm());
+	double min_side_length = std::min(min_so_far, et.norm());
+
 	// Return dt = d / v.
-	return (min_side_length_so_far * 0.25) / max_grow_velocity;
+	return (min_side_length * 0.25) / max_grow_velocity;
 }
 
 void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index)
@@ -310,19 +314,19 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, i
 	assert(angio_elem);
 	for(int i=0; i < angio_elem->adjacency_list.size();i++)
 	{
-		if(angio_elem->adjacency_list.at(i))
+		if(angio_elem->adjacency_list[i])
 		{
-			std::vector<Tip*> & tips = angio_elem->adjacency_list.at(i)->active_tips[buffer_index].at(angio_elem);
+			std::vector<Tip*> & tips = angio_elem->adjacency_list[i]->active_tips[buffer_index][angio_elem];
 			for(int j=0; j < tips.size();j++)
 			{
-				assert(tips.at(j)->angio_element == angio_elem);
-				GrowthInElement(end_time, tips.at(j), i, buffer_index);
+				assert(tips[j]->angio_element == angio_elem);
+				GrowthInElement(end_time, tips[j], i, buffer_index);
 			}
 			
 		}
 		
 	}
-	std::vector<Tip*> & tips = angio_elem->active_tips[buffer_index].at(angio_elem);
+	std::vector<Tip*> & tips = angio_elem->active_tips[buffer_index][angio_elem];
 	for(int j=0; j < tips.size();j++)
 	{
 		assert(tips[j]->angio_element == angio_elem);
@@ -332,9 +336,16 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, i
 
 void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double override_grow_length, bool grow_len_overrride)
 {
-	auto angio_element = active_tip->angio_element;
+	if(active_tip->time >= end_time)
+	{
+		active_tip->angio_element->next_tips[active_tip->face].push_back(active_tip);
+		return;
+	}
 	
+	auto angio_element = active_tip->angio_element;
 	assert(active_tip);
+	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (active_tip->local_pos.x + active_tip->local_pos.y + active_tip->local_pos.z) < 1.01 : true );
+	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (active_tip->local_pos.x + active_tip->local_pos.y + active_tip->local_pos.z) < 1.01 : true);
 	auto mesh = m_pangio->GetMesh();
 	const double min_segm_len = 0.1;
 	int next_buffer_index = (buffer_index + 1) % 2;
@@ -347,16 +358,17 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	}
 	else
 	{
-		grow_vel = this->GetSegmentVelocity(angio_element, active_tip->GetLocalPosition());
+		grow_vel = this->GetSegmentVelocity(angio_element, active_tip->local_pos);
 		grow_len =  grow_vel*dt;
 	}
+	 
+	
 
 	double Gr[FEElement::MAX_NODES];
 	double Gs[FEElement::MAX_NODES];
 	double Gt[FEElement::MAX_NODES];
-	vec3d local_pos = active_tip->GetLocalPosition();
-	angio_element->_elem->shape_deriv(Gr, Gs, Gt, local_pos.x, local_pos.y, local_pos.z);
-	vec3d er, es, et; // Basis vectors of the natural coordinates
+	angio_element->_elem->shape_deriv(Gr, Gs, Gt, active_tip->local_pos.x, active_tip->local_pos.y, active_tip->local_pos.z);
+	vec3d er, es, et;//basis vectors of the natural coordinates
 	for (int j = 0; j < angio_element->_elem->Nodes(); j++)
 	{
 		er += mesh->Node(angio_element->_elem->m_node[j]).m_rt* Gr[j];
@@ -374,22 +386,22 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	vec3d global_dir = active_tip->GetDirection(mesh);
 	vec3d global_pos;
 	double H[FEElement::MAX_NODES];
-	angio_element->_elem->shape_fnc(H, local_pos.x, local_pos.y, local_pos.z);
+	angio_element->_elem->shape_fnc(H, active_tip->local_pos.x, active_tip->local_pos.y, active_tip->local_pos.z);
 	for (int j = 0; j < angio_element->_elem->Nodes(); j++)
 	{
 		global_pos += mesh->Node(angio_element->_elem->m_node[j]).m_rt* H[j];
 	}
 
-	// Just do the transformations
+	//just do the transformations
 	vec3d nat_dir = global_to_natc * global_dir;
 	double factor;
-	bool proj_sucess = m_pangio->ScaleFactorToProjectToNaturalCoordinates(active_tip->angio_element->_elem, nat_dir, local_pos, factor);
-	vec3d possible_natc = local_pos + (nat_dir*factor);
-	double possible_grow_length = m_pangio->InElementLength(active_tip->angio_element->_elem, local_pos, possible_natc);
+	bool proj_sucess = m_pangio->ScaleFactorToProjectToNaturalCoordinates(active_tip->angio_element->_elem, nat_dir, active_tip->local_pos, factor);
+	vec3d possible_natc = active_tip->local_pos + (nat_dir*factor);
+	double possible_grow_length = m_pangio->InElementLength(active_tip->angio_element->_elem, active_tip->local_pos, possible_natc);
 	if ((possible_grow_length >= grow_len) && proj_sucess)
 	{
 		//this is still in the same element
-		vec3d real_natc = local_pos + (nat_dir * (factor * (grow_len / possible_grow_length)));
+		vec3d real_natc = active_tip->local_pos + (nat_dir * (factor * (grow_len / possible_grow_length)));
 		//add the segment and add the new tip to the current angio element
 		Tip * next = new Tip(active_tip, mesh);
 		Segment * seg = new Segment();
@@ -400,9 +412,9 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		next->face = angio_element;
 		next->growth_velocity = grow_vel;
 		next->initial_fragment_id = active_tip->initial_fragment_id;
-		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (local_pos.x + local_pos.y + local_pos.z) < 1.01 : true);
-		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (local_pos.x + local_pos.y + local_pos.z) < 1.01 : true);
-		angio_element->next_tips.at(angio_element).push_back(next);
+		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (next->local_pos.x + next->local_pos.y + next->local_pos.z) < 1.01 : true);
+		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (next->local_pos.x + next->local_pos.y + next->local_pos.z) < 1.01 : true);
+		angio_element->next_tips[angio_element].push_back(next);
 
 		//move next to use the rest of the remaining dt
 
@@ -434,12 +446,16 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		next->angio_element = angio_element;
 
 		//still need to update the local position of the tip
-		next->SetLocalPosition(local_pos + (nat_dir * possible_grow_length));
+		next->SetLocalPosition(active_tip->local_pos + (nat_dir * possible_grow_length));
+
 
 		next->parent = seg;
 		next->face = angio_element;
 		next->initial_fragment_id = active_tip->initial_fragment_id;
 		next->growth_velocity = grow_vel;
+
+		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (next->local_pos.x + next->local_pos.y + next->local_pos.z) < 1.01 : true);
+		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (next->local_pos.x + next->local_pos.y + next->local_pos.z) < 1.01 : true);
 
 		seg->back = active_tip;
 		seg->front = next;
@@ -470,9 +486,9 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 						adj->use_direction = true;
 						adj->growth_velocity = grow_vel;
 
-						angio_element->active_tips[next_buffer_index].at(ang_elem).push_back(adj);
+						angio_element->active_tips[next_buffer_index][ang_elem].push_back(adj);
 
-						// break; // Place the tip in exactly one element
+						//break;//place the tip in exactly one element
 					}
 				}
 			}
@@ -482,10 +498,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 
 void FEAngioMaterial::PostGrowthUpdate(AngioElement* angio_elem, double end_time, int buffer_index)
 {
-	for(auto iter = angio_elem->active_tips[buffer_index].begin(); iter != angio_elem->active_tips[buffer_index].end(); ++iter)
-	{
-		iter->second.clear();
-	}
+	angio_elem->active_tips[buffer_index].clear();
 }
 
 void FEAngioMaterial::Cleanup(AngioElement* angio_elem, double end_time, int buffer_index)
@@ -500,10 +513,7 @@ void FEAngioMaterial::Cleanup(AngioElement* angio_elem, double end_time, int buf
 void FEAngioMaterial::PrepBuffers(AngioElement* angio_elem, double end_time, int buffer_index)
 {
 	angio_elem->next_tips.swap(angio_elem->active_tips[buffer_index]);
-	for(auto iter=angio_elem->next_tips.begin(); iter != angio_elem->next_tips.end(); ++iter)
-	{
-		iter->second.clear();
-	}
+	angio_elem->next_tips.clear();
 	angio_elem->final_active_tips.clear();
 }
 

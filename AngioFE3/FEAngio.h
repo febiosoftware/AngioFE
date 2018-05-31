@@ -116,7 +116,7 @@ private:
 	void Output();
 
 	//returns the scale factor that would project this ray onto the unit cube, pt must be within the unit cube
-	bool ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d & dir, vec3d & pt, double & sf) const;
+	bool ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d & dir, vec3d & pt, double & sf, double min_sf = 1.0) const;
 
 	//returns the length between the two points as if they are conencted by a line segment in the natrual coordinates of the element
 	//only the difference between the points if the elements are linear

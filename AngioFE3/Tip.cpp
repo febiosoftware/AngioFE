@@ -82,8 +82,23 @@ Tip::Tip(Tip * other, FEMesh * mesh)
 void Tip::SetLocalPosition(vec3d pos)
 {
 	assert(angio_element);
+	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (pos.x + pos.y + pos.z) < 1.01 : true);
+	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (pos.x < 1.01) && (pos.x >= -0.01) : true);
+	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (pos.y < 1.01) && (pos.y >= -0.01) : true);
+	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (pos.z < 1.01) && (pos.z >= -0.01) : true);
+
+	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (pos.x + pos.y + pos.z) < 1.01 : true);
+	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (pos.x < 1.01) && (pos.x >= -0.01) : true);
+	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (pos.y < 1.01) && (pos.y >= -0.01) : true);
+	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (pos.z < 1.01) && (pos.z >= -0.01) : true);
+
 	local_pos = pos;
 	local_pos.x = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound(angio_element->_elem->Type()), local_pos.x), FEAngio::NaturalCoordinatesLowerBound(angio_element->_elem->Type()));
 	local_pos.y = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound(angio_element->_elem->Type()), local_pos.y), FEAngio::NaturalCoordinatesLowerBound(angio_element->_elem->Type()));
 	local_pos.z = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound(angio_element->_elem->Type()), local_pos.z), FEAngio::NaturalCoordinatesLowerBound(angio_element->_elem->Type()));
+}
+
+vec3d Tip::GetLocalPosition() const
+{
+	return local_pos;
 }

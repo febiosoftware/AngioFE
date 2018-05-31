@@ -44,7 +44,7 @@ public:
 
 
 	//should be const and threadsafe
-	double GetMin_dt(AngioElement* angio_elem);
+	double GetMin_dt(AngioElement* angio_elem, FEMesh* mesh);
 
 	void GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index);
 
