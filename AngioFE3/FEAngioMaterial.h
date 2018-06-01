@@ -91,7 +91,7 @@ public:
 	// Calculate Cauchy-stress
 	mat3ds Stress(FEMaterialPoint& mp) override;
 
-	double GetSegmentVelocity(AngioElement * angio_element, vec3d local_pos);
+	double GetSegmentVelocity(AngioElement * angio_element, vec3d local_pos, FEMesh* mesh);
 
 	// Calculate spatial elasticity tangent
 	tens4ds Tangent(FEMaterialPoint& mp) override;

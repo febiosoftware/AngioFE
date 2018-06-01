@@ -227,9 +227,9 @@ void FEAngioMaterial::SetSeeds(AngioElement* angio_elem)
 	offset++;
 }
 
-double FEAngioMaterial::GetSegmentVelocity(AngioElement * angio_element, vec3d local_pos)
+double FEAngioMaterial::GetSegmentVelocity(AngioElement * angio_element, vec3d local_pos, FEMesh* mesh)
 {
-	return velocity_manager->ApplyModifiers(1, local_pos, angio_element);
+	return velocity_manager->ApplyModifiers(1, local_pos, angio_element, mesh);
 }
 
 double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem, FEMesh* mesh)
@@ -244,7 +244,7 @@ double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem, FEMesh* mesh)
 	for (int i = 0; i < angio_elem->_elem->GaussPoints();i++)
 	{
 		vec3d pos(angio_elem->_elem->gr(i), angio_elem->_elem->gs(i), angio_elem->_elem->gt(i));
-		double vel = angio_elem->_angio_mat->GetSegmentVelocity(angio_elem, pos);
+		double vel = angio_elem->_angio_mat->GetSegmentVelocity(angio_elem, pos, mesh);
 		max_grow_velocity = std::max(max_grow_velocity, vel);
 	}
 
@@ -336,7 +336,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	}
 	else
 	{
-		grow_vel = this->GetSegmentVelocity(angio_element, active_tip->GetLocalPosition());
+		grow_vel = this->GetSegmentVelocity(angio_element, active_tip->GetLocalPosition(), mesh);
 		grow_len =  grow_vel*dt;
 	}
 
@@ -363,7 +363,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	vec3d psc_dir = psc_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip, mesh);
 	vec3d pdd_dir = pdd_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip, mesh);
 	double alpha = cm_manager->ApplyModifiers(0, active_tip, mesh);
-	vec3d global_dir = mix(psc_dir, pdd_dir , alpha);
+	vec3d global_dir = mix(psc_dir, pdd_dir , (alpha * dt));
 
 
 	vec3d global_pos;

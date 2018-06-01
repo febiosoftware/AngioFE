@@ -2,6 +2,7 @@
 #include <FECore/FEMaterial.h>
 #include <FEBioMech/FESPRProjection.h>
 #include "AngioElement.h"
+#include "VariableInterpolation.h"
 class FEAngio;
 
 class Tip;
@@ -65,9 +66,22 @@ public:
 	explicit ContributionMixManager(FEModel* pfem) : FEMaterial(pfem) { AddProperty(&cm_modifiers, "psc_modifier"); cm_modifiers.m_brequired = false; }
 	virtual ~ContributionMixManager() {}
 	double ApplyModifiers(double prev, Tip* tip, FEMesh* mesh);
-	void Update(FEMesh * mesh) { }
+	void Update(FEMesh * mesh) {}
 private:
 	FEVecPropertyT<ContributionMix> cm_modifiers;
+};
+
+class PSCPDDContributionMix : public ContributionMix // TODO: Rename?
+{
+public:
+	explicit PSCPDDContributionMix(FEModel* pfem) : ContributionMix(pfem) {}
+	virtual ~PSCPDDContributionMix() {}
+	double ApplyModifiers(double prev, Tip* tip, FEMesh* mesh) override;
+	void Update(FEMesh * mesh) override;
+protected:
+	DECLARE_PARAMETER_LIST();
+private:
+	double psc_weight = 0.5;
 };
 
 //get the length over one unit of time at the given position
@@ -76,7 +90,7 @@ class SegmentGrowthVelocity : public FEMaterial
 public:
 	explicit SegmentGrowthVelocity(FEModel* pfem) : FEMaterial(pfem) {}
 	virtual ~SegmentGrowthVelocity() {}
-	virtual double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_elem) = 0;
+	virtual double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_elem, FEMesh* mesh) = 0;
 };
 
 class SegmentGrowthVelocityManager : public FEMaterial
@@ -84,7 +98,7 @@ class SegmentGrowthVelocityManager : public FEMaterial
 public:
 	explicit SegmentGrowthVelocityManager(FEModel* pfem) : FEMaterial(pfem) { AddProperty(&seg_vel_modifiers, "velocity_modifier"); seg_vel_modifiers.m_brequired = false; }
 	virtual ~SegmentGrowthVelocityManager() {}
-	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_elem);
+	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_elem, FEMesh* mesh);
 private:
 	FEVecPropertyT<SegmentGrowthVelocity> seg_vel_modifiers;
 };
@@ -93,12 +107,25 @@ class SegmentVelocityModifier : public SegmentGrowthVelocity
 {
 public:
 	explicit SegmentVelocityModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) {}
-	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element) override;
+	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
 	bool Init() override;
 protected:
 	DECLARE_PARAMETER_LIST();
 private:
 	double segment_velocity_over_time = 1;
+};
+
+class SegmentVelocityDensityScaleModifier : public SegmentGrowthVelocity
+{
+public:
+	explicit SegmentVelocityDensityScaleModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) { AddProperty(&interpolation_prop, "interpolation_prop"); }
+	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
+	bool Init() override;
+protected:
+	DECLARE_PARAMETER_LIST();
+private:
+	FEPropertyT<FEVariableInterpolation> interpolation_prop;
+	vec3d m_density_scale_factor = vec3d(-0.016, 5.1605, 0.5112);
 };
 
 class FiberPDD : public PositionDependentDirection
