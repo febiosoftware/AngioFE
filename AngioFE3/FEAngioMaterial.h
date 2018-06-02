@@ -16,6 +16,7 @@
 #include "CultureParameters.h"
 #include "SegmentGrowthModifiers.h"
 #include "AngioStressPolicy.h"
+#include "InitialModifiers.h"
 
 class AngioElement;
 
@@ -105,6 +106,7 @@ public:
 	double StrainEnergyDensity(FEMaterialPoint& mp) override;
 	FEAngio*	m_pangio = nullptr;
 	FEPropertyT<AngioStressPolicy> angio_stress_policy;
+	FEPropertyT<InitialModifierManager> im_manager;
 private:
 	DECLARE_PARAMETER_LIST();
 
@@ -115,6 +117,7 @@ private:
 	FEPropertyT<ContributionMixManager> cm_manager;
 	FEPropertyT<SegmentGrowthVelocityManager> velocity_manager;
 	FEPropertyT<CommonAngioProperties> common_properties;
+	
 	CultureParameters m_cultureParams;
 	
 };

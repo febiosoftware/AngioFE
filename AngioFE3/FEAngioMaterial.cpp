@@ -50,6 +50,7 @@ FEAngioMaterial::FEAngioMaterial(FEModel* pfem) : FEElasticMaterial(pfem)
 	AddProperty(&psc_manager, "psc_manager");
 	AddProperty(&cm_manager, "cm_manager");
 	AddProperty(&velocity_manager, "velocity_manager");
+	AddProperty(&im_manager, "im_manager");
 }
 
 FEAngioMaterial::~FEAngioMaterial()
@@ -364,7 +365,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	vec3d pdd_dir = pdd_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip, mesh);
 	double alpha = cm_manager->ApplyModifiers(0, active_tip, mesh);
 	vec3d global_dir = mix(psc_dir, pdd_dir , (alpha * dt));
-
+	global_dir.unit();
 
 	vec3d global_pos;
 	double H[FEElement::MAX_NODES];

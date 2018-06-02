@@ -12,6 +12,7 @@ class FEVariableInterpolation : public FEMaterial
 public:
 	explicit FEVariableInterpolation(FEModel * pfem) : FEMaterial(pfem){}
 	virtual double Interpolate(FESolidElement *se, std::vector<double> & values_at_gauss_points, vec3d local_pos, FEMesh* mesh) = 0;
+	virtual quatd Interpolate(FESolidElement *se, std::vector<quatd> & values_at_gauss_points, vec3d local_pos, FEMesh* mesh) = 0;
 };
 
 //discontinuous interp[olation of values at the gauss points
@@ -20,4 +21,5 @@ class PerElementVI : public FEVariableInterpolation
 public:
 	explicit PerElementVI(FEModel * pfem) : FEVariableInterpolation(pfem) {}
 	double Interpolate(FESolidElement *se, std::vector<double> & values_at_gauss_points, vec3d local_pos, FEMesh* mesh) override;
+	quatd Interpolate(FESolidElement *se, std::vector<quatd> & values_at_gauss_points, vec3d local_pos, FEMesh* mesh) override;
 };

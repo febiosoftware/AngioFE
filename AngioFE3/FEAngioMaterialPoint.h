@@ -20,7 +20,7 @@ public:
 	//! copy material point data (for running restarts) todo Is this still used?
 	void Serialize(DumpStream& dmp) override;
 
-	double ref_ecm_density = 1.0;
+	double ref_ecm_density;
 
 	//the temporary to store angio stress
 	mat3ds m_as;

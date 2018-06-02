@@ -131,14 +131,13 @@ private:
 class FiberPDD : public PositionDependentDirection
 {
 public:
-	explicit FiberPDD(FEModel* pfem) : PositionDependentDirection(pfem) {}
+	explicit FiberPDD(FEModel* pfem) : PositionDependentDirection(pfem) { AddProperty(&interpolation_prop, "interpolation_prop"); }
 	virtual ~FiberPDD() {}
 	vec3d ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh) override;
 	void Update(FEMesh * mesh, FEAngio* angio) override;
 private:
 	double contribution = 1.0;
-	FESPRProjection map;
-	std::vector<std::vector<double>> fiber_at_int_pts;
+	FEPropertyT<FEVariableInterpolation> interpolation_prop;
 };
 
 //

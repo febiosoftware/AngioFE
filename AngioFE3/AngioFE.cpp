@@ -40,6 +40,10 @@ FEPluginFactory_T<LoadCurveAngioStressPolicy, FEMATERIAL_ID> load_curve_angio_st
 // Seeder Classes
 FEPluginFactory_T<ByElementFragmentSeeder, FEMATERIAL_ID> by_element_fragment_seeder_factory("by element fragment seeder");
 
+//InitalModifiers any modifiers for angio_elements this will be run only once before much else happens
+FEPluginFactory_T<InitialModifierManager, FEMATERIAL_ID> inital_modifier_manager_factory("im_manager");
+FEPluginFactory_T<FiberRandomizer, FEMATERIAL_ID> fiber_randomizer_factory("fiber_randomizer");
+
 // SegmentVelocityModifier CLasses
 FEPluginFactory_T<SegmentGrowthVelocityManager, FEMATERIAL_ID> segment_growth_velocity_manager_factory("segment_growth_velocity_manager");
 FEPluginFactory_T<SegmentVelocityModifier, FEMATERIAL_ID> segment_velocity_modifier_factory("segment_velocity_modifier");
@@ -51,7 +55,7 @@ FEPluginFactory_T<PreviousSegmentPSC, FEMATERIAL_ID> previous_segment_psc_factor
 
 // PDD Classes
 FEPluginFactory_T<PositionDependentDirectionManager, FEMATERIAL_ID> position_dependent_direction_manager_factory("position_dependent_direction_manager");
-//FEPluginFactory_T<FiberPDD, FEMATERIAL_ID> previous_segment_psc_factory("previous_segment_psc");
+FEPluginFactory_T<FiberPDD, FEMATERIAL_ID> fiber_pdd_factory("fiber_pdd");
 
 // ContributionMix Classes
 FEPluginFactory_T<ContributionMixManager, FEMATERIAL_ID> contribution_mix_manager_factory("contribution_mix_manager");
@@ -170,6 +174,10 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		//fragment seeders
 		&by_element_fragment_seeder_factory,
 
+		//initial modifiers
+		&inital_modifier_manager_factory,
+		&fiber_randomizer_factory,
+
 		//boundary conditions
 		
 		//random distribution
@@ -190,6 +198,7 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 
 		// PDD Modifier Classes
 		&position_dependent_direction_manager_factory,
+		&fiber_pdd_factory,
 
 		// ContributionMix Classes
 		&contribution_mix_manager_factory,

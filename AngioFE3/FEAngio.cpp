@@ -676,17 +676,26 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 	static bool start = false;
 	if (!start)
 	{
+		size_t angio_element_count = angio_elements.size();
 		/*
 		grow_timer.start();
 		GrowSegments();
 		grow_timer.stop();
 		*/
+#pragma omp parallel for schedule(dynamic, 16)
+		for (int i = 0; i < angio_element_count; i++)
+		{
+			angio_elements[i]->_angio_mat->im_manager->ApplyModifier(angio_elements[i], mesh, this);
+		}
+
+
+
+
 		update_angio_stress_timer.start();
 		for(int i=0; i < angio_materials.size();i++)
 		{
 			angio_materials[i]->angio_stress_policy->UpdateScale();
 		}
-		size_t angio_element_count = angio_elements.size();
 #pragma omp parallel for schedule(dynamic, 16)
 		for(int i=0;i < angio_element_count;i++)
 		{
