@@ -24,6 +24,12 @@ public:
 	explicit ByElementFragmentSeeder(FEModel * model);
 	bool SeedFragments(std::vector<AngioElement *> &angio_elements, FEAngioMaterial* angio_mat, int buffer_index)override;
 };
+class ByElementFragmentSeederBidirectional :public FragmentSeeder
+{
+public:
+	explicit ByElementFragmentSeederBidirectional(FEModel * model);
+	bool SeedFragments(std::vector<AngioElement *> &angio_elements, FEAngioMaterial* angio_mat, int buffer_index)override;
+};
 
 class ByVolumeFragmentSeeder :public FragmentSeeder
 {

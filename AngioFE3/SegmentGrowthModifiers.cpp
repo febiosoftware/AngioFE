@@ -12,54 +12,7 @@ vec3d PreviousSegmentPSC::ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh)
 
 void FiberPDD::Update(FEMesh * mesh, FEAngio* angio)
 {
-	/*
-	angio->
-	// build the element data array
-	for (int n = 0; n < 4; n++)
-	{
-		fiber_at_int_pts[n].clear();
-		fiber_at_int_pts[n].resize(NE);
 
-		for (int i = 0; i<NE; ++i)
-		{
-			FESolidElement& e = sd->Element(i);
-			int nint = e.GaussPoints();
-			fiber_at_int_pts[n][i].assign(nint, 0.0);
-		}
-	}
-
-
-	// this array will store the results
-	FESPRProjection map;
-
-	// loop over stress components
-
-	// fill the ED array
-	for (int i = 0; i<NE; ++i)
-	{
-		FESolidElement& el = sd->Element(i);
-		int nint = el.GaussPoints();
-		for (int j = 0; j<nint; ++j)
-		{
-			FEMaterialPoint * mp = el.GetMaterialPoint(j);
-			FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
-			vec3d fd = emp->m_F * emp->m_Q * vec3d(1, 0, 0);
-			double lambda = fd.unit();
-
-			//store the data
-			fiber_at_int_pts[0][i][j] = fd.x;
-			fiber_at_int_pts[1][i][j] = fd.y;
-			fiber_at_int_pts[2][i][j] = fd.z;
-			fiber_at_int_pts[3][i][j] = lambda;
-		}
-	}
-
-	for (int n = 0; n<4; ++n)
-	{
-		// project to nodes
-		map.Project(*sd, fiber_at_int_pts[n], fibers_at_nodes[n]);
-	}
-	*/
 }
 
 double PSCPDDContributionMix::ApplyModifiers(double prev, Tip* tip, FEMesh* mesh)
@@ -131,7 +84,7 @@ vec3d FiberPDD::ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh)
 		gauss_data.push_back({ axis });
 	}
 	
-	quatd rv = variable_interpolation->Interpolate(tip->angio_element->_elem, gauss_data, tip->GetLocalPosition(), mesh);
+	quatd rv = interpolation_prop->Interpolate(tip->angio_element->_elem, gauss_data, tip->GetLocalPosition(), mesh);
 	vec3d fiber_direction = rv.GetVector();
 	return mix(prev, fiber_direction, contribution);
 }

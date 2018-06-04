@@ -39,6 +39,7 @@ FEPluginFactory_T<LoadCurveAngioStressPolicy, FEMATERIAL_ID> load_curve_angio_st
 
 // Seeder Classes
 FEPluginFactory_T<ByElementFragmentSeeder, FEMATERIAL_ID> by_element_fragment_seeder_factory("by element fragment seeder");
+FEPluginFactory_T<ByElementFragmentSeederBidirectional, FEMATERIAL_ID> by_element_fragment_seeder_bidirectional_factory("by element fragment seeder bidirectional");
 
 //InitalModifiers any modifiers for angio_elements this will be run only once before much else happens
 FEPluginFactory_T<InitialModifierManager, FEMATERIAL_ID> inital_modifier_manager_factory("im_manager");
@@ -173,6 +174,7 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 
 		//fragment seeders
 		&by_element_fragment_seeder_factory,
+		&by_element_fragment_seeder_bidirectional_factory,
 
 		//initial modifiers
 		&inital_modifier_manager_factory,
