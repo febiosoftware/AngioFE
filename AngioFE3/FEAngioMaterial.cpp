@@ -325,7 +325,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	auto angio_element = active_tip->angio_element;
 	
 	assert(active_tip);
-	auto mesh = m_pangio->GetMesh();
+	auto mesh = m_pangio->GetMesh(); // DEBUG: active_tip->angio_element->_elem->m_nID == 528
 	const double min_segm_len = 0.1;
 	int next_buffer_index = (buffer_index + 1) % 2;
 	double dt = end_time - active_tip->time;
@@ -378,7 +378,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	// Just do the transformations
 	vec3d nat_dir = global_to_natc * global_dir;
 	double factor;
-	bool proj_sucess = m_pangio->ScaleFactorToProjectToNaturalCoordinates(active_tip->angio_element->_elem, nat_dir, local_pos, factor);
+	bool proj_sucess = m_pangio->ScaleFactorToProjectToNaturalCoordinates(active_tip->angio_element->_elem, nat_dir, local_pos, factor); // TODO: HERE
 	vec3d possible_natc = local_pos + (nat_dir*factor);
 	double possible_grow_length = m_pangio->InElementLength(active_tip->angio_element->_elem, local_pos, possible_natc);
 	if ((possible_grow_length >= grow_len) && proj_sucess)
@@ -446,7 +446,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		vec3d pos = next->GetPosition(mesh);
 		angio_element->recent_segments.push_back(seg);
 
-		for(int i=0; i < angio_element->adjacency_list.size();i++)
+		for(int i=0; i < angio_element->adjacency_list.size();i++) // TODO: HERE
 		{
 			AngioElement * ang_elem = angio_element->adjacency_list[i];
 			if(ang_elem)
@@ -502,9 +502,9 @@ void FEAngioMaterial::PrepBuffers(AngioElement* angio_elem, double end_time, int
 	angio_elem->final_active_tips.clear();
 }
 
-bool FEAngioMaterial::SeedFragments(std::vector<AngioElement *>& angio_elements)
+bool FEAngioMaterial::SeedFragments(std::vector<AngioElement *>& angio_elements, FEMesh* mesh)
 {
-	return common_properties->fseeder->SeedFragments(angio_elements, this,0);
+	return common_properties->fseeder->SeedFragments(angio_elements, mesh, this, 0);
 }
 
 vec3d FEAngioMaterial::ApplySegmentDirectionModifiers(Tip * tip, double dt)

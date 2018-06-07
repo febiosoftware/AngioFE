@@ -75,8 +75,13 @@ public:
 	//or consider making the node and element data public
 	friend class FEAngioMaterial;
 
-	static double NaturalCoordinatesUpperBound(int et);
-	static double NaturalCoordinatesLowerBound(int et);
+	// Natural coordinate bounds based on the element type.
+	static double NaturalCoordinatesUpperBound_r(int et);
+	static double NaturalCoordinatesUpperBound_s(int et);
+	static double NaturalCoordinatesUpperBound_t(int et);
+	static double NaturalCoordinatesLowerBound_r(int et);
+	static double NaturalCoordinatesLowerBound_s(int et);
+	static double NaturalCoordinatesLowerBound_t(int et);
 
 	//returns the extrema in global coordinates of the given elem
 	void ExtremaInElement(FESolidElement * se, std::vector<vec3d> & extrema) const;

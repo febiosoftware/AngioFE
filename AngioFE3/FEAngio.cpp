@@ -51,7 +51,7 @@ bool FEAngio::SeedFragments()
 	bool rv = true;
 	for(auto iter = elements_by_material.begin(); iter != elements_by_material.end(); ++iter)
 	{
-		rv &= iter->first->SeedFragments(iter->second);
+		rv &= iter->first->SeedFragments(iter->second, GetMesh());
 	}
 	return rv;
 }
@@ -159,14 +159,35 @@ vec3d FEAngio::ReferenceCoordinates(Tip * tip) const
 	return r;
 }
 
-double FEAngio::NaturalCoordinatesUpperBound(int et)
+double FEAngio::NaturalCoordinatesUpperBound_r(int et)
 {
 	switch(et)
 	{
+	case FE_HEX8G1:
 	case FE_HEX8G8:
+	case FE_HEX20G27:
+	case FE_HEX20G8:
+	case FE_HEX27G27:
+	case FE_HEX8RI:
 		return 1.0;
 	case FE_TET4G1:
 	case FE_TET4G4:
+	case FE_TET10G1:
+	case FE_TET10G4:
+	case FE_TET10G4RI1:
+	case FE_TET10G8:
+	case FE_TET10G8RI4:
+	case FE_TET10GL11:
+	case FE_TET15G4:
+	case FE_TET15G8:
+	case FE_TET15G11:
+	case FE_TET15G15:
+	case FE_TET15G15RI4:
+	case FE_TET20G15:
+		return 1.0;
+	case FE_PENTA15G21:
+	case FE_PENTA15G8:
+	case FE_PENTA6G6:
 		return 1.0;
 	default:
 		assert(false);
@@ -174,15 +195,180 @@ double FEAngio::NaturalCoordinatesUpperBound(int et)
 	return std::numeric_limits<double>::max();
 }
 
-double FEAngio::NaturalCoordinatesLowerBound(int et)
+double FEAngio::NaturalCoordinatesUpperBound_s(int et)
 {
 	switch (et)
 	{
+	case FE_HEX8G1:
 	case FE_HEX8G8:
+	case FE_HEX20G27:
+	case FE_HEX20G8:
+	case FE_HEX27G27:
+	case FE_HEX8RI:
+		return 1.0;
+	case FE_TET4G1:
+	case FE_TET4G4:
+	case FE_TET10G1:
+	case FE_TET10G4:
+	case FE_TET10G4RI1:
+	case FE_TET10G8:
+	case FE_TET10G8RI4:
+	case FE_TET10GL11:
+	case FE_TET15G4:
+	case FE_TET15G8:
+	case FE_TET15G11:
+	case FE_TET15G15:
+	case FE_TET15G15RI4:
+	case FE_TET20G15:
+		return 1.0;
+	case FE_PENTA15G21:
+	case FE_PENTA15G8:
+	case FE_PENTA6G6:
+		return 1.0;
+	default:
+		assert(false);
+	}
+	return std::numeric_limits<double>::max();
+}
+
+double FEAngio::NaturalCoordinatesUpperBound_t(int et)
+{
+	switch (et)
+	{
+	case FE_HEX8G1:
+	case FE_HEX8G8:
+	case FE_HEX20G27:
+	case FE_HEX20G8:
+	case FE_HEX27G27:
+	case FE_HEX8RI:
+		return 1.0;
+	case FE_TET4G1:
+	case FE_TET4G4:
+	case FE_TET10G1:
+	case FE_TET10G4:
+	case FE_TET10G4RI1:
+	case FE_TET10G8:
+	case FE_TET10G8RI4:
+	case FE_TET10GL11:
+	case FE_TET15G4:
+	case FE_TET15G8:
+	case FE_TET15G11:
+	case FE_TET15G15:
+	case FE_TET15G15RI4:
+	case FE_TET20G15:
+		return 1.0;
+	case FE_PENTA15G21:
+	case FE_PENTA15G8:
+	case FE_PENTA6G6:
+		return 1.0;
+	default:
+		assert(false);
+	}
+	return std::numeric_limits<double>::max();
+}
+
+double FEAngio::NaturalCoordinatesLowerBound_r(int et)
+{
+	switch (et)
+	{
+	case FE_HEX8G1:
+	case FE_HEX8G8:
+	case FE_HEX20G27:
+	case FE_HEX20G8:
+	case FE_HEX27G27:
+	case FE_HEX8RI:
 		return -1.0;
 	case FE_TET4G1:
 	case FE_TET4G4:
+	case FE_TET10G1:
+	case FE_TET10G4:
+	case FE_TET10G4RI1:
+	case FE_TET10G8:
+	case FE_TET10G8RI4:
+	case FE_TET10GL11:
+	case FE_TET15G4:
+	case FE_TET15G8:
+	case FE_TET15G11:
+	case FE_TET15G15:
+	case FE_TET15G15RI4:
+	case FE_TET20G15:
 		return 0.0;
+	case FE_PENTA15G21:
+	case FE_PENTA15G8:
+	case FE_PENTA6G6:
+		return 0.0;
+	default:
+		assert(false);
+	}
+	return std::numeric_limits<double>::max();
+}
+
+double FEAngio::NaturalCoordinatesLowerBound_s(int et)
+{
+	switch (et)
+	{
+	case FE_HEX8G1:
+	case FE_HEX8G8:
+	case FE_HEX20G27:
+	case FE_HEX20G8:
+	case FE_HEX27G27:
+	case FE_HEX8RI:
+		return -1.0;
+	case FE_TET4G1:
+	case FE_TET4G4:
+	case FE_TET10G1:
+	case FE_TET10G4:
+	case FE_TET10G4RI1:
+	case FE_TET10G8:
+	case FE_TET10G8RI4:
+	case FE_TET10GL11:
+	case FE_TET15G4:
+	case FE_TET15G8:
+	case FE_TET15G11:
+	case FE_TET15G15:
+	case FE_TET15G15RI4:
+	case FE_TET20G15:
+		return 0.0;
+	case FE_PENTA15G21:
+	case FE_PENTA15G8:
+	case FE_PENTA6G6:
+		return 0.0;
+	default:
+		assert(false);
+	}
+	return std::numeric_limits<double>::max();
+}
+
+double FEAngio::NaturalCoordinatesLowerBound_t(int et)
+{
+	switch (et)
+	{
+	case FE_HEX8G1:
+	case FE_HEX8G8:
+	case FE_HEX20G27:
+	case FE_HEX20G8:
+	case FE_HEX27G27:
+	case FE_HEX8RI:
+		return -1.0;
+	case FE_TET4G1:
+	case FE_TET4G4:
+	case FE_TET10G1:
+	case FE_TET10G4:
+	case FE_TET10G4RI1:
+	case FE_TET10G8:
+	case FE_TET10G8RI4:
+	case FE_TET10GL11:
+	case FE_TET15G4:
+	case FE_TET15G8:
+	case FE_TET15G11:
+	case FE_TET15G15:
+	case FE_TET15G15RI4:
+	case FE_TET20G15:
+		return 0.0;
+	case FE_PENTA15G21:
+	case FE_PENTA15G8:
+	case FE_PENTA6G6:
+		return -1.0;
 	default:
 		assert(false);
 	}
@@ -812,9 +998,11 @@ bool FEAngio::ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d
 
 	std::vector<double> possible_values;
 
-	const double ub = FEAngio::NaturalCoordinatesUpperBound(se->Type());
-	const double lb = FEAngio::NaturalCoordinatesLowerBound(se->Type());
-	//this is computed differently depending on the element type
+	// Determine the natural coordinate bounds based on the element type.
+	vec3d upper_bounds(FEAngio::NaturalCoordinatesUpperBound_r(se->Type()), FEAngio::NaturalCoordinatesUpperBound_s(se->Type()), FEAngio::NaturalCoordinatesUpperBound_t(se->Type()));
+	vec3d lower_bounds(FEAngio::NaturalCoordinatesLowerBound_r(se->Type()), FEAngio::NaturalCoordinatesLowerBound_s(se->Type()), FEAngio::NaturalCoordinatesLowerBound_t(se->Type()));
+
+	// This is computed differently depending on the element type.
 	switch (se->Type())
 	{
 	case FE_Element_Type::FE_HEX8G1:
@@ -822,45 +1010,60 @@ bool FEAngio::ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d
 	case FE_Element_Type::FE_HEX8RI:
 		if (dir.x > 0)
 		{
-			double temp = (ub - pt.x) / dir.x;
+			double temp = (upper_bounds.x - pt.x) / dir.x;
 			if (temp >= 0)
 				possible_values.push_back(temp);
 		}
 		else if (dir.x < 0)
 		{
-			double temp = (lb - pt.x) / dir.x;
+			double temp = (lower_bounds.x - pt.x) / dir.x;
 			if (temp >= 0)
 				possible_values.push_back(temp);
 		}
 		if (dir.y > 0)
 		{
-			double temp = (ub - pt.y) / dir.y;
+			double temp = (upper_bounds.y - pt.y) / dir.y;
 			if (temp >= 0)
 				possible_values.push_back(temp);
 		}
 		else if (dir.y < 0)
 		{
-			double temp = (lb - pt.y) / dir.y;
+			double temp = (lower_bounds.y - pt.y) / dir.y;
 			if (temp >= 0)
 				possible_values.push_back(temp);
 		}
 
 		if (dir.z > 0)
 		{
-			double temp = (ub - pt.z) / dir.z;
+			double temp = (upper_bounds.z - pt.z) / dir.z;
 			if (temp >= 0)
 				possible_values.push_back(temp);
 		}
 		else if (dir.z < 0)
 		{
-			double temp = (lb - pt.z) / dir.z;
+			double temp = (lower_bounds.z - pt.z) / dir.z;
 			if (temp >= 0)
 				possible_values.push_back(temp);
 		}
 		if (possible_values.size())
 		{
-			sf = *std::min_element(possible_values.begin(), possible_values.end());
+			auto double_it = std::min_element(possible_values.begin(), possible_values.end());
+			sf = *double_it;
 
+			while (sf == 0.0)
+			{
+				possible_values.erase(double_it);
+
+				if (possible_values.size() == 0)
+				{
+					return false;
+				}
+
+				double_it = std::min_element(possible_values.begin(), possible_values.end());
+				sf = *double_it;
+			}
+
+			// sf < 1 && (se->m_nID == 112 || se->m_nID == 142)
 			return true;
 		}
 		break;
@@ -1043,15 +1246,15 @@ bool FEAngio::IsInBounds(FESolidElement* se, double r[3], double eps)
 	case FE_Element_Type::FE_TET4G1:
 	case FE_Element_Type::FE_TET4G4:
 
-		return (r[0] <= NaturalCoordinatesUpperBound(se->Type()) + eps) && (r[0] >= NaturalCoordinatesLowerBound(se->Type())-eps) &&
-			(r[1] <= NaturalCoordinatesUpperBound(se->Type())+ eps) && (r[1] >= NaturalCoordinatesLowerBound(se->Type())-eps) &&
-			(r[2] <= NaturalCoordinatesUpperBound(se->Type())+ eps) && (r[2] >= NaturalCoordinatesLowerBound(se->Type())- eps) && ((nat_pos.x + nat_pos.y + nat_pos.z) <= 1 + eps);
+		return (r[0] <= NaturalCoordinatesUpperBound_r(se->Type()) + eps) && (r[0] >= NaturalCoordinatesLowerBound_r(se->Type())-eps) &&
+			(r[1] <= NaturalCoordinatesUpperBound_s(se->Type())+ eps) && (r[1] >= NaturalCoordinatesLowerBound_s(se->Type())-eps) &&
+			(r[2] <= NaturalCoordinatesUpperBound_t(se->Type())+ eps) && (r[2] >= NaturalCoordinatesLowerBound_t(se->Type())- eps) && ((nat_pos.x + nat_pos.y + nat_pos.z) <= 1 + eps);
 
 	}
 	//consider doing this with tolerances
-	return (r[0] <= NaturalCoordinatesUpperBound(se->Type())+ eps) && (r[0] >= NaturalCoordinatesLowerBound(se->Type())-eps) &&
-		(r[1] <= NaturalCoordinatesUpperBound(se->Type()) + eps) && (r[1] >= NaturalCoordinatesLowerBound(se->Type())-eps) &&
-		(r[2] <= NaturalCoordinatesUpperBound(se->Type()) + eps) && (r[2] >= NaturalCoordinatesLowerBound(se->Type())- eps);
+	return (r[0] <= NaturalCoordinatesUpperBound_r(se->Type())+ eps) && (r[0] >= NaturalCoordinatesLowerBound_r(se->Type())-eps) &&
+		(r[1] <= NaturalCoordinatesUpperBound_s(se->Type()) + eps) && (r[1] >= NaturalCoordinatesLowerBound_s(se->Type())-eps) &&
+		(r[2] <= NaturalCoordinatesUpperBound_t(se->Type()) + eps) && (r[2] >= NaturalCoordinatesLowerBound_t(se->Type())- eps);
 }
 
 

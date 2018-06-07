@@ -28,3 +28,18 @@ void FiberRandomizer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh,
 		ves_emp->m_Q = emp->m_Q;
 	}
 }
+
+void DensityInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
+{
+	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
+	{
+		FEMaterialPoint *mp = angio_element->_elem->GetMaterialPoint(i);
+		FEAngioMaterialPoint *angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+
+		angio_pt->ref_ecm_density = initial_density;
+	}
+}
+
+BEGIN_PARAMETER_LIST(DensityInitializer, InitialModifier)
+ADD_PARAMETER(initial_density, FE_PARAM_DOUBLE, "initial_density");
+END_PARAMETER_LIST();

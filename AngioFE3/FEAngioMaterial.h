@@ -58,7 +58,7 @@ public:
 
 	void PrepBuffers(AngioElement* angio_elem, double end_time, int buffer_index);
 
-	bool SeedFragments(std::vector<AngioElement *>& angio_elements);
+	bool SeedFragments(std::vector<AngioElement *>& angio_elements, FEMesh* mesh);
 
 	vec3d ApplySegmentDirectionModifiers(Tip * tip, double dt);
 

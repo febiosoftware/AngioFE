@@ -22,6 +22,17 @@ private:
 class FiberRandomizer : public InitialModifier
 {
 public:
-	explicit FiberRandomizer(FEModel * pfem) :InitialModifier(pfem) {}
+	explicit FiberRandomizer(FEModel * pfem) : InitialModifier(pfem) {}
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
+};
+
+class DensityInitializer : public InitialModifier
+{
+public:
+	explicit DensityInitializer(FEModel * pfem) : InitialModifier(pfem) {}
+	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
+protected:
+	DECLARE_PARAMETER_LIST();
+private:
+	double initial_density = 3.0;
 };

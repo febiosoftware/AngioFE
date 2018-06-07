@@ -19,8 +19,8 @@
 #endif
 
 //-----------------------------------------------------------------------------
-FEPluginFactory_T<AngioFETask       , FETASK_ID    > angiofe_task_factory("angio"   );
-FEPluginFactory_T<FEAngioMaterial   , FEMATERIAL_ID> angio_mat_factory   ("angio_mat"   );
+FEPluginFactory_T<AngioFETask          , FETASK_ID    > angiofe_task_factory("angio"   );
+FEPluginFactory_T<FEAngioMaterial      , FEMATERIAL_ID> angio_mat_factory   ("angio_mat"   );
 FEPluginFactory_T<CommonAngioProperties, FEMATERIAL_ID> common_angio_properties_factory("angio_properties");
 
 // Distribution Classes
@@ -33,34 +33,37 @@ FEPluginFactory_T<FEWeibullDistribution    , FEMATERIAL_ID> weibull_distribution
 FEPluginFactory_T<FEGammaDistribution      , FEMATERIAL_ID> gamma_distribution_factory      ("gamma_distribution"      );
 
 // Stress Policy Classes
-FEPluginFactory_T<SigmoidAngioStressPolicy, FEMATERIAL_ID> sigmoid_angio_stress_policy_factory("sigmoid_angio_stress_policy");
+FEPluginFactory_T<SigmoidAngioStressPolicy     , FEMATERIAL_ID> sigmoid_angio_stress_policy_factory("sigmoid_angio_stress_policy");
 FEPluginFactory_T<LoadCurveVelAngioStressPolicy, FEMATERIAL_ID> load_curve_vel_angio_stress_policy_factory("load_curve_vel_angio_stress_policy");
-FEPluginFactory_T<LoadCurveAngioStressPolicy, FEMATERIAL_ID> load_curve_angio_stress_policy_factory("load_curve_angio_stress_policy");
+FEPluginFactory_T<LoadCurveAngioStressPolicy   , FEMATERIAL_ID> load_curve_angio_stress_policy_factory("load_curve_angio_stress_policy");
 
 // Seeder Classes
-FEPluginFactory_T<ByElementFragmentSeeder, FEMATERIAL_ID> by_element_fragment_seeder_factory("by element fragment seeder");
-FEPluginFactory_T<ByElementFragmentSeederBidirectional, FEMATERIAL_ID> by_element_fragment_seeder_bidirectional_factory("by element fragment seeder bidirectional");
+FEPluginFactory_T<ByElementFragmentSeeder             , FEMATERIAL_ID> by_element_fragment_seeder_factory("by_element_fragment_seeder");
+FEPluginFactory_T<ByElementFragmentSeederBiDirectional, FEMATERIAL_ID> by_element_fragment_seeder_bidirectional_factory("by_element_fragment_seeder_bidirectional");
+FEPluginFactory_T<ByVolumeFragmentSeeder              , FEMATERIAL_ID> by_volume_fragment_seeder_factory("by_volume_fragment_seeder");
+FEPluginFactory_T<ByVolumeFragmentSeederBiDirectional , FEMATERIAL_ID> by_volume_fragment_seeder_bidirectional_factory("by_volume_fragment_seeder_bidirectional");
 
 //InitalModifiers any modifiers for angio_elements this will be run only once before much else happens
 FEPluginFactory_T<InitialModifierManager, FEMATERIAL_ID> inital_modifier_manager_factory("im_manager");
-FEPluginFactory_T<FiberRandomizer, FEMATERIAL_ID> fiber_randomizer_factory("fiber_randomizer");
+FEPluginFactory_T<FiberRandomizer       , FEMATERIAL_ID> fiber_randomizer_factory("fiber_randomizer");
+FEPluginFactory_T<DensityInitializer    , FEMATERIAL_ID> density_initializer_factory("density_initializer");
 
 // SegmentVelocityModifier CLasses
-FEPluginFactory_T<SegmentGrowthVelocityManager, FEMATERIAL_ID> segment_growth_velocity_manager_factory("segment_growth_velocity_manager");
-FEPluginFactory_T<SegmentVelocityModifier, FEMATERIAL_ID> segment_velocity_modifier_factory("segment_velocity_modifier");
+FEPluginFactory_T<SegmentGrowthVelocityManager       , FEMATERIAL_ID> segment_growth_velocity_manager_factory("segment_growth_velocity_manager");
+FEPluginFactory_T<SegmentVelocityModifier            , FEMATERIAL_ID> segment_velocity_modifier_factory("segment_velocity_modifier");
 FEPluginFactory_T<SegmentVelocityDensityScaleModifier, FEMATERIAL_ID> segment_velocity_density_scale_modifier_factory("segment_velocity_density_scale_modifier");
 
 // PSC Classes
 FEPluginFactory_T<PreviousSegmentContributionManager, FEMATERIAL_ID> previous_segment_contribution_manager_factory("previous_segment_contribution_manager");
-FEPluginFactory_T<PreviousSegmentPSC, FEMATERIAL_ID> previous_segment_psc_factory("previous_segment_psc");
+FEPluginFactory_T<PreviousSegmentPSC                , FEMATERIAL_ID> previous_segment_psc_factory("previous_segment_psc");
 
 // PDD Classes
 FEPluginFactory_T<PositionDependentDirectionManager, FEMATERIAL_ID> position_dependent_direction_manager_factory("position_dependent_direction_manager");
-FEPluginFactory_T<FiberPDD, FEMATERIAL_ID> fiber_pdd_factory("fiber_pdd");
+FEPluginFactory_T<FiberPDD                         , FEMATERIAL_ID> fiber_pdd_factory("fiber_pdd");
 
 // ContributionMix Classes
 FEPluginFactory_T<ContributionMixManager, FEMATERIAL_ID> contribution_mix_manager_factory("contribution_mix_manager");
-FEPluginFactory_T<PSCPDDContributionMix, FEMATERIAL_ID> psd_pdd_contribution_mix_factory("psc_pdd_contribution_mix");
+FEPluginFactory_T<PSCPDDContributionMix , FEMATERIAL_ID> psd_pdd_contribution_mix_factory("psc_pdd_contribution_mix");
 
 // Interpolation From Gauss Points to a Local Position
 FEPluginFactory_T<PerElementVI, FEMATERIAL_ID> per_element_vi_factory("per_element_vi");
@@ -93,7 +96,7 @@ FEPluginFactory_T<DirectionChangeGGP, FEMATERIAL_ID> direction_change_ggp_factor
 */
 
 
-
+// Plot Classes
 FEPluginFactory_T<FEPlotAngioStress          , FEPLOTDATA_ID> plot_angio_stress            ("angio stress"          );
 FEPluginFactory_T<FEPlotVesselStress         , FEPLOTDATA_ID> plot_vessel_stress           ("vessel stress"         );
 FEPluginFactory_T<FEPlotMatrixStress         , FEPLOTDATA_ID> plot_matrix_stress           ("matrix stress"         );
@@ -175,10 +178,13 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		//fragment seeders
 		&by_element_fragment_seeder_factory,
 		&by_element_fragment_seeder_bidirectional_factory,
+		&by_volume_fragment_seeder_factory,
+		&by_volume_fragment_seeder_bidirectional_factory,
 
 		//initial modifiers
 		&inital_modifier_manager_factory,
 		&fiber_randomizer_factory,
+		&density_initializer_factory,
 
 		//boundary conditions
 		
