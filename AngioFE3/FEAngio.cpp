@@ -23,6 +23,7 @@
 #include <ctime>
 #include <future>
 #include <algorithm>
+#include <unordered_set>
 #include <cfloat> 
 #include <FEBioMix/FETriphasic.h>
 #include "GrowDirectionModifier.h"
@@ -80,7 +81,7 @@ void FEAngio::GrowSegments(double min_scale_factor)
 	size_t angio_element_count = angio_elements.size();
 	
 
-	// Is it valid for this to run more than once?
+	// Is it valid for this to run more than once? only 
 	if(time_info.currentTime >= next_time)
 	{
 		#pragma omp parallel for shared(min_dt)
@@ -143,9 +144,10 @@ void FEAngio::GrowSegments(double min_scale_factor)
 
 void FEAngio::GetActiveFinalTipsInRadius(AngioElement* angio_element, double radius, FEAngio* pangio, std::vector<Tip *> & tips)
 {
-	std::set<AngioElement *> visited;
+	std::unordered_set<AngioElement *> visited;
 	std::set<AngioElement *> next;
 	std::vector<vec3d> element_bounds;
+	visited.reserve(1000);
 	pangio->ExtremaInElement(angio_element->_elem, element_bounds);
 
 	for (int i = 0; i < angio_element->adjacency_list.size(); i++)
@@ -1316,6 +1318,7 @@ bool FEAngio::IsInBounds(FESolidElement* se, double r[3], double eps)
 void FEAngio::ExtremaInElement(FESolidElement * se, std::vector<vec3d> & extrema) const
 {
 	auto mesh = GetMesh();
+	extrema.reserve(se->Nodes());
 	switch(se->Type())
 	{
 	case FE_Element_Type::FE_TET4G1:
