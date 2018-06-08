@@ -89,7 +89,11 @@ public:
 	//returns the minimun distance between the two sets of points
 	static double MinDistance(std::vector<vec3d> & element_bounds0, std::vector<vec3d>  & element_bounds1);
 
-	void GrowSegments();
+	void GrowSegments(double min_scale_factor);
+
+	//returns the length between the two points as if they are conencted by a line segment in the natrual coordinates of the element
+	//only the difference between the points if the elements are linear
+	double InElementLength(FESolidElement * se, vec3d pt0, vec3d pt1) const;
 private:
 	
 	// Initialize the nodal ECM values
@@ -121,15 +125,14 @@ private:
 	void Output();
 
 	//returns the scale factor that would project this ray onto the unit cube, pt must be within the unit cube
-	bool ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d & dir, vec3d & pt, double & sf, double min_sf = 1.0) const;
+	bool ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d & dir, vec3d & pt, double & sf, double min_sf = 0.00001) const;
 
-	//returns the length between the two points as if they are conencted by a line segment in the natrual coordinates of the element
-	//only the difference between the points if the elements are linear
-	double InElementLength(FESolidElement * se, vec3d pt0, vec3d pt1) const;
+	
+	
 
 	void GetElementsContainingNode(FENode * node, std::vector<FESolidElement*> & elements);
 
-	static bool IsInBounds(FESolidElement* se, double r[3], double eps= 0.0001);
+	static bool IsInBounds(FESolidElement* se, double r[3], double eps= 0.000001);
 
 	
 
@@ -188,7 +191,7 @@ private:
 	std::unordered_map<FESolidElement *, AngioElement *> se_to_angio_element;
 	std::unordered_map<FENode *, std::vector<FESolidElement*>> nodes_to_elements;
 	std::unordered_map<AngioElement *, std::vector<AngioElement *>> angio_elements_to_all_adjacent_elements;//adjacent is shares a node with the element
-	double next_time = 0.0;
+	double next_time = -1;
 
 
 	const double eps = 0.001;

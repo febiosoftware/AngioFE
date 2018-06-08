@@ -18,11 +18,6 @@ double FENormalDistribution::NextValue(angiofe_random_engine & re)
 bool FENormalDistribution::Init()
 {
 	nd = std::normal_distribution<double>(mean, stddev);
-	prev_mean = mean;
-	prev_stddev = stddev;
-	//if load curves are used they must use step interpolation
-	SetLoadCurveToStep("mean");
-	SetLoadCurveToStep("stddev");
 
 	return true;
 }

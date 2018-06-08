@@ -47,12 +47,12 @@ public:
 	//should be const and threadsafe
 	double GetMin_dt(AngioElement* angio_elem, FEMesh* mesh);
 
-	void GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index);
+	void GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor);
 
-	void GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double override_grow_length=10, bool grow_len_overrride=false);
+	void GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor);
 
 	//should be const and threadsafe
-	void PostGrowthUpdate(AngioElement* angio_elem, double end_time, int buffer_index);
+	void PostGrowthUpdate(AngioElement* angio_elem, double end_time, int buffer_index, FEMesh* mesh, FEAngio* feangio);
 
 	void Cleanup(AngioElement* angio_elem, double end_time, int buffer_index);
 
@@ -94,6 +94,8 @@ public:
 
 	double GetSegmentVelocity(AngioElement * angio_element, vec3d local_pos, FEMesh* mesh);
 
+	double GetInitialVelocity();
+
 	// Calculate spatial elasticity tangent
 	tens4ds Tangent(FEMaterialPoint& mp) override;
 
@@ -107,8 +109,11 @@ public:
 	FEAngio*	m_pangio = nullptr;
 	FEPropertyT<AngioStressPolicy> angio_stress_policy;
 	FEPropertyT<InitialModifierManager> im_manager;
+	FEPropertyT<BranchPolicy> branch_policy;
 private:
 	DECLARE_PARAMETER_LIST();
+
+	double initial_segment_velocity = 40.0;
 
 	FEPropertyT<FESolidMaterial> matrix_material;
 	

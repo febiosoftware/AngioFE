@@ -68,6 +68,9 @@ FEPluginFactory_T<PSCPDDContributionMix , FEMATERIAL_ID> psd_pdd_contribution_mi
 // Interpolation From Gauss Points to a Local Position
 FEPluginFactory_T<PerElementVI, FEMATERIAL_ID> per_element_vi_factory("per_element_vi");
 
+//BranchPolicy
+FEPluginFactory_T<DelayedBranchingPolicy, FEMATERIAL_ID> delayed_branching_policy_factory("delayed_branching_policy");
+
 /*
 FEPluginFactory_T<GrowDirectionModifiers, FEMATERIAL_ID> grow_direction_modifiers_factory("grow_direction_modifiers");
 
@@ -170,6 +173,7 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		*/
 
 		//branching factories
+		&delayed_branching_policy_factory,
 
 		//grow direction modifiers
 

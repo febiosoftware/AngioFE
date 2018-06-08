@@ -17,6 +17,8 @@ public:
 
     Segment(){}
 	vec3d Direction(FEMesh * mesh) const;
+	vec3d NatcAtTime(double time)const;
+	int GetInitialFragmentID()const;
 	Tip * front = nullptr;
 	Tip * back = nullptr;
 	Segment * parent = nullptr;

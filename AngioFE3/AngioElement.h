@@ -9,6 +9,7 @@
 class FEAngioMaterial;
 class Segment;
 class Tip;
+class BranchInfo;
 
 class AngioElement
 {
@@ -28,6 +29,7 @@ public:
 	std::unordered_map<AngioElement *, int> angio_element_to_adjacency_index;
 	std::vector<Segment *> grown_segments;
 	std::vector<Segment *> recent_segments;
+	int processed_recent_segments = 0;
 	//this might be further optimized to a lookup into a constant lookup table given the element type that is doing the looking up ... its possible to do this at compile time
 	//this should reduce this to a jump based on the element type
 	std::unordered_map<AngioElement*, std::vector<Tip *>> active_tips[2];
@@ -35,6 +37,8 @@ public:
 	std::vector<Tip *> current_tips;//to be used in stress calculations
 
 	std::vector<Tip*> final_active_tips;
+
+	BranchInfo * branch_info = nullptr;
 
 	int padding[16];
 };

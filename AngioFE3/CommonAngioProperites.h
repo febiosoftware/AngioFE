@@ -15,7 +15,7 @@ public:
 	//FEPropertyT<GrowDirectionModifiers> gdms;
 	FEPropertyT<FragmentSeeder> fseeder;
 	FEPropertyT<FESolidMaterial> vessel_material;
-	FEPropertyT<BranchPolicy> branch_policy;
+	
 
 	void UpdateGDMs();
 };

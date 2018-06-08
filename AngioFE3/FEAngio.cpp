@@ -72,7 +72,7 @@ void FEAngio::ApplydtToTimestepper(double dt)
 	}
 }
 
-void FEAngio::GrowSegments()
+void FEAngio::GrowSegments(double min_scale_factor)
 {
 	auto   time_info = m_fem->GetTime();
 	auto   mesh = GetMesh();
@@ -109,13 +109,13 @@ void FEAngio::GrowSegments()
 #pragma omp parallel for schedule(dynamic, 16)
 				for (int j = 0; j <angio_element_count; j++)
 				{
-					angio_elements.at(j)->_angio_mat->GrowSegments(angio_elements.at(j), ctime, buffer_index);
+					angio_elements.at(j)->_angio_mat->GrowSegments(angio_elements.at(j), ctime, buffer_index, min_scale_factor);
 				}
 
 #pragma omp parallel for schedule(dynamic, 16)
 				for (int j = 0; j <angio_element_count; j++)
 				{
-					angio_elements[j]->_angio_mat->PostGrowthUpdate(angio_elements[j], ctime, buffer_index);
+					angio_elements[j]->_angio_mat->PostGrowthUpdate(angio_elements[j], ctime, buffer_index, mesh,this);
 				}
 				buffer_index = (buffer_index + 1) % 2;
 			}
@@ -457,7 +457,6 @@ bool FEAngio::Init()
 		printf("fragment seeding failed\n");
 		return false;
 	}
-	fileout->save_vessel_state(*this);
 
 	// start timer
 	time(&m_start);
@@ -860,6 +859,7 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 	FEMesh * mesh = GetMesh();
 	
 	static bool start = false;
+	static int min_scale_factor = m_fem->GetGlobalConstant("min_scale_factor");
 	if (!start)
 	{
 		size_t angio_element_count = angio_elements.size();
@@ -874,7 +874,18 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 			angio_elements[i]->_angio_mat->im_manager->ApplyModifier(angio_elements[i], mesh, this);
 		}
 
-
+		//setup the branch info before doing any growth
+#pragma omp parallel for schedule(dynamic, 16)
+		for (int i = 0; i < angio_element_count; i++)
+		{
+			if(angio_elements[i]->_angio_mat->branch_policy)
+			{
+				angio_elements[i]->_angio_mat->branch_policy->SetupBranchInfo(angio_elements[i]);
+			}
+		}
+		grow_timer.start();
+		GrowSegments(min_scale_factor);
+		grow_timer.stop();
 
 
 		update_angio_stress_timer.start();
@@ -907,7 +918,7 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 
 		//new function to find the start time grow time and if this is the final iteration this timestep
 		grow_timer.start();
-		GrowSegments();
+		GrowSegments(min_scale_factor);
 		grow_timer.stop();
 		
 		mesh_stiffness_timer.start();
@@ -1050,7 +1061,14 @@ bool FEAngio::ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d
 			auto double_it = std::min_element(possible_values.begin(), possible_values.end());
 			sf = *double_it;
 
-			while (sf == 0.0)
+			/*
+			if(sf < min_sf)
+			{
+				return false;
+			}
+			*/
+
+			while (sf < min_sf)
 			{
 				possible_values.erase(double_it);
 
@@ -1062,8 +1080,6 @@ bool FEAngio::ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d
 				double_it = std::min_element(possible_values.begin(), possible_values.end());
 				sf = *double_it;
 			}
-
-			// sf < 1 && (se->m_nID == 112 || se->m_nID == 142)
 			return true;
 		}
 		break;

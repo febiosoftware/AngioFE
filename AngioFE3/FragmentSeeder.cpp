@@ -88,7 +88,7 @@ bool ByElementFragmentSeeder::SeedFragments(std::vector<AngioElement *> &angio_e
 		r0->angio_element = angio_elements[elem_index];
 		vec3d local_pos = GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(mesh, r0->angio_element, angio_mat->m_pangio->rengine);
 		r0->SetLocalPosition(local_pos);
-		r0->time = 0;
+		r0->time = -1;
 		r0->use_direction = true;
 		r0->direction = angio_mat->m_pangio->uniformRandomDirection(angio_mat->m_pangio->rengine);
 		r0->face = r0->angio_element;
@@ -127,7 +127,7 @@ bool ByElementFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElemen
 		r0->angio_element = angio_elements[elem_index];
 		vec3d local_pos = GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(mesh, r0->angio_element, angio_mat->m_pangio->rengine);
 		r0->SetLocalPosition(local_pos);
-		r0->time = 0;
+		r0->time = -1;
 		r0->use_direction = true;
 		r0->direction = angio_mat->m_pangio->uniformRandomDirection(angio_mat->m_pangio->rengine);
 		r0->face = r0->angio_element;
@@ -145,8 +145,6 @@ bool ByElementFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElemen
 		//r0->angio_element->_angio_mat->GrowthInElement(0, r0, 1, -1, initial_vessel_length, true);
 
 	}
-	angio_mat->m_pangio->GrowSegments();
-
 	return true;
 }
 
@@ -196,7 +194,7 @@ bool ByVolumeFragmentSeeder::SeedFragments(std::vector<AngioElement *>& angio_el
 		r0->angio_element = angio_elements[element_index];
 		vec3d local_pos = GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(mesh, r0->angio_element, angio_mat->m_pangio->rengine);
 		r0->SetLocalPosition(local_pos);
-		r0->time = 0;
+		r0->time = -1;
 		r0->use_direction = true;
 		r0->direction = angio_mat->m_pangio->uniformRandomDirection(angio_mat->m_pangio->rengine);
 		r0->face = r0->angio_element;
@@ -257,7 +255,7 @@ bool ByVolumeFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElement
 		r0->angio_element = angio_elements[element_index];
 		vec3d local_pos = GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(mesh, r0->angio_element, angio_mat->m_pangio->rengine);
 		r0->SetLocalPosition(local_pos);
-		r0->time = 0;
+		r0->time = -1;
 		r0->use_direction = true;
 		r0->direction = angio_mat->m_pangio->uniformRandomDirection(angio_mat->m_pangio->rengine);
 		r0->face = r0->angio_element;

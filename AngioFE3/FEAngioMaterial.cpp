@@ -37,6 +37,8 @@ BEGIN_PARAMETER_LIST(FEAngioMaterial, FEElasticMaterial)
 	ADD_PARAMETER2(m_cultureParams.min_segment_length, FE_PARAM_DOUBLE, FE_RANGE_GREATER_OR_EQUAL(0), "min_segment_length");
 	ADD_PARAMETER(m_cultureParams.m_weight_interpolation, FE_PARAM_DOUBLE, "direction_weight");
 	
+	ADD_PARAMETER(initial_segment_velocity, FE_PARAM_DOUBLE, "initial_segment_velocity");
+
 END_PARAMETER_LIST();
 
 //-----------------------------------------------------------------------------
@@ -51,6 +53,8 @@ FEAngioMaterial::FEAngioMaterial(FEModel* pfem) : FEElasticMaterial(pfem)
 	AddProperty(&cm_manager, "cm_manager");
 	AddProperty(&velocity_manager, "velocity_manager");
 	AddProperty(&im_manager, "im_manager");
+	AddProperty(&branch_policy, "branch_policy");
+	branch_policy.m_brequired = false;
 }
 
 FEAngioMaterial::~FEAngioMaterial()
@@ -233,6 +237,11 @@ double FEAngioMaterial::GetSegmentVelocity(AngioElement * angio_element, vec3d l
 	return velocity_manager->ApplyModifiers(1, local_pos, angio_element, mesh);
 }
 
+double FEAngioMaterial::GetInitialVelocity()
+{
+	return initial_segment_velocity;
+}
+
 double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem, FEMesh* mesh)
 {
 	assert(angio_elem);
@@ -294,7 +303,7 @@ double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem, FEMesh* mesh)
 	return (min_side_length_so_far * 0.25) / max_grow_velocity;
 }
 
-void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index)
+void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor)
 {
 	assert(angio_elem);
 	for(int i=0; i < angio_elem->adjacency_list.size();i++)
@@ -305,7 +314,7 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, i
 			for(int j=0; j < tips.size();j++)
 			{
 				assert(tips.at(j)->angio_element == angio_elem);
-				GrowthInElement(end_time, tips.at(j), i, buffer_index);
+				GrowthInElement(end_time, tips.at(j), i, buffer_index, min_scale_factor);
 			}
 			
 		}
@@ -316,11 +325,11 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, i
 	for(int j=0; j < tips.size();j++)
 	{
 		assert(tips[j]->angio_element == angio_elem);
-		GrowthInElement(end_time, tips[j], -1, buffer_index);
+		GrowthInElement(end_time, tips[j], -1, buffer_index, min_scale_factor);
 	}
 }
 
-void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double override_grow_length, bool grow_len_overrride)
+void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor)
 {
 	auto angio_element = active_tip->angio_element;
 	
@@ -331,9 +340,9 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	double dt = end_time - active_tip->time;
 	double grow_len;
 	double grow_vel;
-	if(grow_len_overrride)
+	if(active_tip->time < 0.0)
 	{
-		grow_len = override_grow_length  *dt;
+		grow_len = angio_element->_angio_mat->GetInitialVelocity()  *dt;
 	}
 	else
 	{
@@ -378,7 +387,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	// Just do the transformations
 	vec3d nat_dir = global_to_natc * global_dir;
 	double factor;
-	bool proj_sucess = m_pangio->ScaleFactorToProjectToNaturalCoordinates(active_tip->angio_element->_elem, nat_dir, local_pos, factor); // TODO: HERE
+	bool proj_sucess = m_pangio->ScaleFactorToProjectToNaturalCoordinates(active_tip->angio_element->_elem, nat_dir, local_pos, factor, min_scale_factor); // TODO: HERE
 	vec3d possible_natc = local_pos + (nat_dir*factor);
 	double possible_grow_length = m_pangio->InElementLength(active_tip->angio_element->_elem, local_pos, possible_natc);
 	if ((possible_grow_length >= grow_len) && proj_sucess)
@@ -473,10 +482,25 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 			}
 		}
 	}
+	else
+	{
+		//handle the difficult cases here
+		//this occours when the tip is close to a face
+		//this also might be when a segment is supposed to die
+		assert(false);
+	}
 }
 
-void FEAngioMaterial::PostGrowthUpdate(AngioElement* angio_elem, double end_time, int buffer_index)
+void FEAngioMaterial::PostGrowthUpdate(AngioElement* angio_elem, double end_time, int buffer_index, FEMesh* mesh, FEAngio* feangio)
 {
+	//do the branching
+	if(angio_elem->_angio_mat->branch_policy)
+	{
+		angio_elem->_angio_mat->branch_policy->AddBranches(angio_elem, buffer_index, mesh, feangio);
+	}
+	
+
+	//do the buffer management
 	for(auto iter = angio_elem->active_tips[buffer_index].begin(); iter != angio_elem->active_tips[buffer_index].end(); ++iter)
 	{
 		iter->second.clear();
@@ -490,6 +514,7 @@ void FEAngioMaterial::Cleanup(AngioElement* angio_elem, double end_time, int buf
 		angio_elem->grown_segments.push_back(angio_elem->recent_segments[i]);
 	}
 	angio_elem->recent_segments.clear();
+	angio_elem->processed_recent_segments = 0;
 }
 
 void FEAngioMaterial::PrepBuffers(AngioElement* angio_elem, double end_time, int buffer_index)
