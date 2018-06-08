@@ -148,6 +148,7 @@ void FEAngio::GetActiveFinalTipsInRadius(AngioElement* angio_element, double rad
 	std::set<AngioElement *> next;
 	std::vector<vec3d> element_bounds;
 	visited.reserve(1000);
+	tips.reserve(500);
 	pangio->ExtremaInElement(angio_element->_elem, element_bounds);
 
 	for (int i = 0; i < angio_element->adjacency_list.size(); i++)
@@ -900,7 +901,7 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 	FEMesh * mesh = GetMesh();
 	
 	static bool start = false;
-	static int min_scale_factor = m_fem->GetGlobalConstant("min_scale_factor");
+	static double min_scale_factor = m_fem->GetGlobalConstant("min_scale_factor");
 	if (!start)
 	{
 		size_t angio_element_count = angio_elements.size();
