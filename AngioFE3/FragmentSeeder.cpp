@@ -3,6 +3,10 @@
 #include "FEAngioMaterial.h"
 #include "angio3d.h"
 
+// Variable used to ensure that all initial Tips that are part of the same fragment
+// share an ID so that they do not anastamose with each other.
+int FragmentSeeder::initial_fragment_id_counter = 0;
+
 FragmentSeeder::FragmentSeeder(FEModel * model) : FEMaterial(model)
 {
 
@@ -84,6 +88,7 @@ bool ByElementFragmentSeeder::SeedFragments(std::vector<AngioElement *> &angio_e
 	for (int i = 0; i < number_fragments; ++i)
 	{
 		Tip* r0 = new Tip();
+		r0->initial_fragment_id = initial_fragment_id_counter++;
 		int elem_index = edist(angio_mat->m_pangio->rengine);
 		r0->angio_element = angio_elements[elem_index];
 		vec3d local_pos = GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(mesh, r0->angio_element, angio_mat->m_pangio->rengine);
@@ -123,6 +128,7 @@ bool ByElementFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElemen
 	for (int i = 0; i < number_fragments; ++i)
 	{
 		Tip* r0 = new Tip();
+		r0->initial_fragment_id = initial_fragment_id_counter;
 		int elem_index = edist(angio_mat->m_pangio->rengine);
 		r0->angio_element = angio_elements[elem_index];
 		vec3d local_pos = GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(mesh, r0->angio_element, angio_mat->m_pangio->rengine);
@@ -137,6 +143,7 @@ bool ByElementFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElemen
 
 		// Now add an oppositely directed tip.
 		Tip * r1 = new Tip(r0, mesh);
+		r0->initial_fragment_id = initial_fragment_id_counter++;
 		r1->use_direction = true;
 		r1->direction = -r0->direction;
 		r1->angio_element->next_tips.at(r1->angio_element).push_back(r1);
@@ -191,6 +198,7 @@ bool ByVolumeFragmentSeeder::SeedFragments(std::vector<AngioElement *>& angio_el
 
 		// Build the fragment using a tip and build it in the proper element.
 		Tip* r0 = new Tip();
+		r0->initial_fragment_id = initial_fragment_id_counter;
 		r0->angio_element = angio_elements[element_index];
 		vec3d local_pos = GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(mesh, r0->angio_element, angio_mat->m_pangio->rengine);
 		r0->SetLocalPosition(local_pos);
@@ -252,6 +260,7 @@ bool ByVolumeFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElement
 
 		// Build the fragment using a tip and build it in the element.
 		Tip* r0 = new Tip();
+		r0->initial_fragment_id = initial_fragment_id_counter;
 		r0->angio_element = angio_elements[element_index];
 		vec3d local_pos = GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(mesh, r0->angio_element, angio_mat->m_pangio->rengine);
 		r0->SetLocalPosition(local_pos);
@@ -265,6 +274,7 @@ bool ByVolumeFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElement
 
 		// Now add an oppositely directed tip.
 		Tip * r1 = new Tip(r0, mesh);
+		r0->initial_fragment_id = initial_fragment_id_counter++;
 		r1->use_direction = true;
 		r1->direction = -r0->direction;
 		r1->angio_element->next_tips.at(r1->angio_element).push_back(r1);

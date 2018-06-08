@@ -15,6 +15,7 @@ public:
 	vec3d GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(FEMesh* mesh, AngioElement* angio_element, angiofe_random_engine random_engine);
 protected:
 	int number_fragments = 0;
+	static int initial_fragment_id_counter;
 	double initial_vessel_length = 20.0;
 	DECLARE_PARAMETER_LIST();
 };

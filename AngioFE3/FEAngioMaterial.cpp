@@ -334,7 +334,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	auto angio_element = active_tip->angio_element;
 	
 	assert(active_tip);
-	auto mesh = m_pangio->GetMesh(); // DEBUG: active_tip->angio_element->_elem->m_nID == 528
+	auto mesh = m_pangio->GetMesh();
 	const double min_segm_len = 0.1;
 	int next_buffer_index = (buffer_index + 1) % 2;
 	double dt = end_time - active_tip->time;
@@ -371,7 +371,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	mat3d natc_to_global(er, es, et);
 	mat3d global_to_natc = natc_to_global.inverse();
 	vec3d psc_dir = psc_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip, mesh);
-	vec3d pdd_dir = pdd_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip, mesh);
+	vec3d pdd_dir = pdd_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip, mesh, m_pangio);
 	double alpha = cm_manager->ApplyModifiers(0, active_tip, mesh);
 	vec3d global_dir = mix(psc_dir, pdd_dir , (alpha * dt));
 	global_dir.unit();

@@ -15,7 +15,6 @@ public:
 	//will set m_as for all gauss points of the element
 	virtual void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) = 0;
 	virtual void UpdateScale() = 0;
-	static void GetActiveFinalTipsInRadius(AngioElement* angio_element, double radius, FEAngio* pangio, std::vector<Tip *> & tips);
 	void UpdateToLoadCurve(const char* param_name, double & value);
 protected:
 	double radius = 1000;

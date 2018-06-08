@@ -141,6 +141,45 @@ void FEAngio::GrowSegments(double min_scale_factor)
 
 }
 
+void FEAngio::GetActiveFinalTipsInRadius(AngioElement* angio_element, double radius, FEAngio* pangio, std::vector<Tip *> & tips)
+{
+	std::set<AngioElement *> visited;
+	std::set<AngioElement *> next;
+	std::vector<vec3d> element_bounds;
+	pangio->ExtremaInElement(angio_element->_elem, element_bounds);
+
+	for (int i = 0; i < angio_element->adjacency_list.size(); i++)
+	{
+		next.insert(angio_element->adjacency_list[i]);
+	}
+	visited.insert(angio_element);
+	while (next.size())
+	{
+		AngioElement * cur = *next.begin();
+		next.erase(next.begin());
+		visited.insert(cur);
+		std::vector<vec3d> cur_element_bounds;
+		pangio->ExtremaInElement(cur->_elem, cur_element_bounds);
+		double cdist = FEAngio::MinDistance(element_bounds, cur_element_bounds);
+		if (cdist <= radius)
+		{
+			//add the tips and the add all unvisited adjacent elements to next
+			for (int i = 0; i < cur->final_active_tips.size(); i++)
+			{
+				tips.push_back(cur->final_active_tips[i]);
+			}
+
+			for (int i = 0; i < cur->adjacency_list.size(); i++)
+			{
+				if (!visited.count(cur->adjacency_list[i]))
+				{
+					next.insert(cur->adjacency_list[i]);
+				}
+			}
+		}
+	}
+}
+
 vec3d FEAngio::ReferenceCoordinates(Tip * tip) const
 {
 	vec3d r(0, 0, 0);

@@ -13,7 +13,7 @@ class PositionDependentDirection : public FEMaterial
 public:
 	explicit PositionDependentDirection(FEModel* pfem) : FEMaterial(pfem) {}
 	virtual ~PositionDependentDirection() {}
-	virtual vec3d ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh)=0;
+	virtual vec3d ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh, FEAngio* pangio) = 0;
 	virtual void Update(FEMesh * mesh, FEAngio* angio){} //may be used to get values from loadcurves that modify the behavior as a whole
 };
 
@@ -22,7 +22,7 @@ class PositionDependentDirectionManager : public FEMaterial
 public:
 	explicit PositionDependentDirectionManager(FEModel* pfem) : FEMaterial(pfem) { AddProperty(&pdd_modifiers, "pdd_modifier"); pdd_modifiers.m_brequired = false; }
 	virtual ~PositionDependentDirectionManager() {}
-	vec3d ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh);
+	vec3d ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh, FEAngio* pangio);
 	void Update(FEMesh * mesh, FEAngio* angio) {} //may be used to get values from loadcurves that modify the behavior as a whole
 private:
 	FEVecPropertyT<PositionDependentDirection> pdd_modifiers;
@@ -71,7 +71,7 @@ private:
 	FEVecPropertyT<ContributionMix> cm_modifiers;
 };
 
-class PSCPDDContributionMix : public ContributionMix // TODO: Rename?
+class PSCPDDContributionMix : public ContributionMix
 {
 public:
 	explicit PSCPDDContributionMix(FEModel* pfem) : ContributionMix(pfem) {}
@@ -84,7 +84,7 @@ private:
 	double psc_weight = 0.5;
 };
 
-//get the length over one unit of time at the given position
+// Get the length over one unit of time at the given position
 class SegmentGrowthVelocity : public FEMaterial
 {
 public:
@@ -133,7 +133,7 @@ class FiberPDD : public PositionDependentDirection
 public:
 	explicit FiberPDD(FEModel* pfem) : PositionDependentDirection(pfem) { AddProperty(&interpolation_prop, "interpolation_prop"); }
 	virtual ~FiberPDD() {}
-	vec3d ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh) override;
+	vec3d ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh, FEAngio* pangio) override;
 	void Update(FEMesh * mesh, FEAngio* angio) override;
 private:
 	double contribution = 1.0;
@@ -141,23 +141,35 @@ private:
 };
 
 //
-class ConcentrationPDD :public PositionDependentDirection
+class ConcentrationPDD : public PositionDependentDirection
 {
 public:
 	explicit ConcentrationPDD(FEModel* pfem) : PositionDependentDirection(pfem) {}
 	virtual ~ConcentrationPDD() {}
-	vec3d ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh) override;
+	vec3d ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh, FEAngio* pangio) override;
 };
 
-class DensityGradientPDD :public PositionDependentDirection
+class DensityGradientPDD : public PositionDependentDirection
 {
 public:
 	explicit DensityGradientPDD(FEModel* pfem) : PositionDependentDirection(pfem) {}
 	virtual ~DensityGradientPDD() {}
-	vec3d ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh) override;
+	vec3d ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh, FEAngio* pangio) override;
 };
 
-class PreviousSegmentPSC :public PreviousSegmentContribution
+class AnastomosisPDD : public PositionDependentDirection
+{
+public:
+	explicit AnastomosisPDD(FEModel* pfem) : PositionDependentDirection(pfem) {}
+	virtual ~AnastomosisPDD() {}
+	vec3d ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh, FEAngio* pangio) override;
+protected:
+	DECLARE_PARAMETER_LIST();
+private:
+	double anastomosis_radius = 0.0;
+};
+
+class PreviousSegmentPSC : public PreviousSegmentContribution
 {
 	//overrides the previous segment contribution with the previous segment direction
 public:

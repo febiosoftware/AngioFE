@@ -91,6 +91,8 @@ public:
 
 	void GrowSegments(double min_scale_factor);
 
+	static void GetActiveFinalTipsInRadius(AngioElement* angio_element, double radius, FEAngio* pangio, std::vector<Tip *> & tips);
+
 	//returns the length between the two points as if they are conencted by a line segment in the natrual coordinates of the element
 	//only the difference between the points if the elements are linear
 	double InElementLength(FESolidElement * se, vec3d pt0, vec3d pt1) const;

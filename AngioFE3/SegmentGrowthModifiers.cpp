@@ -4,6 +4,7 @@
 #include <FEBioMech/FEElasticMaterial.h>
 #include <FECore/FESolidDomain.h>
 #include "FEAngioMaterialPoint.h"
+#include "FEAngio.h"
 
 vec3d PreviousSegmentPSC::ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh)
 {
@@ -71,7 +72,7 @@ BEGIN_PARAMETER_LIST(SegmentVelocityDensityScaleModifier, SegmentGrowthVelocity)
 ADD_PARAMETER(m_density_scale_factor, FE_PARAM_VEC3D, "density_scale_factor");
 END_PARAMETER_LIST();
 
-vec3d FiberPDD::ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh)
+vec3d FiberPDD::ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh, FEAngio* pangio)
 {
 	std::vector<quatd> gauss_data;
 	std::vector<quatd> nodal_data;
@@ -89,6 +90,20 @@ vec3d FiberPDD::ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh)
 	return mix(prev, fiber_direction, contribution);
 }
 
+vec3d AnastomosisPDD::ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh, FEAngio* pangio)
+{
+	// Storage for all active tips within the radius of the tip being looked at.
+	std::vector<Tip *> tips;
+
+	// Get all tips within a specified radius to potentially anastomose with this one.
+
+	FEAngio::GetActiveFinalTipsInRadius(tip->angio_element, anastomosis_radius, pangio, tips);
+}
+
+BEGIN_PARAMETER_LIST(AnastomosisPDD, PositionDependentDirection)
+ADD_PARAMETER(anastomosis_radius, FE_PARAM_DOUBLE, "anastomosis_radius");
+END_PARAMETER_LIST();
+
 // Managers
 vec3d PreviousSegmentContributionManager::ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh)
 {
@@ -100,11 +115,11 @@ vec3d PreviousSegmentContributionManager::ApplyModifiers(vec3d prev, Tip* tip, F
 }
 
 
-vec3d PositionDependentDirectionManager::ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh)
+vec3d PositionDependentDirectionManager::ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh, FEAngio* pangio)
 {
 	for (int i = 0; i < pdd_modifiers.size(); i++)
 	{
-		prev = pdd_modifiers[i]->ApplyModifiers(prev, tip, mesh);
+		prev = pdd_modifiers[i]->ApplyModifiers(prev, tip, mesh, pangio);
 	}
 	return prev;
 }

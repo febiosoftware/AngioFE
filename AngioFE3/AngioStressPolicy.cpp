@@ -4,44 +4,6 @@
 #include "Tip.h"
 #include <FECore/FEDataLoadCurve.h>
 
-void AngioStressPolicy::GetActiveFinalTipsInRadius(AngioElement* angio_element, double radius, FEAngio* pangio, std::vector<Tip *> & tips)
-{
-	std::set<AngioElement *> visited;
-	std::set<AngioElement *> next;
-	std::vector<vec3d> element_bounds;
-	pangio->ExtremaInElement(angio_element->_elem, element_bounds);
-
-	for(int i=0; i < angio_element->adjacency_list.size();i++)
-	{
-		next.insert(angio_element->adjacency_list[i]);
-	}
-	visited.insert(angio_element);
-	while(next.size())
-	{
-		AngioElement * cur = *next.begin();
-		next.erase(next.begin());
-		visited.insert(cur);
-		std::vector<vec3d> cur_element_bounds;
-		pangio->ExtremaInElement(cur->_elem, cur_element_bounds);
-		double cdist = FEAngio::MinDistance(element_bounds, cur_element_bounds);
-		if(cdist <= radius)
-		{
-			//add the tips and the add all unvisited adjacent elements to next
-			for(int i =0; i < cur->final_active_tips.size();i++)
-			{
-				tips.push_back(cur->final_active_tips[i]);
-			}
-
-			for(int i=0;i < cur->adjacency_list.size();i++)
-			{
-				if(!visited.count(cur->adjacency_list[i]))
-				{
-					next.insert(cur->adjacency_list[i]);
-				}
-			}
-		}
-	}
-}
 void AngioStressPolicy::UpdateToLoadCurve(const char* param_name, double& value)
 {
 	//if load curves are used they must use step interpolation
@@ -73,7 +35,7 @@ void SigmoidAngioStressPolicy::UpdateScale()
 void SigmoidAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
 {
 	std::vector<Tip*> final_active_tips;
-	GetActiveFinalTipsInRadius(angio_element, sprout_range * sprout_radius_multiplier, pangio, final_active_tips);
+	FEAngio::GetActiveFinalTipsInRadius(angio_element, sprout_range * sprout_radius_multiplier, pangio, final_active_tips);
 
 	for(int i=0;i < angio_element->_elem->GaussPoints();i++)
 	{
@@ -125,7 +87,7 @@ void LoadCurveVelAngioStressPolicy::UpdateScale()
 void LoadCurveVelAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
 {
 	std::vector<Tip*> final_active_tips;
-	GetActiveFinalTipsInRadius(angio_element, sprout_range * sprout_radius_multiplier, pangio, final_active_tips);
+	FEAngio::GetActiveFinalTipsInRadius(angio_element, sprout_range * sprout_radius_multiplier, pangio, final_active_tips);
 
 	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
 	{
@@ -172,7 +134,7 @@ void LoadCurveAngioStressPolicy::UpdateScale()
 void LoadCurveAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
 {
 	std::vector<Tip*> final_active_tips;
-	GetActiveFinalTipsInRadius(angio_element, sprout_range * sprout_radius_multiplier, pangio, final_active_tips);
+	FEAngio::GetActiveFinalTipsInRadius(angio_element, sprout_range * sprout_radius_multiplier, pangio, final_active_tips);
 
 	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
 	{
