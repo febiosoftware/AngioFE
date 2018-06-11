@@ -98,6 +98,7 @@ vec3d AnastomosisPDD::ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh, FEAngio
 	// Get all tips within a specified radius to potentially anastomose with this one.
 
 	FEAngio::GetActiveFinalTipsInRadius(tip->angio_element, anastomosis_radius, pangio, tips);
+	return vec3d(0, 0, 0);
 }
 
 BEGIN_PARAMETER_LIST(AnastomosisPDD, PositionDependentDirection)

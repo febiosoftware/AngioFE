@@ -247,8 +247,6 @@ double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem, FEMesh* mesh)
 	assert(angio_elem);
 	assert(angio_elem->_elem);
 
-	double V = m_pangio->GetMesh()->ElementVolume(*angio_elem->_elem);
-
 	// Calculate the maximum growth velocity based on the potential velocities calculated at each of the Gauss points.
 	double max_grow_velocity = 0.0;
 	for (int i = 0; i < angio_elem->_elem->GaussPoints();i++)
@@ -300,7 +298,7 @@ double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem, FEMesh* mesh)
 	}
 
 	// Return dt = d / v.
-	return (min_side_length_so_far * 0.25) / max_grow_velocity;
+	return (min_side_length_so_far * 0.5 * dt_safety_multiplier) / max_grow_velocity;
 }
 
 void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor)
