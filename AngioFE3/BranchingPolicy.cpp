@@ -31,7 +31,7 @@ void DelayedBranchingPolicy::AddBranches(AngioElement * angio_elem, int buffer_i
 	std::list<BranchPoints> bps;
 	for(int i=angio_elem->processed_recent_segments; i< angio_elem->recent_segments.size();i++)
 	{
-		if(bps.size() == 1)
+		if(bps.size() == 0)
 		{
 			BranchPoints bpt;
 			Segment * seg = angio_elem->recent_segments[i];

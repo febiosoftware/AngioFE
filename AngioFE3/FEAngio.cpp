@@ -96,7 +96,7 @@ void FEAngio::GrowSegments(double min_scale_factor)
 		
 		double ctime = next_time + min_dt;
 
-		#pragma omp parallel for schedule(dynamic, 16)
+		#pragma omp parallel for schedule(dynamic, 32)
 		for (int j = 0; j <angio_element_count; j++)
 		{
 			angio_elements[j]->_angio_mat->PrepBuffers(angio_elements[j], next_time, buffer_index);
@@ -107,13 +107,13 @@ void FEAngio::GrowSegments(double min_scale_factor)
 			int n = 3;
 			for (int i = 0; i <n; i++)
 			{
-#pragma omp parallel for schedule(dynamic, 16)
+#pragma omp parallel for schedule(dynamic, 32)
 				for (int j = 0; j <angio_element_count; j++)
 				{
 					angio_elements.at(j)->_angio_mat->GrowSegments(angio_elements.at(j), ctime, buffer_index, min_scale_factor);
 				}
 
-#pragma omp parallel for schedule(dynamic, 16)
+#pragma omp parallel for schedule(dynamic, 32)
 				for (int j = 0; j <angio_element_count; j++)
 				{
 					angio_elements[j]->_angio_mat->PostGrowthUpdate(angio_elements[j], ctime, buffer_index, mesh,this);

@@ -340,7 +340,8 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	double grow_vel;
 	if(active_tip->time < 0.0)
 	{
-		grow_len = angio_element->_angio_mat->GetInitialVelocity()  *dt;
+		grow_vel = angio_element->_angio_mat->GetInitialVelocity();
+		grow_len =  grow_vel *dt;
 	}
 	else
 	{
@@ -485,7 +486,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		//handle the difficult cases here
 		//this occours when the tip is close to a face
 		//this also might be when a segment is supposed to die
-		assert(false);
+		//assert(false);
 	}
 }
 
