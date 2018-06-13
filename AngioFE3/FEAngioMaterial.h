@@ -47,9 +47,9 @@ public:
 	//should be const and threadsafe
 	double GetMin_dt(AngioElement* angio_elem, FEMesh* mesh);
 
-	void GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor);
+	void GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor, double bounds_tolerance);
 
-	void GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor);
+	void GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor, double bounds_tolerance);
 
 	//should be const and threadsafe
 	void PostGrowthUpdate(AngioElement* angio_elem, double end_time, int buffer_index, FEMesh* mesh, FEAngio* feangio);

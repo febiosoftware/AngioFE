@@ -47,7 +47,7 @@ private:
 	double discretization_length = 1.0;
 
 	//helper class for delayed branching policy
-	class BranchPoints
+	class BranchPoint
 	{
 	public:
 		//only needed while creating the collection of branch points

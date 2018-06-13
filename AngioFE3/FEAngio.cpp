@@ -73,7 +73,7 @@ void FEAngio::ApplydtToTimestepper(double dt)
 	}
 }
 
-void FEAngio::GrowSegments(double min_scale_factor)
+void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance)
 {
 	auto   time_info = m_fem->GetTime();
 	auto   mesh = GetMesh();
@@ -110,7 +110,7 @@ void FEAngio::GrowSegments(double min_scale_factor)
 #pragma omp parallel for schedule(dynamic, 32)
 				for (int j = 0; j <angio_element_count; j++)
 				{
-					angio_elements.at(j)->_angio_mat->GrowSegments(angio_elements.at(j), ctime, buffer_index, min_scale_factor);
+					angio_elements.at(j)->_angio_mat->GrowSegments(angio_elements.at(j), ctime, buffer_index, min_scale_factor,bounds_tolerance);
 				}
 
 #pragma omp parallel for schedule(dynamic, 32)
@@ -902,6 +902,7 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 	
 	static bool start = false;
 	static double min_scale_factor = m_fem->GetGlobalConstant("min_scale_factor");
+	static double bounds_tolerance = m_fem->GetGlobalConstant("bounds_tolerance");
 	if (!start)
 	{
 		size_t angio_element_count = angio_elements.size();
@@ -926,7 +927,7 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 			}
 		}
 		grow_timer.start();
-		GrowSegments(min_scale_factor);
+		GrowSegments(min_scale_factor,bounds_tolerance);
 		grow_timer.stop();
 
 
@@ -960,7 +961,7 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 
 		//new function to find the start time grow time and if this is the final iteration this timestep
 		grow_timer.start();
-		GrowSegments(min_scale_factor);
+		GrowSegments(min_scale_factor, bounds_tolerance);
 		grow_timer.stop();
 		
 		mesh_stiffness_timer.start();

@@ -89,7 +89,7 @@ public:
 	//returns the minimun distance between the two sets of points
 	static double MinDistance(std::vector<vec3d> & element_bounds0, std::vector<vec3d>  & element_bounds1);
 
-	void GrowSegments(double min_scale_factor);
+	void GrowSegments(double min_scale_factor, double bounds_tolerance);
 
 	static void GetActiveFinalTipsInRadius(AngioElement* angio_element, double radius, FEAngio* pangio, std::vector<Tip *> & tips);
 

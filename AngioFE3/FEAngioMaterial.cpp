@@ -301,7 +301,7 @@ double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem, FEMesh* mesh)
 	return (min_side_length_so_far * 0.5 * dt_safety_multiplier) / max_grow_velocity;
 }
 
-void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor)
+void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor, double bounds_tolerance)
 {
 	assert(angio_elem);
 	for(int i=0; i < angio_elem->adjacency_list.size();i++)
@@ -312,7 +312,7 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, i
 			for(int j=0; j < tips.size();j++)
 			{
 				assert(tips.at(j)->angio_element == angio_elem);
-				GrowthInElement(end_time, tips.at(j), i, buffer_index, min_scale_factor);
+				GrowthInElement(end_time, tips.at(j), i, buffer_index, min_scale_factor,bounds_tolerance);
 			}
 			
 		}
@@ -323,11 +323,11 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, i
 	for(int j=0; j < tips.size();j++)
 	{
 		assert(tips[j]->angio_element == angio_elem);
-		GrowthInElement(end_time, tips[j], -1, buffer_index, min_scale_factor);
+		GrowthInElement(end_time, tips[j], -1, buffer_index, min_scale_factor,bounds_tolerance);
 	}
 }
 
-void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor)
+void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor, double bounds_tolerance)
 {
 	auto angio_element = active_tip->angio_element;
 	
@@ -475,7 +475,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 
 						angio_element->active_tips[next_buffer_index].at(ang_elem).push_back(adj);
 
-						// break; // Place the tip in exactly one element
+						break; // Place the tip in exactly one element
 					}
 				}
 			}
