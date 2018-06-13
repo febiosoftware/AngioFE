@@ -60,6 +60,7 @@ FEPluginFactory_T<PreviousSegmentPSC                , FEMATERIAL_ID> previous_se
 // PDD Classes
 FEPluginFactory_T<PositionDependentDirectionManager, FEMATERIAL_ID> position_dependent_direction_manager_factory("position_dependent_direction_manager");
 FEPluginFactory_T<FiberPDD                         , FEMATERIAL_ID> fiber_pdd_factory("fiber_pdd");
+FEPluginFactory_T<AnastomosisPDD                   , FEMATERIAL_ID> anastomosis_pdd_factory("anastomosis_pdd");
 
 // ContributionMix Classes
 FEPluginFactory_T<ContributionMixManager, FEMATERIAL_ID> contribution_mix_manager_factory("contribution_mix_manager");
@@ -211,6 +212,7 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		// PDD Modifier Classes
 		&position_dependent_direction_manager_factory,
 		&fiber_pdd_factory,
+		&anastomosis_pdd_factory,
 
 		// ContributionMix Classes
 		&contribution_mix_manager_factory,

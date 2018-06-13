@@ -166,7 +166,8 @@ public:
 protected:
 	DECLARE_PARAMETER_LIST();
 private:
-	double anastomosis_radius = 0.0;
+	double anastomosis_radius = 300;
+	double contribution = 1.0;
 };
 
 class PreviousSegmentPSC : public PreviousSegmentContribution

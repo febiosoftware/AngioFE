@@ -92,17 +92,52 @@ vec3d FiberPDD::ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh, FEAngio* pang
 
 vec3d AnastomosisPDD::ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh, FEAngio* pangio)
 {
+	// Information needed for calculations.
+	Tip*   closest_so_far = nullptr;
+	Tip*   candidate = nullptr;
+	vec3d  tip_position = tip->GetPosition(mesh);
+	vec3d  candidate_pos;
+	vec3d  direction_towards_candidate;
+	double distance_to_closest_so_far = std::numeric_limits<double>::max();
+	double distance_sq_to_candidate = 0;
+
 	// Storage for all active tips within the radius of the tip being looked at.
-	std::vector<Tip *> tips;
+	std::vector<Tip *> tips_in_radius;
 
 	// Get all tips within a specified radius to potentially anastomose with this one.
+	FEAngio::GetActiveFinalTipsInRadius(tip->angio_element, anastomosis_radius, pangio, tips_in_radius);
 
-	FEAngio::GetActiveFinalTipsInRadius(tip->angio_element, anastomosis_radius, pangio, tips);
+	// Find the closest tip that is not a part of the same initial fragment.
+	for (int i = 0; i < tips_in_radius.size(); i++)
+	{
+		candidate = tips_in_radius.at(i);
+		candidate_pos = candidate->GetPosition(mesh);
+
+		distance_sq_to_candidate = (tip_position - candidate_pos).norm2();
+
+		if (distance_sq_to_candidate < distance_to_closest_so_far && tip->initial_fragment_id != candidate->initial_fragment_id)
+		{
+			closest_so_far = candidate;
+			distance_to_closest_so_far = distance_sq_to_candidate;
+		}
+	}
+
+	// No other tips with different initial fragment ID.
+	if (closest_so_far == nullptr)
+	{
+		return prev;
+	}
+
+	direction_towards_candidate = tip_position - candidate_pos;
+	direction_towards_candidate.unit();
+
+	return mix(prev, direction_towards_candidate, contribution);
 	return vec3d(0, 0, 0);
 }
 
 BEGIN_PARAMETER_LIST(AnastomosisPDD, PositionDependentDirection)
 ADD_PARAMETER(anastomosis_radius, FE_PARAM_DOUBLE, "anastomosis_radius");
+ADD_PARAMETER(contribution, FE_PARAM_DOUBLE, "contribution");
 END_PARAMETER_LIST();
 
 // Managers
