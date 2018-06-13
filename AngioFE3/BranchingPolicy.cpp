@@ -24,8 +24,10 @@ vec3d BranchPolicy::GetBranchDirection(vec3d local_pos, vec3d parent_direction)
 
 
 
-void DelayedBranchingPolicy::AddBranches(AngioElement * angio_elem, int buffer_index, FEMesh* mesh, FEAngio* feangio)
+void DelayedBranchingPolicy::AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, FEMesh* mesh, FEAngio* feangio)
 {
+	DelayBranchInfo * dbi = dynamic_cast<DelayBranchInfo*>(angio_elem->branch_info);
+	//calculate where and when the branches shoud occour
 	if(angio_elem->processed_recent_segments == angio_elem->recent_segments.size())
 	{
 		return;
@@ -133,7 +135,10 @@ void DelayedBranchingPolicy::AddBranches(AngioElement * angio_elem, int buffer_i
 				double start_time = mix(cur.end_time, cur.start_time, (distance_in / cur.length));
 				vec3d tip_pos = seg->NatcAtTime(start_time);
 				//add a tip at the appropriate localation
-				AddBranchTip(angio_elem, tip_pos, seg->Direction(mesh),start_time, seg->GetInitialFragmentID(), buffer_index);
+				//AddBranchTip(angio_elem, tip_pos, seg->Direction(mesh),start_time, seg->GetInitialFragmentID(), buffer_index);
+				double time_to_wait = t2e->NextValue(angio_elem->_rengine);
+				FutureBranch fb = FutureBranch(tip_pos, seg, start_time + time_to_wait);
+				dbi->future_branches.push_back(fb);
 				cur.processed += remaing_l2b;
 				remaing_l2b = l2b->NextValue(angio_elem->_rengine);
 			}
@@ -147,6 +152,18 @@ void DelayedBranchingPolicy::AddBranches(AngioElement * angio_elem, int buffer_i
 		{
 			bps.pop_front();
 		}
+	}
+
+	for(auto iter = dbi->future_branches.begin(); iter != dbi->future_branches.end(); ++iter)
+	{
+		while((iter != dbi->future_branches.end()) && (iter->_start_time < end_time))
+		{
+			//grow this segment
+			AddBranchTip(angio_elem, iter->_local_pos, iter->_parent->Direction(mesh), iter->_start_time, iter->_parent->GetInitialFragmentID(), buffer_index);
+			iter = dbi->future_branches.erase(iter);
+		}
+		if (iter == dbi->future_branches.end())
+			break;
 	}
 }
 void DelayedBranchingPolicy::SetupBranchInfo(AngioElement * angio_elem)

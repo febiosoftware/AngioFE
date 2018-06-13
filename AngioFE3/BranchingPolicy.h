@@ -17,11 +17,19 @@ class BranchPolicy :public FEMaterial
 public:
 	BranchPolicy(FEModel* pfem) : FEMaterial(pfem) {}
 	virtual ~BranchPolicy(){};
-	virtual void AddBranches(AngioElement * angio_elem, int buffer_index, FEMesh* mesh, FEAngio* feangio)=0;
+	virtual void AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, FEMesh* mesh, FEAngio* feangio)=0;
 	virtual void SetupBranchInfo(AngioElement * angio_elem) = 0;
 	//adds a branch tip at the given natural coordinates
 	void AddBranchTip(AngioElement * angio_element, vec3d local_pos, vec3d parent_direction, double start_time, int vessel_id, int buffer_index);
 	vec3d GetBranchDirection(vec3d local_pos, vec3d parent_direction);
+};
+class FutureBranch
+{
+public:
+	explicit FutureBranch(vec3d local_pos, Segment * parent, double start_time) : _local_pos(local_pos), _parent(parent), _start_time(start_time) { assert(parent); }
+	vec3d _local_pos;
+	Segment * _parent;
+	double _start_time;
 };
 
 //info needed by delayed branchin on a per element 
@@ -29,6 +37,7 @@ class DelayBranchInfo : public BranchInfo
 {
 public:
 	double length_to_branch;
+	std::list<FutureBranch> future_branches;
 };
 
 
@@ -36,14 +45,16 @@ public:
 class DelayedBranchingPolicy :public BranchPolicy
 {
 public:
-	DelayedBranchingPolicy(FEModel* pfem) : BranchPolicy(pfem) { AddProperty(&l2b, "length_to_branch"); }
+	DelayedBranchingPolicy(FEModel* pfem) : BranchPolicy(pfem) { AddProperty(&l2b, "length_to_branch"); AddProperty(&t2e, "time_to_emerge");
+	}
 	virtual ~DelayedBranchingPolicy(){}
 	bool Init() override {
-		return l2b.Init(); }
-	void AddBranches(AngioElement * angio_elem, int buffer_index, FEMesh* mesh, FEAngio* feangio) override;
+		return l2b.Init() && t2e.Init(); }
+	void AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, FEMesh* mesh, FEAngio* feangio) override;
 	void SetupBranchInfo(AngioElement * angio_elem) override;
 private:
-	FEPropertyT<FEProbabilityDistribution> l2b;
+	FEPropertyT<FEProbabilityDistribution> l2b;//length to branch
+	FEPropertyT<FEProbabilityDistribution> t2e;//time to emerge
 	double discretization_length = 1.0;
 
 	//helper class for delayed branching policy

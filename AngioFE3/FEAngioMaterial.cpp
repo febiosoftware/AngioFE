@@ -495,7 +495,7 @@ void FEAngioMaterial::PostGrowthUpdate(AngioElement* angio_elem, double end_time
 	//do the branching
 	if(angio_elem->_angio_mat->branch_policy)
 	{
-		angio_elem->_angio_mat->branch_policy->AddBranches(angio_elem, buffer_index, mesh, feangio);
+		angio_elem->_angio_mat->branch_policy->AddBranches(angio_elem, buffer_index, end_time , mesh, feangio);
 	}
 	
 
