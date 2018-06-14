@@ -22,18 +22,6 @@ bool FENormalDistribution::Init()
 	return true;
 }
 
-void FENormalDistribution::StepToTime(double time)
-{
-	bool change = ChangeInParam("mean", time, prev_mean, mean) || ChangeInParam("stddev", time, prev_stddev, stddev);
-	if (change)
-	{
-		//rebuild the distribution
-		prev_mean = mean;
-		prev_stddev = stddev;
-		nd = std::normal_distribution<double>(mean, stddev);
-	}
-}
-
 
 BEGIN_PARAMETER_LIST(FENormalDistribution, FEProbabilityDistribution)
 ADD_PARAMETER(mean, FE_PARAM_DOUBLE, "mean");
@@ -63,22 +51,6 @@ bool FEUniformDistribution::Init()
 	SetLoadCurveToStep("b");
 
 	return true;
-}
-
-void FEUniformDistribution::StepToTime(double time)
-{
-	bool change = ChangeInParam("a", time, prev_a, a) || ChangeInParam("b", time, prev_b, b);
-	if (change)
-	{
-		//rebuild the distribution
-		prev_a = a;
-		prev_b = b;
-		rd = std::uniform_real_distribution<double>(a, b);
-	}
-	if(time_clamped)
-	{
-		rd = std::uniform_real_distribution<double>(a, b-time);
-	}
 }
 
 BEGIN_PARAMETER_LIST(FEUniformDistribution, FEProbabilityDistribution)
@@ -152,18 +124,6 @@ bool FEExponentialDistribution::Init()
 	return true;
 }
 
-void FEExponentialDistribution::StepToTime(double time)
-{
-	bool change = ChangeInParam("lambda", time, prev_lambda, lambda);
-	ChangeInParam("mult", time, prev_mult, mult);
-	if (change)
-	{
-		//rebuild the distribution
-		prev_lambda = lambda;
-		ed = std::exponential_distribution<double>(lambda);
-	}
-}
-
 BEGIN_PARAMETER_LIST(FEExponentialDistribution, FEProbabilityDistribution)
 ADD_PARAMETER(lambda, FE_PARAM_DOUBLE, "lambda");
 ADD_PARAMETER(mult, FE_PARAM_DOUBLE, "mult");
@@ -191,18 +151,6 @@ bool FECauchyDistribution::Init()
 	SetLoadCurveToStep("b");
 
 	return true;
-}
-
-void FECauchyDistribution::StepToTime(double time)
-{
-	bool change = ChangeInParam("a", time, prev_a, a) || ChangeInParam("b", time, prev_b, b);
-	if (change)
-	{
-		//rebuild the distribution
-		prev_a = a;
-		prev_b = b;
-		cd = std::cauchy_distribution<double>(a, b);
-	}
 }
 
 
@@ -233,18 +181,6 @@ bool FEChiSquaredDistribution::Init()
 	SetLoadCurveToStep("mult");
 
 	return true;
-}
-
-void FEChiSquaredDistribution::StepToTime(double time)
-{
-	bool change = ChangeInParam("dof", time, prev_dof, dof);
-	ChangeInParam("mult", time, prev_mult, mult);
-	if (change)
-	{
-		//rebuild the distribution
-		prev_dof = dof;
-		cd = std::chi_squared_distribution<double>(dof);
-	}
 }
 
 
@@ -278,18 +214,6 @@ bool FEWeibullDistribution::Init()
 	return true;
 }
 
-void FEWeibullDistribution::StepToTime(double time)
-{
-	bool change = ChangeInParam("a", time, prev_a, a) || ChangeInParam("b", time, prev_b, b);
-	if (change)
-	{
-		//rebuild the distribution
-		prev_a = a;
-		prev_b = b;
-		wd = std::weibull_distribution<double>(a, b);
-	}
-}
-
 
 BEGIN_PARAMETER_LIST(FEWeibullDistribution, FEProbabilityDistribution)
 ADD_PARAMETER(a, FE_PARAM_DOUBLE, "a");
@@ -319,18 +243,6 @@ bool FEGammaDistribution::Init()
 	SetLoadCurveToStep("beta");
 
 	return true;
-}
-
-void FEGammaDistribution::StepToTime(double time)
-{
-	bool change = ChangeInParam("alpha", time, prev_alpha, alpha) || ChangeInParam("beta", time, prev_beta, beta);
-	if (change)
-	{
-		//rebuild the distribution
-		prev_alpha = alpha;
-		prev_beta = beta;
-		gd = std::gamma_distribution<double>(alpha, beta);
-	}
 }
 
 

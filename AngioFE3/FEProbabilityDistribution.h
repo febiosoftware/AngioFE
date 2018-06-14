@@ -11,10 +11,6 @@ public:
 	virtual double NextValue(angiofe_random_engine & re) = 0;
 
 	
-	//when the time changes if the distribution needs modified this is the time to do it
-	virtual void StepToTime(double time) = 0;
-
-	
 protected:
 	int max_retries = 10;
 
@@ -35,8 +31,6 @@ public:
 	double NextValue(angiofe_random_engine & re) override;
 
 	bool Init() override;
-
-	void StepToTime(double time) override;
 
 private:
 	double mean = 1.0;//distribution's mean
@@ -62,8 +56,6 @@ public:
 	double NextValue(angiofe_random_engine & re) override;
 
 	bool Init() override;
-
-	void StepToTime(double time) override;
 
 private:
 	double a = 0.0;//distribution's mean
@@ -91,8 +83,6 @@ public:
 
 	bool Init() override;
 
-	void StepToTime(double time) override;
-
 private:
 	double lambda = 1.0;//distribution's lambda
 	double mult = 1.0;//multiplier
@@ -116,8 +106,6 @@ public:
 	double NextValue(angiofe_random_engine & re) override;
 
 	bool Init() override;
-
-	void StepToTime(double time) override;
 
 private:
 	double a = 1.0;//distribution's mean
@@ -145,8 +133,6 @@ public:
 
 	bool Init() override;
 
-	void StepToTime(double time) override;
-
 private:
 	double dof = 1.0;//distribution's x^2
 	double mult = 1.0;
@@ -172,8 +158,6 @@ public:
 
 	bool Init() override;
 
-	void StepToTime(double time) override;
-
 private:
 	double a = 1.0;
 	double b = 1.0;
@@ -198,7 +182,6 @@ public:
 
 	bool Init() override;
 
-	void StepToTime(double time) override;
 
 private:
 	double alpha = 1.0;

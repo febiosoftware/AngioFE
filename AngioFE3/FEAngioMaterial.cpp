@@ -454,6 +454,8 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		vec3d pos = next->GetPosition(mesh);
 		angio_element->recent_segments.push_back(seg);
 
+		std::vector<AngioElement*> possible_locations;
+		std::vector<vec3d> possible_local_coordinates;
 		for(int i=0; i < angio_element->adjacency_list.size();i++) // TODO: HERE
 		{
 			AngioElement * ang_elem = angio_element->adjacency_list[i];
