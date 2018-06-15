@@ -51,6 +51,9 @@ public:
 
 	void GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor, double bounds_tolerance);
 
+	//returns the index of the element in which the tip will grow next, this resolves when a tip can grow in multiple elements
+	int SelectNextTip(std::vector<AngioElement*> & possible_locations, std::vector<vec3d> & possible_local_coordinates, Tip* tip, double dt, FEMesh* mesh, double min_scale_factor);
+
 	//should be const and threadsafe
 	void PostGrowthUpdate(AngioElement* angio_elem, double end_time, int buffer_index, FEMesh* mesh, FEAngio* feangio);
 

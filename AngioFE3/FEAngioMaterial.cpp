@@ -369,9 +369,9 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	}
 	mat3d natc_to_global(er, es, et);
 	mat3d global_to_natc = natc_to_global.inverse();
-	vec3d psc_dir = psc_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip, mesh);
-	vec3d pdd_dir = pdd_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip, mesh, m_pangio);
-	double alpha = cm_manager->ApplyModifiers(0, active_tip, mesh);
+	vec3d psc_dir = psc_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip->angio_element, active_tip->GetLocalPosition(), active_tip->GetDirection(mesh), mesh);
+	vec3d pdd_dir = pdd_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip->angio_element, active_tip->GetLocalPosition() , mesh, m_pangio);
+	double alpha = cm_manager->ApplyModifiers(0, active_tip->angio_element, active_tip->GetLocalPosition(), mesh);
 	vec3d global_dir = mix(psc_dir, pdd_dir , (alpha * dt));
 	global_dir.unit();
 
@@ -466,8 +466,11 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 				{
 					double r[3];//new natural coordinates
 					sd->ProjectToElement(*ang_elem->_elem,pos,r);
-					if(m_pangio->IsInBounds(ang_elem->_elem, r))
+					if(m_pangio->IsInBounds(ang_elem->_elem, r, bounds_tolerance))
 					{
+						possible_locations.push_back(angio_element->adjacency_list[i]);
+						possible_local_coordinates.push_back(FEAngio::clamp_natc(angio_element->adjacency_list[i]->_elem->Type(),vec3d(r[0], r[1], r[2])));
+						/*
 						Tip * adj = new Tip(next, mesh);
 						adj->angio_element = angio_element->adjacency_list[i];
 						adj->face = angio_element;
@@ -478,8 +481,24 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 						angio_element->active_tips[next_buffer_index].at(ang_elem).push_back(adj);
 
 						break; // Place the tip in exactly one element
+						*/
 					}
 				}
+			}
+		}
+		if(possible_locations.size())
+		{
+			//need some way to choose the correct element to continue the tip in
+			int index = SelectNextTip(possible_locations, possible_local_coordinates, next, dt ,mesh, min_scale_factor);
+			if(index != -1)
+			{
+				Tip * adj = new Tip(next, mesh);
+				adj->angio_element = possible_locations[index];
+				adj->face = angio_element;
+				adj->SetLocalPosition(possible_local_coordinates[index]);
+				adj->use_direction = true;
+				adj->growth_velocity = grow_vel;
+				angio_element->active_tips[next_buffer_index].at(possible_locations[index]).push_back(adj);
 			}
 		}
 	}
@@ -490,6 +509,74 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		//this also might be when a segment is supposed to die
 		//assert(false);
 	}
+}
+//needs to be selected on some criteria 
+//possibilites include: longest possible growth length,
+//most similar in direction to the tip's direction and above a 
+
+int FEAngioMaterial::SelectNextTip(std::vector<AngioElement*> & possible_locations, std::vector<vec3d> & possible_local_coordinates, Tip* tip, double dt, FEMesh* mesh, double min_scale_factor)
+{
+	assert(possible_locations.size() == possible_local_coordinates.size());
+	if (possible_locations.size() == 1)
+		return 0;
+	auto dir = tip->GetDirection(mesh);
+	const double min_length = 2;//maybe some fraction of min element length
+	const double min_angle = 0.25;
+	std::vector<double> angles;
+	for(int i=0; i < possible_locations.size();i++)
+	{
+		vec3d psc_dir = psc_manager->ApplyModifiers(vec3d(1, 0, 0), possible_locations[i], possible_local_coordinates[i], tip->GetDirection(mesh), mesh);
+		vec3d pdd_dir = pdd_manager->ApplyModifiers(vec3d(1, 0, 0), possible_locations[i], possible_local_coordinates[i], mesh, m_pangio);
+		double alpha = cm_manager->ApplyModifiers(0, possible_locations[i], possible_local_coordinates[i], mesh);
+		vec3d global_dir = mix(psc_dir, pdd_dir, (alpha * dt));
+		global_dir.unit();
+		vec3d possible_dir = possible_locations[i]->_angio_mat->pdd_manager->ApplyModifiers({ 1,0,0 }, possible_locations[i], possible_local_coordinates[i], mesh, m_pangio);
+		double Gr[FEElement::MAX_NODES];
+		double Gs[FEElement::MAX_NODES];
+		double Gt[FEElement::MAX_NODES];
+		vec3d local_pos = possible_local_coordinates[i];
+		possible_locations[i]->_elem->shape_deriv(Gr, Gs, Gt, local_pos.x, local_pos.y, local_pos.z);
+		vec3d er, es, et; // Basis vectors of the natural coordinates
+		for (int j = 0; j < possible_locations[i]->_elem->Nodes(); j++)
+		{
+			er += mesh->Node(possible_locations[i]->_elem->m_node[j]).m_rt* Gr[j];
+		}
+		for (int j = 0; j < possible_locations[i]->_elem->Nodes(); j++)
+		{
+			es += mesh->Node(possible_locations[i]->_elem->m_node[j]).m_rt* Gs[j];
+		}
+		for (int j = 0; j < possible_locations[i]->_elem->Nodes(); j++)
+		{
+			et += mesh->Node(possible_locations[i]->_elem->m_node[j]).m_rt* Gt[j];
+		}
+		mat3d natc_to_global(er, es, et);
+		mat3d global_to_natc = natc_to_global.inverse();
+		vec3d nat_dir = global_to_natc * possible_dir;
+		double factor;
+		bool proj_sucess = m_pangio->ScaleFactorToProjectToNaturalCoordinates(possible_locations[i]->_elem, nat_dir, local_pos, factor, min_scale_factor);
+		if(proj_sucess && factor > min_length && possible_dir*dir >= min_angle)
+		{
+			angles.push_back(factor);
+		}
+		else
+		{
+			angles.push_back(-1);
+		}
+	}
+	double min = -1;
+	int index = -1;
+	for(int i=0;i < angles.size();i++)
+	{
+		if(angles[i] > min)
+		{
+			min = angles[i];
+			index = i;
+		}
+	}
+
+	
+
+	return index;
 }
 
 void FEAngioMaterial::PostGrowthUpdate(AngioElement* angio_elem, double end_time, int buffer_index, FEMesh* mesh, FEAngio* feangio)

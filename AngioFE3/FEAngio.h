@@ -83,6 +83,8 @@ public:
 	static double NaturalCoordinatesLowerBound_s(int et);
 	static double NaturalCoordinatesLowerBound_t(int et);
 
+	static vec3d clamp_natc(int et, vec3d natc);
+
 	//returns the extrema in global coordinates of the given elem
 	void ExtremaInElement(FESolidElement * se, std::vector<vec3d> & extrema) const;
 

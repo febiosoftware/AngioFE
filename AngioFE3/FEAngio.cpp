@@ -416,6 +416,13 @@ double FEAngio::NaturalCoordinatesLowerBound_t(int et)
 	}
 	return std::numeric_limits<double>::max();
 }
+vec3d FEAngio::clamp_natc(int et, vec3d natc)
+{
+	return vec3d(std::max(std::min(NaturalCoordinatesUpperBound_r(et),natc.x ), NaturalCoordinatesLowerBound_r(et)),
+		std::max(std::min(NaturalCoordinatesUpperBound_s(et), natc.y), NaturalCoordinatesLowerBound_s(et)),
+		std::max(std::min(NaturalCoordinatesUpperBound_t(et), natc.z), NaturalCoordinatesLowerBound_t(et))
+		);
+}
 
 //-----------------------------------------------------------------------------
 FEAngio::FEAngio(FEModel& fem) : ztopi(std::uniform_real_distribution<double>(0, PI)), 

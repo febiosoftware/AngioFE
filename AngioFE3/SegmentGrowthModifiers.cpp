@@ -6,9 +6,9 @@
 #include "FEAngioMaterialPoint.h"
 #include "FEAngio.h"
 
-vec3d PreviousSegmentPSC::ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh)
+vec3d PreviousSegmentPSC::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, vec3d prev_direction, FEMesh* mesh)
 {
-	return tip->GetDirection(mesh);
+	return prev_direction;
 }
 
 void FiberPDD::Update(FEMesh * mesh, FEAngio* angio)
@@ -16,7 +16,7 @@ void FiberPDD::Update(FEMesh * mesh, FEAngio* angio)
 
 }
 
-double PSCPDDContributionMix::ApplyModifiers(double prev, Tip* tip, FEMesh* mesh)
+double PSCPDDContributionMix::ApplyModifiers(double prev, AngioElement* angio_element, vec3d local_pos, FEMesh* mesh)
 {
 	return psc_weight;
 }
@@ -72,66 +72,27 @@ BEGIN_PARAMETER_LIST(SegmentVelocityDensityScaleModifier, SegmentGrowthVelocity)
 ADD_PARAMETER(m_density_scale_factor, FE_PARAM_VEC3D, "density_scale_factor");
 END_PARAMETER_LIST();
 
-vec3d FiberPDD::ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh, FEAngio* pangio)
+vec3d FiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, FEMesh* mesh, FEAngio* pangio)
 {
 	std::vector<quatd> gauss_data;
 	std::vector<quatd> nodal_data;
-	for(int i=0; i< tip->angio_element->_elem->GaussPoints();i++)
+	for(int i=0; i< angio_element->_elem->GaussPoints();i++)
 	{
-		FEMaterialPoint * mp = tip->angio_element->_elem->GetMaterialPoint(i);
+		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
 		FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
 		vec3d axis(1, 0, 0);
 		axis = emp->m_F * emp->m_Q * axis;
 		gauss_data.push_back({ axis });
 	}
 	
-	quatd rv = interpolation_prop->Interpolate(tip->angio_element->_elem, gauss_data, tip->GetLocalPosition(), mesh);
+	quatd rv = interpolation_prop->Interpolate(angio_element->_elem, gauss_data, local_pos, mesh);
 	vec3d fiber_direction = rv.GetVector();
 	return mix(prev, fiber_direction, contribution);
 }
 
-vec3d AnastomosisPDD::ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh, FEAngio* pangio)
+vec3d AnastomosisPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, FEMesh* mesh, FEAngio* pangio)
 {
-	// Information needed for calculations.
-	Tip*   closest_so_far = nullptr;
-	Tip*   candidate = nullptr;
-	vec3d  tip_position = tip->GetPosition(mesh);
-	vec3d  candidate_pos;
-	vec3d  direction_towards_candidate;
-	double distance_to_closest_so_far = std::numeric_limits<double>::max();
-	double distance_sq_to_candidate = 0;
 
-	// Storage for all active tips within the radius of the tip being looked at.
-	std::vector<Tip *> tips_in_radius;
-
-	// Get all tips within a specified radius to potentially anastomose with this one.
-	FEAngio::GetActiveFinalTipsInRadius(tip->angio_element, anastomosis_radius, pangio, tips_in_radius);
-
-	// Find the closest tip that is not a part of the same initial fragment.
-	for (int i = 0; i < tips_in_radius.size(); i++)
-	{
-		candidate = tips_in_radius.at(i);
-		candidate_pos = candidate->GetPosition(mesh);
-
-		distance_sq_to_candidate = (tip_position - candidate_pos).norm2();
-
-		if (distance_sq_to_candidate < distance_to_closest_so_far && tip->initial_fragment_id != candidate->initial_fragment_id)
-		{
-			closest_so_far = candidate;
-			distance_to_closest_so_far = distance_sq_to_candidate;
-		}
-	}
-
-	// No other tips with different initial fragment ID.
-	if (closest_so_far == nullptr)
-	{
-		return prev;
-	}
-
-	direction_towards_candidate = tip_position - candidate_pos;
-	direction_towards_candidate.unit();
-
-	return mix(prev, direction_towards_candidate, contribution);
 	return vec3d(0, 0, 0);
 }
 
@@ -141,30 +102,30 @@ ADD_PARAMETER(contribution, FE_PARAM_DOUBLE, "contribution");
 END_PARAMETER_LIST();
 
 // Managers
-vec3d PreviousSegmentContributionManager::ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh)
+vec3d PreviousSegmentContributionManager::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, vec3d prev_direction, FEMesh* mesh)
 {
 	for(int i=0; i < psc_modifiers.size();i++)
 	{
-		prev = psc_modifiers[i]->ApplyModifiers(prev, tip, mesh);
+		prev = psc_modifiers[i]->ApplyModifiers(prev, angio_element,local_pos, prev_direction, mesh);
 	}
 	return prev;
 }
 
 
-vec3d PositionDependentDirectionManager::ApplyModifiers(vec3d prev, Tip* tip, FEMesh* mesh, FEAngio* pangio)
+vec3d PositionDependentDirectionManager::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, FEMesh* mesh, FEAngio* pangio)
 {
 	for (int i = 0; i < pdd_modifiers.size(); i++)
 	{
-		prev = pdd_modifiers[i]->ApplyModifiers(prev, tip, mesh, pangio);
+		prev = pdd_modifiers[i]->ApplyModifiers(prev, angio_element, local_pos , mesh, pangio);
 	}
 	return prev;
 }
 
-double ContributionMixManager::ApplyModifiers(double prev, Tip* tip, FEMesh* mesh)
+double ContributionMixManager::ApplyModifiers(double prev, AngioElement* angio_element, vec3d local_pos, FEMesh* mesh)
 {
 	for (int i = 0; i < cm_modifiers.size(); i++)
 	{
-		prev = cm_modifiers[i]->ApplyModifiers(prev, tip, mesh);
+		prev = cm_modifiers[i]->ApplyModifiers(prev, angio_element,local_pos, mesh);
 	}
 	return prev;
 }
