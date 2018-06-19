@@ -26,128 +26,53 @@ vec3d BranchPolicy::GetBranchDirection(vec3d local_pos, vec3d parent_direction)
 
 void DelayedBranchingPolicy::AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, FEMesh* mesh, FEAngio* feangio)
 {
+	//this algorithm is n^2 there propably exists an nlogn algorithm
 	DelayBranchInfo * dbi = dynamic_cast<DelayBranchInfo*>(angio_elem->branch_info);
 	//calculate where and when the branches shoud occour
 	if(angio_elem->processed_recent_segments == angio_elem->recent_segments.size())
 	{
 		return;
 	}
-	//assemble a list of when the number of segments in an element at a time change
-	//ordered by time from earliest to latest
-	std::list<BranchPoint> bps;
-
+	//get points of interest 
+	std::set<double> poi;
+	for(int i= angio_elem->processed_recent_segments; i < angio_elem->recent_segments.size();i++)
 	{
-		Segment * seg = angio_elem->recent_segments[angio_elem->processed_recent_segments];
-		BranchPoint bpt(seg->back->time, seg->front->time);
-		bpt.current_segments.push_back(seg);
+		Segment * seg = angio_elem->recent_segments[i];
+		poi.insert(seg->front->time);
+		poi.insert(seg->back->time);
+	}
+	//order the points of interst
+	std::vector<double> ordered_poi;
+	ordered_poi.reserve(poi.size());
+	for(auto iter = poi.begin(); iter != poi.end(); ++iter)
+	{
+		ordered_poi.push_back(*iter);
+	}
+	//may do nothing due to using set
+	std::sort(ordered_poi.begin(), ordered_poi.end());
+
+	//construct branch points
+	std::list<BranchPoint> bps;
+	for(int i=0; i < ordered_poi.size() -1;i++)
+	{
+		BranchPoint bpt(ordered_poi[i], ordered_poi[i+1]);
 		bps.push_back(bpt);
 	}
-
-	
-	for(int i=angio_elem->processed_recent_segments + 1; i< angio_elem->recent_segments.size();i++)
+	//add segments to all branch points that contain them
+	for (int i = angio_elem->processed_recent_segments; i < angio_elem->recent_segments.size(); i++)
 	{
-		bool last_placed = false;
-		bool first_placed = true;
-		auto iter = bps.begin();
-		for(; iter != bps.end();++iter)
+		Segment * seg = angio_elem->recent_segments[i];
+		for(auto iter = bps.begin(); iter != bps.end(); ++iter)
 		{
-			Segment * seg = angio_elem->recent_segments[i];
-			//insert leading branch point
-			if(iter->_start_time > seg->back->time)
+			if(seg->front->time >= iter->_end_time && seg->back->time <= iter->_start_time)
 			{
-				//break up the bpt
-				BranchPoint bpt(seg->back->time, iter->_start_time);
-				bpt.current_segments.push_back(seg);
-				bps.insert(iter, bpt);
-				++iter;
-				//does this work in high density situations?
-				first_placed = true;
-				break;
-			}
-			//do a middle split
-			else if(iter->_start_time < seg->back->time && iter->_end_time > seg->back->time)
-			{
-				BranchPoint bpt(seg->back->time, iter->_end_time);
-				iter->_end_time = seg->back->time;
-				for(int j=0; j < iter->current_segments.size();j++)
-				{
-					bpt.current_segments.push_back(iter->current_segments[j]);
-				}
-				++iter;
-				bps.insert(iter, bpt);
-				//does this work in high density situations?
-				first_placed = true;
-				break;
-			}
-			//well aligned segments
-			else if(iter->_start_time == seg->back->time)
-			{
-				//iter now points to the correct bpt 
-				first_placed = true;
-				break;
-			}
-		}
-		//now advance to the end
-		for (; iter != bps.end() && first_placed; ++iter)
-		{
-			//still need to place
-			Segment * seg = angio_elem->recent_segments[i];
-			if (iter->_end_time > seg->front->time)
-			{
-				//break up the bpt
-				
-				BranchPoint bpt(seg->front->time, iter->_end_time);
-				
-				iter->_end_time = seg->front->time;
-				for(int j=0; j < iter->current_segments.size();j++)
-				{
-					bpt.current_segments.push_back(iter->current_segments[j]);
-				}
 				iter->current_segments.push_back(seg);
-				auto next = iter;
-				++next;
-				bps.insert(next, bpt);
-				last_placed = true;
-				break;
 			}
-			else if (iter->_end_time == seg->front->time)
-			{
-				//add the segment to the current bucket
-				iter->current_segments.push_back(seg);
-				//iter now points to the correct bpt 
-				last_placed = true;
-				break;
-			}
-			else
-			{
-				//add the segment to the current bucket
-				iter->current_segments.push_back(seg);
-				last_placed = true;
-			}
-		}
-		if (!last_placed)
-		{
-			/*
-			auto prev = iter;
-			--prev;
-			Segment * seg = angio_elem->recent_segments[i];
-			if(seg->back->time == prev->_start_time && seg->front->time == prev->_end_time)
-			{
-				prev->current_segments.push_back(seg);
-			}
-			//do a split
-
-			//trailing disconnected segment
-			else
-			{
-				BranchPoint bpt(seg->back->time, seg->front->time);
-				bps.insert(iter, bpt);
-			}
-			*/
-			
 		}
 	}
 
+
+	//verify the container with the branch points has been constructed correctly
 #ifndef NDEBUG
 	for(auto iter = bps.begin(); iter != bps.end();++iter)
 	{
@@ -184,7 +109,7 @@ void DelayedBranchingPolicy::AddBranches(AngioElement * angio_elem, int buffer_i
 	assert(dynamic_cast<DelayBranchInfo*>(angio_elem->branch_info));
 	double & remaing_l2b = dynamic_cast<DelayBranchInfo*>(angio_elem->branch_info)->length_to_branch;
 
-	//process all of the branch points
+	//process all of the branch points, creates the futre points at which branches will occour
 	while(bps.size())
 	{
 		BranchPoint & cur = bps.front();
