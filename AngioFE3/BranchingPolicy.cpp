@@ -59,6 +59,7 @@ void DelayedBranchingPolicy::AddBranches(AngioElement * angio_elem, int buffer_i
 				BranchPoint bpt(seg->back->time, iter->_start_time);
 				bpt.current_segments.push_back(seg);
 				bps.insert(iter, bpt);
+				++iter;
 				//does this work in high density situations?
 				first_placed = true;
 				break;
@@ -68,14 +69,12 @@ void DelayedBranchingPolicy::AddBranches(AngioElement * angio_elem, int buffer_i
 			{
 				BranchPoint bpt(seg->back->time, iter->_end_time);
 				iter->_end_time = seg->back->time;
-				bpt.current_segments.push_back(seg);
 				for(int j=0; j < iter->current_segments.size();j++)
 				{
 					bpt.current_segments.push_back(iter->current_segments[j]);
 				}
-				auto next = iter;
-				++next;
-				bps.insert(next, bpt);
+				++iter;
+				bps.insert(iter, bpt);
 				//does this work in high density situations?
 				first_placed = true;
 				break;
@@ -89,7 +88,7 @@ void DelayedBranchingPolicy::AddBranches(AngioElement * angio_elem, int buffer_i
 			}
 		}
 		//now advance to the end
-		for (; iter != bps.end(); ++iter)
+		for (; iter != bps.end() && first_placed; ++iter)
 		{
 			//still need to place
 			Segment * seg = angio_elem->recent_segments[i];
@@ -123,22 +122,43 @@ void DelayedBranchingPolicy::AddBranches(AngioElement * angio_elem, int buffer_i
 			{
 				//add the segment to the current bucket
 				iter->current_segments.push_back(seg);
+				last_placed = true;
 			}
 		}
 		if (!last_placed)
 		{
+			/*
 			auto prev = iter;
 			--prev;
 			Segment * seg = angio_elem->recent_segments[i];
-			BranchPoint bpt(prev->_end_time, seg->front->time);
-			bps.insert(iter, bpt);
+			if(seg->back->time == prev->_start_time && seg->front->time == prev->_end_time)
+			{
+				prev->current_segments.push_back(seg);
+			}
+			//do a split
+
+			//trailing disconnected segment
+			else
+			{
+				BranchPoint bpt(seg->back->time, seg->front->time);
+				bps.insert(iter, bpt);
+			}
+			*/
+			
 		}
 	}
 
 #ifndef NDEBUG
 	for(auto iter = bps.begin(); iter != bps.end();++iter)
 	{
-		for(int i=0;i < iter->current_segments.size();i++)
+		auto next = iter;
+		++next;
+		if(next != bps.end())
+		{
+			assert(iter->_end_time <= next->_start_time);
+		}
+		assert(iter->_start_time < iter->_end_time);
+		for (int i = 0; i < iter->current_segments.size(); i++)
 		{
 			//check the segment is within the time bounds
 			assert(iter->current_segments[i]->front->time >= iter->_end_time);
