@@ -61,9 +61,10 @@ private:
 	class BranchPoint
 	{
 	public:
+		explicit BranchPoint(double start_time, double end_time) : _start_time(start_time), _end_time(end_time) { assert(end_time > start_time); }
 		//only needed while creating the collection of branch points
-		double start_time = 0.0;
-		double end_time = 0.0;
+		double _start_time = 0.0;
+		double _end_time = 0.0;
 
 		double length =0.0;
 		double processed =0.0;
