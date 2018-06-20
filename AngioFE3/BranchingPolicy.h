@@ -2,6 +2,7 @@
 #include <FECore/FEMaterial.h>
 #include "AngioElement.h"
 #include "FEProbabilityDistribution.h"
+#include "VariableInterpolation.h"
 
 class FEAngio;
 
@@ -12,16 +13,58 @@ public:
 	virtual ~BranchInfo(){}
 };
 
+class ZenithAngle : public FEMaterial
+{
+public:
+	ZenithAngle(FEModel* pfem) : FEMaterial(pfem) {}
+	virtual double GetZenithAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element) = 0;
+};
+
+class AzmuthAngle :public FEMaterial
+{
+public:
+	AzmuthAngle(FEModel* pfem) : FEMaterial(pfem) {}
+	virtual double GetAzmuthAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element) = 0;
+};
+
+class ZenithAngleProbabilityDistribution : public ZenithAngle
+{
+public:
+	ZenithAngleProbabilityDistribution(FEModel* pfem) : ZenithAngle(pfem) { AddProperty(&angle, "angle"); }
+	double GetZenithAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element) override;
+	bool Init() override { return angle->Init(); }
+private:
+	FEPropertyT<FEProbabilityDistribution> angle;
+};
+
+class AzmuthAngleProbabilityDistribution :public AzmuthAngle
+{
+public:
+	AzmuthAngleProbabilityDistribution(FEModel* pfem) : AzmuthAngle(pfem) { AddProperty(&angle, "angle"); }
+	double GetAzmuthAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element) override;
+	bool Init() override {return angle->Init();}
+private:
+	FEPropertyT<FEProbabilityDistribution> angle;
+};
 class BranchPolicy :public FEMaterial
 {
 public:
-	BranchPolicy(FEModel* pfem) : FEMaterial(pfem) {}
+	BranchPolicy(FEModel* pfem) : FEMaterial(pfem) { 
+		AddProperty(&azmuth_angle, "azmuth_angle"); 
+		AddProperty(&zenith_angle, "zenith_angle");
+		AddProperty(&interpolation_prop, "interpolation_prop");
+	}
 	virtual ~BranchPolicy(){};
 	virtual void AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, FEMesh* mesh, FEAngio* feangio)=0;
 	virtual void SetupBranchInfo(AngioElement * angio_elem) = 0;
 	//adds a branch tip at the given natural coordinates
-	void AddBranchTip(AngioElement * angio_element, vec3d local_pos, vec3d parent_direction, double start_time, int vessel_id, int buffer_index);
-	vec3d GetBranchDirection(vec3d local_pos, vec3d parent_direction);
+	void AddBranchTip(AngioElement * angio_element, vec3d local_pos, vec3d parent_direction, double start_time, int vessel_id, int buffer_index, FEMesh* mesh);
+	vec3d GetBranchDirection(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element, FEMesh* mesh);
+private:
+	//angles are in radians
+	FEPropertyT<AzmuthAngle> azmuth_angle;
+	FEPropertyT<ZenithAngle> zenith_angle;
+	FEPropertyT<FEVariableInterpolation> interpolation_prop;
 };
 class FutureBranch
 {

@@ -3,23 +3,43 @@
 #include "Segment.h"
 #include "FEAngio.h"
 
-void BranchPolicy::AddBranchTip(AngioElement * angio_element, vec3d local_pos, vec3d parent_direction, double start_time, int vessel_id, int buffer_index)
+void BranchPolicy::AddBranchTip(AngioElement * angio_element, vec3d local_pos, vec3d parent_direction, double start_time, int vessel_id, int buffer_index, FEMesh* mesh)
 {
 	Tip * branch = new Tip();
 	branch->time = start_time;
 	branch->angio_element = angio_element;
 	branch->SetLocalPosition(local_pos);
 	branch->initial_fragment_id = vessel_id;
-	branch->direction = GetBranchDirection(local_pos, parent_direction);
+	branch->direction = GetBranchDirection(local_pos, parent_direction,angio_element,mesh);
 	branch->use_direction = true;
 	branch->is_branch = true;
 
 	angio_element->active_tips[(buffer_index + 1 % 2)].at(angio_element).push_back(branch);
 }
 
-vec3d BranchPolicy::GetBranchDirection(vec3d local_pos, vec3d parent_direction)
+vec3d BranchPolicy::GetBranchDirection(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element, FEMesh* mesh)
 {
-	return vec3d(1, 0, 0);
+	//get the fiber direction to form a basis to determine the branch directions
+	std::vector<quatd> gauss_data;
+	std::vector<quatd> nodal_data;
+	for (int i = 0; i< angio_element->_elem->GaussPoints(); i++)
+	{
+		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
+		FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
+		vec3d axis(1, 0, 0);
+		axis = emp->m_F * emp->m_Q * axis;
+		gauss_data.push_back({ axis });
+	}
+
+	quatd rv = interpolation_prop->Interpolate(angio_element->_elem, gauss_data, local_pos, mesh);
+	vec3d fiber_direction = rv.GetVector();
+	vec3d normal = fiber_direction ^ parent_direction;
+	vec3d corrected_fiber_direction = normal ^ parent_direction;//make the fiber direction be ortogonal to parent direction
+
+	quatd zenith_rotation(zenith_angle->GetZenithAngle(local_pos, parent_direction, angio_element), corrected_fiber_direction);
+	quatd azmuth_rotation(azmuth_angle->GetAzmuthAngle(local_pos, parent_direction, angio_element), parent_direction);
+
+	return azmuth_rotation.RotationMatrix() * zenith_rotation.RotationMatrix() * parent_direction;
 }
 
 
@@ -148,7 +168,7 @@ void DelayedBranchingPolicy::AddBranches(AngioElement * angio_elem, int buffer_i
 		while((iter != dbi->future_branches.end()) && (iter->_start_time < end_time))
 		{
 			//grow this segment
-			AddBranchTip(angio_elem, iter->_local_pos, iter->_parent->Direction(mesh), iter->_start_time, iter->_parent->GetInitialFragmentID(), buffer_index);
+			AddBranchTip(angio_elem, iter->_local_pos, iter->_parent->Direction(mesh), iter->_start_time, iter->_parent->GetInitialFragmentID(), buffer_index,mesh);
 			iter = dbi->future_branches.erase(iter);
 		}
 		if (iter == dbi->future_branches.end())
@@ -160,4 +180,14 @@ void DelayedBranchingPolicy::SetupBranchInfo(AngioElement * angio_elem)
 	angio_elem->branch_info = new DelayBranchInfo();
 	DelayBranchInfo *dbi = dynamic_cast<DelayBranchInfo*>(angio_elem->branch_info);
 	dbi->length_to_branch = l2b->NextValue(angio_elem->_rengine);
+}
+
+double ZenithAngleProbabilityDistribution::GetZenithAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element)
+{
+	return angle->NextValue(angio_element->_rengine);
+}
+
+double AzmuthAngleProbabilityDistribution::GetAzmuthAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element)
+{
+	return angle->NextValue(angio_element->_rengine);
 }
