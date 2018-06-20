@@ -31,6 +31,7 @@ FEPluginFactory_T<FECauchyDistribution     , FEMATERIAL_ID> cauchy_distribution_
 FEPluginFactory_T<FEChiSquaredDistribution , FEMATERIAL_ID> chi_squared_distribution_factory("chi_squared_distribution");
 FEPluginFactory_T<FEWeibullDistribution    , FEMATERIAL_ID> weibull_distribution_factory    ("weibull_distribution"    );
 FEPluginFactory_T<FEGammaDistribution      , FEMATERIAL_ID> gamma_distribution_factory      ("gamma_distribution"      );
+FEPluginFactory_T<FEFixedDistribution, FEMATERIAL_ID> fixed_distribution_factory("fixed_distribution");
 
 // Stress Policy Classes
 FEPluginFactory_T<SigmoidAngioStressPolicy     , FEMATERIAL_ID> sigmoid_angio_stress_policy_factory("sigmoid_angio_stress_policy");
@@ -196,7 +197,7 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		//random distribution
 		&cauchy_distribution_factory, &chi_squared_distribution_factory, &weibull_distribution_factory,
 		&gamma_distribution_factory,&normal_distribution_factory, &exponential_distribution_factory,
-		&uniform_distribution_factory,
+		&uniform_distribution_factory, &fixed_distribution_factory,
 		
 		//ggp's
 

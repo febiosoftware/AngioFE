@@ -194,3 +194,22 @@ private:
 
 	DECLARE_PARAMETER_LIST();
 };
+
+class FEFixedDistribution : public FEProbabilityDistribution
+{
+public:
+	explicit FEFixedDistribution(FEModel* pfem) : FEProbabilityDistribution(pfem) {}
+
+	//generates the next value in the given sequence which fits a given distribution
+	//this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
+	//nan will be returned if the distribution fails to find a suitable number
+	double NextValue(angiofe_random_engine & re) override;
+
+	bool Init() override;
+
+
+private:
+	double value = 1.0;
+
+	DECLARE_PARAMETER_LIST();
+};

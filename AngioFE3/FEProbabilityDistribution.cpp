@@ -250,3 +250,19 @@ BEGIN_PARAMETER_LIST(FEGammaDistribution, FEProbabilityDistribution)
 ADD_PARAMETER(alpha, FE_PARAM_DOUBLE, "alpha");
 ADD_PARAMETER(beta, FE_PARAM_DOUBLE, "beta");
 END_PARAMETER_LIST();
+
+//implemenations of FENormalDistribution
+double FEFixedDistribution::NextValue(angiofe_random_engine & re)
+{
+	return value;
+}
+
+bool FEFixedDistribution::Init()
+{
+	return true;
+}
+
+
+BEGIN_PARAMETER_LIST(FEFixedDistribution, FEProbabilityDistribution)
+ADD_PARAMETER(value, FE_PARAM_DOUBLE, "value");
+END_PARAMETER_LIST();
