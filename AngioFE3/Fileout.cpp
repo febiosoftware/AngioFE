@@ -18,7 +18,7 @@ Fileout::Fileout(FEAngio& angio)
 {
     logstream.open("out_log.csv");
 	//write the headers
-	logstream << "Time,Material,Segments,Total Length,Vessels,Branch Points,Anastamoses,Active Tips,Sprouts" << endl;
+	logstream << "Time,Segments,Total Length,Vessels,Branches,Anastamoses,Active Tips" << endl;
 
 #ifndef NDEBUG
 	vessel_csv_stream.open("vessels.csv");
@@ -73,11 +73,10 @@ Fileout::~Fileout()
 //-----------------------------------------------------------------------------
 void Fileout::printStatus(FEAngio& angio)
 {
-	//now updated to a form which can be easily consumed by excel
-	for (size_t i = 0; i < angio.m_pmat.size(); i++)
-	{
+	//just store the status in a csv
+	//logstream << "Time,Segments,Total Length,Vessels,Branchs,Anastamoses,Active Tips" << endl;
 
-	}
+	logstream << angio.GetFEModel()->GetTime().currentTime << ","<< getSegmentCount(angio) <<"," << getSegmentLength(angio)<< ",," << getBranchCount(angio) << ",," << getTipCount(angio) << std::endl;
 }
 
 void PrintSegment(vec3d r0, vec3d r1)
@@ -235,6 +234,49 @@ void Fileout::save_feangio_stats(FEAngio& angio)
 void Fileout::save_winfiber(FEAngio& angio)
 {
 
+}
+
+int Fileout::getBranchCount(FEAngio& angio)
+{
+	int count = 0;
+	for(int i=0; i < angio.angio_elements.size();i++)
+	{
+		count += angio.angio_elements[i]->branch_count;
+	}
+	return count;
+}
+
+int Fileout::getSegmentCount(FEAngio& angio)
+{
+	int count = 0;
+	for (int i = 0; i < angio.angio_elements.size(); i++)
+	{
+		count += angio.angio_elements[i]->grown_segments.size();
+	}
+	return count;
+}
+
+double Fileout::getSegmentLength(FEAngio& angio)
+{
+	double len= 0;
+	for (int i = 0; i < angio.angio_elements.size(); i++)
+	{
+		len += angio.angio_elements[i]->global_segment_length;
+	}
+	return len;
+}
+
+int Fileout::getTipCount(FEAngio& angio)
+{
+	int count = 0;
+	for (int i = 0; i < angio.angio_elements.size(); i++)
+	{
+		for(auto iter = angio.angio_elements[i]->next_tips.begin(); iter != angio.angio_elements[i]->next_tips.end();++iter)
+		{
+			count += iter->second.size();
+		}
+	}
+	return count;
 }
 
 

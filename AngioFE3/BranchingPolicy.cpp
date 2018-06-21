@@ -15,6 +15,7 @@ void BranchPolicy::AddBranchTip(AngioElement * angio_element, vec3d local_pos, v
 	branch->is_branch = true;
 
 	angio_element->active_tips[(buffer_index + 1 % 2)].at(angio_element).push_back(branch);
+	angio_element->branch_count++;
 }
 
 vec3d BranchPolicy::GetBranchDirection(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element, FEMesh* mesh)

@@ -283,6 +283,21 @@ bool FEPlotAngioGradientCenter::Save(FEDomain& d, FEDataStream& str)
 	return true;
 };
 
+bool FEPlotBranches::Save(FEDomain& d, FEDataStream& str)
+{
+	for(int i=0; i < d.Elements();i++)
+	{
+		FEElement & elem = d.ElementRef(i);
+		FESolidElement *se = dynamic_cast<FESolidElement*>(&elem);
+		if(se)
+		{
+			AngioElement * angio_element = pfeangio->se_to_angio_element.at(se);
+			str << static_cast<double>(angio_element->branch_count);
+		}
+	}
+	
+	return true;
+};
 
 bool FEPlotAngioGradient::Save(FEMesh & m, FEDataStream & a)
 {

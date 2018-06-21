@@ -82,6 +82,15 @@ public:
 	bool Save(FEDomain& d, FEDataStream& str) override;
 };
 
+//-----------------------------------------------------------------------------
+class FEPlotBranches : public FEDomainData
+{
+public:
+	explicit FEPlotBranches(FEModel* pfem) : FEDomainData(PLT_FLOAT, FMT_ITEM) {}
+	bool Save(FEDomain& d, FEDataStream& str) override;
+};
+
+
 class FEPlotAngioGradient : public FENodeData
 {
 public:
@@ -104,6 +113,8 @@ public:
 	explicit FEPlotAngioECMAlpha(FEModel* pfem) : FENodeData(PLT_FLOAT, FMT_ITEM){}
 	bool Save(FEMesh& m, FEDataStream& a)  override;
 };
+
+
 
 /*
 //-----------------------------------------------------------------------------

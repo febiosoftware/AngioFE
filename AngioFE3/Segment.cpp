@@ -24,3 +24,8 @@ int Segment::GetInitialFragmentID()const
 {
 	return front->initial_fragment_id;
 }
+
+double Segment::Length(FEMesh * mesh)const
+{
+	return (front->GetPosition(mesh) - back->GetPosition(mesh)).norm();
+}

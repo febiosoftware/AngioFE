@@ -26,10 +26,16 @@ public:
 	void save_active_tips(FEAngio& angio) const;
 	void save_timeline(FEAngio& angio);
 	void save_winfiber(FEAngio& angio);
+	//timing statistics
 	void save_feangio_stats(FEAngio& angio);
 	static void save_final_vessel_csv(FEAngio & angio);
 
 private:
+	int getBranchCount(FEAngio& angio);
+	int getSegmentCount(FEAngio& angio);
+	double getSegmentLength(FEAngio& angio);
+	int getTipCount(FEAngio& angio);
+
 	std::ofstream logstream;
 
 	FILE*	m_stream4 = 0;	// active tips

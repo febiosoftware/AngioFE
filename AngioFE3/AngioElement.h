@@ -39,6 +39,8 @@ public:
 	std::vector<Tip*> final_active_tips;
 
 	BranchInfo * branch_info = nullptr;
+	int branch_count = 0;
+	double global_segment_length = 0.0;
 
 	int padding[16];
 };

@@ -53,6 +53,8 @@ public:
 	//gets the global position of the local coordinates given an element
 	vec3d Position(FESolidElement * se, vec3d local) const;
 
+	void CalculateSegmentLengths(FEMesh* mesh);
+
 
 	mat3d unifromRandomRotationMatrix(angiofe_random_engine & rengine) const;
 	mat3d rotationMatrix(double alpha, double beta, double gamma);
@@ -70,6 +72,7 @@ public:
 	friend class FEPlotAngioECMDensity;
 	friend class FEPlotAngioECMAlpha;
 	friend class FEPlotAngioGradient;
+	friend class FEPlotBranches;
 	//the following friendships are bad and need removed eventually
 	//TODO: remove the freindship, creation in the old way requires this
 	//or consider making the node and element data public

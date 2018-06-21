@@ -975,6 +975,22 @@ vec3d FEAngio::Position(FESolidElement * se, vec3d local) const
 	return rc;
 }
 
+void FEAngio::CalculateSegmentLengths(FEMesh* mesh)
+{
+	int angio_elements_size = angio_elements.size();
+#pragma omp parallel for schedule(dynamic, 16)
+	for(int i=0; i < angio_elements_size;i++)
+	{
+		AngioElement * angio_element = angio_elements[i];
+		angio_element->global_segment_length = 0.0;//reset this
+		for(int j=0; j < angio_element->grown_segments.size();j++)
+		{
+			angio_element->global_segment_length += angio_element->grown_segments[j]->Length(mesh);
+		}
+	}
+}
+
+
 //-----------------------------------------------------------------------------
 void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 {
@@ -1090,7 +1106,7 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		if (!m_fem->GetGlobalConstant("no_io"))
 		{
 			// save active tips
-
+			CalculateSegmentLengths(mesh);
 			// Print the status of angio3d to the user    
 			fileout->printStatus(*this);
 		}
