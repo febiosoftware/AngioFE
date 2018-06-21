@@ -703,7 +703,6 @@ int FEAngioMaterial::SelectNextTip(std::vector<AngioElement*> & possible_locatio
 	if (possible_locations.size() == 1)
 		return 0;
 	auto dir = tip->GetDirection(mesh);
-	const double min_length = 2;//maybe some fraction of min element length
 	const double min_angle = 0.25;
 	std::vector<double> angles;
 	for(int i=0; i < possible_locations.size();i++)
@@ -737,7 +736,7 @@ int FEAngioMaterial::SelectNextTip(std::vector<AngioElement*> & possible_locatio
 		vec3d nat_dir = global_to_natc * possible_dir;
 		double factor;
 		bool proj_sucess = m_pangio->ScaleFactorToProjectToNaturalCoordinates(possible_locations[i]->_elem, nat_dir, local_pos, factor, min_scale_factor);
-		if(proj_sucess && factor > min_length && possible_dir*dir >= min_angle)
+		if(proj_sucess && factor > min_scale_factor && possible_dir*dir >= min_angle)
 		{
 			angles.push_back(factor);
 		}

@@ -96,7 +96,7 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance)
 		
 		double ctime = next_time + min_dt;
 
-		#pragma omp parallel for schedule(dynamic, 32)
+		#pragma omp parallel for schedule(dynamic, 16)
 		for (int j = 0; j <angio_element_count; j++)
 		{
 			angio_elements[j]->_angio_mat->PrepBuffers(angio_elements[j], next_time, buffer_index);
@@ -107,13 +107,13 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance)
 			int n = 3;
 			for (int i = 0; i <n; i++)
 			{
-#pragma omp parallel for schedule(dynamic, 32)
+#pragma omp parallel for schedule(dynamic, 16)
 				for (int j = 0; j <angio_element_count; j++)
 				{
 					angio_elements.at(j)->_angio_mat->GrowSegments(angio_elements.at(j), ctime, buffer_index, min_scale_factor,bounds_tolerance);
 				}
 
-#pragma omp parallel for schedule(dynamic, 32)
+#pragma omp parallel for schedule(dynamic, 16)
 				for (int j = 0; j <angio_element_count; j++)
 				{
 					angio_elements[j]->_angio_mat->PostGrowthUpdate(angio_elements[j], ctime, buffer_index, mesh,this);
@@ -1005,7 +1005,11 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 #pragma omp parallel for schedule(dynamic, 16)
 		for (int i = 0; i < angio_element_count; i++)
 		{
-			if(angio_elements[i]->_angio_mat->branch_policy)
+			if(angio_elements[i]->_angio_mat->proto_branch_policy)
+			{
+				angio_elements[i]->_angio_mat->proto_branch_policy->SetupBranchInfo(angio_elements[i]);
+			}
+			else if(angio_elements[i]->_angio_mat->branch_policy)
 			{
 				angio_elements[i]->_angio_mat->branch_policy->SetupBranchInfo(angio_elements[i]);
 			}
