@@ -21,6 +21,8 @@ public:
 	virtual ~Fileout();
 	void printStatus(FEAngio& angio);
 	void save_vessel_state(FEAngio& angio);
+	//saves all segments not just recent ones, should only be used in initialization
+	void bulk_save_vessel_state(FEAngio& angio);
 	void save_active_tips(FEAngio& angio) const;
 	void save_timeline(FEAngio& angio);
 	void save_winfiber(FEAngio& angio);

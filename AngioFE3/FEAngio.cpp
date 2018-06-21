@@ -142,6 +142,83 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance)
 
 }
 
+void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance)
+{
+	//grow from time -1 to time 0
+	auto   time_info = m_fem->GetTime();
+	auto   mesh = GetMesh();
+	double min_dt = std::numeric_limits<double>::max();
+	size_t angio_element_count = angio_elements.size();
+
+	while(next_time < 0)
+	{
+		// Is it valid for this to run more than once? only 
+		if (time_info.currentTime >= next_time)
+		{
+#pragma omp parallel for shared(min_dt)
+			for (int i = 0; i < angio_element_count; ++i)
+			{
+				double temp_dt = angio_elements[i]->_angio_mat->GetMin_dt(angio_elements[i], mesh);
+#pragma omp critical
+				{
+					min_dt = std::min(min_dt, temp_dt);
+				}
+			}
+
+			double ctime = next_time + min_dt;
+			//clamp the dt to hit zero
+			if(ctime > 0)
+			{
+				min_dt = 0.0 - next_time;
+				ctime = 0;
+			}
+
+#pragma omp parallel for schedule(dynamic, 32)
+			for (int j = 0; j <angio_element_count; j++)
+			{
+				angio_elements[j]->_angio_mat->PrepBuffers(angio_elements[j], next_time, buffer_index);
+			}
+			//worse performace than separate declarations
+			//#pragma omp parallel
+			{
+				int n = 3;
+				for (int i = 0; i <n; i++)
+				{
+#pragma omp parallel for schedule(dynamic, 32)
+					for (int j = 0; j <angio_element_count; j++)
+					{
+						angio_elements.at(j)->_angio_mat->ProtoGrowSegments(angio_elements.at(j), ctime, buffer_index, min_scale_factor, bounds_tolerance);
+					}
+
+#pragma omp parallel for schedule(dynamic, 32)
+					for (int j = 0; j <angio_element_count; j++)
+					{
+						angio_elements[j]->_angio_mat->ProtoPostGrowthUpdate(angio_elements[j], ctime, buffer_index, mesh, this);
+					}
+					buffer_index = (buffer_index + 1) % 2;
+				}
+			}
+
+		}
+
+		//do the cleanup if needed
+		if (time_info.currentTime >= next_time)
+		{
+			next_time += min_dt;
+			printf("\nangio dt chosen is: %lg next angio time\n", min_dt);
+#pragma omp parallel for schedule(dynamic, 16)
+			for (int j = 0; j <angio_element_count; j++)
+			{
+				angio_elements[j]->_angio_mat->Cleanup(angio_elements[j], next_time, buffer_index);
+			}
+			buffer_index = (buffer_index + 1) % 2;
+		}
+	}
+
+	//do the output, this will output all of the segments
+	fileout->bulk_save_vessel_state(*this);
+}
+
 void FEAngio::GetActiveFinalTipsInRadius(AngioElement* angio_element, double radius, FEAngio* pangio, std::vector<Tip *> & tips)
 {
 	std::unordered_set<AngioElement *> visited;
@@ -934,7 +1011,7 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 			}
 		}
 		grow_timer.start();
-		GrowSegments(min_scale_factor,bounds_tolerance);
+		ProtoGrowSegments(min_scale_factor,bounds_tolerance);
 		grow_timer.stop();
 
 

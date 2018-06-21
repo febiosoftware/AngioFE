@@ -140,6 +140,56 @@ void Fileout::save_vessel_state(FEAngio& angio)
 	assert(crc_segcount == new_seg_count);
 }
 
+void Fileout::bulk_save_vessel_state(FEAngio& angio)
+{
+	unsigned int new_seg_count = 0;
+	for (int i = 0; i <angio.angio_elements.size(); i++)
+	{
+		new_seg_count += angio.angio_elements[i]->grown_segments.size();
+	}
+
+	//write segcount and time
+	fwrite(&new_seg_count, sizeof(unsigned int), 1, vessel_state_stream);
+	auto ti = angio.GetFEModel()->GetTime();
+	float rtime = static_cast<float>(ti.currentTime);
+	fwrite(&rtime, sizeof(float), 1, vessel_state_stream) == sizeof(float);
+
+	unsigned int crc_segcount = 0;
+	for (int i = 0; i <angio.angio_elements.size(); i++)
+	{
+		for (int j = 0; j < angio.angio_elements[i]->grown_segments.size(); j++)
+		{
+			crc_segcount++;
+			Tip * back_tip = angio.angio_elements[i]->grown_segments[j]->back;
+			Tip * front_tip = angio.angio_elements[i]->grown_segments[j]->front;
+			vec3d r0 = angio.ReferenceCoordinates(back_tip);
+			vec3d r1 = angio.ReferenceCoordinates(front_tip);
+
+			PrintSegment(r0, r1);
+			//consider checking fwrites return values
+			float cur = static_cast<float>(r0.x);
+			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
+			cur = static_cast<float>(r0.y);
+			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
+			cur = static_cast<float>(r0.z);
+			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
+
+			cur = static_cast<float>(r1.x);
+			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
+			cur = static_cast<float>(r1.y);
+			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
+			cur = static_cast<float>(r1.z);
+			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
+
+			r1 = angio.ReferenceCoordinates(front_tip);
+#ifndef NDEBUG
+			vessel_csv_stream << r0.x << "," << r0.y << "," << r0.z << "," << r1.x << "," << r1.y << "," << r1.z << "," << rtime << std::endl;
+#endif
+		}
+	}
+	assert(crc_segcount == new_seg_count);
+}
+
 //-----------------------------------------------------------------------------
 // Save active points
 void Fileout::save_active_tips(FEAngio& angio) const

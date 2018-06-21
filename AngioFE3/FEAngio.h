@@ -93,6 +93,8 @@ public:
 
 	void GrowSegments(double min_scale_factor, double bounds_tolerance);
 
+	void ProtoGrowSegments(double min_scale_factor, double bounds_tolerance);
+
 	static void GetActiveFinalTipsInRadius(AngioElement* angio_element, double radius, FEAngio* pangio, std::vector<Tip *> & tips);
 
 	//returns the length between the two points as if they are conencted by a line segment in the natrual coordinates of the element
