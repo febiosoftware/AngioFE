@@ -316,7 +316,7 @@ double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem, FEMesh* mesh)
 	return (min_side_length_so_far * 0.5 * dt_safety_multiplier) / max_grow_velocity;
 }
 
-void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor, double bounds_tolerance)
+void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle)
 {
 	assert(angio_elem);
 	for(int i=0; i < angio_elem->adjacency_list.size();i++)
@@ -327,7 +327,7 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, i
 			for(int j=0; j < tips.size();j++)
 			{
 				assert(tips.at(j)->angio_element == angio_elem);
-				GrowthInElement(end_time, tips.at(j), i, buffer_index, min_scale_factor,bounds_tolerance);
+				GrowthInElement(end_time, tips.at(j), i, buffer_index, min_scale_factor,bounds_tolerance, min_angle);
 			}
 			
 		}
@@ -338,11 +338,11 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, i
 	for(int j=0; j < tips.size();j++)
 	{
 		assert(tips[j]->angio_element == angio_elem);
-		GrowthInElement(end_time, tips[j], -1, buffer_index, min_scale_factor,bounds_tolerance);
+		GrowthInElement(end_time, tips[j], -1, buffer_index, min_scale_factor,bounds_tolerance, min_angle);
 	}
 }
 
-void FEAngioMaterial::ProtoGrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor, double bounds_tolerance)
+void FEAngioMaterial::ProtoGrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle)
 {
 	assert(angio_elem);
 	for (int i = 0; i < angio_elem->adjacency_list.size(); i++)
@@ -353,7 +353,7 @@ void FEAngioMaterial::ProtoGrowSegments(AngioElement * angio_elem, double end_ti
 			for (int j = 0; j < tips.size(); j++)
 			{
 				assert(tips.at(j)->angio_element == angio_elem);
-				ProtoGrowthInElement(end_time, tips.at(j), i, buffer_index, min_scale_factor, bounds_tolerance);
+				ProtoGrowthInElement(end_time, tips.at(j), i, buffer_index, min_scale_factor, bounds_tolerance, min_angle);
 			}
 		}
 	}
@@ -362,11 +362,11 @@ void FEAngioMaterial::ProtoGrowSegments(AngioElement * angio_elem, double end_ti
 	for (int j = 0; j < tips.size(); j++)
 	{
 		assert(tips[j]->angio_element == angio_elem);
-		ProtoGrowthInElement(end_time, tips[j], -1, buffer_index, min_scale_factor, bounds_tolerance);
+		ProtoGrowthInElement(end_time, tips[j], -1, buffer_index, min_scale_factor, bounds_tolerance,min_angle);
 	}
 }
 
-void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor, double bounds_tolerance)
+void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle)
 {
 	auto angio_element = active_tip->angio_element;
 	
@@ -518,7 +518,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		if(possible_locations.size())
 		{
 			//need some way to choose the correct element to continue the tip in
-			int index = SelectNextTip(possible_locations, possible_local_coordinates, next, dt ,mesh, min_scale_factor);
+			int index = SelectNextTip(possible_locations, possible_local_coordinates, next, dt ,mesh, min_scale_factor,min_angle);
 			if(index != -1)
 			{
 				Tip * adj = new Tip(next, mesh);
@@ -540,7 +540,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	}
 }
 
-void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor, double bounds_tolerance)
+void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle)
 {
 	auto angio_element = active_tip->angio_element;
 
@@ -678,7 +678,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		if (possible_locations.size())
 		{
 			//need some way to choose the correct element to continue the tip in
-			int index = SelectNextTip(possible_locations, possible_local_coordinates, next, dt, mesh, min_scale_factor);
+			int index = SelectNextTip(possible_locations, possible_local_coordinates, next, dt, mesh, min_scale_factor, min_angle);
 			if (index != -1)
 			{
 				Tip * adj = new Tip(next, mesh);
@@ -697,13 +697,12 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 //possibilites include: longest possible growth length,
 //most similar in direction to the tip's direction and above a 
 
-int FEAngioMaterial::SelectNextTip(std::vector<AngioElement*> & possible_locations, std::vector<vec3d> & possible_local_coordinates, Tip* tip, double dt, FEMesh* mesh, double min_scale_factor)
+int FEAngioMaterial::SelectNextTip(std::vector<AngioElement*> & possible_locations, std::vector<vec3d> & possible_local_coordinates, Tip* tip, double dt, FEMesh* mesh, double min_scale_factor, double min_angle)
 {
 	assert(possible_locations.size() == possible_local_coordinates.size());
 	if (possible_locations.size() == 1)
 		return 0;
 	auto dir = tip->GetDirection(mesh);
-	const double min_angle = 0.25;
 	std::vector<double> angles;
 	for(int i=0; i < possible_locations.size();i++)
 	{
