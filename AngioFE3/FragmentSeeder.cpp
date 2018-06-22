@@ -186,7 +186,7 @@ bool ByVolumeFragmentSeeder::SeedFragments(std::vector<AngioElement *>& angio_el
 	}
 
 	// Form the distribution.
-	std::uniform_int_distribution<int> vol_dist(0, total_volume);
+	std::uniform_real_distribution<double> vol_dist(0.0, total_volume);
 
 	// Based on the sample taken from the distribution, find the element that corresponds to the sample from the parallel arrays.
 	for (int i = 0; i < number_fragments; i++)
@@ -230,7 +230,7 @@ bool ByVolumeFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElement
 	}
 
 	// Random engine used to sample from distributions.
-	angiofe_random_engine random_engine = angio_mat->m_pangio->rengine;
+	angiofe_random_engine & random_engine = angio_mat->m_pangio->rengine;
 
 	// A uniform distribution must be used, so take a sample from (0, total_volume) and find which element that the sample corresponds to by ordering 
 	// the element's "starting" and "ending" volumes in two separate parallel arrays.
@@ -248,7 +248,7 @@ bool ByVolumeFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElement
 	}
 
 	// Form the distribution.
-	std::uniform_int_distribution<int> vol_dist(0, total_volume);
+	std::uniform_real_distribution<double> vol_dist(0.0, total_volume);
 
 	// Based on the sample taken from the distribution, find the element that corresponds to the sample from the parallel arrays.
 	for (int i = 0; i < number_fragments; i++)
@@ -256,7 +256,7 @@ bool ByVolumeFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElement
 		double volume_sample = vol_dist(random_engine);
 
 		// Perform a binary search of the pre-sorted parallel arrays (only requires one of them) to find the index of the element that will get the tip.
-		size_t element_index = findElement(volume_sample, 0, angio_elements.size(), element_beginning_volume, element_ending_volume);
+		size_t element_index = findElement(volume_sample, 0, angio_elements.size() - 1, element_beginning_volume, element_ending_volume);
 
 		// Build the fragment using a tip and build it in the element.
 		Tip* r0 = new Tip();

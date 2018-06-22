@@ -73,7 +73,7 @@ void FEAngio::ApplydtToTimestepper(double dt)
 	}
 }
 
-void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, double min_angle)
+void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, double min_angle, int growth_substeps)
 {
 	auto   time_info = m_fem->GetTime();
 	auto   mesh = GetMesh();
@@ -104,8 +104,7 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, dou
 //worse performace than separate declarations
 //#pragma omp parallel
 		{
-			int n = 3;
-			for (int i = 0; i <n; i++)
+			for (int i = 0; i <growth_substeps; i++)
 			{
 #pragma omp parallel for schedule(dynamic, 16)
 				for (int j = 0; j <angio_element_count; j++)
@@ -142,7 +141,7 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, dou
 
 }
 
-void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance, double min_angle)
+void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance, double min_angle, int growth_substeps)
 {
 	//grow from time -1 to time 0
 	auto   time_info = m_fem->GetTime();
@@ -1004,6 +1003,7 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 	static double min_scale_factor = m_fem->GetGlobalConstant("min_scale_factor");
 	static double bounds_tolerance = m_fem->GetGlobalConstant("bounds_tolerance");
 	static double min_angle = m_fem->GetGlobalConstant("min_angle");
+	static int growth_substeps = m_fem->GetGlobalConstant("growth_substeps");
 	if (!start)
 	{
 		size_t angio_element_count = angio_elements.size();
@@ -1032,7 +1032,7 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 			}
 		}
 		grow_timer.start();
-		ProtoGrowSegments(min_scale_factor,bounds_tolerance,min_angle);
+		ProtoGrowSegments(min_scale_factor,bounds_tolerance,min_angle, growth_substeps);
 		grow_timer.stop();
 
 
@@ -1066,7 +1066,7 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 
 		//new function to find the start time grow time and if this is the final iteration this timestep
 		grow_timer.start();
-		GrowSegments(min_scale_factor, bounds_tolerance,min_angle);
+		GrowSegments(min_scale_factor, bounds_tolerance,min_angle,growth_substeps);
 		grow_timer.stop();
 		
 		mesh_stiffness_timer.start();
@@ -1088,6 +1088,9 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 			angio_elements[i]->_angio_mat->angio_stress_policy->AngioStress(angio_elements[i], this,mesh);
 		}
 		update_angio_stress_timer.stop();
+
+		CalculateSegmentLengths(mesh);
+
 	}
 	else if (nwhen == CB_MAJOR_ITERS)
 	{
