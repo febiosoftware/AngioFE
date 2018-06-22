@@ -73,6 +73,7 @@ public:
 	friend class FEPlotAngioECMAlpha;
 	friend class FEPlotAngioGradient;
 	friend class FEPlotBranches;
+	friend class FEPlotSegmentLength;
 	//the following friendships are bad and need removed eventually
 	//TODO: remove the freindship, creation in the old way requires this
 	//or consider making the node and element data public

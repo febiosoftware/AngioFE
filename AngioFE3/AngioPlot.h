@@ -90,6 +90,14 @@ public:
 	bool Save(FEDomain& d, FEDataStream& str) override;
 };
 
+//-----------------------------------------------------------------------------
+class FEPlotSegmentLength : public FEDomainData
+{
+public:
+	explicit FEPlotSegmentLength(FEModel* pfem) : FEDomainData(PLT_FLOAT, FMT_ITEM) {}
+	bool Save(FEDomain& d, FEDataStream& str) override;
+};
+
 
 class FEPlotAngioGradient : public FENodeData
 {
