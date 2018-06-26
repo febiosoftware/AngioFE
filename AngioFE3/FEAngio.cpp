@@ -204,7 +204,7 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 		if (time_info.currentTime >= next_time)
 		{
 			next_time += min_dt;
-			printf("\nangio dt chosen is: %lg next angio time\n", min_dt);
+			printf("\nproto angio dt chosen is: %lg next angio time\n", min_dt);
 #pragma omp parallel for schedule(dynamic, 16)
 			for (int j = 0; j <angio_element_count; j++)
 			{
@@ -213,7 +213,8 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 			buffer_index = (buffer_index + 1) % 2;
 		}
 	}
-
+	//this may be a bit conservative for a first step but should produce good results
+	ApplydtToTimestepper(min_dt);
 	//do the output, this will output all of the segments
 	fileout->bulk_save_vessel_state(*this);
 }
@@ -509,8 +510,6 @@ FEAngio::FEAngio(FEModel& fem) : ztopi(std::uniform_real_distribution<double>(0,
 	
 	FE_state = 0;
 
-	// initialize time stepping parameters
-	m_time.dt = 1.0;
 	// Input random seed number
 	m_irseed = 0;
 
@@ -582,6 +581,49 @@ bool FEAngio::Init()
 		printf("fragment seeding failed\n");
 		return false;
 	}
+
+	//start the protogrowth phase
+	min_scale_factor = m_fem->GetGlobalConstant("min_scale_factor");
+	bounds_tolerance = m_fem->GetGlobalConstant("bounds_tolerance");
+	min_angle = m_fem->GetGlobalConstant("min_angle");
+	growth_substeps = m_fem->GetGlobalConstant("growth_substeps");
+	size_t angio_element_count = angio_elements.size();
+	FEMesh * mesh = GetMesh();
+#pragma omp parallel for schedule(dynamic, 16)
+	for (int i = 0; i < angio_element_count; i++)
+	{
+		angio_elements[i]->_angio_mat->im_manager->ApplyModifier(angio_elements[i], mesh, this);
+	}
+
+	//setup the branch info before doing any growth
+#pragma omp parallel for schedule(dynamic, 16)
+	for (int i = 0; i < angio_element_count; i++)
+	{
+		if (angio_elements[i]->_angio_mat->proto_branch_policy)
+		{
+			angio_elements[i]->_angio_mat->proto_branch_policy->SetupBranchInfo(angio_elements[i]);
+		}
+		else if (angio_elements[i]->_angio_mat->branch_policy)
+		{
+			angio_elements[i]->_angio_mat->branch_policy->SetupBranchInfo(angio_elements[i]);
+		}
+	}
+	grow_timer.start();
+	ProtoGrowSegments(min_scale_factor, bounds_tolerance, min_angle, growth_substeps);
+	grow_timer.stop();
+
+
+	update_angio_stress_timer.start();
+	for (int i = 0; i < angio_materials.size(); i++)
+	{
+		angio_materials[i]->angio_stress_policy->UpdateScale();
+	}
+#pragma omp parallel for schedule(dynamic, 16)
+	for (int i = 0; i < angio_element_count; i++)
+	{
+		angio_elements[i]->_angio_mat->angio_stress_policy->AngioStress(angio_elements[i], this, mesh);
+	}
+	update_angio_stress_timer.stop();
 
 	// start timer
 	time(&m_start);
@@ -994,62 +1036,8 @@ void FEAngio::CalculateSegmentLengths(FEMesh* mesh)
 void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 {
 	FEModel& fem = *pfem;
-	FETimeInfo fti = fem.GetTime();
-	m_time.t = fti.currentTime;
-	m_time.dt = fti.timeIncrement;
 	FEMesh * mesh = GetMesh();
-	
-	static bool start = false;
-	static double min_scale_factor = m_fem->GetGlobalConstant("min_scale_factor");
-	static double bounds_tolerance = m_fem->GetGlobalConstant("bounds_tolerance");
-	static double min_angle = m_fem->GetGlobalConstant("min_angle");
-	static int growth_substeps = m_fem->GetGlobalConstant("growth_substeps");
-	if (!start)
-	{
-		size_t angio_element_count = angio_elements.size();
-		/*
-		grow_timer.start();
-		GrowSegments();
-		grow_timer.stop();
-		*/
-#pragma omp parallel for schedule(dynamic, 16)
-		for (int i = 0; i < angio_element_count; i++)
-		{
-			angio_elements[i]->_angio_mat->im_manager->ApplyModifier(angio_elements[i], mesh, this);
-		}
 
-		//setup the branch info before doing any growth
-#pragma omp parallel for schedule(dynamic, 16)
-		for (int i = 0; i < angio_element_count; i++)
-		{
-			if(angio_elements[i]->_angio_mat->proto_branch_policy)
-			{
-				angio_elements[i]->_angio_mat->proto_branch_policy->SetupBranchInfo(angio_elements[i]);
-			}
-			else if(angio_elements[i]->_angio_mat->branch_policy)
-			{
-				angio_elements[i]->_angio_mat->branch_policy->SetupBranchInfo(angio_elements[i]);
-			}
-		}
-		grow_timer.start();
-		ProtoGrowSegments(min_scale_factor,bounds_tolerance,min_angle, growth_substeps);
-		grow_timer.stop();
-
-
-		update_angio_stress_timer.start();
-		for(int i=0; i < angio_materials.size();i++)
-		{
-			angio_materials[i]->angio_stress_policy->UpdateScale();
-		}
-#pragma omp parallel for schedule(dynamic, 16)
-		for(int i=0;i < angio_element_count;i++)
-		{
-			angio_elements[i]->_angio_mat->angio_stress_policy->AngioStress(angio_elements[i], this,mesh);
-		}
-		update_angio_stress_timer.stop();
-
-		start = true;
-	}
 
 	if (nwhen == CB_UPDATE_TIME)
 	{

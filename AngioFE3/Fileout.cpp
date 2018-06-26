@@ -210,6 +210,7 @@ void Fileout::save_final_vessel_csv(FEAngio & angio)
 
 void Fileout::save_feangio_stats(FEAngio& angio)
 {
+	FETimeInfo & ti = angio.m_fem->GetTime();
 	const int STR_SIZE = 64;
 	char grow_time[STR_SIZE];
 	char update_stress_scaling_time[STR_SIZE];
@@ -226,7 +227,7 @@ void Fileout::save_feangio_stats(FEAngio& angio)
 	angio.update_ecm_timer.time_str(ecm_update_time);
 	angio.material_update_timer.time_str(material_update_time);
 	fprintf(feangio_state_stream, "%-12.7f,%-64s,%-64s,%-64s,%-64s,%-64s,%-64s,%-64s\n",
-		angio.m_time.t, grow_time, update_stress_scaling_time, update_stress_time,
+		ti.currentTime, grow_time, update_stress_scaling_time, update_stress_time,
 		mesh_stiffnesss_time, gdm_update_time, ecm_update_time, material_update_time);
 	fflush(feangio_state_stream);
 }

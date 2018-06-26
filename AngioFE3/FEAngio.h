@@ -17,17 +17,6 @@ class FEAngioMaterial;
 class FEAngioMaterialBase;
 
 //-----------------------------------------------------------------------------
-// This class represents the time parameters
-class SimulationTime
-{
-public:
-	double	t;		// current time value
-	double	dt;		// time increment from last time
-	double	maxt;	// end time of simulation
-	SimulationTime() { t = dt = maxt = 0.0; }
-};
-
-//-----------------------------------------------------------------------------
 // The FEAngio class contains all the functionality of the growth model.
 class FEAngio
 {
@@ -175,8 +164,6 @@ private:
 	//both nodes and elements id's go from 1 to n+1 for n items
 	//first element is padding so the id can be used to lookup the data for that node
 
-	SimulationTime	m_time;		// simulation time
-
     time_t m_start = 0;			// time of start
 	Fileout * fileout = nullptr;		// output manager
 	
@@ -205,4 +192,9 @@ private:
 
 
 	const double eps = 0.001;
+
+	double min_scale_factor;
+	double bounds_tolerance;
+	double min_angle;
+	int growth_substeps;
 };
