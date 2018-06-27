@@ -57,6 +57,7 @@ public:
 	virtual ~BranchPolicy(){};
 	virtual void AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, FEMesh* mesh, FEAngio* feangio)=0;
 	virtual void SetupBranchInfo(AngioElement * angio_elem) = 0;
+	bool Init() override { return azmuth_angle->Init() && zenith_angle->Init(); }
 	//adds a branch tip at the given natural coordinates
 	void AddBranchTip(AngioElement * angio_element, vec3d local_pos, vec3d parent_direction, double start_time, int vessel_id, int buffer_index, FEMesh* mesh);
 	vec3d GetBranchDirection(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element, FEMesh* mesh);
@@ -92,7 +93,7 @@ public:
 	}
 	virtual ~DelayedBranchingPolicy(){}
 	bool Init() override {
-		return l2b.Init() && t2e.Init(); }
+		return l2b.Init() && t2e.Init() && BranchPolicy::Init(); }
 	void AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, FEMesh* mesh, FEAngio* feangio) override;
 	void SetupBranchInfo(AngioElement * angio_elem) override;
 private:

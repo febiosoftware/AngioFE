@@ -26,8 +26,10 @@
 #include <unordered_set>
 #include <cfloat> 
 #include <FEBioMix/FETriphasic.h>
+#include <FECore/FENodeDataMap.h>
 #include "GrowDirectionModifier.h"
 #include <omp.h>
+
 
 
 //-----------------------------------------------------------------------------
@@ -57,19 +59,18 @@ bool FEAngio::SeedFragments()
 	return rv;
 }
 
-void FEAngio::ApplydtToTimestepper(double dt)
+
+
+void FEAngio::ApplydtToTimestepper(double dt, bool initial)
 {
 	FETimeStepController &tsc = m_fem->GetCurrentStep()->m_timeController;
-	if(tsc.m_nmplc == -1)
+	if(initial)
 	{
-		//there is no load curve being used, just set dtmax
-		tsc.m_dtmax = dt;
+		auto_stepper_key = tsc.AddAdditionaldtmax(dt);
 	}
 	else
 	{
-		//not implemented yet
-		//use the lower of the loadcurve vs dt
-		assert(false);
+		tsc.ModifyAdditionaldtmax(auto_stepper_key, dt);
 	}
 }
 
@@ -121,7 +122,7 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, dou
 			}
 		}
 
-		ApplydtToTimestepper(min_dt);
+		ApplydtToTimestepper(min_dt,true);
 	}
 	//do the output
 	fileout->save_vessel_state(*this);
@@ -259,6 +260,12 @@ void FEAngio::GetActiveFinalTipsInRadius(AngioElement* angio_element, double rad
 		}
 	}
 }
+//currently support for density modifers as nodal data
+void FEAngio::NodeDataProjection()
+{
+	//
+}
+
 
 vec3d FEAngio::ReferenceCoordinates(Tip * tip) const
 {
@@ -566,64 +573,11 @@ bool FEAngio::Init()
 
 	// Init all the FE stuff
 	//must be done first initializes material
-	if (InitFEM() == false) return false;
-	
-	SetupAngioElements();
-
-	SetSeeds();
-
-
-	FinalizeFEM();
-
-	//do the seeding of the tips/segments
-	if(!SeedFragments())
+	if (InitFEM() == false)
 	{
-		printf("fragment seeding failed\n");
 		return false;
 	}
-
-	//start the protogrowth phase
-	min_scale_factor = m_fem->GetGlobalConstant("min_scale_factor");
-	bounds_tolerance = m_fem->GetGlobalConstant("bounds_tolerance");
-	min_angle = m_fem->GetGlobalConstant("min_angle");
-	growth_substeps = m_fem->GetGlobalConstant("growth_substeps");
-	size_t angio_element_count = angio_elements.size();
-	FEMesh * mesh = GetMesh();
-#pragma omp parallel for schedule(dynamic, 16)
-	for (int i = 0; i < angio_element_count; i++)
-	{
-		angio_elements[i]->_angio_mat->im_manager->ApplyModifier(angio_elements[i], mesh, this);
-	}
-
-	//setup the branch info before doing any growth
-#pragma omp parallel for schedule(dynamic, 16)
-	for (int i = 0; i < angio_element_count; i++)
-	{
-		if (angio_elements[i]->_angio_mat->proto_branch_policy)
-		{
-			angio_elements[i]->_angio_mat->proto_branch_policy->SetupBranchInfo(angio_elements[i]);
-		}
-		else if (angio_elements[i]->_angio_mat->branch_policy)
-		{
-			angio_elements[i]->_angio_mat->branch_policy->SetupBranchInfo(angio_elements[i]);
-		}
-	}
-	grow_timer.start();
-	ProtoGrowSegments(min_scale_factor, bounds_tolerance, min_angle, growth_substeps);
-	grow_timer.stop();
-
-
-	update_angio_stress_timer.start();
-	for (int i = 0; i < angio_materials.size(); i++)
-	{
-		angio_materials[i]->angio_stress_policy->UpdateScale();
-	}
-#pragma omp parallel for schedule(dynamic, 16)
-	for (int i = 0; i < angio_element_count; i++)
-	{
-		angio_elements[i]->_angio_mat->angio_stress_policy->AngioStress(angio_elements[i], this, mesh);
-	}
-	update_angio_stress_timer.stop();
+	if (m_fem->Init() == false) return false;
 
 	// start timer
 	time(&m_start);
@@ -660,30 +614,9 @@ bool FEAngio::InitFEM()
 	felog.printf("%d Angio materials found. Stress approach will be used.", m_pmat.size());
 
 	// register the callback
-	m_fem->AddCallback(FEAngio::feangio_callback, CB_UPDATE_TIME | CB_MAJOR_ITERS | CB_SOLVED | CB_STEP_ACTIVE, this);
-
-	// Do the model initialization
-	if (m_fem->Init() == false) return false;
+	m_fem->AddCallback(FEAngio::feangio_callback, CB_UPDATE_TIME | CB_MAJOR_ITERS | CB_SOLVED | CB_STEP_ACTIVE | CB_INIT, this);
 
 	return true;
-}
-void FEAngio::FinalizeFEM()
-{
-
-	// only output to the logfile (not to the screen)
-	felog.SetMode(Logfile::LOG_FILE);
-
-	//currently the destructors are not called for classes created by FEBio this allows destructors to be called
-	fileout = new Fileout(*this);
-
-	// --- Output initial state of model ---
-	if (!m_fem->GetGlobalConstant("no_io"))
-	{
-		// Output initial microvessel state
-
-		// save active tips
-		fileout->save_active_tips(*this);
-	}
 }
 //fills in the adjacnecy information 
 void FEAngio::FillInAdjacencyInfo(FEMesh * mesh,FEElemElemList * eel, AngioElement *angio_element, int elem_index)
@@ -1037,7 +970,78 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 {
 	FEModel& fem = *pfem;
 	FEMesh * mesh = GetMesh();
+	if(nwhen == CB_INIT)
+	{
+		// only output to the logfile (not to the screen)
+		felog.SetMode(Logfile::LOG_FILE);
 
+		//currently the destructors are not called for classes created by FEBio this allows destructors to be called
+		fileout = new Fileout(*this);
+
+		
+		SetupAngioElements();
+
+		SetSeeds();
+
+		//do the seeding of the tips/segments
+		if (!SeedFragments())
+		{
+			printf("fragment seeding failed\n");
+			throw;
+		}
+		// --- Output initial state of model ---
+		if (!m_fem->GetGlobalConstant("no_io"))
+		{
+			// Output initial microvessel state
+
+			// save active tips
+			fileout->save_active_tips(*this);
+		}
+
+		//start the protogrowth phase
+		min_scale_factor = m_fem->GetGlobalConstant("min_scale_factor");
+		bounds_tolerance = m_fem->GetGlobalConstant("bounds_tolerance");
+		min_angle = m_fem->GetGlobalConstant("min_angle");
+		growth_substeps = m_fem->GetGlobalConstant("growth_substeps");
+		size_t angio_element_count = angio_elements.size();
+		FEMesh * mesh = GetMesh();
+#pragma omp parallel for schedule(dynamic, 16)
+		for (int i = 0; i < angio_element_count; i++)
+		{
+			angio_elements[i]->_angio_mat->im_manager->ApplyModifier(angio_elements[i], mesh, this);
+		}
+		NodeDataProjection();
+
+		//setup the branch info before doing any growth
+#pragma omp parallel for schedule(dynamic, 16)
+		for (int i = 0; i < angio_element_count; i++)
+		{
+			if (angio_elements[i]->_angio_mat->proto_branch_policy)
+			{
+				angio_elements[i]->_angio_mat->proto_branch_policy->SetupBranchInfo(angio_elements[i]);
+			}
+			else if (angio_elements[i]->_angio_mat->branch_policy)
+			{
+				angio_elements[i]->_angio_mat->branch_policy->SetupBranchInfo(angio_elements[i]);
+			}
+		}
+		grow_timer.start();
+		ProtoGrowSegments(min_scale_factor, bounds_tolerance, min_angle, growth_substeps);
+		grow_timer.stop();
+
+
+		update_angio_stress_timer.start();
+		for (int i = 0; i < angio_materials.size(); i++)
+		{
+			angio_materials[i]->angio_stress_policy->UpdateScale();
+		}
+#pragma omp parallel for schedule(dynamic, 16)
+		for (int i = 0; i < angio_element_count; i++)
+		{
+			angio_elements[i]->_angio_mat->angio_stress_policy->AngioStress(angio_elements[i], this, mesh);
+		}
+		update_angio_stress_timer.stop();
+	}
 
 	if (nwhen == CB_UPDATE_TIME)
 	{
@@ -1078,7 +1082,6 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		update_angio_stress_timer.stop();
 
 		CalculateSegmentLengths(mesh);
-
 	}
 	else if (nwhen == CB_MAJOR_ITERS)
 	{

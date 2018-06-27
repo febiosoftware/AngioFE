@@ -111,8 +111,10 @@ private:
 
 	bool SeedFragments();
 
-	void ApplydtToTimestepper(double dt);
+	void ApplydtToTimestepper(double dt, bool initial = false);
 
+	//projects any initial data from the nodes to the gauss points
+	void NodeDataProjection();
 	
 
 	vec3d ReferenceCoordinates(Tip * tip) const;
@@ -197,4 +199,5 @@ private:
 	double bounds_tolerance;
 	double min_angle;
 	int growth_substeps;
+	int auto_stepper_key = -1;
 };
