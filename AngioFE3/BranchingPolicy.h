@@ -55,7 +55,7 @@ public:
 		AddProperty(&interpolation_prop, "interpolation_prop");
 	}
 	virtual ~BranchPolicy(){};
-	virtual void AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, FEMesh* mesh, FEAngio* feangio)=0;
+	virtual void AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, double final_time, FEMesh* mesh, FEAngio* feangio)=0;
 	virtual void SetupBranchInfo(AngioElement * angio_elem) = 0;
 	bool Init() override { return azmuth_angle->Init() && zenith_angle->Init(); }
 	//adds a branch tip at the given natural coordinates
@@ -80,7 +80,7 @@ public:
 class DelayBranchInfo : public BranchInfo
 {
 public:
-	double length_to_branch;
+	double length_to_branch = 0.0;
 	std::list<FutureBranch> future_branches;
 };
 
@@ -94,7 +94,7 @@ public:
 	virtual ~DelayedBranchingPolicy(){}
 	bool Init() override {
 		return l2b.Init() && t2e.Init() && BranchPolicy::Init(); }
-	void AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, FEMesh* mesh, FEAngio* feangio) override;
+	void AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, double final_time, FEMesh* mesh, FEAngio* feangio) override;
 	void SetupBranchInfo(AngioElement * angio_elem) override;
 private:
 	FEPropertyT<FEProbabilityDistribution> l2b;//length to branch

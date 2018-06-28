@@ -760,12 +760,12 @@ int FEAngioMaterial::SelectNextTip(std::vector<AngioElement*> & possible_locatio
 	return index;
 }
 
-void FEAngioMaterial::PostGrowthUpdate(AngioElement* angio_elem, double end_time, int buffer_index, FEMesh* mesh, FEAngio* feangio)
+void FEAngioMaterial::PostGrowthUpdate(AngioElement* angio_elem, double end_time, double final_time, int buffer_index, FEMesh* mesh, FEAngio* feangio)
 {
 	//do the branching
 	if(angio_elem->_angio_mat->branch_policy)
 	{
-		angio_elem->_angio_mat->branch_policy->AddBranches(angio_elem, buffer_index, end_time , mesh, feangio);
+		angio_elem->_angio_mat->branch_policy->AddBranches(angio_elem, buffer_index, end_time , final_time, mesh, feangio);
 	}
 	
 
@@ -781,7 +781,7 @@ void FEAngioMaterial::ProtoPostGrowthUpdate(AngioElement* angio_elem, double end
 	//do the branching
 	if (angio_elem->_angio_mat->proto_branch_policy)
 	{
-		angio_elem->_angio_mat->proto_branch_policy->AddBranches(angio_elem, buffer_index, end_time, mesh, feangio);
+		angio_elem->_angio_mat->proto_branch_policy->AddBranches(angio_elem, buffer_index, end_time, std::numeric_limits<int>::max(), mesh, feangio);
 	}
 
 

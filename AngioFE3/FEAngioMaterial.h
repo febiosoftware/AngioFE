@@ -59,7 +59,7 @@ public:
 	int SelectNextTip(std::vector<AngioElement*> & possible_locations, std::vector<vec3d> & possible_local_coordinates, Tip* tip, double dt, FEMesh* mesh, double min_scale_factor, double min_angle);
 
 	//should be const and threadsafe
-	void PostGrowthUpdate(AngioElement* angio_elem, double end_time, int buffer_index, FEMesh* mesh, FEAngio* feangio);
+	void PostGrowthUpdate(AngioElement* angio_elem, double end_time, double final_time, int buffer_index, FEMesh* mesh, FEAngio* feangio);
 
 	void ProtoPostGrowthUpdate(AngioElement* angio_elem, double end_time, int buffer_index, FEMesh* mesh, FEAngio* feangio);
 

@@ -63,28 +63,27 @@ bool FEAngio::SeedFragments()
 
 void FEAngio::ApplydtToTimestepper(double dt, bool initial)
 {
-	FETimeStepController &tsc = m_fem->GetCurrentStep()->m_timeController;
-	if(initial)
+	FEAnalysis * fea = m_fem->GetCurrentStep();
+	if(fea->m_dt > dt)
 	{
-		auto_stepper_key = tsc.AddAdditionaldtmax(dt);
-	}
-	else
-	{
-		tsc.ModifyAdditionaldtmax(auto_stepper_key, dt);
+		fea->m_dt = dt;
 	}
 }
 
 void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, double min_angle, int growth_substeps)
 {
 	auto   time_info = m_fem->GetTime();
+	FEAnalysis * cs = m_fem->GetCurrentStep();
 	auto   mesh = GetMesh();
-	double min_dt = std::numeric_limits<double>::max();
+	static double min_dt;
+	
 	size_t angio_element_count = angio_elements.size();
 	
 
 	// Is it valid for this to run more than once? only 
 	if(time_info.currentTime >= next_time)
 	{
+		min_dt = std::numeric_limits<double>::max();
 		#pragma omp parallel for shared(min_dt)
 		for (int i = 0; i < angio_element_count; ++i)
 		{
@@ -116,14 +115,14 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, dou
 #pragma omp parallel for schedule(dynamic, 16)
 				for (int j = 0; j <angio_element_count; j++)
 				{
-					angio_elements[j]->_angio_mat->PostGrowthUpdate(angio_elements[j], ctime, buffer_index, mesh,this);
+					angio_elements[j]->_angio_mat->PostGrowthUpdate(angio_elements[j], ctime, cs->m_tend , buffer_index,mesh, this);
 				}
 				buffer_index = (buffer_index + 1) % 2;
 			}
 		}
-
-		ApplydtToTimestepper(min_dt,true);
 	}
+	ApplydtToTimestepper(min_dt, true);
+
 	//do the output
 	fileout->save_vessel_state(*this);
 
@@ -215,7 +214,7 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 		}
 	}
 	//this may be a bit conservative for a first step but should produce good results
-	ApplydtToTimestepper(min_dt);
+	//ApplydtToTimestepper(min_dt);
 	//do the output, this will output all of the segments
 	fileout->bulk_save_vessel_state(*this);
 }
@@ -966,12 +965,16 @@ void FEAngio::CalculateSegmentLengths(FEMesh* mesh)
 
 
 //-----------------------------------------------------------------------------
-void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
+bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 {
 	FEModel& fem = *pfem;
 	FEMesh * mesh = GetMesh();
 	if(nwhen == CB_INIT)
 	{
+		SetupAngioElements();
+
+		SetSeeds();
+
 		// only output to the logfile (not to the screen)
 		felog.SetMode(Logfile::LOG_FILE);
 
@@ -979,10 +982,6 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		fileout = new Fileout(*this);
 
 		
-		SetupAngioElements();
-
-		SetSeeds();
-
 		//do the seeding of the tips/segments
 		if (!SeedFragments())
 		{
@@ -1011,6 +1010,13 @@ void FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 			angio_elements[i]->_angio_mat->im_manager->ApplyModifier(angio_elements[i], mesh, this);
 		}
 		NodeDataProjection();
+
+		update_gdms_timer.start();
+		for (size_t i = 0; i < m_pmat.size(); i++)
+		{
+			m_pmat[i]->UpdateGDMs();
+		}
+		update_gdms_timer.stop();
 
 		//setup the branch info before doing any growth
 #pragma omp parallel for schedule(dynamic, 16)

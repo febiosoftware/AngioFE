@@ -142,11 +142,10 @@ private:
 	static bool feangio_callback(FEModel* pfem, unsigned int nwhen, void* pd)
 	{
 		FEAngio* pfa = reinterpret_cast<FEAngio*>(pd);
-		pfa->OnCallback(pfem, nwhen);
-		return true;
+		return pfa->OnCallback(pfem, nwhen);
 	}
 
-	void OnCallback(FEModel* pfem, unsigned int nwhen);
+	bool OnCallback(FEModel* pfem, unsigned int nwhen);
 
 public:	// parameters read directly from file
 

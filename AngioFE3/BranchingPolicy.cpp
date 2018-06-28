@@ -8,6 +8,7 @@ void BranchPolicy::AddBranchTip(AngioElement * angio_element, vec3d local_pos, v
 	Tip * branch = new Tip();
 	branch->time = start_time;
 	branch->angio_element = angio_element;
+	branch->face = angio_element;
 	branch->SetLocalPosition(local_pos);
 	branch->initial_fragment_id = vessel_id;
 	branch->direction = GetBranchDirection(local_pos, parent_direction,angio_element,mesh);
@@ -45,7 +46,7 @@ vec3d BranchPolicy::GetBranchDirection(vec3d local_pos, vec3d parent_direction, 
 
 
 
-void DelayedBranchingPolicy::AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, FEMesh* mesh, FEAngio* feangio)
+void DelayedBranchingPolicy::AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, double final_time, FEMesh* mesh, FEAngio* feangio)
 {
 	//this algorithm is n^2 there propably exists an nlogn algorithm
 	DelayBranchInfo * dbi = dynamic_cast<DelayBranchInfo*>(angio_elem->branch_info);
@@ -131,6 +132,11 @@ void DelayedBranchingPolicy::AddBranches(AngioElement * angio_elem, int buffer_i
 	double & remaing_l2b = dynamic_cast<DelayBranchInfo*>(angio_elem->branch_info)->length_to_branch;
 
 	//process all of the branch points, creates the futre points at which branches will occour
+	if(bps.size()>25 || angio_elem->recent_segments.size() > 100)
+	{
+		std::cout << "large number of branch points" << std::endl;
+	}
+
 	while(bps.size())
 	{
 		BranchPoint & cur = bps.front();
@@ -147,10 +153,21 @@ void DelayedBranchingPolicy::AddBranches(AngioElement * angio_elem, int buffer_i
 				//add a tip at the appropriate localation
 				//AddBranchTip(angio_elem, tip_pos, seg->Direction(mesh),start_time, seg->GetInitialFragmentID(), buffer_index);
 				double time_to_wait = t2e->NextValue(angio_elem->_rengine);
-				FutureBranch fb = FutureBranch(tip_pos, seg, start_time + time_to_wait);
-				dbi->future_branches.push_back(fb);
-				cur.processed += remaing_l2b;
-				remaing_l2b = l2b->NextValue(angio_elem->_rengine);
+				time_to_wait = start_time + time_to_wait;
+				//need to test this with multiple steps
+				if(time_to_wait >= final_time)
+				{
+					cur.processed += remaing_l2b;
+					remaing_l2b = l2b->NextValue(angio_elem->_rengine);
+				}
+				else
+				{
+					FutureBranch fb = FutureBranch(tip_pos, seg, time_to_wait);
+					dbi->future_branches.push_back(fb);
+					cur.processed += remaing_l2b;
+					remaing_l2b = l2b->NextValue(angio_elem->_rengine);
+				}
+				
 			}
 			else
 			{
