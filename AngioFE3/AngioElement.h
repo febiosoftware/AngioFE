@@ -25,8 +25,8 @@ public:
 	std::mt19937_64 _rengine;
 
 	//begin buffers
-	std::vector<AngioElement *> adjacency_list;
-	std::unordered_map<AngioElement *, int> angio_element_to_adjacency_index;
+	std::vector<AngioElement *> adjacency_list;//elements that share a node with the element
+	std::vector<AngioElement *> face_adjacency_list;//elements that share a face with the element
 	std::vector<Segment *> grown_segments;
 	std::vector<Segment *> recent_segments;
 	int processed_recent_segments = 0;

@@ -228,9 +228,9 @@ void FEAngio::GetActiveFinalTipsInRadius(AngioElement* angio_element, double rad
 	tips.reserve(500);
 	pangio->ExtremaInElement(angio_element->_elem, element_bounds);
 
-	for (int i = 0; i < angio_element->adjacency_list.size(); i++)
+	for (int i = 0; i < angio_element->face_adjacency_list.size(); i++)
 	{
-		next.insert(angio_element->adjacency_list[i]);
+		next.insert(angio_element->face_adjacency_list[i]);
 	}
 	visited.insert(angio_element);
 	while (next.size())
@@ -249,11 +249,11 @@ void FEAngio::GetActiveFinalTipsInRadius(AngioElement* angio_element, double rad
 				tips.push_back(cur->final_active_tips[i]);
 			}
 
-			for (int i = 0; i < cur->adjacency_list.size(); i++)
+			for (int i = 0; i < cur->face_adjacency_list.size(); i++)
 			{
-				if (!visited.count(cur->adjacency_list[i]))
+				if (!visited.count(cur->face_adjacency_list[i]))
 				{
-					next.insert(cur->adjacency_list[i]);
+					next.insert(cur->face_adjacency_list[i]);
 				}
 			}
 		}
@@ -633,21 +633,13 @@ void FEAngio::FillInAdjacencyInfo(FEMesh * mesh,FEElemElemList * eel, AngioEleme
 			auto ae_iter = se_to_angio_elem.find(nse);
 			if(ae_iter != se_to_angio_elem.end())
 			{
-				angio_element->adjacency_list.push_back(ae_iter->second.first);
+				angio_element->face_adjacency_list.push_back(ae_iter->second.first);
 			}
 			else
 			{
 				assert(false);
 			}
 		}
-		else
-		{
-			angio_element->adjacency_list.push_back(nullptr);
-		}
-	}
-	for(int i=0;i< angio_element->adjacency_list.size();i++)
-	{
-		angio_element->angio_element_to_adjacency_index[angio_element->adjacency_list[i]] = i;
 	}
 
 }
