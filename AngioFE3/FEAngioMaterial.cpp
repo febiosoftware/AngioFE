@@ -401,10 +401,11 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	}
 	mat3d natc_to_global(er, es, et);
 	mat3d global_to_natc = natc_to_global.inverse();
+	double alpha = cm_manager->ApplyModifiers(dt, active_tip->angio_element, active_tip->GetLocalPosition(), mesh);
 	vec3d psc_dir = psc_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip->angio_element, active_tip->GetLocalPosition(), active_tip->GetDirection(mesh), mesh);
-	vec3d pdd_dir = pdd_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip->angio_element, active_tip->GetLocalPosition() , mesh, m_pangio);
-	double alpha = cm_manager->ApplyModifiers(0, active_tip->angio_element, active_tip->GetLocalPosition(), mesh);
-	vec3d global_dir = mix(psc_dir, pdd_dir , (alpha * dt));
+	vec3d pdd_dir = pdd_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip->angio_element, active_tip->GetLocalPosition() , alpha, mesh, m_pangio);
+	
+	vec3d global_dir = mix(psc_dir, pdd_dir , (alpha));
 	global_dir.unit();
 
 	vec3d global_pos;
@@ -709,12 +710,12 @@ int FEAngioMaterial::SelectNextTip(std::vector<AngioElement*> & possible_locatio
 	std::vector<double> angles;
 	for(int i=0; i < possible_locations.size();i++)
 	{
+		double alpha = cm_manager->ApplyModifiers(dt, possible_locations[i], possible_local_coordinates[i], mesh);
 		vec3d psc_dir = psc_manager->ApplyModifiers(vec3d(1, 0, 0), possible_locations[i], possible_local_coordinates[i], tip->GetDirection(mesh), mesh);
-		vec3d pdd_dir = pdd_manager->ApplyModifiers(vec3d(1, 0, 0), possible_locations[i], possible_local_coordinates[i], mesh, m_pangio);
-		double alpha = cm_manager->ApplyModifiers(0, possible_locations[i], possible_local_coordinates[i], mesh);
-		vec3d global_dir = mix(psc_dir, pdd_dir, (alpha * dt));
+		vec3d pdd_dir = pdd_manager->ApplyModifiers(vec3d(1, 0, 0), possible_locations[i], possible_local_coordinates[i],alpha , mesh, m_pangio);
+		vec3d global_dir = mix(psc_dir, pdd_dir, (alpha));
 		global_dir.unit();
-		vec3d possible_dir = possible_locations[i]->_angio_mat->pdd_manager->ApplyModifiers({ 1,0,0 }, possible_locations[i], possible_local_coordinates[i], mesh, m_pangio);
+		vec3d possible_dir = possible_locations[i]->_angio_mat->pdd_manager->ApplyModifiers({ 1,0,0 }, possible_locations[i], possible_local_coordinates[i], alpha, mesh, m_pangio);
 		double Gr[FEElement::MAX_NODES];
 		double Gs[FEElement::MAX_NODES];
 		double Gt[FEElement::MAX_NODES];

@@ -4,6 +4,7 @@
 #include <FECore/FEMaterial.h>
 #include <unordered_map>
 #include <FECore/FESurface.h>
+#include <unordered_set>
 
 
 class FEAngioMaterial;

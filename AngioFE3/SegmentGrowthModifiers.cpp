@@ -18,7 +18,7 @@ void FiberPDD::Update(FEMesh * mesh, FEAngio* angio)
 
 double PSCPDDContributionMix::ApplyModifiers(double prev, AngioElement* angio_element, vec3d local_pos, FEMesh* mesh)
 {
-	return psc_weight;
+	return psc_weight*prev;
 }
 
 void PSCPDDContributionMix::Update(FEMesh * mesh)
@@ -72,7 +72,7 @@ BEGIN_PARAMETER_LIST(SegmentVelocityDensityScaleModifier, SegmentGrowthVelocity)
 ADD_PARAMETER(m_density_scale_factor, FE_PARAM_VEC3D, "density_scale_factor");
 END_PARAMETER_LIST();
 
-vec3d FiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, FEMesh* mesh, FEAngio* pangio)
+vec3d FiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, double& alpha, FEMesh* mesh, FEAngio* pangio)
 {
 	std::vector<quatd> gauss_data;
 	std::vector<quatd> nodal_data;
@@ -90,9 +90,33 @@ vec3d FiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d lo
 	return mix(prev, fiber_direction, contribution);
 }
 
-vec3d AnastomosisPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, FEMesh* mesh, FEAngio* pangio)
+vec3d ECMDensityGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, double& alpha, FEMesh* mesh, FEAngio* pangio)
 {
+	std::vector<double> density_at_integration_points;
+	
+	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
+	{
+		FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
+		FEElasticMaterialPoint* elastic_mp = gauss_point->ExtractData<FEElasticMaterialPoint>();
 
+		density_at_integration_points.push_back(angio_mp->ref_ecm_density * (1.0 / elastic_mp->m_J));
+	}
+	vec3d grad = pangio->gradient(angio_element->_elem, density_at_integration_points, local_pos);
+	if(grad.norm() > threshold)
+	{
+		vec3d currentDirectionGradientPlane = grad ^ prev;
+		currentDirectionGradientPlane.unit();
+		vec3d perpendicularToGradient = currentDirectionGradientPlane ^ grad;
+		perpendicularToGradient.unit();
+		alpha = 0.0;
+		return mix(prev, perpendicularToGradient, contribution);
+	}
+	return prev;
+}
+
+vec3d AnastomosisPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, double& alpha, FEMesh* mesh, FEAngio* pangio)
+{
 	return vec3d(0, 0, 0);
 }
 
@@ -112,11 +136,11 @@ vec3d PreviousSegmentContributionManager::ApplyModifiers(vec3d prev, AngioElemen
 }
 
 
-vec3d PositionDependentDirectionManager::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, FEMesh* mesh, FEAngio* pangio)
+vec3d PositionDependentDirectionManager::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, double& alpha, FEMesh* mesh, FEAngio* pangio)
 {
 	for (int i = 0; i < pdd_modifiers.size(); i++)
 	{
-		prev = pdd_modifiers[i]->ApplyModifiers(prev, angio_element, local_pos , mesh, pangio);
+		prev = pdd_modifiers[i]->ApplyModifiers(prev, angio_element, local_pos, alpha, mesh, pangio);
 	}
 	return prev;
 }
