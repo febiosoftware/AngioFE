@@ -90,6 +90,10 @@ vec3d FiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d lo
 	return mix(prev, fiber_direction, contribution);
 }
 
+BEGIN_PARAMETER_LIST(ECMDensityGradientPDD, PositionDependentDirection)
+ADD_PARAMETER(threshold, FE_PARAM_DOUBLE, "threshold");
+END_PARAMETER_LIST();
+
 vec3d ECMDensityGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, double& alpha, FEMesh* mesh, FEAngio* pangio)
 {
 	std::vector<double> density_at_integration_points;
@@ -103,13 +107,14 @@ vec3d ECMDensityGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_elem
 		density_at_integration_points.push_back(angio_mp->ref_ecm_density * (1.0 / elastic_mp->m_J));
 	}
 	vec3d grad = pangio->gradient(angio_element->_elem, density_at_integration_points, local_pos);
-	if(grad.norm() > threshold)
+	double gradnorm = grad.norm();
+	if(gradnorm > threshold)
 	{
 		vec3d currentDirectionGradientPlane = grad ^ prev;
 		currentDirectionGradientPlane.unit();
 		vec3d perpendicularToGradient = currentDirectionGradientPlane ^ grad;
 		perpendicularToGradient.unit();
-		alpha = 0.0;
+		alpha = 1.0;
 		return mix(prev, perpendicularToGradient, contribution);
 	}
 	return prev;

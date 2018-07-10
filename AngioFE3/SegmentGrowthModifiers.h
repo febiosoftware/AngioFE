@@ -146,10 +146,11 @@ public:
 	explicit ECMDensityGradientPDD(FEModel* pfem) : PositionDependentDirection(pfem) { AddProperty(&interpolation_prop, "interpolation_prop"); }
 	virtual ~ECMDensityGradientPDD() {}
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, double& alpha, FEMesh* mesh, FEAngio* pangio) override;
-	void Update(FEMesh * mesh, FEAngio* angio) override{}
+	void Update(FEMesh * mesh, FEAngio* angio) override{}\
+	DECLARE_PARAMETER_LIST();
 private:
 	double contribution = 1.0;
-	double threshold = 0.01;//vessels will deflect if above threshold
+	double threshold = 0.00001;//vessels will deflect if above threshold
 	FEPropertyT<FEVariableInterpolation> interpolation_prop;
 };
 
