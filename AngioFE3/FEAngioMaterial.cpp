@@ -245,7 +245,8 @@ void FEAngioMaterial::SetSeeds(AngioElement* angio_elem)
 {
 	static int offset = 0;
 	static int seed = m_pangio->m_fem->GetGlobalConstant("seed");
-	angio_elem->_rengine.seed(offset + seed);
+	std::seed_seq sq{ offset + seed };
+	angio_elem->_rengine.seed(sq);
 	offset++;
 }
 
