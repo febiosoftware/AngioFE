@@ -46,8 +46,11 @@ FEPluginFactory_T<ByVolumeFragmentSeederBiDirectional , FEMATERIAL_ID> by_volume
 
 //InitalModifiers any modifiers for angio_elements this will be run only once before much else happens
 FEPluginFactory_T<InitialModifierManager, FEMATERIAL_ID> inital_modifier_manager_factory("im_manager");
+FEPluginFactory_T<NodeDataInterpolationManager, FEMATERIAL_ID> nodedata_interpolation_manager_factory("nodedata_interpolation_manager");
 FEPluginFactory_T<FiberRandomizer       , FEMATERIAL_ID> fiber_randomizer_factory("fiber_randomizer");
 FEPluginFactory_T<DensityInitializer    , FEMATERIAL_ID> density_initializer_factory("density_initializer");
+FEPluginFactory_T<DensityValuesNodeDataInterpolation, FEMATERIAL_ID> ecm_ref_density("ref_ecm_density");
+
 
 // SegmentVelocityModifier CLasses
 FEPluginFactory_T<SegmentGrowthVelocityManager       , FEMATERIAL_ID> segment_growth_velocity_manager_factory("segment_growth_velocity_manager");
@@ -201,8 +204,10 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 
 		//initial modifiers
 		&inital_modifier_manager_factory,
+		&nodedata_interpolation_manager_factory,
 		&fiber_randomizer_factory,
 		&density_initializer_factory,
+		&ecm_ref_density,
 
 		//boundary conditions
 		

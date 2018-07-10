@@ -67,6 +67,8 @@ public:
 	//TODO: remove the freindship, creation in the old way requires this
 	//or consider making the node and element data public
 	friend class FEAngioMaterial;
+	friend class NodeDataInterpolationManager;
+	friend class NodeDataInterpolation;
 
 	// Natural coordinate bounds based on the element type.
 	static double NaturalCoordinatesUpperBound_r(int et);
@@ -112,9 +114,6 @@ private:
 	bool SeedFragments();
 
 	void ApplydtToTimestepper(double dt, bool initial = false);
-
-	//projects any initial data from the nodes to the gauss points
-	void NodeDataProjection();
 	
 
 	vec3d ReferenceCoordinates(Tip * tip) const;

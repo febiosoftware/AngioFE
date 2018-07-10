@@ -53,6 +53,8 @@ FEAngioMaterial::FEAngioMaterial(FEModel* pfem) : FEElasticMaterial(pfem)
 	AddProperty(&cm_manager, "cm_manager");
 	AddProperty(&velocity_manager, "velocity_manager");
 	AddProperty(&im_manager, "im_manager");
+	AddProperty(&nodedata_interpolation_manager, "nodedata_interpolation_manager");
+	nodedata_interpolation_manager.m_brequired = false;
 	AddProperty(&branch_policy, "branch_policy");
 	branch_policy.m_brequired = false;
 	AddProperty(&proto_branch_policy, "proto_branch_policy");

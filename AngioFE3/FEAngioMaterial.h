@@ -17,6 +17,7 @@
 #include "SegmentGrowthModifiers.h"
 #include "AngioStressPolicy.h"
 #include "InitialModifiers.h"
+#include "NodeDataInterpolation.h"
 
 class AngioElement;
 
@@ -120,6 +121,7 @@ public:
 	FEPropertyT<InitialModifierManager> im_manager;
 	FEPropertyT<BranchPolicy> branch_policy;
 	FEPropertyT<BranchPolicy> proto_branch_policy;
+	FEPropertyT<NodeDataInterpolationManager> nodedata_interpolation_manager;
 private:
 	DECLARE_PARAMETER_LIST();
 

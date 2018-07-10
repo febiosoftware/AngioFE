@@ -28,6 +28,7 @@
 #include <FEBioMix/FETriphasic.h>
 #include <FECore/FENodeDataMap.h>
 #include "GrowDirectionModifier.h"
+#include "NodeDataInterpolation.h"
 #include <omp.h>
 
 
@@ -258,11 +259,6 @@ void FEAngio::GetActiveFinalTipsInRadius(AngioElement* angio_element, double rad
 			}
 		}
 	}
-}
-//currently support for density modifers as nodal data
-void FEAngio::NodeDataProjection()
-{
-	//
 }
 
 
@@ -1001,7 +997,14 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		{
 			angio_elements[i]->_angio_mat->im_manager->ApplyModifier(angio_elements[i], mesh, this);
 		}
-		NodeDataProjection();
+		//now override any specific information that needs it
+		for(auto iter = elements_by_material.begin(); iter != elements_by_material.end(); ++iter)
+		{
+			if(iter->first->nodedata_interpolation_manager)
+			{
+				iter->first->nodedata_interpolation_manager->DoInterpolations(this, mesh, iter->first);
+			}
+		}
 
 		update_gdms_timer.start();
 		for (size_t i = 0; i < m_pmat.size(); i++)
