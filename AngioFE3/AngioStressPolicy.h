@@ -55,7 +55,7 @@ private:
 	double sprout_width = 2;
 	double sprout_range = 200;//used to calculate the falloff of stress
 	double sprout_radius_multiplier = 3;//multiplied by sprout range implicitly gives the cutoff for the tips that are included
-										//the default value cuts of tips stresses that are below 5% of a tip on top of a gauss point
+										//the default value cuts of tips stresses that are below ~5% of a tip on top of a gauss point
 };
 //used to update the old code
 class LoadCurveAngioStressPolicy : public AngioStressPolicy

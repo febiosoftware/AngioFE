@@ -315,6 +315,22 @@ bool FEPlotSegmentLength::Save(FEDomain& d, FEDataStream& str)
 	return true;
 };
 
+bool FEPlotRefSegmentLength::Save(FEDomain& d, FEDataStream& str)
+{
+	for (int i = 0; i < d.Elements(); i++)
+	{
+		FEElement & elem = d.ElementRef(i);
+		FESolidElement *se = dynamic_cast<FESolidElement*>(&elem);
+		if (se)
+		{
+			AngioElement * angio_element = pfeangio->se_to_angio_element.at(se);
+			str << angio_element->refernce_frame_segment_length;
+		}
+	}
+
+	return true;
+};
+
 bool FEPlotAngioGradient::Save(FEMesh & m, FEDataStream & a)
 {
 	//this has problems on the boundaries between materials

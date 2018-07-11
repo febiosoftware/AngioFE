@@ -29,3 +29,8 @@ double Segment::Length(FEMesh * mesh)const
 {
 	return (front->GetPosition(mesh) - back->GetPosition(mesh)).norm();
 }
+
+double Segment::RefLength(FEMesh * mesh)const
+{
+	return (front->GetRefPosition(mesh) - back->GetRefPosition(mesh)).norm();
+}

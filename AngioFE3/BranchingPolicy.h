@@ -18,6 +18,7 @@ class ZenithAngle : public FEMaterial
 public:
 	ZenithAngle(FEModel* pfem) : FEMaterial(pfem) {}
 	virtual double GetZenithAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element) = 0;
+	virtual void TimeStepUpdate(double current_time) = 0;
 };
 
 class AzmuthAngle :public FEMaterial
@@ -25,6 +26,7 @@ class AzmuthAngle :public FEMaterial
 public:
 	AzmuthAngle(FEModel* pfem) : FEMaterial(pfem) {}
 	virtual double GetAzmuthAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element) = 0;
+	virtual void TimeStepUpdate(double current_time) = 0;
 };
 
 class ZenithAngleProbabilityDistribution : public ZenithAngle
@@ -33,6 +35,8 @@ public:
 	ZenithAngleProbabilityDistribution(FEModel* pfem) : ZenithAngle(pfem) { AddProperty(&angle, "angle"); }
 	double GetZenithAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element) override;
 	bool Init() override { return angle->Init(); }
+	void TimeStepUpdate(double current_time) override { angle->TimeStepUpdate(current_time); }
+
 private:
 	FEPropertyT<FEProbabilityDistribution> angle;
 };
@@ -43,6 +47,7 @@ public:
 	AzmuthAngleProbabilityDistribution(FEModel* pfem) : AzmuthAngle(pfem) { AddProperty(&angle, "angle"); }
 	double GetAzmuthAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element) override;
 	bool Init() override {return angle->Init();}
+	void TimeStepUpdate(double current_time) override { angle->TimeStepUpdate(current_time); }
 private:
 	FEPropertyT<FEProbabilityDistribution> angle;
 };
@@ -58,6 +63,7 @@ public:
 	virtual void AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, double final_time, FEMesh* mesh, FEAngio* feangio)=0;
 	virtual void SetupBranchInfo(AngioElement * angio_elem) = 0;
 	bool Init() override { return azmuth_angle->Init() && zenith_angle->Init(); }
+	virtual void TimeStepUpdate(double current_time){ azmuth_angle->TimeStepUpdate(current_time); zenith_angle->TimeStepUpdate(current_time);}
 	//adds a branch tip at the given natural coordinates
 	void AddBranchTip(AngioElement * angio_element, vec3d local_pos, vec3d parent_direction, double start_time, int vessel_id, int buffer_index, FEMesh* mesh);
 	vec3d GetBranchDirection(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element, FEMesh* mesh);
@@ -94,6 +100,7 @@ public:
 	virtual ~DelayedBranchingPolicy(){}
 	bool Init() override {
 		return l2b.Init() && t2e.Init() && BranchPolicy::Init(); }
+	void TimeStepUpdate(double current_time) override { BranchPolicy::TimeStepUpdate(current_time); l2b->TimeStepUpdate(current_time); t2e->TimeStepUpdate(current_time); }
 	void AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, double final_time, FEMesh* mesh, FEAngio* feangio) override;
 	void SetupBranchInfo(AngioElement * angio_elem) override;
 private:

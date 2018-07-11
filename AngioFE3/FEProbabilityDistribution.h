@@ -9,7 +9,7 @@ public:
 
 	//generates the next value in the given sequence which fits a given distribution
 	virtual double NextValue(angiofe_random_engine & re) = 0;
-
+	virtual void TimeStepUpdate(double current_time) = 0;
 	
 protected:
 	int max_retries = 10;
@@ -31,17 +31,13 @@ public:
 	double NextValue(angiofe_random_engine & re) override;
 
 	bool Init() override;
+	void TimeStepUpdate(double current_time) override;
 
 private:
 	double mean = 1.0;//distribution's mean
 	double stddev = 1.0;//distribution's standard deviation
 
 	std::normal_distribution<double> nd;
-
-	double prev_mean = 1.0;
-	double prev_stddev = 1.0;
-	
-
 	DECLARE_PARAMETER_LIST();
 };
 
@@ -56,6 +52,7 @@ public:
 	double NextValue(angiofe_random_engine & re) override;
 
 	bool Init() override;
+	void TimeStepUpdate(double current_time) override;
 
 private:
 	double a = 0.0;//distribution's mean
@@ -63,9 +60,6 @@ private:
 
 	std::uniform_real_distribution<double> rd;
 	bool time_clamped = true;
-
-	double prev_a = 0.0;
-	double prev_b = 1.0;
 
 
 	DECLARE_PARAMETER_LIST();
@@ -82,6 +76,7 @@ public:
 	double NextValue(angiofe_random_engine & re) override;
 
 	bool Init() override;
+	void TimeStepUpdate(double current_time) override;
 
 private:
 	double lambda = 1.0;//distribution's lambda
@@ -106,7 +101,7 @@ public:
 	double NextValue(angiofe_random_engine & re) override;
 
 	bool Init() override;
-
+	void TimeStepUpdate(double current_time) override;
 private:
 	double a = 1.0;//distribution's mean
 	double b = 1.0;//distribution's standard deviation
@@ -132,7 +127,7 @@ public:
 	double NextValue(angiofe_random_engine & re) override;
 
 	bool Init() override;
-
+	void TimeStepUpdate(double current_time) override;
 private:
 	double dof = 1.0;//distribution's x^2
 	double mult = 1.0;
@@ -157,7 +152,7 @@ public:
 	double NextValue(angiofe_random_engine & re) override;
 
 	bool Init() override;
-
+	void TimeStepUpdate(double current_time) override;
 private:
 	double a = 1.0;
 	double b = 1.0;
@@ -182,7 +177,7 @@ public:
 
 	bool Init() override;
 
-
+	void TimeStepUpdate(double current_time) override;
 private:
 	double alpha = 1.0;
 	double beta = 1.0;
@@ -207,7 +202,7 @@ public:
 
 	bool Init() override;
 
-
+	void TimeStepUpdate(double current_time) override;
 private:
 	double value = 1.0;
 

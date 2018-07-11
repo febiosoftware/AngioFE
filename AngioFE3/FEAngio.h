@@ -43,6 +43,7 @@ public:
 	vec3d Position(FESolidElement * se, vec3d local) const;
 
 	void CalculateSegmentLengths(FEMesh* mesh);
+	void AdjustMatrixVesselWeights(FEMesh* mesh);
 
 
 	mat3d unifromRandomRotationMatrix(angiofe_random_engine & rengine) const;
@@ -63,6 +64,7 @@ public:
 	friend class FEPlotAngioGradient;
 	friend class FEPlotBranches;
 	friend class FEPlotSegmentLength;
+	friend class FEPlotRefSegmentLength;
 	//the following friendships are bad and need removed eventually
 	//TODO: remove the freindship, creation in the old way requires this
 	//or consider making the node and element data public

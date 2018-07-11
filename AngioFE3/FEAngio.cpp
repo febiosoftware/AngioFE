@@ -951,6 +951,28 @@ void FEAngio::CalculateSegmentLengths(FEMesh* mesh)
 	}
 }
 
+void FEAngio::AdjustMatrixVesselWeights(class FEMesh* mesh)
+{
+	int angio_elements_size = angio_elements.size();
+#pragma omp parallel for schedule(dynamic, 16)
+	for (int i = 0; i < angio_elements_size; i++)
+	{
+		AngioElement * angio_element = angio_elements[i];
+		double vessel_volume = PI * angio_element->_angio_mat->vessel_radius *angio_element->_angio_mat->vessel_radius * angio_element->refernce_frame_segment_length;
+		double element_volume = mesh->ElementVolume(*angio_element->_elem);
+		double vessel_weight = vessel_volume/element_volume;
+		double matrix_weight = 1 - vessel_weight;
+
+		for(int j=0; j < angio_element->_elem->GaussPoints();j++)
+		{
+			FEAngioMaterialPoint * angioPt = FEAngioMaterialPoint::FindAngioMaterialPoint(angio_element->_elem->GetMaterialPoint(j));
+			angioPt->vessel_weight = vessel_weight;
+			angioPt->matrix_weight = matrix_weight;
+		}
+	}
+}
+
+
 
 //-----------------------------------------------------------------------------
 bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
@@ -1030,6 +1052,8 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		ProtoGrowSegments(min_scale_factor, bounds_tolerance, min_angle, growth_substeps);
 		grow_timer.stop();
 
+		CalculateSegmentLengths(mesh);
+		AdjustMatrixVesselWeights(mesh);
 
 		update_angio_stress_timer.start();
 		for (int i = 0; i < angio_materials.size(); i++)
@@ -1049,10 +1073,13 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		static int index = 0;
 		// grab the time information
 		
+		auto & ti = fem.GetTime();
+
 		update_gdms_timer.start();
 		for (size_t i = 0; i < m_pmat.size(); i++)
 		{
 			m_pmat[i]->UpdateGDMs();
+			m_pmat[i]->branch_policy->TimeStepUpdate(ti.currentTime);
 		}
 		update_gdms_timer.stop();
 
@@ -1074,6 +1101,10 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		{
 			angio_materials[i]->angio_stress_policy->UpdateScale();
 		}
+
+		AdjustMatrixVesselWeights(mesh);
+		CalculateSegmentLengths(mesh);
+
 		size_t angio_element_count = angio_elements.size();
 #pragma omp parallel for schedule(static, 16)
 		for (int i = 0; i < angio_element_count; i++)
@@ -1082,7 +1113,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		}
 		update_angio_stress_timer.stop();
 
-		CalculateSegmentLengths(mesh);
+		
 	}
 	else if (nwhen == CB_MAJOR_ITERS)
 	{

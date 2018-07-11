@@ -98,6 +98,13 @@ public:
 	bool Save(FEDomain& d, FEDataStream& str) override;
 };
 
+//-----------------------------------------------------------------------------
+class FEPlotRefSegmentLength : public FEDomainData
+{
+public:
+	explicit FEPlotRefSegmentLength(FEModel* pfem) : FEDomainData(PLT_FLOAT, FMT_ITEM) {}
+	bool Save(FEDomain& d, FEDataStream& str) override;
+};
 
 class FEPlotAngioGradient : public FENodeData
 {

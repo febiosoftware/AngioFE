@@ -22,6 +22,11 @@ bool FENormalDistribution::Init()
 	return true;
 }
 
+void FENormalDistribution::TimeStepUpdate(double current_time)
+{
+	nd = std::normal_distribution<double>(mean, stddev);
+}
+
 
 BEGIN_PARAMETER_LIST(FENormalDistribution, FEProbabilityDistribution)
 ADD_PARAMETER(mean, FE_PARAM_DOUBLE, "mean");
@@ -44,13 +49,23 @@ double FEUniformDistribution::NextValue(angiofe_random_engine & re)
 bool FEUniformDistribution::Init()
 {
 	rd = std::uniform_real_distribution<double>(a,b);
-	prev_a = a;
-	prev_b = b;
 	//if load curves are used they must use step interpolation
 	SetLoadCurveToStep("a");
 	SetLoadCurveToStep("b");
 
 	return true;
+}
+
+void FEUniformDistribution::TimeStepUpdate(double current_time)
+{
+	if(time_clamped)
+	{
+		rd = std::uniform_real_distribution<double>(a, b - current_time);
+	}
+	else
+	{
+		rd = std::uniform_real_distribution<double>(a, b);
+	}
 }
 
 BEGIN_PARAMETER_LIST(FEUniformDistribution, FEProbabilityDistribution)
@@ -117,12 +132,17 @@ double FEExponentialDistribution::NextValue(angiofe_random_engine & re)
 bool FEExponentialDistribution::Init()
 {
 	ed = std::exponential_distribution<double>(lambda);
-	prev_lambda = lambda;
 	//if load curves are used they must use step interpolation
 	SetLoadCurveToStep("lambda");
 	SetLoadCurveToStep("mult");
 	return true;
 }
+
+void FEExponentialDistribution::TimeStepUpdate(double current_time)
+{
+	ed = std::exponential_distribution<double>(lambda);
+}
+
 
 BEGIN_PARAMETER_LIST(FEExponentialDistribution, FEProbabilityDistribution)
 ADD_PARAMETER(lambda, FE_PARAM_DOUBLE, "lambda");
@@ -144,14 +164,17 @@ double FECauchyDistribution::NextValue(angiofe_random_engine & re)
 bool FECauchyDistribution::Init()
 {
 	cd = std::cauchy_distribution<double>(a, b);
-	prev_a = a;
-	prev_b = b;
 	//if load curves are used they must use step interpolation
 	SetLoadCurveToStep("a");
 	SetLoadCurveToStep("b");
 
 	return true;
 }
+void FECauchyDistribution::TimeStepUpdate(double current_time)
+{
+	cd = std::cauchy_distribution<double>(a, b);
+}
+
 
 
 BEGIN_PARAMETER_LIST(FECauchyDistribution, FEProbabilityDistribution)
@@ -175,13 +198,18 @@ double FEChiSquaredDistribution::NextValue(angiofe_random_engine & re)
 bool FEChiSquaredDistribution::Init()
 {
 	cd = std::chi_squared_distribution<double>(dof);
-	prev_dof = dof;
 	//if load curves are used they must use step interpolation
 	SetLoadCurveToStep("dof");
 	SetLoadCurveToStep("mult");
 
 	return true;
 }
+
+void FEChiSquaredDistribution::TimeStepUpdate(double current_time)
+{
+	cd = std::chi_squared_distribution<double>(dof);
+}
+
 
 
 BEGIN_PARAMETER_LIST(FEChiSquaredDistribution, FEProbabilityDistribution)
@@ -205,14 +233,17 @@ double FEWeibullDistribution::NextValue(angiofe_random_engine & re)
 bool FEWeibullDistribution::Init()
 {
 	wd = std::weibull_distribution<double>(a, b);
-	prev_a = a;
-	prev_b = b;
 	//if load curves are used they must use step interpolation
 	SetLoadCurveToStep("a");
 	SetLoadCurveToStep("b");
-
 	return true;
 }
+
+void FEWeibullDistribution::TimeStepUpdate(double current_time)
+{
+	wd = std::weibull_distribution<double>(a, b);
+}
+
 
 
 BEGIN_PARAMETER_LIST(FEWeibullDistribution, FEProbabilityDistribution)
@@ -236,14 +267,18 @@ double FEGammaDistribution::NextValue(angiofe_random_engine & re)
 bool FEGammaDistribution::Init()
 {
 	gd = std::gamma_distribution<double>(alpha, beta);
-	prev_alpha = alpha;
-	prev_beta = beta;
 	//if load curves are used they must use step interpolation
 	SetLoadCurveToStep("alpha");
 	SetLoadCurveToStep("beta");
 
 	return true;
 }
+
+void FEGammaDistribution::TimeStepUpdate(double current_time)
+{
+	gd = std::gamma_distribution<double>(alpha, beta);
+}
+
 
 
 BEGIN_PARAMETER_LIST(FEGammaDistribution, FEProbabilityDistribution)
@@ -256,6 +291,12 @@ double FEFixedDistribution::NextValue(angiofe_random_engine & re)
 {
 	return value;
 }
+
+void FEFixedDistribution::TimeStepUpdate(double current_time)
+{
+	
+}
+
 
 bool FEFixedDistribution::Init()
 {

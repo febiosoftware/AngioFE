@@ -26,6 +26,7 @@ public:
 	vec3d direction;//only used if the tip is a branch
 	vec3d GetDirection(FEMesh* mesh) const;
 	vec3d GetPosition(FEMesh * mesh) const;
+	vec3d GetRefPosition(FEMesh * mesh) const;//get tip position in refernce frame
 	void PrintTipInfo(FEMesh *mesh) const;
 	void PrintTipInfo(FEMesh *mesh, std::string title) const;
 private:

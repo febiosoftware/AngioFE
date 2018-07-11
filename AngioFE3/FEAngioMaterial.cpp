@@ -449,7 +449,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 			seg->parent = active_tip->parent;
 		}
 
-
+		angio_element->refernce_frame_segment_length += seg->RefLength(mesh);
 		angio_element->recent_segments.push_back(seg);
 		angio_element->final_active_tips.push_back(next);
 		assert(next->angio_element);
@@ -486,6 +486,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 
 		vec3d pos = next->GetPosition(mesh);
 		angio_element->recent_segments.push_back(seg);
+		angio_element->refernce_frame_segment_length += seg->RefLength(mesh);
 
 		std::vector<AngioElement*> possible_locations;
 		std::vector<vec3d> possible_local_coordinates;
@@ -623,6 +624,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 
 
 		angio_element->recent_segments.push_back(seg);
+		angio_element->refernce_frame_segment_length += seg->RefLength(mesh);
 		angio_element->final_active_tips.push_back(next);
 		assert(next->angio_element);
 	}
@@ -657,6 +659,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		}
 
 		vec3d pos = next->GetPosition(mesh);
+		angio_element->refernce_frame_segment_length += seg->RefLength(mesh);
 		angio_element->recent_segments.push_back(seg);
 
 		std::vector<AngioElement*> possible_locations;
