@@ -14,7 +14,10 @@
 #include "CommonAngioProperites.h"
 #include <FEBioMix/FEMultiphasic.h>
 #include "CultureParameters.h"
-#include "SegmentGrowthModifiers.h"
+#include "ContributionMix.h"
+#include "PositionDependentDirection.h"
+#include "PreviousSegmentContribution.h"
+#include "SegmentGrowthVelocity.h"
 #include "AngioStressPolicy.h"
 #include "InitialModifiers.h"
 #include "NodeDataInterpolation.h"
