@@ -66,6 +66,7 @@ FEPluginFactory_T<PositionDependentDirectionManager, FEMATERIAL_ID> position_dep
 FEPluginFactory_T<FiberPDD                         , FEMATERIAL_ID> fiber_pdd_factory("fiber_pdd");
 FEPluginFactory_T<AnastomosisPDD                   , FEMATERIAL_ID> anastomosis_pdd_factory("anastomosis_pdd");
 FEPluginFactory_T<ECMDensityGradientPDD, FEMATERIAL_ID> ecm_density_gradient_factory("ecm_density_gradient_pdd");
+FEPluginFactory_T<ConcentrationGradientPDD, FEMATERIAL_ID> concentration_gradient_factory("concentration_gradient_pdd");
 
 // ContributionMix Classes
 FEPluginFactory_T<ContributionMixManager, FEMATERIAL_ID> contribution_mix_manager_factory("contribution_mix_manager");
@@ -235,6 +236,7 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		&fiber_pdd_factory,
 		&anastomosis_pdd_factory,
 		&ecm_density_gradient_factory,
+		&concentration_gradient_factory,
 
 		// ContributionMix Classes
 		&contribution_mix_manager_factory,

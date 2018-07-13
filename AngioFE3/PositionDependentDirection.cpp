@@ -47,9 +47,38 @@ vec3d ECMDensityGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_elem
 		perpendicularToGradient.unit();
 		if (alpha_override)
 		{
-			alpha = 1.0;
+			alpha = contribution;
 		}
 		return mix(prev, perpendicularToGradient, contribution);
+	}
+	return prev;
+}
+
+BEGIN_PARAMETER_LIST(ConcentrationGradientPDD, PositionDependentDirection)
+ADD_PARAMETER(threshold, FE_PARAM_DOUBLE, "threshold");
+ADD_PARAMETER(alpha_override, FE_PARAM_BOOL, "alpha_override");
+ADD_PARAMETER(sol_id, FE_PARAM_INT, "sol_id");
+END_PARAMETER_LIST();
+
+vec3d ConcentrationGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, double& alpha, FEMesh* mesh, FEAngio* pangio)
+{
+	std::vector<double> concentration_at_integration_points;
+
+	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
+	{
+		FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
+
+		concentration_at_integration_points.push_back(pangio->GetConcentration(angio_element->_mat, gauss_point, sol_id));
+	}
+	vec3d grad = pangio->gradient(angio_element->_elem, concentration_at_integration_points, local_pos);
+	double gradnorm = grad.norm();
+	if (gradnorm > threshold)
+	{
+		if (alpha_override)
+		{
+			alpha = contribution;
+		}
+		return mix(prev, grad, contribution);
 	}
 	return prev;
 }
