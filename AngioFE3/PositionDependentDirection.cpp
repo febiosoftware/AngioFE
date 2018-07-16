@@ -54,6 +54,40 @@ vec3d ECMDensityGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_elem
 	return prev;
 }
 
+BEGIN_PARAMETER_LIST(RepulsePDD, PositionDependentDirection)
+ADD_PARAMETER(threshold, FE_PARAM_DOUBLE, "threshold");
+ADD_PARAMETER(alpha_override, FE_PARAM_BOOL, "alpha_override");
+END_PARAMETER_LIST();
+
+vec3d RepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, double& alpha, FEMesh* mesh, FEAngio* pangio)
+{
+	std::vector<double> repulse_at_integration_points;
+
+	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
+	{
+		FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
+		FEElasticMaterialPoint* elastic_mp = gauss_point->ExtractData<FEElasticMaterialPoint>();
+
+		repulse_at_integration_points.push_back(angio_mp->repulse_value * (1.0 / elastic_mp->m_J));
+	}
+	vec3d grad = pangio->gradient(angio_element->_elem, repulse_at_integration_points, local_pos);
+	double gradnorm = grad.norm();
+	if (gradnorm > threshold)
+	{
+		vec3d currentDirectionGradientPlane = grad ^ prev;
+		currentDirectionGradientPlane.unit();
+		vec3d perpendicularToGradient = currentDirectionGradientPlane ^ grad;
+		perpendicularToGradient.unit();
+		if (alpha_override)
+		{
+			alpha = contribution;
+		}
+		return mix(prev, perpendicularToGradient, contribution);
+	}
+	return prev;
+}
+
 BEGIN_PARAMETER_LIST(ConcentrationGradientPDD, PositionDependentDirection)
 ADD_PARAMETER(threshold, FE_PARAM_DOUBLE, "threshold");
 ADD_PARAMETER(alpha_override, FE_PARAM_BOOL, "alpha_override");

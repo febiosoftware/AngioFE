@@ -21,6 +21,7 @@ public:
 	void Serialize(DumpStream& dmp) override;
 
 	double ref_ecm_density;
+	double repulse_value = 0.0;
 
 	//the temporary to store angio stress
 	mat3ds m_as;

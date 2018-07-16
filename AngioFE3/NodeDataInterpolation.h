@@ -39,4 +39,12 @@ public:
 	const char * GetDataName() const override;
 };
 
+class RepulseValuesNodeDataInterpolation : public NodeDataInterpolation
+{
+public:
+	RepulseValuesNodeDataInterpolation(FEModel * pfem) :NodeDataInterpolation(pfem) {}
+	bool Init() override { return FEMaterial::Init(); }
+	double & ValueReference(FEMaterialPoint * mp) override;
+	const char * GetDataName() const override;
+};
 

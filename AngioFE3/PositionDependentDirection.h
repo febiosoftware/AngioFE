@@ -56,6 +56,21 @@ private:
 	FEPropertyT<FEVariableInterpolation> interpolation_prop;
 };
 
+//the replacement for the bouncy boundary condition
+class RepulsePDD : public PositionDependentDirection
+{
+public:
+	explicit RepulsePDD(FEModel* pfem) : PositionDependentDirection(pfem) { AddProperty(&interpolation_prop, "interpolation_prop"); }
+	virtual ~RepulsePDD() {}
+	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, double& alpha, FEMesh* mesh, FEAngio* pangio) override;
+	void Update(FEMesh * mesh, FEAngio* angio) override {}
+	DECLARE_PARAMETER_LIST();
+private:
+	double threshold = 0.00001;//vessels will deflect if above threshold
+	bool alpha_override = true;//replace the alpha to have this take over
+	FEPropertyT<FEVariableInterpolation> interpolation_prop;
+};
+
 //
 class ConcentrationGradientPDD : public PositionDependentDirection
 {

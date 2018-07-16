@@ -16,6 +16,16 @@ const char * DensityValuesNodeDataInterpolation::GetDataName() const
 	return "ref_ecm_density";
 }
 
+double & RepulseValuesNodeDataInterpolation::ValueReference(FEMaterialPoint * mp)
+{
+	return FEAngioMaterialPoint::FindAngioMaterialPoint(mp)->repulse_value;
+}
+
+const char * RepulseValuesNodeDataInterpolation::GetDataName() const
+{
+	return "repulse_value";
+}
+
 void NodeDataInterpolation::PrepValues(FEAngio* angio, FEMesh* mesh, FEAngioMaterial* angio_mat)
 {
 	for(int i=0;i < angio->elements_by_material[angio_mat].size();i++)
