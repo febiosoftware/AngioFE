@@ -50,6 +50,7 @@ FEPluginFactory_T<NodeDataInterpolationManager, FEMATERIAL_ID> nodedata_interpol
 FEPluginFactory_T<FiberRandomizer       , FEMATERIAL_ID> fiber_randomizer_factory("fiber_randomizer");
 FEPluginFactory_T<DensityInitializer    , FEMATERIAL_ID> density_initializer_factory("density_initializer");
 FEPluginFactory_T<DensityValuesNodeDataInterpolation, FEMATERIAL_ID> ecm_ref_density("ref_ecm_density");
+FEPluginFactory_T<RepulseValuesNodeDataInterpolation, FEMATERIAL_ID> repulse_value("repulse_value");
 
 
 // SegmentVelocityModifier CLasses
@@ -66,6 +67,7 @@ FEPluginFactory_T<PositionDependentDirectionManager, FEMATERIAL_ID> position_dep
 FEPluginFactory_T<FiberPDD                         , FEMATERIAL_ID> fiber_pdd_factory("fiber_pdd");
 FEPluginFactory_T<AnastomosisPDD                   , FEMATERIAL_ID> anastomosis_pdd_factory("anastomosis_pdd");
 FEPluginFactory_T<ECMDensityGradientPDD, FEMATERIAL_ID> ecm_density_gradient_factory("ecm_density_gradient_pdd");
+FEPluginFactory_T<RepulsePDD, FEMATERIAL_ID> repulse_factory("repulse_pdd");
 FEPluginFactory_T<ConcentrationGradientPDD, FEMATERIAL_ID> concentration_gradient_factory("concentration_gradient_pdd");
 
 // ContributionMix Classes
@@ -212,6 +214,7 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		&fiber_randomizer_factory,
 		&density_initializer_factory,
 		&ecm_ref_density,
+		&repulse_value,
 
 		//boundary conditions
 		
@@ -236,6 +239,7 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		&fiber_pdd_factory,
 		&anastomosis_pdd_factory,
 		&ecm_density_gradient_factory,
+		&repulse_factory,
 		&concentration_gradient_factory,
 
 		// ContributionMix Classes

@@ -384,7 +384,8 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	double alpha = cm_manager->ApplyModifiers(dt, active_tip->angio_element, active_tip->GetLocalPosition(), mesh);
 	vec3d psc_dir = psc_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip->angio_element, active_tip->GetLocalPosition(), active_tip->GetDirection(mesh), mesh);
 	vec3d pdd_dir = pdd_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip->angio_element, active_tip->GetLocalPosition() , alpha, mesh, m_pangio);
-	
+	alpha = std::max(0.0,std::min(1.0, alpha));
+
 	vec3d global_dir = mix(psc_dir, pdd_dir , (alpha));
 	global_dir.unit();
 
@@ -747,12 +748,12 @@ int FEAngioMaterial::SelectNextTip(std::vector<AngioElement*> & possible_locatio
 	return index;
 }
 
-void FEAngioMaterial::PostGrowthUpdate(AngioElement* angio_elem, double end_time, double final_time, int buffer_index, FEMesh* mesh, FEAngio* feangio)
+void FEAngioMaterial::PostGrowthUpdate(AngioElement* angio_elem, double end_time, double final_time, double min_scale_factor, int buffer_index, FEMesh* mesh, FEAngio* feangio)
 {
 	//do the branching
 	if(angio_elem->_angio_mat->branch_policy)
 	{
-		angio_elem->_angio_mat->branch_policy->AddBranches(angio_elem, buffer_index, end_time , final_time, mesh, feangio);
+		angio_elem->_angio_mat->branch_policy->AddBranches(angio_elem, buffer_index, end_time , final_time, min_scale_factor, mesh, feangio);
 	}
 	
 
@@ -763,12 +764,12 @@ void FEAngioMaterial::PostGrowthUpdate(AngioElement* angio_elem, double end_time
 	}
 }
 
-void FEAngioMaterial::ProtoPostGrowthUpdate(AngioElement* angio_elem, double end_time, int buffer_index, FEMesh* mesh, FEAngio* feangio)
+void FEAngioMaterial::ProtoPostGrowthUpdate(AngioElement* angio_elem, double end_time, double min_scale_factor, int buffer_index, FEMesh* mesh, FEAngio* feangio)
 {
 	//do the branching
 	if (angio_elem->_angio_mat->proto_branch_policy)
 	{
-		angio_elem->_angio_mat->proto_branch_policy->AddBranches(angio_elem, buffer_index, end_time, std::numeric_limits<int>::max(), mesh, feangio);
+		angio_elem->_angio_mat->proto_branch_policy->AddBranches(angio_elem, buffer_index, end_time, std::numeric_limits<int>::max(), min_scale_factor , mesh, feangio);
 	}
 
 

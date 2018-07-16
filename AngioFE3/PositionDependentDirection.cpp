@@ -71,21 +71,44 @@ vec3d RepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d 
 
 		repulse_at_integration_points.push_back(angio_mp->repulse_value * (1.0 / elastic_mp->m_J));
 	}
-	vec3d grad = pangio->gradient(angio_element->_elem, repulse_at_integration_points, local_pos);
-	double gradnorm = grad.norm();
-	if (gradnorm > threshold)
+	if(grad_threshold)
 	{
-		vec3d currentDirectionGradientPlane = grad ^ prev;
-		currentDirectionGradientPlane.unit();
-		vec3d perpendicularToGradient = currentDirectionGradientPlane ^ grad;
-		perpendicularToGradient.unit();
-		if (alpha_override)
+		vec3d grad = pangio->gradient(angio_element->_elem, repulse_at_integration_points, local_pos);
+		double gradnorm = grad.norm();
+		if (gradnorm > threshold)
 		{
-			alpha = contribution;
+			grad = -grad;
+			if (alpha_override)
+			{
+				alpha = contribution;
+			}
+			return mix(prev,grad, contribution);
 		}
-		return mix(prev, perpendicularToGradient, contribution);
+	}
+	else
+	{
+		double nodal_repulse[FEElement::MAX_NODES];
+		double H[FEElement::MAX_NODES];
+		angio_element->_elem->project_to_nodes(&repulse_at_integration_points[0],nodal_repulse);
+		double val = 0;
+		angio_element->_elem->shape_fnc(H, local_pos.x, local_pos.y, local_pos.z);
+		for(int i=0; i < angio_element->_elem->Nodes();i++)
+		{
+			val += H[i] * nodal_repulse[i];
+		}
+		vec3d grad = pangio->gradient(angio_element->_elem, repulse_at_integration_points, local_pos);
+		if(val > threshold)
+		{
+			grad = -grad;
+			if (alpha_override)
+			{
+				alpha = contribution;
+			}
+			return mix(prev, grad, contribution);
+		}
 	}
 	return prev;
+	
 }
 
 BEGIN_PARAMETER_LIST(ConcentrationGradientPDD, PositionDependentDirection)

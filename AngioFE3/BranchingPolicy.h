@@ -60,7 +60,7 @@ public:
 		AddProperty(&interpolation_prop, "interpolation_prop");
 	}
 	virtual ~BranchPolicy(){};
-	virtual void AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, double final_time, FEMesh* mesh, FEAngio* feangio)=0;
+	virtual void AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, double final_time, double min_scale_factor, FEMesh* mesh, FEAngio* feangio)=0;
 	virtual void SetupBranchInfo(AngioElement * angio_elem) = 0;
 	bool Init() override { return azmuth_angle->Init() && zenith_angle->Init(); }
 	virtual void TimeStepUpdate(double current_time){ azmuth_angle->TimeStepUpdate(current_time); zenith_angle->TimeStepUpdate(current_time);}
@@ -101,7 +101,7 @@ public:
 	bool Init() override {
 		return l2b.Init() && t2e.Init() && BranchPolicy::Init(); }
 	void TimeStepUpdate(double current_time) override { BranchPolicy::TimeStepUpdate(current_time); l2b->TimeStepUpdate(current_time); t2e->TimeStepUpdate(current_time); }
-	void AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, double final_time, FEMesh* mesh, FEAngio* feangio) override;
+	void AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, double final_time, double min_scale_factor, FEMesh* mesh, FEAngio* feangio) override;
 	void SetupBranchInfo(AngioElement * angio_elem) override;
 private:
 	FEPropertyT<FEProbabilityDistribution> l2b;//length to branch

@@ -13,7 +13,6 @@
 #include "ECMInitializer.h"
 #include "CommonAngioProperites.h"
 #include <FEBioMix/FEMultiphasic.h>
-#include "CultureParameters.h"
 #include "ContributionMix.h"
 #include "PositionDependentDirection.h"
 #include "PreviousSegmentContribution.h"
@@ -63,9 +62,9 @@ public:
 	int SelectNextTip(std::vector<AngioElement*> & possible_locations, std::vector<vec3d> & possible_local_coordinates, Tip* tip, double dt, FEMesh* mesh, double min_scale_factor, double min_angle);
 
 	//should be const and threadsafe
-	void PostGrowthUpdate(AngioElement* angio_elem, double end_time, double final_time, int buffer_index, FEMesh* mesh, FEAngio* feangio);
+	void PostGrowthUpdate(AngioElement* angio_elem, double end_time, double final_time, double min_scale_factor, int buffer_index, FEMesh* mesh, FEAngio* feangio);
 
-	void ProtoPostGrowthUpdate(AngioElement* angio_elem, double end_time, int buffer_index, FEMesh* mesh, FEAngio* feangio);
+	void ProtoPostGrowthUpdate(AngioElement* angio_elem, double end_time, double min_scale_factor, int buffer_index, FEMesh* mesh, FEAngio* feangio);
 
 	void Cleanup(AngioElement* angio_elem, double end_time, int buffer_index);
 
@@ -139,7 +138,5 @@ private:
 	FEPropertyT<ContributionMixManager> cm_manager;
 	FEPropertyT<SegmentGrowthVelocityManager> velocity_manager;
 	FEPropertyT<CommonAngioProperties> common_properties;
-	
-	CultureParameters m_cultureParams;
 	
 };

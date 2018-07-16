@@ -46,7 +46,7 @@ vec3d BranchPolicy::GetBranchDirection(vec3d local_pos, vec3d parent_direction, 
 
 
 
-void DelayedBranchingPolicy::AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, double final_time, FEMesh* mesh, FEAngio* feangio)
+void DelayedBranchingPolicy::AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, double final_time, double min_scale_factor, FEMesh* mesh, FEAngio* feangio)
 {
 	//this algorithm is n^2 there propably exists an nlogn algorithm
 	DelayBranchInfo * dbi = dynamic_cast<DelayBranchInfo*>(angio_elem->branch_info);
@@ -167,6 +167,7 @@ void DelayedBranchingPolicy::AddBranches(AngioElement * angio_elem, int buffer_i
 					cur.processed += remaing_l2b;
 					remaing_l2b = l2b->NextValue(angio_elem->_rengine);
 				}
+				cur.processed += min_scale_factor;
 				
 			}
 			else

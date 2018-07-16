@@ -116,7 +116,7 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, dou
 #pragma omp parallel for schedule(dynamic, 16)
 				for (int j = 0; j <angio_element_count; j++)
 				{
-					angio_elements[j]->_angio_mat->PostGrowthUpdate(angio_elements[j], ctime, cs->m_tend , buffer_index,mesh, this);
+					angio_elements[j]->_angio_mat->PostGrowthUpdate(angio_elements[j], ctime, cs->m_tend , min_scale_factor, buffer_index, mesh, this);
 				}
 				buffer_index = (buffer_index + 1) % 2;
 			}
@@ -193,7 +193,7 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 #pragma omp parallel for schedule(dynamic, 32)
 					for (int j = 0; j <angio_element_count; j++)
 					{
-						angio_elements[j]->_angio_mat->ProtoPostGrowthUpdate(angio_elements[j], ctime, buffer_index, mesh, this);
+						angio_elements[j]->_angio_mat->ProtoPostGrowthUpdate(angio_elements[j], ctime, min_scale_factor, buffer_index, mesh, this);
 					}
 					buffer_index = (buffer_index + 1) % 2;
 				}
