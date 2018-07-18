@@ -8,9 +8,3 @@ CommonAngioProperties::CommonAngioProperties(FEModel * pfem) : FEMaterial(pfem)
 	AddProperty(&fseeder, "fragment_seeder");
 	//AddProperty(&gdms, "grow_direction_modifiers");
 }
-
-
-void CommonAngioProperties::UpdateGDMs()
-{
-	//gdms->Update();
-}

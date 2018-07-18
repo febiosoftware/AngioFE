@@ -56,10 +56,8 @@ Fileout::Fileout(FEAngio& angio)
 	fprintf(m_stream4, "%-5s,%-12s,%-12s,%-12s\n", "State", "X", "Y", "Z");
 
 	feangio_state_stream = fopen("angio_stats.csv", "wt");
-	fprintf(feangio_state_stream, "%-64s,%-64s,%-64s,%-64s,%-64s,%-64s,%-64s,%-64s\n",
-		"Timestep", "Grow Segments","Update Sprout Stress Scaling",
-		"Update Sprout Stress", "Adjust Mesh Stiffness", "GDM Update",
-		"ECM Update", "Material Update");
+	fprintf(feangio_state_stream, "%-64s,%-64s,%-64s,%-64s\n",
+		"Timestep", "Growth Process","Branch Policy Update", "Update Stress");
 }
 
 //-----------------------------------------------------------------------------
@@ -213,22 +211,13 @@ void Fileout::save_feangio_stats(FEAngio& angio)
 	FETimeInfo & ti = angio.m_fem->GetTime();
 	const int STR_SIZE = 64;
 	char grow_time[STR_SIZE];
-	char update_stress_scaling_time[STR_SIZE];
-	char update_stress_time[STR_SIZE];
-	char mesh_stiffnesss_time[STR_SIZE];
-	char gdm_update_time[STR_SIZE];
-	char ecm_update_time[STR_SIZE];
-	char material_update_time[STR_SIZE];
+	char update_branch_policy[STR_SIZE];
+	char update_stress[STR_SIZE];
 	angio.grow_timer.time_str(grow_time);
-	angio.update_sprout_stress_scaling_timer.time_str(update_stress_scaling_time);
-	angio.update_sprout_stress_scaling_timer.time_str(update_stress_time);//TODO: fix this
-	angio.mesh_stiffness_timer.time_str(mesh_stiffnesss_time);
-	angio.update_gdms_timer.time_str(gdm_update_time);
-	angio.update_ecm_timer.time_str(ecm_update_time);
-	angio.material_update_timer.time_str(material_update_time);
-	fprintf(feangio_state_stream, "%-12.7f,%-64s,%-64s,%-64s,%-64s,%-64s,%-64s,%-64s\n",
-		ti.currentTime, grow_time, update_stress_scaling_time, update_stress_time,
-		mesh_stiffnesss_time, gdm_update_time, ecm_update_time, material_update_time);
+	angio.update_branch_policy_timestep_timer.time_str(update_branch_policy);
+	angio.update_angio_stress_timer.time_str(update_stress);
+	fprintf(feangio_state_stream, "%-12.7f,%-64s,%-64s,%-64s\n",
+		ti.currentTime, grow_time, update_branch_policy, update_stress);
 	fflush(feangio_state_stream);
 }
 

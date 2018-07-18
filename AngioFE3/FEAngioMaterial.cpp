@@ -358,7 +358,9 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	const double min_segm_len = 0.1;
 	int next_buffer_index = (buffer_index + 1) % 2;
 	double dt = end_time - active_tip->time;
+	assert(dt > 0.0);
 	double grow_vel = this->GetSegmentVelocity(angio_element, active_tip->GetLocalPosition(), mesh);
+	assert(grow_vel > 0.0);
 	double grow_len = grow_vel*dt;
 
 	double Gr[FEElement::MAX_NODES];
@@ -383,7 +385,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	mat3d global_to_natc = natc_to_global.inverse();
 	double alpha = cm_manager->ApplyModifiers(dt, active_tip->angio_element, active_tip->GetLocalPosition(), mesh);
 	vec3d psc_dir = psc_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip->angio_element, active_tip->GetLocalPosition(), active_tip->GetDirection(mesh), mesh);
-	vec3d pdd_dir = pdd_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip->angio_element, active_tip->GetLocalPosition() , alpha, mesh, m_pangio);
+	vec3d pdd_dir = pdd_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip->angio_element, active_tip->GetLocalPosition() , active_tip->initial_fragment_id , buffer_index , alpha, mesh, m_pangio);
 	alpha = std::max(0.0,std::min(1.0, alpha));
 
 	vec3d global_dir = mix(psc_dir, pdd_dir , (alpha));
@@ -504,7 +506,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		if(possible_locations.size())
 		{
 			//need some way to choose the correct element to continue the tip in
-			int index = SelectNextTip(possible_locations, possible_local_coordinates, next, dt ,mesh, min_scale_factor,min_angle);
+			int index = SelectNextTip(possible_locations, possible_local_coordinates, next, dt , buffer_index, mesh,min_scale_factor, min_angle);
 			if(index != -1)
 			{
 				Tip * adj = new Tip(next, mesh);
@@ -666,7 +668,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		if (possible_locations.size())
 		{
 			//need some way to choose the correct element to continue the tip in
-			int index = SelectNextTip(possible_locations, possible_local_coordinates, next, dt, mesh, min_scale_factor, min_angle);
+			int index = SelectNextTip(possible_locations, possible_local_coordinates, next, dt, buffer_index , mesh, min_scale_factor, min_angle);
 			if (index != -1)
 			{
 				Tip * adj = new Tip(next, mesh);
@@ -685,7 +687,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 //possibilites include: longest possible growth length,
 //most similar in direction to the tip's direction and above a 
 
-int FEAngioMaterial::SelectNextTip(std::vector<AngioElement*> & possible_locations, std::vector<vec3d> & possible_local_coordinates, Tip* tip, double dt, FEMesh* mesh, double min_scale_factor, double min_angle)
+int FEAngioMaterial::SelectNextTip(std::vector<AngioElement*> & possible_locations, std::vector<vec3d> & possible_local_coordinates, Tip* tip, double dt, int buffer, FEMesh* mesh, double min_scale_factor, double min_angle)
 {
 	assert(possible_locations.size() == possible_local_coordinates.size());
 	if (possible_locations.size() == 1)
@@ -696,10 +698,10 @@ int FEAngioMaterial::SelectNextTip(std::vector<AngioElement*> & possible_locatio
 	{
 		double alpha = cm_manager->ApplyModifiers(dt, possible_locations[i], possible_local_coordinates[i], mesh);
 		vec3d psc_dir = psc_manager->ApplyModifiers(vec3d(1, 0, 0), possible_locations[i], possible_local_coordinates[i], tip->GetDirection(mesh), mesh);
-		vec3d pdd_dir = pdd_manager->ApplyModifiers(vec3d(1, 0, 0), possible_locations[i], possible_local_coordinates[i],alpha , mesh, m_pangio);
+		vec3d pdd_dir = pdd_manager->ApplyModifiers(vec3d(1, 0, 0), possible_locations[i], possible_local_coordinates[i],tip->initial_fragment_id , buffer , alpha, mesh, m_pangio);
 		vec3d global_dir = mix(psc_dir, pdd_dir, (alpha));
 		global_dir.unit();
-		vec3d possible_dir = possible_locations[i]->_angio_mat->pdd_manager->ApplyModifiers({ 1,0,0 }, possible_locations[i], possible_local_coordinates[i], alpha, mesh, m_pangio);
+		vec3d possible_dir = possible_locations[i]->_angio_mat->pdd_manager->ApplyModifiers({ 1,0,0 }, possible_locations[i], possible_local_coordinates[i], tip->initial_fragment_id, buffer, alpha, mesh, m_pangio);
 		double Gr[FEElement::MAX_NODES];
 		double Gs[FEElement::MAX_NODES];
 		double Gt[FEElement::MAX_NODES];
@@ -808,11 +810,6 @@ bool FEAngioMaterial::SeedFragments(std::vector<AngioElement *>& angio_elements,
 vec3d FEAngioMaterial::ApplySegmentDirectionModifiers(Tip * tip, double dt)
 {
 	
-}
-
-void FEAngioMaterial::UpdateGDMs()
-{
-	common_properties->UpdateGDMs();
 }
 
 

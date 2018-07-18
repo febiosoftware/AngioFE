@@ -132,10 +132,12 @@ void DelayedBranchingPolicy::AddBranches(AngioElement * angio_elem, int buffer_i
 	double & remaing_l2b = dynamic_cast<DelayBranchInfo*>(angio_elem->branch_info)->length_to_branch;
 
 	//process all of the branch points, creates the futre points at which branches will occour
+#ifndef NDEBUG
 	if(bps.size()>25 || angio_elem->recent_segments.size() > 100)
 	{
 		std::cout << "large number of branch points" << std::endl;
 	}
+#endif
 
 	while(bps.size())
 	{

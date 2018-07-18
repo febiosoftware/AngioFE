@@ -20,7 +20,7 @@ public:
 	//int face;//-1 for inside the element
 	AngioElement* face= nullptr;//the element where growth originated from
 	Segment * parent=nullptr;//may be nullptr for no parent segment
-	int initial_fragment_id = -1;
+	int initial_fragment_id = -1;//will be initialized to values greater than or equal to zero
 	bool is_branch = false;
 	bool use_direction = false;
 	vec3d direction;//only used if the tip is a branch

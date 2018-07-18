@@ -261,6 +261,55 @@ void FEAngio::GetActiveFinalTipsInRadius(AngioElement* angio_element, double rad
 	}
 }
 
+void FEAngio::GetActiveTipsInRadius(AngioElement* angio_element, double radius, int buffer, FEAngio* pangio, std::vector<Tip *> & tips, int excliude)
+{
+	std::unordered_set<AngioElement *> visited;
+	std::set<AngioElement *> next;
+	std::vector<vec3d> element_bounds;
+	visited.reserve(1000);
+	tips.reserve(500);
+	pangio->ExtremaInElement(angio_element->_elem, element_bounds);
+
+	for (int i = 0; i < angio_element->face_adjacency_list.size(); i++)
+	{
+		next.insert(angio_element->face_adjacency_list[i]);
+	}
+	visited.insert(angio_element);
+	while (next.size())
+	{
+		AngioElement * cur = *next.begin();
+		next.erase(next.begin());
+		visited.insert(cur);
+		std::vector<vec3d> cur_element_bounds;
+		pangio->ExtremaInElement(cur->_elem, cur_element_bounds);
+		double cdist = FEAngio::MinDistance(element_bounds, cur_element_bounds);
+		if (cdist <= radius)
+		{
+			for(auto iter = cur->active_tips[buffer].begin(); iter != cur->active_tips[buffer].end(); ++iter)
+			{
+				//add the tips and the add all unvisited adjacent elements to next
+				for (int i = 0; i < iter->second.size(); i++)
+				{
+					Tip * tip = iter->second[i];
+					if(tip->initial_fragment_id != excliude)
+					{
+						tips.push_back(tip);
+					}
+				}
+			}
+			
+
+			for (int i = 0; i < cur->face_adjacency_list.size(); i++)
+			{
+				if (!visited.count(cur->face_adjacency_list[i]))
+				{
+					next.insert(cur->face_adjacency_list[i]);
+				}
+			}
+		}
+	}
+}
+
 
 vec3d FEAngio::ReferenceCoordinates(Tip * tip) const
 {
@@ -1028,13 +1077,6 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 			}
 		}
 
-		update_gdms_timer.start();
-		for (size_t i = 0; i < m_pmat.size(); i++)
-		{
-			m_pmat[i]->UpdateGDMs();
-		}
-		update_gdms_timer.stop();
-
 		//setup the branch info before doing any growth
 #pragma omp parallel for schedule(dynamic, 16)
 		for (int i = 0; i < angio_element_count; i++)
@@ -1075,26 +1117,18 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		
 		auto & ti = fem.GetTime();
 
-		update_gdms_timer.start();
+		update_branch_policy_timestep_timer.start();
 		for (size_t i = 0; i < m_pmat.size(); i++)
 		{
-			m_pmat[i]->UpdateGDMs();
 			m_pmat[i]->branch_policy->TimeStepUpdate(ti.currentTime);
 		}
-		update_gdms_timer.stop();
+		update_branch_policy_timestep_timer.stop();
 
 
 		//new function to find the start time grow time and if this is the final iteration this timestep
 		grow_timer.start();
 		GrowSegments(min_scale_factor, bounds_tolerance,min_angle,growth_substeps);
 		grow_timer.stop();
-		
-		mesh_stiffness_timer.start();
-		mesh_stiffness_timer.stop();
-
-		update_sprout_stress_scaling_timer.start();
-
-		update_sprout_stress_scaling_timer.stop();
 
 		update_angio_stress_timer.start();
 		for (int i = 0; i < angio_materials.size(); i++)
@@ -1117,16 +1151,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 	}
 	else if (nwhen == CB_MAJOR_ITERS)
 	{
-		// update the grid data
-		update_ecm_timer.start();
-		update_ecm_timer.stop();
 
-		material_update_timer.start();
-		for (size_t i = 0; i < m_pmat.size(); i++)
-		{
-			
-		}
-		material_update_timer.stop();
 		fileout->save_feangio_stats(*this);
 		ResetTimers();
 		++FE_state;
@@ -1156,11 +1181,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 void FEAngio::ResetTimers()
 {
 	grow_timer.reset();
-	mesh_stiffness_timer.reset();
-	update_sprout_stress_scaling_timer.reset();
-	update_gdms_timer.reset();
-	update_ecm_timer.reset();
-	material_update_timer.reset();
+	update_branch_policy_timestep_timer.reset();
 	update_angio_stress_timer.reset();
 }
 

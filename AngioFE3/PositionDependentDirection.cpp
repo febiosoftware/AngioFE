@@ -11,11 +11,11 @@ BEGIN_PARAMETER_LIST(PositionDependentDirection, FEMaterial)
 ADD_PARAMETER(contribution, FE_PARAM_DOUBLE, "contribution");
 END_PARAMETER_LIST();
 
-vec3d PositionDependentDirectionManager::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, double& alpha, FEMesh* mesh, FEAngio* pangio)
+vec3d PositionDependentDirectionManager::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int buffer, double& alpha, FEMesh* mesh, FEAngio* pangio)
 {
 	for (int i = 0; i < pdd_modifiers.size(); i++)
 	{
-		prev = pdd_modifiers[i]->ApplyModifiers(prev, angio_element, local_pos, alpha, mesh, pangio);
+		prev = pdd_modifiers[i]->ApplyModifiers(prev, angio_element, local_pos, initial_fragment_id , buffer , alpha, mesh, pangio);
 	}
 	return prev;
 }
@@ -25,7 +25,7 @@ ADD_PARAMETER(threshold, FE_PARAM_DOUBLE, "threshold");
 ADD_PARAMETER(alpha_override, FE_PARAM_BOOL, "alpha_override");
 END_PARAMETER_LIST();
 
-vec3d ECMDensityGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, double& alpha, FEMesh* mesh, FEAngio* pangio)
+vec3d ECMDensityGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, FEMesh* mesh, FEAngio* pangio)
 {
 	std::vector<double> density_at_integration_points;
 
@@ -59,7 +59,7 @@ ADD_PARAMETER(threshold, FE_PARAM_DOUBLE, "threshold");
 ADD_PARAMETER(alpha_override, FE_PARAM_BOOL, "alpha_override");
 END_PARAMETER_LIST();
 
-vec3d RepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, double& alpha, FEMesh* mesh, FEAngio* pangio)
+vec3d RepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, FEMesh* mesh, FEAngio* pangio)
 {
 	std::vector<double> repulse_at_integration_points;
 
@@ -117,7 +117,7 @@ ADD_PARAMETER(alpha_override, FE_PARAM_BOOL, "alpha_override");
 ADD_PARAMETER(sol_id, FE_PARAM_INT, "sol_id");
 END_PARAMETER_LIST();
 
-vec3d ConcentrationGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, double& alpha, FEMesh* mesh, FEAngio* pangio)
+vec3d ConcentrationGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, FEMesh* mesh, FEAngio* pangio)
 {
 	std::vector<double> concentration_at_integration_points;
 
@@ -140,9 +140,57 @@ vec3d ConcentrationGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_e
 	return prev;
 }
 
-vec3d AnastomosisPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, double& alpha, FEMesh* mesh, FEAngio* pangio)
+//used in the anastamosis modifier
+double distance2(FESolidElement * se, vec3d local_pos, Tip * tip, FEMesh* mesh)
 {
-	return vec3d(0, 0, 0);
+	vec3d pos;
+	double H[FEElement::MAX_NODES];
+	se->shape_fnc(H, local_pos.x, local_pos.y, local_pos.z);
+	for(int i=0; i < se->Nodes();i++)
+	{
+		pos += (mesh->Node(se->m_node[i]).m_rt * H[i]);
+	}
+	return (tip->GetPosition(mesh) - pos).norm2();
+}
+
+vec3d AnastomosisPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, FEMesh* mesh, FEAngio* pangio)
+{
+	//find all elements within the radius 
+	std::vector<Tip*> tips;
+	FEAngio::GetActiveTipsInRadius(angio_element, anastomosis_radius, current_buffer, pangio, tips, initial_fragment_id);
+	//if there are any valid tips pick the nearest and grow towards it
+	if(tips.size())
+	{
+		int best_index = 0;
+		double best_distance = distance2(angio_element->_elem,local_pos, tips[0], mesh);
+		for(int i=1; i < tips.size();i++)
+		{
+			double pd = distance2(angio_element->_elem, local_pos, tips[i], mesh);
+			if(best_distance > pd)
+			{
+				best_index = i;
+				best_distance = pd;
+			}
+		}
+		//get the direction
+		vec3d pos;
+		double H[FEElement::MAX_NODES];
+		angio_element->_elem->shape_fnc(H, local_pos.x, local_pos.y, local_pos.z);
+		for (int i = 0; i < angio_element->_elem->Nodes(); i++)
+		{
+			pos += (mesh->Node(angio_element->_elem->m_node[i]).m_rt * H[i]);
+		}
+		vec3d dir = (tips[best_index]->GetPosition(mesh) - pos);
+		dir.unit();
+		if (alpha_override)
+		{
+			alpha = contribution;
+		}
+		return mix(prev, dir, contribution);
+	}
+
+
+	return prev;
 }
 
 BEGIN_PARAMETER_LIST(AnastomosisPDD, PositionDependentDirection)
@@ -155,7 +203,7 @@ void FiberPDD::Update(FEMesh * mesh, FEAngio* angio)
 
 }
 
-vec3d FiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, double& alpha, FEMesh* mesh, FEAngio* pangio)
+vec3d FiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, FEMesh* mesh, FEAngio* pangio)
 {
 	std::vector<quatd> gauss_data;
 	std::vector<quatd> nodal_data;

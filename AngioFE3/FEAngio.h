@@ -93,6 +93,7 @@ public:
 	void ProtoGrowSegments(double min_scale_factor, double bounds_tolerance, double min_angle, int growth_substeps);
 
 	static void GetActiveFinalTipsInRadius(AngioElement* angio_element, double radius, FEAngio* pangio, std::vector<Tip *> & tips);
+	static void GetActiveTipsInRadius(AngioElement* angio_element, double radius, int buffer, FEAngio* pangio, std::vector<Tip *> & tips, int excliude);
 
 	//returns the length between the two points as if they are conencted by a line segment in the natrual coordinates of the element
 	//only the difference between the points if the elements are linear
@@ -175,12 +176,8 @@ private:
 	std::uniform_real_distribution<double> zto2pi;
 	std::uniform_real_distribution<double> n1to1;
 	Timer grow_timer;
-	Timer mesh_stiffness_timer;
-	Timer update_sprout_stress_scaling_timer;
 	Timer update_angio_stress_timer;
-	Timer update_gdms_timer;
-	Timer update_ecm_timer;
-	Timer material_update_timer;
+	Timer update_branch_policy_timestep_timer;
 
 	std::vector<AngioElement *> angio_elements;//the dense list of angio elements
 	std::unordered_map<FESolidElement*,std::pair<AngioElement *,int>> se_to_angio_elem;//the int is the index which is used in neighbor lookups

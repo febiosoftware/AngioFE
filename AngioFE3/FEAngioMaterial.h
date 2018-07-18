@@ -59,7 +59,7 @@ public:
 	void ProtoGrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle);
 
 	//returns the index of the element in which the tip will grow next, this resolves when a tip can grow in multiple elements
-	int SelectNextTip(std::vector<AngioElement*> & possible_locations, std::vector<vec3d> & possible_local_coordinates, Tip* tip, double dt, FEMesh* mesh, double min_scale_factor, double min_angle);
+	int SelectNextTip(std::vector<AngioElement*> & possible_locations, std::vector<vec3d> & possible_local_coordinates, Tip* tip, double dt, int buffer, FEMesh* mesh, double min_scale_factor, double min_angle);
 
 	//should be const and threadsafe
 	void PostGrowthUpdate(AngioElement* angio_elem, double end_time, double final_time, double min_scale_factor, int buffer_index, FEMesh* mesh, FEAngio* feangio);
@@ -73,8 +73,6 @@ public:
 	bool SeedFragments(std::vector<AngioElement *>& angio_elements, FEMesh* mesh);
 
 	vec3d ApplySegmentDirectionModifiers(Tip * tip, double dt);
-
-	void UpdateGDMs();
 
 	double FindDensityScale(FEAngioMaterialPoint * mp);
 
