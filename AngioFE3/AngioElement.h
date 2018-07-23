@@ -43,4 +43,5 @@ public:
 	int branch_count = 0;
 	double global_segment_length = 0.0;
 	double refernce_frame_segment_length = 0.0;
+	int anastamoses = 0;
 };

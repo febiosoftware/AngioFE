@@ -63,6 +63,7 @@ public:
 	friend class FEPlotAngioECMAlpha;
 	friend class FEPlotAngioGradient;
 	friend class FEPlotBranches;
+	friend class FEPlotAnastamoses;
 	friend class FEPlotSegmentLength;
 	friend class FEPlotRefSegmentLength;
 	//the following friendships are bad and need removed eventually
@@ -94,6 +95,7 @@ public:
 
 	static void GetActiveFinalTipsInRadius(AngioElement* angio_element, double radius, FEAngio* pangio, std::vector<Tip *> & tips);
 	static void GetActiveTipsInRadius(AngioElement* angio_element, double radius, int buffer, FEAngio* pangio, std::vector<Tip *> & tips, int excliude);
+	static void GetGrownTipsInRadius(AngioElement* angio_element, double radius, int buffer, FEAngio* pangio, std::vector<Tip *> & tips, int excliude);
 
 	//returns the length between the two points as if they are conencted by a line segment in the natrual coordinates of the element
 	//only the difference between the points if the elements are linear

@@ -91,6 +91,14 @@ public:
 };
 
 //-----------------------------------------------------------------------------
+class FEPlotAnastamoses : public FEDomainData
+{
+public:
+	explicit FEPlotAnastamoses(FEModel* pfem) : FEDomainData(PLT_FLOAT, FMT_ITEM) {}
+	bool Save(FEDomain& d, FEDataStream& str) override;
+};
+
+//-----------------------------------------------------------------------------
 class FEPlotSegmentLength : public FEDomainData
 {
 public:

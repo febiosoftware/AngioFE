@@ -11,11 +11,11 @@ BEGIN_PARAMETER_LIST(PositionDependentDirection, FEMaterial)
 ADD_PARAMETER(contribution, FE_PARAM_DOUBLE, "contribution");
 END_PARAMETER_LIST();
 
-vec3d PositionDependentDirectionManager::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int buffer, double& alpha, FEMesh* mesh, FEAngio* pangio)
+vec3d PositionDependentDirectionManager::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int buffer, bool& continue_growth, vec3d& tip_dir, double& alpha, FEMesh* mesh, FEAngio* pangio)
 {
 	for (int i = 0; i < pdd_modifiers.size(); i++)
 	{
-		prev = pdd_modifiers[i]->ApplyModifiers(prev, angio_element, local_pos, initial_fragment_id , buffer , alpha, mesh, pangio);
+		prev = pdd_modifiers[i]->ApplyModifiers(prev, angio_element, local_pos, initial_fragment_id , buffer , alpha, continue_growth , tip_dir , mesh, pangio);
 	}
 	return prev;
 }
@@ -25,7 +25,7 @@ ADD_PARAMETER(threshold, FE_PARAM_DOUBLE, "threshold");
 ADD_PARAMETER(alpha_override, FE_PARAM_BOOL, "alpha_override");
 END_PARAMETER_LIST();
 
-vec3d ECMDensityGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, FEMesh* mesh, FEAngio* pangio)
+vec3d ECMDensityGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio)
 {
 	std::vector<double> density_at_integration_points;
 
@@ -59,7 +59,7 @@ ADD_PARAMETER(threshold, FE_PARAM_DOUBLE, "threshold");
 ADD_PARAMETER(alpha_override, FE_PARAM_BOOL, "alpha_override");
 END_PARAMETER_LIST();
 
-vec3d RepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, FEMesh* mesh, FEAngio* pangio)
+vec3d RepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio)
 {
 	std::vector<double> repulse_at_integration_points;
 
@@ -117,7 +117,7 @@ ADD_PARAMETER(alpha_override, FE_PARAM_BOOL, "alpha_override");
 ADD_PARAMETER(sol_id, FE_PARAM_INT, "sol_id");
 END_PARAMETER_LIST();
 
-vec3d ConcentrationGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, FEMesh* mesh, FEAngio* pangio)
+vec3d ConcentrationGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio)
 {
 	std::vector<double> concentration_at_integration_points;
 
@@ -141,7 +141,7 @@ vec3d ConcentrationGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_e
 }
 
 //used in the anastamosis modifier
-double distance2(FESolidElement * se, vec3d local_pos, Tip * tip, FEMesh* mesh)
+double AnastamosisPDD::distance2(FESolidElement * se, vec3d local_pos, Tip * tip, FEMesh* mesh)
 {
 	vec3d pos;
 	double H[FEElement::MAX_NODES];
@@ -153,49 +153,126 @@ double distance2(FESolidElement * se, vec3d local_pos, Tip * tip, FEMesh* mesh)
 	return (tip->GetPosition(mesh) - pos).norm2();
 }
 
-vec3d AnastomosisPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, FEMesh* mesh, FEAngio* pangio)
+vec3d AnastamosisPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio)
 {
-	//find all elements within the radius 
-	std::vector<Tip*> tips;
-	FEAngio::GetActiveTipsInRadius(angio_element, anastomosis_radius, current_buffer, pangio, tips, initial_fragment_id);
-	//if there are any valid tips pick the nearest and grow towards it
-	if(tips.size())
+	vec3d tip_pos;
+	double H[FEElement::MAX_NODES];
+	angio_element->_elem->shape_fnc(H, local_pos.x, local_pos.y, local_pos.z);
+	for (int i = 0; i < angio_element->_elem->Nodes(); i++)
 	{
-		int best_index = 0;
-		double best_distance = distance2(angio_element->_elem,local_pos, tips[0], mesh);
-		for(int i=1; i < tips.size();i++)
-		{
-			double pd = distance2(angio_element->_elem, local_pos, tips[i], mesh);
-			if(best_distance > pd)
-			{
-				best_index = i;
-				best_distance = pd;
-			}
-		}
-		//get the direction
-		vec3d pos;
-		double H[FEElement::MAX_NODES];
-		angio_element->_elem->shape_fnc(H, local_pos.x, local_pos.y, local_pos.z);
-		for (int i = 0; i < angio_element->_elem->Nodes(); i++)
-		{
-			pos += (mesh->Node(angio_element->_elem->m_node[i]).m_rt * H[i]);
-		}
-		vec3d dir = (tips[best_index]->GetPosition(mesh) - pos);
-		dir.unit();
+		tip_pos += (mesh->Node(angio_element->_elem->m_node[i]).m_rt * H[i]);
+	}
+	Tip* best_tip = FuseWith(angio_element, pangio, mesh, tip_pos, tip_dir, initial_fragment_id, anastamosis_radius);
+	if(best_tip)
+	{
+		vec3d dir = (best_tip->GetPosition(mesh) - tip_pos);
+		double len = dir.unit();
 		if (alpha_override)
 		{
 			alpha = contribution;
 		}
+		if (len < fuse_radius && fuse_angle  > dir * tip_dir)
+		{
+			angio_element->anastamoses++;
+			continute_growth = false;
+		}
+
 		return mix(prev, dir, contribution);
 	}
-
-
 	return prev;
 }
 
-BEGIN_PARAMETER_LIST(AnastomosisPDD, PositionDependentDirection)
-ADD_PARAMETER(anastomosis_radius, FE_PARAM_DOUBLE, "anastomosis_radius");
+Tip* AnastamosisPDD::FuseWith(class AngioElement* angio_element, FEAngio* pangio, class FEMesh* mesh, class vec3d tip_pos, class vec3d tip_dir, int exclude, double radius)
+{
+	double best_possible_distance;
+	Tip * best = BestInElement(angio_element, pangio, mesh, tip_pos,tip_dir, exclude, best_possible_distance);
+	double best_distance = std::numeric_limits<double>::max();
+	if (best)
+	{
+		best_distance = best_possible_distance;
+	}
+
+	std::unordered_set<AngioElement *> visited;
+	std::set<AngioElement *> next;
+	std::vector<vec3d> element_bounds;
+	visited.reserve(1000);
+	pangio->ExtremaInElement(angio_element->_elem, element_bounds);
+
+
+
+	for (int i = 0; i < angio_element->adjacency_list.size(); i++)
+	{
+		next.insert(angio_element->adjacency_list[i]);
+	}
+	visited.insert(angio_element);
+	while (next.size())
+	{
+		AngioElement * cur = *next.begin();
+		next.erase(next.begin());
+		visited.insert(cur);
+		std::vector<vec3d> cur_element_bounds;
+		pangio->ExtremaInElement(cur->_elem, cur_element_bounds);
+		double cdist = FEAngio::MinDistance(element_bounds, cur_element_bounds);
+		if (cdist <= radius && cdist <= best_distance)
+		{
+			Tip * pos_best = BestInElement(cur, pangio, mesh, tip_pos, tip_dir, exclude, best_possible_distance);
+			if (pos_best && best_possible_distance < best_distance)
+			{
+				best = pos_best;
+				best_distance = best_possible_distance;
+			}
+
+
+			for (int i = 0; i < cur->adjacency_list.size(); i++)
+			{
+				if (!visited.count(cur->adjacency_list[i]))
+				{
+					next.insert(cur->adjacency_list[i]);
+				}
+			}
+		}
+		//otherwise let uneeded elements die
+	}
+	return best;
+}
+
+bool AnastamosisPDD::ValidTip(Tip* tip, vec3d tip_dir, FEMesh* mesh)
+{
+	return fuse_angle > tip->GetDirection(mesh) * tip_dir;
+}
+
+Tip * AnastamosisPDD::BestInElement(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh, vec3d tip_origin, vec3d tip_dir, int exclude, double& best_distance)
+{
+	best_distance = std::numeric_limits<double>::max();
+	int best_index = -1;
+	for(int i=0; i < angio_element->grown_segments.size();i++)
+	{
+		Tip * tip = angio_element->grown_segments[i]->front;
+		if(tip->initial_fragment_id != exclude)
+		{
+			vec3d pos = tip->GetPosition(mesh);
+			double dist = (tip_origin - pos).norm2();
+			if (dist < best_distance)
+			{
+				best_distance = dist;
+				best_index = i;
+			}
+		}
+	}
+	if(best_index != -1)
+	{
+		best_distance = sqrt(best_distance);
+		return angio_element->grown_segments[best_index]->front;
+	}
+	return nullptr;
+}
+
+
+BEGIN_PARAMETER_LIST(AnastamosisPDD, PositionDependentDirection)
+ADD_PARAMETER(anastamosis_radius, FE_PARAM_DOUBLE, "anastamosis_radius");
 ADD_PARAMETER(contribution, FE_PARAM_DOUBLE, "contribution");
+ADD_PARAMETER(fuse_radius, FE_PARAM_DOUBLE, "fuse_radius");
+ADD_PARAMETER(fuse_angle, FE_PARAM_DOUBLE, "fuse_angle");
 END_PARAMETER_LIST();
 
 void FiberPDD::Update(FEMesh * mesh, FEAngio* angio)
@@ -203,7 +280,7 @@ void FiberPDD::Update(FEMesh * mesh, FEAngio* angio)
 
 }
 
-vec3d FiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, FEMesh* mesh, FEAngio* pangio)
+vec3d FiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio)
 {
 	std::vector<quatd> gauss_data;
 	std::vector<quatd> nodal_data;

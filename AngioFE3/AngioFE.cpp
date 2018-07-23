@@ -65,7 +65,7 @@ FEPluginFactory_T<PreviousSegmentPSC                , FEMATERIAL_ID> previous_se
 // PDD Classes
 FEPluginFactory_T<PositionDependentDirectionManager, FEMATERIAL_ID> position_dependent_direction_manager_factory("position_dependent_direction_manager");
 FEPluginFactory_T<FiberPDD                         , FEMATERIAL_ID> fiber_pdd_factory("fiber_pdd");
-FEPluginFactory_T<AnastomosisPDD                   , FEMATERIAL_ID> anastomosis_pdd_factory("anastomosis_pdd");
+FEPluginFactory_T<AnastamosisPDD                   , FEMATERIAL_ID> anastamosis_pdd_factory("anastamosis_pdd");
 FEPluginFactory_T<ECMDensityGradientPDD, FEMATERIAL_ID> ecm_density_gradient_factory("ecm_density_gradient_pdd");
 FEPluginFactory_T<RepulsePDD, FEMATERIAL_ID> repulse_factory("repulse_pdd");
 FEPluginFactory_T<ConcentrationGradientPDD, FEMATERIAL_ID> concentration_gradient_factory("concentration_gradient_pdd");
@@ -127,6 +127,7 @@ FEPluginFactory_T<FEPlotAngioECMAlpha        , FEPLOTDATA_ID> plot_angio_alpha  
 FEPluginFactory_T<FEPlotAngioGradient        , FEPLOTDATA_ID> plot_angio_gradient          ("angio gradient"        );
 FEPluginFactory_T<FEPlotAngioGradientCenter  , FEPLOTDATA_ID> plot_angio_gradient_center   ("angio gradient center" );
 FEPluginFactory_T<FEPlotBranches, FEPLOTDATA_ID> plot_branches("branch_count");
+FEPluginFactory_T<FEPlotAnastamoses, FEPLOTDATA_ID> plot_anastamoses("anastamoses");
 FEPluginFactory_T<FEPlotSegmentLength, FEPLOTDATA_ID> plot_segment_length("segment_length");
 FEPluginFactory_T<FEPlotRefSegmentLength, FEPLOTDATA_ID> plot_reference_frame_segment_length("reference_frame_segment_length");
 FEPluginFactory_T<FEPlotMatrixConectrationGradient, FEPLOTDATA_ID> plot_matrix_concentration_gradient("matrix concecntration gradient");
@@ -172,6 +173,7 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		&plot_angio_stress, &plot_angio_stress,
 		&plot_angio_ecm, &plot_angio_alpha, &plot_angio_gradient, &plot_angio_gradient_center,
 		&plot_branches,
+		&plot_anastamoses,
 		&plot_segment_length,
 		&plot_reference_frame_segment_length,
 		&plot_vessel_stress, &plot_matrix_stress,
@@ -237,7 +239,7 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		// PDD Modifier Classes
 		&position_dependent_direction_manager_factory,
 		&fiber_pdd_factory,
-		&anastomosis_pdd_factory,
+		&anastamosis_pdd_factory,
 		&ecm_density_gradient_factory,
 		&repulse_factory,
 		&concentration_gradient_factory,

@@ -310,6 +310,55 @@ void FEAngio::GetActiveTipsInRadius(AngioElement* angio_element, double radius, 
 	}
 }
 
+void FEAngio::GetGrownTipsInRadius(AngioElement* angio_element, double radius, int buffer, FEAngio* pangio, std::vector<Tip *> & tips, int excliude)
+{
+	std::unordered_set<AngioElement *> visited;
+	std::set<AngioElement *> next;
+	std::vector<vec3d> element_bounds;
+	visited.reserve(1000);
+	tips.reserve(500);
+	pangio->ExtremaInElement(angio_element->_elem, element_bounds);
+
+	for (int i = 0; i < angio_element->face_adjacency_list.size(); i++)
+	{
+		next.insert(angio_element->face_adjacency_list[i]);
+	}
+	visited.insert(angio_element);
+	while (next.size())
+	{
+		AngioElement * cur = *next.begin();
+		next.erase(next.begin());
+		visited.insert(cur);
+		std::vector<vec3d> cur_element_bounds;
+		pangio->ExtremaInElement(cur->_elem, cur_element_bounds);
+		double cdist = FEAngio::MinDistance(element_bounds, cur_element_bounds);
+		if (cdist <= radius)
+		{
+			for (auto iter = cur->active_tips[buffer].begin(); iter != cur->active_tips[buffer].end(); ++iter)
+			{
+				//add the tips and the add all unvisited adjacent elements to next
+				for (int i = 0; i < iter->second.size(); i++)
+				{
+					Tip * tip = iter->second[i];
+					if (tip->initial_fragment_id != excliude)
+					{
+						tips.push_back(tip);
+					}
+				}
+			}
+
+
+			for (int i = 0; i < cur->face_adjacency_list.size(); i++)
+			{
+				if (!visited.count(cur->face_adjacency_list[i]))
+				{
+					next.insert(cur->face_adjacency_list[i]);
+				}
+			}
+		}
+	}
+}
+
 
 vec3d FEAngio::ReferenceCoordinates(Tip * tip) const
 {

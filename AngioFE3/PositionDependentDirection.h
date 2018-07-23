@@ -13,7 +13,7 @@ class PositionDependentDirection : public FEMaterial
 public:
 	explicit PositionDependentDirection(FEModel* pfem) : FEMaterial(pfem) {}
 	virtual ~PositionDependentDirection() {}
-	virtual vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, FEMesh* mesh, FEAngio* pangio) = 0;
+	virtual vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) = 0;
 	virtual void Update(FEMesh * mesh, FEAngio* angio) {} //may be used to get values from loadcurves that modify the behavior as a whole
 	DECLARE_PARAMETER_LIST();
 protected:
@@ -25,7 +25,7 @@ class PositionDependentDirectionManager : public FEMaterial
 public:
 	explicit PositionDependentDirectionManager(FEModel* pfem) : FEMaterial(pfem) { AddProperty(&pdd_modifiers, "pdd_modifier"); pdd_modifiers.m_brequired = false; }
 	virtual ~PositionDependentDirectionManager() {}
-	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int buffer, double& alpha, FEMesh* mesh, FEAngio* pangio);
+	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int buffer, bool& continue_growth, vec3d& tip_dir, double& alpha, FEMesh* mesh, FEAngio* pangio);
 	void Update(FEMesh * mesh, FEAngio* angio) {} //may be used to get values from loadcurves that modify the behavior as a whole
 private:
 	FEVecPropertyT<PositionDependentDirection> pdd_modifiers;
@@ -36,7 +36,7 @@ class FiberPDD : public PositionDependentDirection
 public:
 	explicit FiberPDD(FEModel* pfem) : PositionDependentDirection(pfem) { AddProperty(&interpolation_prop, "interpolation_prop"); }
 	virtual ~FiberPDD() {}
-	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, FEMesh* mesh, FEAngio* pangio) override;
+	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
 	void Update(FEMesh * mesh, FEAngio* angio) override;
 private:
 	FEPropertyT<FEVariableInterpolation> interpolation_prop;
@@ -47,7 +47,7 @@ class ECMDensityGradientPDD : public PositionDependentDirection
 public:
 	explicit ECMDensityGradientPDD(FEModel* pfem) : PositionDependentDirection(pfem) { AddProperty(&interpolation_prop, "interpolation_prop"); }
 	virtual ~ECMDensityGradientPDD() {}
-	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, FEMesh* mesh, FEAngio* pangio) override;
+	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
 	void Update(FEMesh * mesh, FEAngio* angio) override {}
 	DECLARE_PARAMETER_LIST();
 private:
@@ -62,7 +62,7 @@ class RepulsePDD : public PositionDependentDirection
 public:
 	explicit RepulsePDD(FEModel* pfem) : PositionDependentDirection(pfem) { AddProperty(&interpolation_prop, "interpolation_prop"); }
 	virtual ~RepulsePDD() {}
-	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, FEMesh* mesh, FEAngio* pangio) override;
+	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
 	void Update(FEMesh * mesh, FEAngio* angio) override {}
 	DECLARE_PARAMETER_LIST();
 private:
@@ -78,7 +78,7 @@ class ConcentrationGradientPDD : public PositionDependentDirection
 public:
 	explicit ConcentrationGradientPDD(FEModel* pfem) : PositionDependentDirection(pfem) {}
 	virtual ~ConcentrationGradientPDD() {}
-	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, FEMesh* mesh, FEAngio* pangio) override;
+	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
 	void Update(FEMesh * mesh, FEAngio* angio) override {}
 	DECLARE_PARAMETER_LIST();
 private:
@@ -88,17 +88,22 @@ private:
 	FEPropertyT<FEVariableInterpolation> interpolation_prop;
 };
 
-class AnastomosisPDD : public PositionDependentDirection
+class AnastamosisPDD : public PositionDependentDirection
 {
 public:
-	explicit AnastomosisPDD(FEModel* pfem) : PositionDependentDirection(pfem) {}
-	virtual ~AnastomosisPDD() {}
-	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, FEMesh* mesh, FEAngio* pangio) override;
+	explicit AnastamosisPDD(FEModel* pfem) : PositionDependentDirection(pfem) {}
+	virtual ~AnastamosisPDD() {}
+	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
 	void Update(FEMesh * mesh, FEAngio* angio) override {}
+	Tip * FuseWith(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh, vec3d tip_pos, vec3d tip_dir, int exclude, double radius);
+	bool ValidTip(Tip* tip, vec3d tip_dir, FEMesh * mesh);
+	Tip * BestInElement(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh, vec3d tip_origin, vec3d tip_dir, int exclude, double& best_distance);
+	double distance2(FESolidElement * se, vec3d local_pos, Tip * tip, FEMesh* mesh);
 protected:
 	DECLARE_PARAMETER_LIST();
 private:
-	double anastomosis_radius = 300;
-	double threshold = 0.00001;//vessels will deflect if above threshold
+	double anastamosis_radius = 100;//radius at which the tip starts to grow towards another tip
+	double fuse_radius = 30;
+	double fuse_angle = 0.25;
 	bool alpha_override = true;//replace the alpha to have this take over
 };
