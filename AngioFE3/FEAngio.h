@@ -101,7 +101,7 @@ public:
 	//only the difference between the points if the elements are linear
 	double InElementLength(FESolidElement * se, vec3d pt0, vec3d pt1) const;
 
-	double GetConcentration(FEMaterial* mat, FEMaterialPoint * mp, int sol_id) const;
+	static double GetConcentration(FEMaterial* mat, FEMaterialPoint * mp, int sol_id);
 private:
 	
 	// Initialize the nodal ECM values

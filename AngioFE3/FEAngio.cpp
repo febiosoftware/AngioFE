@@ -1475,12 +1475,20 @@ double FEAngio::InElementLength(FESolidElement * se, vec3d pt0, vec3d pt1) const
 	return (g_pt0 - g_pt1).norm();
 }
 
-double FEAngio::GetConcentration(FEMaterial* mat, FEMaterialPoint * mp, int sol_id) const
+double FEAngio::GetConcentration(FEMaterial* mat, FEMaterialPoint * mp, int sol_id)
 {
 	FEMultiphasic * multiph = dynamic_cast<FEMultiphasic*>(mat);
 	if(multiph)
 	{
 		 return multiph->Concentration(*mp, sol_id);
+	}
+	else
+	{
+		FETriphasic * tri = dynamic_cast<FETriphasic*>(mat);
+		if(tri)
+		{
+			return tri->Concentration(*mp, sol_id);
+		}
 	}
 	assert(false);
 	return -1.0;

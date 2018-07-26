@@ -57,6 +57,7 @@ vec3d ECMDensityGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_elem
 BEGIN_PARAMETER_LIST(RepulsePDD, PositionDependentDirection)
 ADD_PARAMETER(threshold, FE_PARAM_DOUBLE, "threshold");
 ADD_PARAMETER(alpha_override, FE_PARAM_BOOL, "alpha_override");
+ADD_PARAMETER(grad_threshold, FE_PARAM_BOOL, "grad_threshold");
 END_PARAMETER_LIST();
 
 vec3d RepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio)
