@@ -54,8 +54,8 @@ public:
 	//accessors for the DataStore
 	double GetDoubleFromDataStore(int record, int elem_id, int item = 0);
 
-	//calcualtes the gradient at the given natural coordinates
-	static vec3d gradient(FESolidElement * se, std::vector<double> & fn, vec3d pt, int size =1,int offset=0);
+	//calcualtes the gradient at the given natural coordinates, the function variables are stored at the integration points
+	static vec3d gradient(FESolidElement * se, std::vector<double> & fn, vec3d pt);
 
 	//these freindships are for displaying/reading the data and are okay
 	friend class Fileout;

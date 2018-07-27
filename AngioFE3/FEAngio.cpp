@@ -924,7 +924,7 @@ vec3d FEAngio::uniformInUnitCube()
 	return vec3d(x,y,z);
 }
 
-vec3d FEAngio::gradient(FESolidElement * se, std::vector<double> & fn, vec3d pt, int size, int offset)
+vec3d FEAngio::gradient(FESolidElement * se, std::vector<double> & fn, vec3d pt)
 {
 	assert(se);
 	FESolidDomain* domain = dynamic_cast<FESolidDomain*>(se->GetDomain());
@@ -932,10 +932,12 @@ vec3d FEAngio::gradient(FESolidElement * se, std::vector<double> & fn, vec3d pt,
 	domain->invjact(*se, Ji, pt.x, pt.y, pt.z);
 	double Gr[FEElement::MAX_NODES], Gs[FEElement::MAX_NODES], Gt[FEElement::MAX_NODES];
 	se->shape_deriv(Gr, Gs, Gt, pt.x, pt.y, pt.z);
+	double out_values[FEElement::MAX_NODES];
+	se->project_to_nodes(&fn[0], out_values);
+
 
 	vec3d gradf;
 	size_t N = se->Nodes();
-	assert(N == size*fn.size());
 	for (size_t i = 0; i<N; ++i)
 	{
 		double Gx, Gy, Gz;
@@ -946,9 +948,9 @@ vec3d FEAngio::gradient(FESolidElement * se, std::vector<double> & fn, vec3d pt,
 		Gz = Ji[0][2] * Gr[i] + Ji[1][2] * Gs[i] + Ji[2][2] * Gt[i];
 
 		// calculate pressure gradient
-		gradf.x += Gx*fn[i*size + offset];
-		gradf.y += Gy*fn[i*size + offset];
-		gradf.z += Gz*fn[i*size + offset];
+		gradf.x += Gx*out_values[i];
+		gradf.y += Gy*out_values[i];
+		gradf.z += Gz*out_values[i];
 	}
 
 	return gradf;
@@ -1263,6 +1265,9 @@ bool FEAngio::ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d
 	case FE_Element_Type::FE_HEX8G1:
 	case FE_Element_Type::FE_HEX8G8:
 	case FE_Element_Type::FE_HEX8RI:
+	case FE_HEX20G27:
+	case FE_HEX20G8:
+	case FE_HEX27G27:
 		if (dir.x > 0)
 		{
 			double temp = (upper_bounds.x - pt.x) / dir.x;
@@ -1329,128 +1334,134 @@ bool FEAngio::ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d
 		break;
 	case FE_Element_Type::FE_TET4G1:
 	case FE_Element_Type::FE_TET4G4:
-		// Currently broken.
-		// Fix in progress.
-
-		assert((pt.x + pt.y + pt.z) < 1.01);
-		
-		// double sol0 = (1 - (pt.x + pt.y + pt.z)) / (dir.x + dir.y + dir.z);
-
-		/*
-		 * For each face of TET4G4, check to see what scale factor is needed to have the given vector (pt, dir)
-		 * reach the plane shared by the face.
-		 */
-
-		/*
-		 * FACE 0
-		 *    v0: (0, 1, 0)
-		 *    v1: (0, 0, 1)
-		 *    v2: (1, 0, 0)
-		 */
-		vec3d relative_v1 = vec3d(0, 0, 1) - vec3d(0, 1, 0); // v1 - v0
-		vec3d relative_v2 = vec3d(1, 0, 0) - vec3d(0, 1, 0); // v2 - v0
-		mat3d temp0(-dir, relative_v1, relative_v2);
-		vec3d sol0;
-		double det0 = temp0.det();
-		if (det0 != 0.0)
+	case FE_Element_Type::FE_TET10G1:
+	case FE_Element_Type::FE_TET10G4:
+	case FE_Element_Type::FE_TET10G4RI1:
+	case FE_Element_Type::FE_TET10G8:
+	case FE_Element_Type::FE_TET10G8RI4:
+	case FE_Element_Type::FE_TET10GL11:
 		{
-			temp0 = temp0.inverse();
-			sol0 = temp0 * (pt - vec3d(0, 1, 0)); // pt - v0
+			assert((pt.x + pt.y + pt.z) < 1.01);
+
+			// double sol0 = (1 - (pt.x + pt.y + pt.z)) / (dir.x + dir.y + dir.z);
+
+			/*
+			 * For each face of TET4G4, check to see what scale factor is needed to have the given vector (pt, dir)
+			 * reach the plane shared by the face.
+			 */
+
+			 /*
+			  * FACE 0
+			  *    v0: (0, 1, 0)
+			  *    v1: (0, 0, 1)
+			  *    v2: (1, 0, 0)
+			  */
+			vec3d relative_v1 = vec3d(0, 0, 1) - vec3d(0, 1, 0); // v1 - v0
+			vec3d relative_v2 = vec3d(1, 0, 0) - vec3d(0, 1, 0); // v2 - v0
+			mat3d temp0(-dir, relative_v1, relative_v2);
+			vec3d sol0;
+			double det0 = temp0.det();
+			if (det0 != 0.0)
+			{
+				temp0 = temp0.inverse();
+				sol0 = temp0 * (pt - vec3d(0, 1, 0)); // pt - v0
+			}
+
+			/*
+			 * FACE 1
+			 *    v0: (0, 0, 0)
+			 *    v1: (0, 0, 1)
+			 *    v2: (1, 0, 0)
+			 */
+			 // relative_v1 = vec3d(0, 0, 1) - vec3d(0, 0, 0); // v1 - v0
+			 // relative_v2 = vec3d(1, 0, 0) - vec3d(0, 0, 0); // v2 - v0
+			mat3d temp1(-dir, vec3d(0, 0, 1), vec3d(1, 0, 0));
+			vec3d sol1;
+			double det1 = temp1.det();
+			if (det1 != 0.0)
+			{
+				temp1 = temp1.inverse();
+				sol1 = temp1 * (pt); // pt - v0
+			}
+
+			/*
+			 * FACE 2
+			 *    v0: (0, 0, 0)
+			 *    v1: (1, 0, 0)
+			 *    v2: (0, 1, 0)
+			 */
+			 // relative_v1 = vec3d(1, 0, 0) - vec3d(0, 0, 0); // v1 - v0
+			 // relative_v2 = vec3d(0, 1, 0) - vec3d(0, 0, 0); // v2 - v0
+			mat3d temp2(-dir, vec3d(1, 0, 0), vec3d(0, 1, 0));
+			vec3d sol2;
+			double det2 = temp2.det();
+			if (det2 != 0.0)
+			{
+				temp2 = temp2.inverse();
+				sol2 = temp2 * (pt); // pt - v0
+			}
+
+			/*
+			* FACE 3
+			*    v0: (0, 0, 0)
+			*    v1: (0, 0, 1)
+			*    v2: (0, 1, 0)
+			*/
+			// relative_v1 = vec3d(0, 0, 1) - vec3d(0, 0, 0); // v1 - v0
+			// relative_v2 = vec3d(0, 1, 0) - vec3d(0, 0, 0); // v2 - v0
+			mat3d temp3(-dir, vec3d(0, 0, 1), vec3d(0, 1, 0));
+			vec3d sol3;
+			double det3 = temp3.det();
+			if (det3 != 0.0)
+			{
+				temp3 = temp3.inverse();
+				sol3 = temp3 * (pt); // pt - v0
+			}
+
+			/*
+			 *  Check to make sure that the scale factor is greater than 0 to ensure growth is simulated. Then ensure
+			 * that the v1 and v2 components are within the bounds of the face's natural coordinate system. Last,
+			 * to ensure that the solution is within the face, the sum of v1 and v2 components must be less than
+			 * 1.01 (scaled to account for floating point calculation inaccuracies).
+			 *
+			 * sol.x: scale factor
+			 * sol.y: v1 component of solution
+			 * sol.z: v2 component of solution
+			 */
+			if (sol0.x > min_sf && (sol0.y <= 1.0) && (sol0.y >= 0) && (sol0.z <= 1.0) && (sol0.z >= 0) && ((sol0.y + sol0.z) < 1.01) && det0 != 0.0)
+			{
+				sf = sol0.x;
+				// assert((sol0.y + sol0.z) < 1.01);
+
+				return true;
+			}
+			if (sol1.x > min_sf && (sol1.y <= 1.0) && (sol1.y >= 0) && (sol1.z <= 1.0) && (sol1.z >= 0) && ((sol1.y + sol1.z) < 1.01) && det1 != 0.0)
+			{
+				sf = sol1.x;
+				// assert((sol1.y + sol1.z) < 1.01);
+
+				return true;
+			}
+			if (sol2.x > min_sf && (sol2.y <= 1.0) && (sol2.y >= 0) && (sol2.z <= 1.0) && (sol2.z >= 0) && ((sol2.y + sol2.z) < 1.01) && det2 != 0.0)
+			{
+				sf = sol2.x;
+				// assert((sol2.y + sol2.z) < 1.01);
+
+				return true;
+			}
+			if (sol3.x > min_sf && (sol3.y <= 1.0) && (sol3.y >= 0) && (sol3.z <= 1.0) && (sol3.z >= 0) && ((sol3.y + sol3.z) < 1.01) && det3 != 0.0)
+			{
+				sf = sol3.x;
+				// assert((sol3.y + sol3.z) < 1.01);
+
+				return true;
+			}
+
+			return false;
 		}
-
-		/*
-		 * FACE 1
-		 *    v0: (0, 0, 0)
-		 *    v1: (0, 0, 1)
-		 *    v2: (1, 0, 0)
-		 */
-		// relative_v1 = vec3d(0, 0, 1) - vec3d(0, 0, 0); // v1 - v0
-		// relative_v2 = vec3d(1, 0, 0) - vec3d(0, 0, 0); // v2 - v0
-		mat3d temp1(-dir, vec3d(0, 0, 1), vec3d(1, 0, 0));
-		vec3d sol1;
-		double det1 = temp1.det();
-		if(det1 != 0.0)
-		{
-			temp1 = temp1.inverse();
-			sol1 = temp1 * (pt); // pt - v0
-		}
-
-		/*
-		 * FACE 2
-		 *    v0: (0, 0, 0)
-		 *    v1: (1, 0, 0)
-		 *    v2: (0, 1, 0)
-		 */
-		// relative_v1 = vec3d(1, 0, 0) - vec3d(0, 0, 0); // v1 - v0
-		// relative_v2 = vec3d(0, 1, 0) - vec3d(0, 0, 0); // v2 - v0
-		mat3d temp2(-dir, vec3d(1, 0, 0), vec3d(0, 1, 0));
-		vec3d sol2;
-		double det2 = temp2.det();
-		if(det2 != 0.0)
-		{
-			temp2 = temp2.inverse();
-			sol2 = temp2 * (pt); // pt - v0
-		}
-
-		/*
-		* FACE 3
-		*    v0: (0, 0, 0)
-		*    v1: (0, 0, 1)
-		*    v2: (0, 1, 0)
-		*/
-		// relative_v1 = vec3d(0, 0, 1) - vec3d(0, 0, 0); // v1 - v0
-		// relative_v2 = vec3d(0, 1, 0) - vec3d(0, 0, 0); // v2 - v0
-		mat3d temp3(-dir, vec3d(0, 0, 1), vec3d(0, 1, 0));
-		vec3d sol3;
-		double det3 = temp3.det();
-		if(det3 != 0.0)
-		{
-			temp3 = temp3.inverse();
-			sol3 = temp3 * (pt); // pt - v0
-		}
-		
-		/*
-		 *  Check to make sure that the scale factor is greater than 0 to ensure growth is simulated. Then ensure
-		 * that the v1 and v2 components are within the bounds of the face's natural coordinate system. Last, 
-		 * to ensure that the solution is within the face, the sum of v1 and v2 components must be less than 
-		 * 1.01 (scaled to account for floating point calculation inaccuracies).
-		 * 
-		 * sol.x: scale factor
-		 * sol.y: v1 component of solution
-		 * sol.z: v2 component of solution
-		 */
-		if (sol0.x > min_sf && (sol0.y <= 1.0) && (sol0.y >= 0) && (sol0.z <= 1.0) && (sol0.z >= 0) && ((sol0.y + sol0.z) < 1.01) && det0 != 0.0)
-		{
-			sf = sol0.x;
-			// assert((sol0.y + sol0.z) < 1.01);
-
-			return true;
-		}
-		if(sol1.x > min_sf && (sol1.y <= 1.0) && (sol1.y >= 0) && (sol1.z <= 1.0) && (sol1.z >= 0) && ((sol1.y + sol1.z) < 1.01) && det1 != 0.0)
-		{
-			sf = sol1.x;
-			// assert((sol1.y + sol1.z) < 1.01);
-
-			return true;
-		}
-		if (sol2.x > min_sf && (sol2.y <= 1.0) && (sol2.y >= 0) && (sol2.z <= 1.0) && (sol2.z >= 0) && ((sol2.y + sol2.z) < 1.01) && det2 != 0.0)
-		{
-			sf = sol2.x;
-			// assert((sol2.y + sol2.z) < 1.01);
-
-			return true;
-		}
-		if (sol3.x > min_sf && (sol3.y <= 1.0) && (sol3.y >= 0) && (sol3.z <= 1.0) && (sol3.z >= 0) && ((sol3.y + sol3.z) < 1.01) && det3 != 0.0)
-		{
-			sf = sol3.x;
-			// assert((sol3.y + sol3.z) < 1.01);
-
-			return true;
-		}
-
-		return false;
-
 		break;
+		default:
+			assert(false);
 	}
 	
 	return false;
@@ -1524,6 +1535,12 @@ bool FEAngio::IsInBounds(FESolidElement* se, double r[3], double eps)
 	{
 	case FE_Element_Type::FE_TET4G1:
 	case FE_Element_Type::FE_TET4G4:
+	case FE_Element_Type::FE_TET10G1:
+	case FE_Element_Type::FE_TET10G4:
+	case FE_Element_Type::FE_TET10G4RI1:
+	case FE_Element_Type::FE_TET10G8:
+	case FE_Element_Type::FE_TET10G8RI4:
+	case FE_Element_Type::FE_TET10GL11:
 
 		return (r[0] <= NaturalCoordinatesUpperBound_r(se->Type()) + eps) && (r[0] >= NaturalCoordinatesLowerBound_r(se->Type())-eps) &&
 			(r[1] <= NaturalCoordinatesUpperBound_s(se->Type())+ eps) && (r[1] >= NaturalCoordinatesLowerBound_s(se->Type())-eps) &&
@@ -1545,8 +1562,17 @@ void FEAngio::ExtremaInElement(FESolidElement * se, std::vector<vec3d> & extrema
 	{
 	case FE_Element_Type::FE_TET4G1:
 	case FE_Element_Type::FE_TET4G4:
+	case FE_Element_Type::FE_TET10G1:
+	case FE_Element_Type::FE_TET10G4:
+	case FE_Element_Type::FE_TET10G4RI1:
+	case FE_Element_Type::FE_TET10G8:
+	case FE_Element_Type::FE_TET10G8RI4:
+	case FE_Element_Type::FE_TET10GL11:
 	case FE_Element_Type::FE_HEX8G1:
 	case FE_Element_Type::FE_HEX8G8:
+	case FE_HEX20G27:
+	case FE_HEX20G8:
+	case FE_HEX27G27:
 		for (int j = 0; j < se->Nodes(); j++)
 		{
 			extrema.push_back(mesh->Node(se->m_node[j]).m_rt);

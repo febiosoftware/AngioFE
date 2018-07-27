@@ -290,6 +290,12 @@ double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem, FEMesh* mesh)
 	{
 		case FE_Element_Type::FE_TET4G1:
 		case FE_Element_Type::FE_TET4G4:
+		case FE_Element_Type::FE_TET10G1:
+		case FE_Element_Type::FE_TET10G4:
+		case FE_Element_Type::FE_TET10G4RI1:
+		case FE_Element_Type::FE_TET10G8:
+		case FE_Element_Type::FE_TET10G8RI4:
+		case FE_Element_Type::FE_TET10GL11:
 			min_side_length_so_far /= 2;
 		default:
 			break;
