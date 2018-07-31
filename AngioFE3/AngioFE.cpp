@@ -37,6 +37,7 @@ FEPluginFactory_T<FEFixedDistribution, FEMATERIAL_ID> fixed_distribution_factory
 FEPluginFactory_T<SigmoidAngioStressPolicy     , FEMATERIAL_ID> sigmoid_angio_stress_policy_factory("sigmoid_angio_stress_policy");
 FEPluginFactory_T<LoadCurveVelAngioStressPolicy, FEMATERIAL_ID> load_curve_vel_angio_stress_policy_factory("load_curve_vel_angio_stress_policy");
 FEPluginFactory_T<LoadCurveAngioStressPolicy   , FEMATERIAL_ID> load_curve_angio_stress_policy_factory("load_curve_angio_stress_policy");
+FEPluginFactory_T<GrownSegmentsAngioStressPolicy, FEMATERIAL_ID> grown_segments_angio_stress_policy_factory("grown_segments_angio_stress_policy");
 
 // Seeder Classes
 FEPluginFactory_T<ByElementFragmentSeeder             , FEMATERIAL_ID> by_element_fragment_seeder_factory("by_element_fragment_seeder");
@@ -185,6 +186,7 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 
 		//angio stress policy classes
 		&sigmoid_angio_stress_policy_factory, &load_curve_vel_angio_stress_policy_factory ,&load_curve_angio_stress_policy_factory,
+		&grown_segments_angio_stress_policy_factory,
 
 		/*
 		//fiber initializers

@@ -310,7 +310,7 @@ void FEAngio::GetActiveTipsInRadius(AngioElement* angio_element, double radius, 
 	}
 }
 
-void FEAngio::GetGrownTipsInRadius(AngioElement* angio_element, double radius, int buffer, FEAngio* pangio, std::vector<Tip *> & tips, int excliude)
+void FEAngio::GetGrownTipsInRadius(AngioElement* angio_element, double radius, FEAngio* pangio, std::vector<Tip *> & tips)
 {
 	std::unordered_set<AngioElement *> visited;
 	std::set<AngioElement *> next;
@@ -334,17 +334,11 @@ void FEAngio::GetGrownTipsInRadius(AngioElement* angio_element, double radius, i
 		double cdist = FEAngio::MinDistance(element_bounds, cur_element_bounds);
 		if (cdist <= radius)
 		{
-			for (auto iter = cur->active_tips[buffer].begin(); iter != cur->active_tips[buffer].end(); ++iter)
+			for (auto iter = cur->grown_segments.begin(); iter != cur->grown_segments.end(); ++iter)
 			{
-				//add the tips and the add all unvisited adjacent elements to next
-				for (int i = 0; i < iter->second.size(); i++)
-				{
-					Tip * tip = iter->second[i];
-					if (tip->initial_fragment_id != excliude)
-					{
-						tips.push_back(tip);
-					}
-				}
+				
+				tips.push_back((*iter)->front);
+				tips.push_back((*iter)->back);
 			}
 
 

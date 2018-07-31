@@ -601,7 +601,9 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		next->SetLocalPosition(real_natc);
 		next->parent = seg;
 		next->face = angio_element;
-		next->growth_velocity = grow_vel;
+		//growth velocity must be zero to work with grown segments stress policy
+		//next->growth_velocity = grow_vel;
+		next->growth_velocity = 0;
 		next->initial_fragment_id = active_tip->initial_fragment_id;
 		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (local_pos.x + local_pos.y + local_pos.z) < 1.01 : true);
 		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (local_pos.x + local_pos.y + local_pos.z) < 1.01 : true);
@@ -643,7 +645,8 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		next->parent = seg;
 		next->face = angio_element;
 		next->initial_fragment_id = active_tip->initial_fragment_id;
-		next->growth_velocity = grow_vel;
+		//growth velocity must be zero to work with grown segments stress policy
+		next->growth_velocity = 0;
 
 		seg->back = active_tip;
 		seg->front = next;
@@ -687,7 +690,8 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 				adj->face = angio_element;
 				adj->SetLocalPosition(possible_local_coordinates[index]);
 				adj->use_direction = true;
-				adj->growth_velocity = grow_vel;
+				//growth velocity must be zero to work with grown segments stress policy
+				adj->growth_velocity = 0;
 				angio_element->active_tips[next_buffer_index].at(possible_locations[index]).push_back(adj);
 			}
 		}
