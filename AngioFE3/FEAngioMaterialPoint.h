@@ -14,6 +14,8 @@ public:
 	//! The init function is used to intialize data
 	void Init() override;
 
+	void Update(const FETimeInfo& timeInfo) override;
+
 	//! copy material point data (for running restarts) todo Is this still used?
 	FEMaterialPoint* Copy() override;
 
