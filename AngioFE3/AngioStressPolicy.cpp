@@ -179,7 +179,6 @@ void GrownSegmentsAngioStressPolicy::UpdateScale()
 void GrownSegmentsAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
 {
 	std::vector<Tip*> grown_tips;
-	FEAngio::GetActiveFinalTipsInRadius(angio_element, sprout_range * sprout_radius_multiplier, pangio, grown_tips);
 	FEAngio::GetGrownTipsInRadius(angio_element, sprout_range * sprout_radius_multiplier, pangio, grown_tips);
 
 	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)

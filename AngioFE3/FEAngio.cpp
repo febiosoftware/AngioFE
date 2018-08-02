@@ -1517,6 +1517,56 @@ void FEAngio::SetupNodesToElement(int min_element_id)
 	
 }
 
+bool FEAngio::ProjectToElement(FESolidElement& el, const vec3d& p, FEMesh* mesh, double r[3])
+{
+	const int MN = FEElement::MAX_NODES;
+	vec3d rt[MN];
+
+	// get the element nodal coordinates
+	int ne = el.Nodes();
+	for (int i = 0; i<ne; ++i) rt[i] = mesh->Node(el.m_node[i]).m_rt;
+
+	r[0] = r[1] = r[2] = 0;
+	const double tol = 1e-5;
+	double dr[3], norm;
+	double H[MN], Gr[MN], Gs[MN], Gt[MN];
+	int max_iter = 1000000;
+	int iter = 0;
+	do
+	{
+		// evaluate shape functions
+		el.shape_fnc(H, r[0], r[1], r[2]);
+
+		// evaluate shape function derivatives
+		el.shape_deriv(Gr, Gs, Gt, r[0], r[1], r[2]);
+
+		// solve for coordinate increment
+		double R[3] = { 0 }, A[3][3] = { 0 };
+		for (int i = 0; i<ne; ++i)
+		{
+			R[0] += rt[i].x*H[i];
+			R[1] += rt[i].y*H[i];
+			R[2] += rt[i].z*H[i];
+
+			A[0][0] -= rt[i].x*Gr[i]; A[0][1] -= rt[i].x*Gs[i]; A[0][2] -= rt[i].x*Gt[i];
+			A[1][0] -= rt[i].y*Gr[i]; A[1][1] -= rt[i].y*Gs[i]; A[1][2] -= rt[i].y*Gt[i];
+			A[2][0] -= rt[i].z*Gr[i]; A[2][1] -= rt[i].z*Gs[i]; A[2][2] -= rt[i].z*Gt[i];
+		}
+		R[0] = p.x - R[0];
+		R[1] = p.y - R[1];
+		R[2] = p.z - R[2];
+
+		solve_3x3(A, R, dr);
+		r[0] -= dr[0];
+		r[1] -= dr[1];
+		r[2] -= dr[2];
+
+		norm = dr[0] * dr[0] + dr[1] * dr[1] + dr[2] * dr[2];
+		iter++;
+	} while (norm > tol && iter < max_iter);
+	return norm <= tol;
+}
+
 void FEAngio::GetElementsContainingNode(FENode * node, std::vector<FESolidElement*> & elements)
 {
 	elements = nodes_to_elements[node];

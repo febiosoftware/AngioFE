@@ -493,8 +493,8 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 				if(sd)
 				{
 					double r[3];//new natural coordinates
-					sd->ProjectToElement(*ang_elem->_elem,pos,r);
-					if(m_pangio->IsInBounds(ang_elem->_elem, r, bounds_tolerance))
+					bool natc_proj = m_pangio->ProjectToElement(*ang_elem->_elem,pos,mesh, r);
+					if(natc_proj &&  m_pangio->IsInBounds(ang_elem->_elem, r, bounds_tolerance))
 					{
 						possible_locations.push_back(angio_element->adjacency_list[i]);
 						possible_local_coordinates.push_back(FEAngio::clamp_natc(angio_element->adjacency_list[i]->_elem->Type(),vec3d(r[0], r[1], r[2])));
@@ -670,8 +670,8 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 				if (sd)
 				{
 					double r[3];//new natural coordinates
-					sd->ProjectToElement(*ang_elem->_elem, pos, r);
-					if (m_pangio->IsInBounds(ang_elem->_elem, r, bounds_tolerance))
+					bool natc_proj = m_pangio->ProjectToElement(*ang_elem->_elem, pos, mesh, r);
+					if (natc_proj && m_pangio->IsInBounds(ang_elem->_elem, r, bounds_tolerance))
 					{
 						possible_locations.push_back(angio_element->adjacency_list[i]);
 						possible_local_coordinates.push_back(FEAngio::clamp_natc(angio_element->adjacency_list[i]->_elem->Type(), vec3d(r[0], r[1], r[2])));

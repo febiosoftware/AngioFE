@@ -135,11 +135,12 @@ private:
 	bool ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d & dir, vec3d & pt, double & sf, double min_sf = 0.00001) const;
 
 	
-	
+	bool ProjectToElement(FESolidElement& el, const vec3d& p, FEMesh* mesh, double r[3]);
 
 	void GetElementsContainingNode(FENode * node, std::vector<FESolidElement*> & elements);
 
 	static bool IsInBounds(FESolidElement* se, double r[3], double eps= 0.000001);
+
 
 	
 
