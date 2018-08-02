@@ -131,8 +131,6 @@ FEPluginFactory_T<FEPlotBranches, FEPLOTDATA_ID> plot_branches("branch_count");
 FEPluginFactory_T<FEPlotAnastamoses, FEPLOTDATA_ID> plot_anastamoses("anastamoses");
 FEPluginFactory_T<FEPlotSegmentLength, FEPLOTDATA_ID> plot_segment_length("segment_length");
 FEPluginFactory_T<FEPlotRefSegmentLength, FEPLOTDATA_ID> plot_reference_frame_segment_length("reference_frame_segment_length");
-FEPluginFactory_T<FEPlotMatrixConectrationGradient, FEPLOTDATA_ID> plot_matrix_concentration_gradient("matrix concecntration gradient");
-FEPluginFactory_T<FEPlotMatrixSBMConectration, FEPLOTDATA_ID> plot_matrix_sbm_concentration("matrix sbm concecntration");
 
 FEPluginFactory_T<FEPlotMatrixElastic_m_Q, FEPLOTDATA_ID> plot_matrix_elastic_m_Q("matrix elastic mQ");
 
@@ -180,9 +178,6 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		&plot_vessel_stress, &plot_matrix_stress,
 		&plot_vessel_weight, &plot_matrix_weight, &plot_matrix_tangent, &plot_matrix_visco_stress,
 		&plot_matrix_elastic_m_Q, &plot_matrix_elastic_stress,
-
-		//stopgap plot classes
-		&plot_matrix_concentration_gradient, &plot_matrix_sbm_concentration,
 
 		//angio stress policy classes
 		&sigmoid_angio_stress_policy_factory, &load_curve_vel_angio_stress_policy_factory ,&load_curve_angio_stress_policy_factory,

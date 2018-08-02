@@ -136,37 +136,3 @@ public:
 	explicit FEPlotAngioECMAlpha(FEModel* pfem) : FENodeData(PLT_FLOAT, FMT_ITEM){}
 	bool Save(FEMesh& m, FEDataStream& a)  override;
 };
-
-
-
-/*
-//-----------------------------------------------------------------------------
-class FEPlotAngioNodeMQ : public FENodeData
-{
-public:
-	FEPlotAngioNodeMQ(FEModel* pfem) : FENodeData(PLT_FLOAT, FMT_ITEM) {}
-	bool Save(FEMesh& m, FEDataStream& a)  override;
-};
-*/
-
-//stopgap plot variables 
-class FEPlotMatrixConectrationGradient : public FEDomainData
-{
-public:
-	explicit FEPlotMatrixConectrationGradient(FEModel * pfem) : FEDomainData(PLT_VEC3F, FMT_ITEM) {}
-	bool Save(FEDomain& d, FEDataStream& str) override;
-};
-
-class FEPlotMatrixSBMConectration : public FEDomainData
-{
-public:
-	explicit FEPlotMatrixSBMConectration(FEModel * pfem) : FEDomainData(PLT_VEC3F, FMT_ITEM) {}
-	bool Save(FEDomain& d, FEDataStream& str) override;
-};
-
-class FEPlotFace1Normal : public FEDomainData
-{
-public:
-	explicit FEPlotFace1Normal(FEModel * pfem) : FEDomainData(PLT_VEC3F, FMT_ITEM) {}
-	bool Save(FEDomain& d, FEDataStream& str) override;
-};

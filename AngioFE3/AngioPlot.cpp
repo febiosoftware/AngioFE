@@ -373,11 +373,23 @@ bool FEPlotAngioGradient::Save(FEMesh & m, FEDataStream & a)
 //-----------------------------------------------------------------------------
 bool FEPlotAngioECMDensity::Save(FEMesh& m, FEDataStream& a)
 {
+	if (pfeangio == nullptr) return false;
+	//
+	FEMesh & mesh = pfeangio->m_fem->GetMesh();
 
-	//multiple materials average their ecm denisties so this reflects that
-	for (int i = 0; i < pfeangio->m_fem->GetMesh().Nodes(); i++)
+
+	for (int i = 0; i < mesh.Nodes(); i++)
 	{
-
+		/*
+		if (gradients.count(mesh.Node(i).GetID()))
+		{
+			a << gradients[mesh.Node(i).GetID()];
+		}
+		else
+		{
+			a << vec3d(0, 0, 0);//is all zero's okay for this parameter
+		}
+		*/
 	}
 
 	return true;
@@ -428,118 +440,4 @@ int GetLocalSoluteID(FEMaterial* pm, int nsol)
 			if (pmm->GetSolute(i)->GetSoluteID() == nsol) { nsid = i; break; }
 	}
 	return nsid;
-}
-bool FEPlotMatrixConectrationGradient::Save(FEDomain& d, FEDataStream& str)
-{
-	FEAngioMaterial * angio_mat = dynamic_cast<FEAngioMaterial*>(d.GetMaterial());
-	int nsid = GetLocalSoluteID(angio_mat->GetMatrixMaterial(), 1);
-
-	// make sure we have a valid index
-	if (nsid == -1) return false;
-
-	int N = d.Elements();
-	for (int i = 0; i<N; ++i)
-	{
-		FEElement& el = d.ElementRef(i);
-
-		// calculate average concentration
-		double ew = 0;
-		for (int j = 0; j<el.GaussPoints(); ++j)
-		{
-			FEMaterialPoint& mp = *el.GetMaterialPoint(j);
-			FESolutesMaterialPoint* pt = (mp.ExtractData<FESolutesMaterialPoint>());
-
-			if (pt) ew += pt->m_ca[nsid];
-		}
-
-		ew /= el.GaussPoints();
-
-		str << ew;
-	}
-	return true;
-}
-
-//-----------------------------------------------------------------------------
-bool FEPlotMatrixSBMConectration::Save(FEDomain &d, FEDataStream& str)
-{
-	int i, j;
-	double ew;
-	const int sbm_id = 1;
-	FEMultiphasicSolidDomain* pmd = dynamic_cast<FEMultiphasicSolidDomain*>(&d);
-	FEMultiphasicShellDomain* psd = dynamic_cast<FEMultiphasicShellDomain*>(&d);
-	FEAngioMaterial * angio_mat = dynamic_cast<FEAngioMaterial*>(d.GetMaterial());
-	assert(angio_mat);
-	FEMaterial * matrix_mat = angio_mat->GetMatrixMaterial();
-	if (pmd)
-	{
-		FEMultiphasic* pm = dynamic_cast<FEMultiphasic*>(matrix_mat);
-		assert(pm);
-		// Check if this solid-bound molecule is present in this specific multiphasic mixture
-		int sid = -1;
-		for (i = 0; i<pm->SBMs(); ++i)
-			if (pm->GetSBM(i)->GetSBMID() == sbm_id) { sid = i; break; }
-		if (sid == -1) return false;
-
-		for (i = 0; i<pmd->Elements(); ++i)
-		{
-			FESolidElement& el = pmd->Element(i);
-
-			// calculate average concentration
-			ew = 0;
-			for (j = 0; j<el.GaussPoints(); ++j)
-			{
-				FEMaterialPoint& mp = *el.GetMaterialPoint(j);
-				FESolutesMaterialPoint* st = (mp.ExtractData<FESolutesMaterialPoint>());
-
-				if (st) ew += pm->SBMConcentration(mp, sid);
-			}
-
-			ew /= el.GaussPoints();
-
-			str << ew;
-		}
-		return true;
-	}
-	else if (psd)
-	{
-		FEMultiphasic* pm = dynamic_cast<FEMultiphasic*> (d.GetMaterial());
-		// Check if this solid-bound molecule is present in this specific multiphasic mixture
-		int sid = -1;
-		for (i = 0; i<pm->SBMs(); ++i)
-			if (pm->GetSBM(i)->GetSBMID() == sbm_id) { sid = i; break; }
-		if (sid == -1) return false;
-
-		for (i = 0; i<psd->Elements(); ++i)
-		{
-			FEShellElement& el = psd->Element(i);
-
-			// calculate average concentration
-			ew = 0;
-			for (j = 0; j<el.GaussPoints(); ++j)
-			{
-				FEMaterialPoint& mp = *el.GetMaterialPoint(j);
-				FESolutesMaterialPoint* st = (mp.ExtractData<FESolutesMaterialPoint>());
-
-				if (st) ew += pm->SBMConcentration(mp, sid);
-			}
-
-			ew /= el.GaussPoints();
-
-			str << ew;
-		}
-		return true;
-	}
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-bool FEPlotFace1Normal::Save(FEDomain &d, FEDataStream& str)
-{
-	FEMesh & mesh = pfeangio->m_fem->GetMesh();
-	for (int i = 0; i < mesh.Nodes(); i++)
-	{
-
-			str << vec3d(0, 0, 0);
-	}
-	return true;
 }
