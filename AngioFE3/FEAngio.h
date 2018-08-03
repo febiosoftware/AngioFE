@@ -47,7 +47,11 @@ public:
 
 
 	mat3d unifromRandomRotationMatrix(angiofe_random_engine & rengine) const;
-	mat3d rotationMatrix(double alpha, double beta, double gamma);
+	//needed to compile on gcc see documentation for comments on random
+	mat3d unifromRandomRotationMatrix(angiofe_random_engine & rengine);
+
+
+	mat3d rotationMatrix(double alpha, double beta, double gamma) const;
 	vec3d uniformRandomDirection(angiofe_random_engine& rengine);
 	vec3d uniformInUnitCube();
 

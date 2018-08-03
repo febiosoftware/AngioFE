@@ -884,7 +884,52 @@ mat3d FEAngio::unifromRandomRotationMatrix(angiofe_random_engine & rengine) cons
 #endif
 	return rv;
 }
-mat3d FEAngio::rotationMatrix(double alpha, double beta, double gamma)
+mat3d FEAngio::unifromRandomRotationMatrix(angiofe_random_engine & rengine)
+{
+	//collagen fibers are right handed so the following transformation is legal
+	//the following will only produce right handed bases for the collagen fibers which is molecularly accurate
+	double alpha = zto2pi(rengine);
+	double beta = zto2pi(rengine);
+	double gamma = zto2pi(rengine);
+
+
+	double c_alpha = cos(alpha);
+	double c_beta = cos(beta);
+	double c_gamma = cos(gamma);
+	double s_alpha = sin(alpha);
+	double s_beta = sin(beta);
+	double s_gamma = sin(gamma);
+	//see: https://en.wikipedia.org/wiki/Change_of_basis Three dimensions section
+	mat3d rv(c_alpha*c_gamma - s_alpha*c_beta*s_gamma, -c_alpha*s_gamma - s_alpha*c_beta*c_gamma, s_beta*s_alpha,
+		s_alpha*c_gamma + c_alpha*c_beta*s_gamma, -s_alpha*s_gamma + c_alpha*c_beta*c_gamma, -s_beta*c_alpha,
+		s_beta*s_gamma, s_beta*c_gamma, c_beta
+	);
+	//rv = rv.transinv();
+#ifndef NDEBUG
+	//do some testing that bases run tthrough this are still orthogonal
+	vec3d x(1, 0, 0);
+	vec3d y(0, 1, 0);
+	vec3d z(0, 0, 1);
+	vec3d xt = rv * x;
+	vec3d yt = rv * y;
+	vec3d zt = rv * z;
+	double tol = 0.01;
+	assert(xt * yt < tol && xt * yt > -tol);
+	assert(xt * zt < tol && xt * zt > -tol);
+	assert(zt * yt < tol && zt * yt > -tol);
+
+	double noq = xt.norm();
+	double nom1 = yt.norm();
+	double nom2 = zt.norm();
+	tol = 0.01;
+	assert(noq < (1 + tol) && noq >(1 - tol));
+	assert(nom1 < (1 + tol) && nom1 >(1 - tol));
+	assert(nom2 < (1 + tol) && nom2 >(1 - tol));
+#endif
+	return rv;
+}
+
+mat3d FEAngio::rotationMatrix(double alpha, double beta, double gamma) const
 {
 	double c_alpha = cos(alpha);
 	double c_beta = cos(beta);
