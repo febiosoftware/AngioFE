@@ -45,10 +45,13 @@ public:
 	void CalculateSegmentLengths(FEMesh* mesh);
 	void AdjustMatrixVesselWeights(FEMesh* mesh);
 
-
+#ifndef __linux__
 	mat3d unifromRandomRotationMatrix(angiofe_random_engine & rengine) const;
+#else
 	//needed to compile on gcc see documentation for comments on random
 	mat3d unifromRandomRotationMatrix(angiofe_random_engine & rengine);
+#endif
+	
 
 
 	mat3d rotationMatrix(double alpha, double beta, double gamma) const;

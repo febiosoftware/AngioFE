@@ -839,7 +839,7 @@ double FEAngio::GetDoubleFromDataStore(int record, int elem_id, int item)
 	DataStore & ds = m_fem->GetDataStore();
 	return ds.GetDataRecord(record)->Evaluate(elem_id, item);
 }
-
+#ifndef __linux__
 mat3d FEAngio::unifromRandomRotationMatrix(angiofe_random_engine & rengine) const
 {
 	//collagen fibers are right handed so the following transformation is legal
@@ -884,6 +884,7 @@ mat3d FEAngio::unifromRandomRotationMatrix(angiofe_random_engine & rengine) cons
 #endif
 	return rv;
 }
+#else
 mat3d FEAngio::unifromRandomRotationMatrix(angiofe_random_engine & rengine)
 {
 	//collagen fibers are right handed so the following transformation is legal
@@ -928,6 +929,7 @@ mat3d FEAngio::unifromRandomRotationMatrix(angiofe_random_engine & rengine)
 #endif
 	return rv;
 }
+#endif
 
 mat3d FEAngio::rotationMatrix(double alpha, double beta, double gamma) const
 {
