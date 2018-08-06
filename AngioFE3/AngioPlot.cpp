@@ -371,27 +371,27 @@ bool FEPlotAngioGradient::Save(FEMesh & m, FEDataStream & a)
 }
 
 //-----------------------------------------------------------------------------
-bool FEPlotAngioECMDensity::Save(FEMesh& m, FEDataStream& a)
+bool FEPlotAngioECMDensity::Save(FEDomain& d, FEDataStream& str)
 {
-	if (pfeangio == nullptr) return false;
-	//
-	FEMesh & mesh = pfeangio->m_fem->GetMesh();
-
-
-	for (int i = 0; i < mesh.Nodes(); i++)
+	for (int i = 0; i < d.Elements(); i++)
 	{
-		/*
-		if (gradients.count(mesh.Node(i).GetID()))
+		FEElement & elem = d.ElementRef(i);
+		FESolidElement *se = dynamic_cast<FESolidElement*>(&elem);
+		if (se)
 		{
-			a << gradients[mesh.Node(i).GetID()];
+			AngioElement * angio_element = pfeangio->se_to_angio_element.at(se);
+			double den = 0.0;
+			for(int j=0; j<angio_element->_elem->GaussPoints();j++)
+			{
+				FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(j);
+				FEAngioMaterialPoint *angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+				FEElasticMaterialPoint* emp = mp->ExtractData<FEElasticMaterialPoint>();
+				den += angio_pt->ref_ecm_density* (1.0/emp->m_J);
+			}
+			den /= angio_element->_elem->GaussPoints();
+			str << den;
 		}
-		else
-		{
-			a << vec3d(0, 0, 0);//is all zero's okay for this parameter
-		}
-		*/
 	}
-
 	return true;
 }
 
