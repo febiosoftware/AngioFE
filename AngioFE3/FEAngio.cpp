@@ -1127,7 +1127,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		SetSeeds();
 
 		// only output to the logfile (not to the screen)
-		felog.SetMode(Logfile::LOG_FILE);
+		//felog.SetMode(Logfile::LOG_FILE);
 
 		//currently the destructors are not called for classes created by FEBio this allows destructors to be called
 		fileout = new Fileout(*this);
