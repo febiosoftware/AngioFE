@@ -124,13 +124,11 @@ FEPluginFactory_T<FEPlotMatrixViscoStress    , FEPLOTDATA_ID> plot_matrix_visco_
 FEPluginFactory_T<FEPlotMatrixElasticStress  , FEPLOTDATA_ID> plot_matrix_elastic_stress   ("matrix elastic stress" );
 
 FEPluginFactory_T<FEPlotAngioECMDensity      , FEPLOTDATA_ID> plot_angio_ecm               ("angio ECM density"     );
-FEPluginFactory_T<FEPlotAngioECMAlpha        , FEPLOTDATA_ID> plot_angio_alpha             ("angio ECM alpha"       );
-FEPluginFactory_T<FEPlotAngioGradient        , FEPLOTDATA_ID> plot_angio_gradient          ("angio gradient"        );
-FEPluginFactory_T<FEPlotAngioGradientCenter  , FEPLOTDATA_ID> plot_angio_gradient_center   ("angio gradient center" );
 FEPluginFactory_T<FEPlotBranches, FEPLOTDATA_ID> plot_branches("branch_count");
 FEPluginFactory_T<FEPlotAnastamoses, FEPLOTDATA_ID> plot_anastamoses("anastamoses");
 FEPluginFactory_T<FEPlotSegmentLength, FEPLOTDATA_ID> plot_segment_length("segment_length");
 FEPluginFactory_T<FEPlotRefSegmentLength, FEPLOTDATA_ID> plot_reference_frame_segment_length("reference_frame_segment_length");
+FEPluginFactory_T<FEPlotPrimaryVesselDirection, FEPLOTDATA_ID> plot_primary_vessel_direction("primary_segment_direction");
 
 FEPluginFactory_T<FEPlotMatrixElastic_m_Q, FEPLOTDATA_ID> plot_matrix_elastic_m_Q("matrix elastic mQ");
 
@@ -170,14 +168,14 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		&angio_mat_factory,
 		//plot classes
 		&plot_angio_stress, &plot_angio_stress,
-		&plot_angio_ecm, &plot_angio_alpha, &plot_angio_gradient, &plot_angio_gradient_center,
+		&plot_angio_ecm,
 		&plot_branches,
 		&plot_anastamoses,
 		&plot_segment_length,
 		&plot_reference_frame_segment_length,
 		&plot_vessel_stress, &plot_matrix_stress,
 		&plot_vessel_weight, &plot_matrix_weight, &plot_matrix_tangent, &plot_matrix_visco_stress,
-		&plot_matrix_elastic_m_Q, &plot_matrix_elastic_stress,
+		&plot_matrix_elastic_m_Q, &plot_matrix_elastic_stress, &plot_primary_vessel_direction,
 
 		//angio stress policy classes
 		&sigmoid_angio_stress_policy_factory, &load_curve_vel_angio_stress_policy_factory ,&load_curve_angio_stress_policy_factory,

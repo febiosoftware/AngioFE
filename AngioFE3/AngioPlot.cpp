@@ -272,17 +272,6 @@ bool FEPlotMatrixElastic_m_Q::Save(FEDomain& d, FEDataStream& str)
 	return true;
 }
 
-
-FEPlotAngioGradientCenter::FEPlotAngioGradientCenter(FEModel* pfem): FEDomainData(PLT_VEC3F, FMT_ITEM)
-{
-};
-
-bool FEPlotAngioGradientCenter::Save(FEDomain& d, FEDataStream& str)
-{
-
-	return true;
-};
-
 bool FEPlotBranches::Save(FEDomain& d, FEDataStream& str)
 {
 	for(int i=0; i < d.Elements();i++)
@@ -347,29 +336,6 @@ bool FEPlotRefSegmentLength::Save(FEDomain& d, FEDataStream& str)
 	return true;
 };
 
-bool FEPlotAngioGradient::Save(FEMesh & m, FEDataStream & a)
-{
-	//this has problems on the boundaries between materials
-	std::unordered_map<int, vec3d> gradients;
-	if (pfeangio == nullptr) return false;
-	//
-	FEMesh & mesh = pfeangio->m_fem->GetMesh();
-
-
-	for (int i = 0; i < mesh.Nodes(); i++)
-	{
-		if (gradients.count(mesh.Node(i).GetID()))
-		{
-			a << gradients[mesh.Node(i).GetID()];
-		}
-		else
-		{
-			a << vec3d(0, 0, 0);//is all zero's okay for this parameter
-		}
-	}
-	return true;
-}
-
 //-----------------------------------------------------------------------------
 bool FEPlotAngioECMDensity::Save(FEDomain& d, FEDataStream& str)
 {
@@ -395,14 +361,24 @@ bool FEPlotAngioECMDensity::Save(FEDomain& d, FEDataStream& str)
 	return true;
 }
 
-bool FEPlotAngioECMAlpha::Save(FEMesh& m, FEDataStream& a)
+bool FEPlotPrimaryVesselDirection::Save(FEDomain& d, FEDataStream& str)
 {
-	if (pfeangio == 0) return false;
-	//multiple materials average their *
-	for (int i = 0; i < pfeangio->m_fem->GetMesh().Nodes(); i++)
+	FEMesh * mesh = pfeangio->GetMesh();
+	for (int i = 0; i < d.Elements(); i++)
 	{
+		FEElement & elem = d.ElementRef(i);
+		FESolidElement *se = dynamic_cast<FESolidElement*>(&elem);
+		if (se)
+		{
+			AngioElement * angio_element = pfeangio->se_to_angio_element.at(se);
+			vec3d primary_dir;
+			for(int j=0; j < angio_element->grown_segments.size();j++)
+			{
+				primary_dir += angio_element->grown_segments[j]->Direction(mesh);
+			}
+			str << primary_dir;
+		}
 	}
-
 	return true;
 }
 

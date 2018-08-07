@@ -74,13 +74,6 @@ public:
 	bool Save(FEDomain& d, FEDataStream& str) override;
 };
 
-//-----------------------------------------------------------------------------
-class FEPlotAngioGradientCenter : public FEDomainData
-{
-public:
-	explicit FEPlotAngioGradientCenter(FEModel* pfem);
-	bool Save(FEDomain& d, FEDataStream& str) override;
-};
 
 //-----------------------------------------------------------------------------
 class FEPlotBranches : public FEDomainData
@@ -114,13 +107,6 @@ public:
 	bool Save(FEDomain& d, FEDataStream& str) override;
 };
 
-class FEPlotAngioGradient : public FENodeData
-{
-public:
-	explicit FEPlotAngioGradient(FEModel * pfem) : FENodeData(PLT_VEC3F, FMT_ITEM){}
-	bool Save(FEMesh & m, FEDataStream & a) override;
-};
-
 //-----------------------------------------------------------------------------
 class FEPlotAngioECMDensity : public FEDomainData
 {
@@ -130,9 +116,12 @@ public:
 };
 
 //-----------------------------------------------------------------------------
-class FEPlotAngioECMAlpha : public FENodeData
+class FEPlotPrimaryVesselDirection : public FEDomainData
 {
 public:
-	explicit FEPlotAngioECMAlpha(FEModel* pfem) : FENodeData(PLT_FLOAT, FMT_ITEM){}
-	bool Save(FEMesh& m, FEDataStream& a)  override;
+	explicit FEPlotPrimaryVesselDirection(FEModel* pfem) : FEDomainData(PLT_VEC3F, FMT_ITEM) {}
+	bool Save(FEDomain& d, FEDataStream& str)  override;
+private:
+	//maps element id to segment direction in the reference configuration
+	std::unordered_map<int, vec3d> accumulated_seg_direction;
 };

@@ -366,6 +366,11 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	double dt = end_time - active_tip->time;
 	assert(dt > 0.0);
 	double grow_vel = this->GetSegmentVelocity(angio_element, active_tip->GetLocalPosition(), mesh);
+	//just kick out and kill if velocity is negative
+	if(grow_vel < 0)
+	{
+		return;
+	}
 	assert(grow_vel > 0.0);
 	double grow_len = grow_vel*dt;
 

@@ -73,6 +73,7 @@ public:
 	friend class FEPlotAnastamoses;
 	friend class FEPlotSegmentLength;
 	friend class FEPlotRefSegmentLength;
+	friend class FEPlotPrimaryVesselDirection;
 	//the following friendships are bad and need removed eventually
 	//TODO: remove the freindship, creation in the old way requires this
 	//or consider making the node and element data public
