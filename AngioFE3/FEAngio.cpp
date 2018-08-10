@@ -1158,7 +1158,10 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 #pragma omp parallel for schedule(dynamic, 16)
 		for (int i = 0; i < angio_element_count; i++)
 		{
-			angio_elements[i]->_angio_mat->im_manager->ApplyModifier(angio_elements[i], mesh, this);
+			if(angio_elements[i]->_angio_mat->im_manager)
+			{
+				angio_elements[i]->_angio_mat->im_manager->ApplyModifier(angio_elements[i], mesh, this);
+			}
 		}
 		//now override any specific information that needs it
 		for(auto iter = elements_by_material.begin(); iter != elements_by_material.end(); ++iter)
@@ -1211,8 +1214,11 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 
 		update_branch_policy_timestep_timer.start();
 		for (size_t i = 0; i < m_pmat.size(); i++)
-		{
-			m_pmat[i]->branch_policy->TimeStepUpdate(ti.currentTime);
+		{	
+			if(m_pmat[i]->branch_policy)
+			{
+				m_pmat[i]->branch_policy->TimeStepUpdate(ti.currentTime);
+			}
 		}
 		update_branch_policy_timestep_timer.stop();
 

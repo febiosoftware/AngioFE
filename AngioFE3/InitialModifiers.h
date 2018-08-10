@@ -13,7 +13,7 @@ public:
 class InitialModifierManager: public FEMaterial
 {
 public:
-	explicit InitialModifierManager(FEModel * pfem) :FEMaterial(pfem) { AddProperty(&initial_modifiers, "initial_modifier"); }
+	explicit InitialModifierManager(FEModel * pfem) :FEMaterial(pfem) { AddProperty(&initial_modifiers, "initial_modifier"); initial_modifiers.m_brequired = false; }
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio);
 private:
 	FEVecPropertyT<InitialModifier> initial_modifiers;
