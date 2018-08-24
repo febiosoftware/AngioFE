@@ -76,6 +76,24 @@ private:
 										//the default value cuts of tips stresses that are below 5% of a tip on top of a gauss point
 };
 
+class GrownSegmentsVelAngioStressPolicy : public AngioStressPolicy
+{
+public:
+	explicit GrownSegmentsVelAngioStressPolicy(FEModel* pfem) : AngioStressPolicy(pfem) {}
+	virtual ~GrownSegmentsVelAngioStressPolicy() {}
+	bool Init() override;
+	void UpdateScale() override;
+	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
+protected:
+	DECLARE_PARAMETER_LIST();
+private:
+	double sprout_mag = 3.72e-12;
+	double sprout_width = 2;
+	double sprout_range = 200;//used to calculate the falloff of stress
+	double sprout_radius_multiplier = 3;//multiplied by sprout range implicitly gives the cutoff for the tips that are included
+										//the default value cuts of tips stresses that are below 5% of a tip on top of a gauss point
+};
+
 class GrownSegmentsAngioStressPolicy : public AngioStressPolicy
 {
 public:

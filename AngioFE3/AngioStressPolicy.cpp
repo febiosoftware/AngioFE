@@ -198,7 +198,7 @@ void GrownSegmentsAngioStressPolicy::AngioStress(AngioElement* angio_element, FE
 			double theta = acos(tip->GetDirection(mesh) * r);//same for GetDirection
 
 															 //sprout s mag replaced with giving correct coeficients for scale
-			double p = tip->growth_velocity *sprout_mag * pow(cos(theta / 2), sprout_width)* exp(-l / sprout_range);
+			double p = sprout_mag * pow(cos(theta / 2), sprout_width)* exp(-l / sprout_range);
 			angio_mp->m_as += dyad(r)*p;
 		}
 	}
@@ -207,6 +207,53 @@ void GrownSegmentsAngioStressPolicy::AngioStress(AngioElement* angio_element, FE
 
 
 BEGIN_PARAMETER_LIST(GrownSegmentsAngioStressPolicy, AngioStressPolicy)
+ADD_PARAMETER(sprout_mag, FE_PARAM_DOUBLE, "sprout_mag");
+ADD_PARAMETER(sprout_width, FE_PARAM_DOUBLE, "sprout_width");
+ADD_PARAMETER(sprout_range, FE_PARAM_DOUBLE, "sprout_range");
+ADD_PARAMETER(sprout_radius_multiplier, FE_PARAM_DOUBLE, "sprout_radius_multiplier");
+END_PARAMETER_LIST();
+
+
+bool GrownSegmentsVelAngioStressPolicy::Init()
+{
+	return true;
+}
+
+void GrownSegmentsVelAngioStressPolicy::UpdateScale()
+{
+}
+
+void GrownSegmentsVelAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
+{
+	std::vector<Tip*> grown_tips;
+	FEAngio::GetGrownTipsInRadius(angio_element, sprout_range * sprout_radius_multiplier, pangio, grown_tips);
+
+	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
+	{
+		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
+		FEAngioMaterialPoint * angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+		FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
+		assert(mp && angio_mp);
+		angio_mp->m_as.zero();
+		vec3d y = emp->m_rt;
+		for (int j = 0; j < grown_tips.size(); j++)
+		{
+			Tip * tip = grown_tips[j];
+			vec3d x = tip->GetPosition(mesh);//consider moving this out and calling it less
+			vec3d r = y - x;
+			double l = r.unit();
+			double theta = acos(tip->GetDirection(mesh) * r);//same for GetDirection
+
+															 //sprout s mag replaced with giving correct coeficients for scale
+			double p = tip->growth_velocity *sprout_mag * pow(cos(theta / 2), sprout_width)* exp(-l / sprout_range);
+			angio_mp->m_as += dyad(r)*p;
+		}
+	}
+
+}
+
+
+BEGIN_PARAMETER_LIST(GrownSegmentsVelAngioStressPolicy, AngioStressPolicy)
 ADD_PARAMETER(sprout_mag, FE_PARAM_DOUBLE, "sprout_mag");
 ADD_PARAMETER(sprout_width, FE_PARAM_DOUBLE, "sprout_width");
 ADD_PARAMETER(sprout_range, FE_PARAM_DOUBLE, "sprout_range");
