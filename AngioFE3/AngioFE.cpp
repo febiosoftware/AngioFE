@@ -82,7 +82,7 @@ FEPluginFactory_T<PerElementVI, FEMATERIAL_ID> per_element_vi_factory("per_eleme
 FEPluginFactory_T<DelayedBranchingPolicy, FEMATERIAL_ID> delayed_branching_policy_factory("delayed_branching_policy");
 
 //branch related classes
-FEPluginFactory_T<AzmuthAngleProbabilityDistribution, FEMATERIAL_ID> azmuth_angle_probability_distribution_factory("azmuth_angle_probability_distribution");
+FEPluginFactory_T<AzimuthAngleProbabilityDistribution, FEMATERIAL_ID> azimuth_angle_probability_distribution_factory("azimuth_angle_probability_distribution");
 FEPluginFactory_T<ZenithAngleProbabilityDistribution, FEMATERIAL_ID> zenith_angle_probability_distribution_factory("zenith_angle_probability_distribution");
 
 /*
@@ -192,7 +192,7 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		&delayed_branching_policy_factory,
 
 		//branching related classes
-		&azmuth_angle_probability_distribution_factory,
+		&azimuth_angle_probability_distribution_factory,
 		&zenith_angle_probability_distribution_factory,
 
 		//grow direction modifiers

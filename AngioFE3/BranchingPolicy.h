@@ -21,11 +21,11 @@ public:
 	virtual void TimeStepUpdate(double current_time) = 0;
 };
 
-class AzmuthAngle :public FEMaterial
+class AzimuthAngle :public FEMaterial
 {
 public:
-	AzmuthAngle(FEModel* pfem) : FEMaterial(pfem) {}
-	virtual double GetAzmuthAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element) = 0;
+	AzimuthAngle(FEModel* pfem) : FEMaterial(pfem) {}
+	virtual double GetAzimuthAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element) = 0;
 	virtual void TimeStepUpdate(double current_time) = 0;
 };
 
@@ -41,11 +41,11 @@ private:
 	FEPropertyT<FEProbabilityDistribution> angle;
 };
 
-class AzmuthAngleProbabilityDistribution :public AzmuthAngle
+class AzimuthAngleProbabilityDistribution :public AzimuthAngle
 {
 public:
-	AzmuthAngleProbabilityDistribution(FEModel* pfem) : AzmuthAngle(pfem) { AddProperty(&angle, "angle"); }
-	double GetAzmuthAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element) override;
+	AzimuthAngleProbabilityDistribution(FEModel* pfem) : AzimuthAngle(pfem) { AddProperty(&angle, "angle"); }
+	double GetAzimuthAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element) override;
 	bool Init() override {return angle->Init();}
 	void TimeStepUpdate(double current_time) override { angle->TimeStepUpdate(current_time); }
 private:
@@ -55,21 +55,21 @@ class BranchPolicy :public FEMaterial
 {
 public:
 	BranchPolicy(FEModel* pfem) : FEMaterial(pfem) { 
-		AddProperty(&azmuth_angle, "azmuth_angle"); 
+		AddProperty(&azimuth_angle, "azimuth_angle"); 
 		AddProperty(&zenith_angle, "zenith_angle");
 		AddProperty(&interpolation_prop, "interpolation_prop");
 	}
 	virtual ~BranchPolicy(){};
 	virtual void AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, double final_time, double min_scale_factor, FEMesh* mesh, FEAngio* feangio)=0;
 	virtual void SetupBranchInfo(AngioElement * angio_elem) = 0;
-	bool Init() override { return azmuth_angle->Init() && zenith_angle->Init(); }
-	virtual void TimeStepUpdate(double current_time){ azmuth_angle->TimeStepUpdate(current_time); zenith_angle->TimeStepUpdate(current_time);}
+	bool Init() override { return azimuth_angle->Init() && zenith_angle->Init(); }
+	virtual void TimeStepUpdate(double current_time){ azimuth_angle->TimeStepUpdate(current_time); zenith_angle->TimeStepUpdate(current_time);}
 	//adds a branch tip at the given natural coordinates
 	void AddBranchTip(AngioElement * angio_element, vec3d local_pos, vec3d parent_direction, double start_time, int vessel_id, int buffer_index, FEMesh* mesh);
 	vec3d GetBranchDirection(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element, FEMesh* mesh);
 private:
 	//angles are in radians
-	FEPropertyT<AzmuthAngle> azmuth_angle;
+	FEPropertyT<AzimuthAngle> azimuth_angle;
 	FEPropertyT<ZenithAngle> zenith_angle;
 	FEPropertyT<FEVariableInterpolation> interpolation_prop;
 };

@@ -39,9 +39,9 @@ vec3d BranchPolicy::GetBranchDirection(vec3d local_pos, vec3d parent_direction, 
 	vec3d corrected_fiber_direction = normal ^ parent_direction;//make the fiber direction be ortogonal to parent direction
 
 	quatd zenith_rotation(zenith_angle->GetZenithAngle(local_pos, parent_direction, angio_element), corrected_fiber_direction);
-	quatd azmuth_rotation(azmuth_angle->GetAzmuthAngle(local_pos, parent_direction, angio_element), parent_direction);
+	quatd azimuth_rotation(azimuth_angle->GetAzimuthAngle(local_pos, parent_direction, angio_element), parent_direction);
 
-	return azmuth_rotation.RotationMatrix() * zenith_rotation.RotationMatrix() * parent_direction;
+	return azimuth_rotation.RotationMatrix() * zenith_rotation.RotationMatrix() * parent_direction;
 }
 
 
@@ -208,7 +208,7 @@ double ZenithAngleProbabilityDistribution::GetZenithAngle(vec3d local_pos, vec3d
 	return angle->NextValue(angio_element->_rengine);
 }
 
-double AzmuthAngleProbabilityDistribution::GetAzmuthAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element)
+double AzimuthAngleProbabilityDistribution::GetAzimuthAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element)
 {
 	return angle->NextValue(angio_element->_rengine);
 }

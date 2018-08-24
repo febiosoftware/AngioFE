@@ -374,7 +374,7 @@ bool FEPlotPrimaryVesselDirection::Save(FEDomain& d, FEDataStream& str)
 			vec3d primary_dir;
 			for(int j=0; j < angio_element->grown_segments.size();j++)
 			{
-				primary_dir += angio_element->grown_segments[j]->Direction(mesh);
+				primary_dir += angio_element->grown_segments[j]->Direction(mesh)* angio_element->grown_segments[j]->Length(mesh);
 			}
 			str << primary_dir;
 		}
