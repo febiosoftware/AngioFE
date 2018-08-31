@@ -10,7 +10,6 @@ public:
 	virtual void SelectIntPtr(std::vector<FEMaterialPoint*> & int_pts, FESolidElement * se, vec3d natc, FEAngio* feangio, FEMesh* mesh) = 0;
 protected:
 	double safety_factor = 1.1;
-
 };
 
 
