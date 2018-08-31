@@ -176,6 +176,9 @@ public:	// parameters read directly from file
 	angiofe_random_engine rengine;
 
 	FEBioModel * m_fem;//just do the cast once
+	std::unordered_map<FESolidElement *, AngioElement *> se_to_angio_element;
+	std::unordered_map<FENode *, std::vector<FESolidElement*>> nodes_to_elements;
+	std::unordered_map<AngioElement *, std::vector<AngioElement *>> angio_elements_to_all_adjacent_elements;//adjacent is shares a node with the element
 private:
 	//both nodes and elements id's go from 1 to n+1 for n items
 	//first element is padding so the id can be used to lookup the data for that node
@@ -197,9 +200,7 @@ private:
 	std::vector<FEAngioMaterial*> angio_materials;
 	int buffer_index = 0;
 
-	std::unordered_map<FESolidElement *, AngioElement *> se_to_angio_element;
-	std::unordered_map<FENode *, std::vector<FESolidElement*>> nodes_to_elements;
-	std::unordered_map<AngioElement *, std::vector<AngioElement *>> angio_elements_to_all_adjacent_elements;//adjacent is shares a node with the element
+	
 	double next_time = -1;
 
 
