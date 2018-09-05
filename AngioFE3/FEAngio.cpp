@@ -128,18 +128,22 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, dou
 	fileout->save_vessel_state(*this);
 
 	//if any chemical deposits are needed do them for the recent segments
-#pragma omp parallel for schedule(dynamic, 16)
-	for (int i = 0; i < angio_element_count; i++)
+	if(time_info.currentTime > 0.0)
 	{
-		if (angio_elements[i]->_angio_mat->tip_doping_manager)
+#pragma omp parallel for schedule(dynamic, 16)
+		for (int i = 0; i < angio_element_count; i++)
 		{
-			for(int j=0; j < angio_elements[i]->recent_segments.size();j++)
+			if (angio_elements[i]->_angio_mat->tip_doping_manager)
 			{
-				Segment * seg = angio_elements[i]->recent_segments[j];
-				angio_elements[i]->_angio_mat->tip_doping_manager->DopeAtTip(seg->front, seg->front->time - seg->back->time,this, mesh);
+				for (int j = 0; j < angio_elements[i]->recent_segments.size(); j++)
+				{
+					Segment * seg = angio_elements[i]->recent_segments[j];
+					angio_elements[i]->_angio_mat->tip_doping_manager->DopeAtTip(seg->front, seg->front->time - seg->back->time, this, mesh);
+				}
 			}
 		}
 	}
+
 
 	//do the cleanup if needed
 	if(time_info.currentTime >= next_time)
@@ -933,9 +937,9 @@ mat3d FEAngio::unifromRandomRotationMatrix(angiofe_random_engine & rengine)
 	assert(xt * zt < tol && xt * zt > -tol);
 	assert(zt * yt < tol && zt * yt > -tol);
 
-	double noq = xt.norm();
-	double nom1 = yt.norm();
-	double nom2 = zt.norm();
+	double noq = xt.rnorm();
+	double nom1 = yt.rnorm();
+	double nom2 = zt.rnorm();
 	tol = 0.01;
 	assert(noq < (1 + tol) && noq >(1 - tol));
 	assert(nom1 < (1 + tol) && nom1 >(1 - tol));

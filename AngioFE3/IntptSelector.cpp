@@ -26,7 +26,7 @@ void NarrowIntptSelector::SelectIntPtr(std::vector<FEMaterialPoint*> & int_pts, 
 	{
 		et += mesh->Node(se->m_node[j]).m_rt * Gt[j];
 	}
-	double search_radius = std::min(er.norm(), std::min( es.norm(), et.norm()));
+	double search_radius = std::max(er.norm(), std::max( es.norm(), et.norm()));
 	search_radius *= safety_factor;
 
 	vec3d pos(0, 0, 0);
@@ -56,7 +56,7 @@ void NarrowIntptSelector::SelectIntPtr(std::vector<FEMaterialPoint*> & int_pts, 
 		AngioElement * cur_angio_element = adj_angio_elements[i];
 		for(int j=0; j < cur_angio_element->_elem->GaussPoints();j++)
 		{
-			FEMaterialPoint * mp = cur_angio_element->_elem->GetMaterialPoint(i);
+			FEMaterialPoint * mp = cur_angio_element->_elem->GetMaterialPoint(j);
 			FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
 			assert(emp);
 			if ((emp->m_rt - pos).norm() < search_radius)

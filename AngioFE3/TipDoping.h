@@ -10,10 +10,10 @@ class TipDoping :public FEMaterial
 public:
 	explicit TipDoping(FEModel* pfem);
 	void DopeAtTip(Tip * tip, double dt, FEAngio* feangio, FEMesh* mesh);
-	FEPropertyT<rbf_norm> norm;
+	FEPropertyT<rbf_norm> rnorm;
 	FEPropertyT<IntptSelector> selector;
 	FEPropertyT<ChemicalDepositInfo> chemical_deposit_info;
-	double chemical_amount = 1.0;
+	double chemical_rate = 1.0;
 };
 
 class TipDopingManager : public FEMaterial

@@ -19,5 +19,5 @@ class SoluteDepositInfo : public ChemicalDepositInfo
 public:
 	explicit SoluteDepositInfo(FEModel* pfem) : ChemicalDepositInfo(pfem) {}
 	void DepositChemicals(class FESolutesMaterialPoint * smp, double amount) override;
-	int solute_id=0;
+	int solute_id=1;
 };

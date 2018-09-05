@@ -1,6 +1,6 @@
 #include "rbf_norms.h"
 
-double gaussian_rbf_norm::norm(vec3d pos, vec3d center)
+double gaussian_rbf_norm::rbfnorm(vec3d pos, vec3d center)
 {
 	double dist = (pos - center).norm();
 	if(dist < cut_off_point)
