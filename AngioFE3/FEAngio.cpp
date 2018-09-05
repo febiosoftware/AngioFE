@@ -127,6 +127,20 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, dou
 	//do the output
 	fileout->save_vessel_state(*this);
 
+	//if any chemical deposits are needed do them for the recent segments
+#pragma omp parallel for schedule(dynamic, 16)
+	for (int i = 0; i < angio_element_count; i++)
+	{
+		if (angio_elements[i]->_angio_mat->tip_doping_manager)
+		{
+			for(int j=0; j < angio_elements[i]->recent_segments.size();j++)
+			{
+				Segment * seg = angio_elements[i]->recent_segments[j];
+				angio_elements[i]->_angio_mat->tip_doping_manager->DopeAtTip(seg->front, seg->front->time - seg->back->time,this, mesh);
+			}
+		}
+	}
+
 	//do the cleanup if needed
 	if(time_info.currentTime >= next_time)
 	{

@@ -1,5 +1,8 @@
 #include "IntptSelector.h"
 #include <FEBioMech/FEElasticMaterial.h>
+#include <FECore/FEMesh.h>
+#include "AngioElement.h"
+#include "FEAngio.h"
 
 void NarrowIntptSelector::SelectIntPtr(std::vector<FEMaterialPoint*> & int_pts, FESolidElement * se, vec3d natc, FEAngio* feangio, FEMesh* mesh)
 {

@@ -3,20 +3,23 @@
 #include "Tip.h"
 #include "rbf_norms.h"
 #include "IntptSelector.h"
+#include "ChemicalDepositInfo.h"
 
 class TipDoping :public FEMaterial
 {
 public:
-	explicit TipDoping(FEModel* pfem) : FEMaterial(pfem) {}
-	void DopeAtTip(Tip * tip, double dt, int solute_id, double solute_amount, FEAngio* feangio, FEMesh* mesh);
+	explicit TipDoping(FEModel* pfem);
+	void DopeAtTip(Tip * tip, double dt, FEAngio* feangio, FEMesh* mesh);
 	FEPropertyT<rbf_norm> norm;
 	FEPropertyT<IntptSelector> selector;
+	FEPropertyT<ChemicalDepositInfo> chemical_deposit_info;
+	double chemical_amount = 1.0;
 };
 
 class TipDopingManager : public FEMaterial
 {
 public:
 	explicit TipDopingManager(FEModel* pfem) : FEMaterial(pfem) { AddProperty(&tip_effects, "tip_effect", false); }
-	void DopeAtTip(Tip * tip, double dt, int solute_id, double solute_amount, FEAngio* feangio, FEMesh* mesh);
+	void DopeAtTip(Tip * tip, double dt, FEAngio* feangio, FEMesh* mesh);
 	FEVecPropertyT<TipDoping> tip_effects;
 };

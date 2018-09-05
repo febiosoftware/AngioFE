@@ -1,7 +1,9 @@
 #pragma once
 #include <FECore/FEMaterial.h>
 #include <FECore/FEElement.h>
-#include "FEAngio.h"
+
+
+class FEAngio;
 
 class IntptSelector : public FEMaterial
 {

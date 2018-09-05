@@ -20,6 +20,7 @@
 #include "AngioStressPolicy.h"
 #include "InitialModifiers.h"
 #include "NodeDataInterpolation.h"
+#include "TipDoping.h"
 
 class AngioElement;
 
@@ -122,6 +123,7 @@ public:
 	FEPropertyT<BranchPolicy> branch_policy;
 	FEPropertyT<BranchPolicy> proto_branch_policy;
 	FEPropertyT<NodeDataInterpolationManager> nodedata_interpolation_manager;
+	FEPropertyT<TipDopingManager> tip_doping_manager;
 	double vessel_radius = 7.0;
 private:
 	DECLARE_PARAMETER_LIST();
