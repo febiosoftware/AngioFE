@@ -19,6 +19,9 @@ public:
 	{
 		//active_tips[0][this]
 	};
+
+	double GetLengthAtTime(FEMesh* mesh, double time) const;
+
 	//  
 	FESolidElement * _elem=nullptr;
 	FEAngioMaterial * _angio_mat=nullptr;

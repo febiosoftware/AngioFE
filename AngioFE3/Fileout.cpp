@@ -69,12 +69,12 @@ Fileout::~Fileout()
 }
 
 //-----------------------------------------------------------------------------
-void Fileout::printStatus(FEAngio& angio)
+void Fileout::printStatus(FEAngio& angio, double time)
 {
 	//just store the status in a csv
 	//logstream << "Time,Segments,Total Length,Vessels,Branchs,Anastamoses,Active Tips" << endl;
 
-	logstream << angio.GetFEModel()->GetTime().currentTime << ","<< getSegmentCount(angio) <<"," << getSegmentLength(angio)<< ",," << getBranchCount(angio) << ",," << getTipCount(angio) << std::endl;
+	logstream << angio.GetFEModel()->GetTime().currentTime << ","<< getSegmentCount(angio) <<"," << getSegmentLength(angio,time)<< ",," << getBranchCount(angio) << ",," << getTipCount(angio) << std::endl;
 }
 
 void PrintSegment(vec3d r0, vec3d r1)
@@ -246,12 +246,16 @@ int Fileout::getSegmentCount(FEAngio& angio)
 	return count;
 }
 
-double Fileout::getSegmentLength(FEAngio& angio)
+double Fileout::getSegmentLength(FEAngio& angio, double time)
 {
+	FEMesh * mesh = angio.GetMesh();
 	double len= 0;
+#pragma omp parallel for
 	for (int i = 0; i < angio.angio_elements.size(); i++)
 	{
-		len += angio.angio_elements[i]->global_segment_length;
+		double temp = angio.angio_elements[i]->GetLengthAtTime(mesh, time);
+#pragma omp critical
+		len += temp;
 	}
 	return len;
 }

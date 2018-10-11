@@ -19,7 +19,7 @@ class Fileout
 public:
 	Fileout(FEAngio& angio);
 	virtual ~Fileout();
-	void printStatus(FEAngio& angio);
+	void printStatus(FEAngio& angio, double time);
 	void save_vessel_state(FEAngio& angio);
 	//saves all segments not just recent ones, should only be used in initialization
 	void bulk_save_vessel_state(FEAngio& angio);
@@ -33,7 +33,7 @@ public:
 private:
 	int getBranchCount(FEAngio& angio);
 	int getSegmentCount(FEAngio& angio);
-	double getSegmentLength(FEAngio& angio);
+	double getSegmentLength(FEAngio& angio, double time);
 	int getTipCount(FEAngio& angio);
 
 	std::ofstream logstream;

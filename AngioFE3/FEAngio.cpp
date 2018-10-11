@@ -1276,7 +1276,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 			// save active tips
 			CalculateSegmentLengths(mesh);
 			// Print the status of angio3d to the user    
-			fileout->printStatus(*this);
+			fileout->printStatus(*this, fem.GetTime().currentTime);
 		}
 		
 	}
