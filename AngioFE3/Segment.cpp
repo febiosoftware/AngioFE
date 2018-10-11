@@ -30,6 +30,26 @@ double Segment::Length(FEMesh * mesh)const
 	return (front->GetPosition(mesh) - back->GetPosition(mesh)).norm();
 }
 
+double Segment::LengthAtTime(FEMesh * mesh, double time)const
+{
+	double contrib = 0;
+	if(back->time > time)
+	{
+		contrib = 0;
+	}
+	else if((back->time <= time) && (front->time <= time))
+	{
+		contrib = 1;
+	}
+	else
+	{
+		contrib = (time - back->time) / (front->time - back->time);
+	}
+	assert(contrib >= -0.001 && contrib <= 1.001);
+
+	return (front->GetPosition(mesh) - back->GetPosition(mesh)).norm() * contrib;
+}
+
 double Segment::RefLength(FEMesh * mesh)const
 {
 	return (front->GetRefPosition(mesh) - back->GetRefPosition(mesh)).norm();

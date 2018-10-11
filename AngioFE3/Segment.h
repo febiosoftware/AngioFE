@@ -20,6 +20,7 @@ public:
 	vec3d NatcAtTime(double time)const;
 	int GetInitialFragmentID()const;
 	double Length(FEMesh * mesh)const;
+	double LengthAtTime(FEMesh * mesh, double time)const;
 	double RefLength(FEMesh * mesh) const;//calculate length in reference frame
 	Tip * front = nullptr;
 	Tip * back = nullptr;
