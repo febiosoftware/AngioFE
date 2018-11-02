@@ -55,7 +55,7 @@ void SigmoidAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio*
 			double theta = acos(tip->GetDirection(mesh) * r);//same for GetDirection
 
 			//sprout s mag replaced with giving correct coeficients for scale
-			double p = den_scale * scale *sprout_mag * pow(cos(theta / 2), sprout_width)* exp(-l / sprout_range);
+			double p = den_scale * scale *sprout_mag * pow(cos(theta / 2), fan_exponential)* exp(-l / sprout_range);
 			angio_mp->m_as += dyad(r)*p;
 		}
 	}
@@ -64,7 +64,7 @@ void SigmoidAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio*
 
 BEGIN_PARAMETER_LIST(SigmoidAngioStressPolicy, AngioStressPolicy)
 ADD_PARAMETER(sprout_mag, FE_PARAM_DOUBLE, "sprout_mag");
-ADD_PARAMETER(sprout_width, FE_PARAM_DOUBLE, "sprout_width");
+ADD_PARAMETER(fan_exponential, FE_PARAM_DOUBLE, "fan_exponential");
 ADD_PARAMETER(sprout_range, FE_PARAM_DOUBLE, "sprout_range");
 ADD_PARAMETER(sprout_radius_multiplier, FE_PARAM_DOUBLE, "sprout_radius_multiplier");
 ADD_PARAMETER(a, FE_PARAM_DOUBLE, "a");
@@ -106,7 +106,7 @@ void LoadCurveVelAngioStressPolicy::AngioStress(AngioElement* angio_element, FEA
 			double theta = acos(tip->GetDirection(mesh) * r);//same for GetDirection
 
 															 //sprout s mag replaced with giving correct coeficients for scale
-			double p = tip->growth_velocity *sprout_mag * pow(cos(theta / 2), sprout_width)* exp(-l / sprout_range);
+			double p = tip->growth_velocity *sprout_mag * pow(cos(theta / 2), fan_exponential)* exp(-l / sprout_range);
 			angio_mp->m_as += dyad(r)*p;
 		}
 	}
@@ -116,7 +116,7 @@ void LoadCurveVelAngioStressPolicy::AngioStress(AngioElement* angio_element, FEA
 
 BEGIN_PARAMETER_LIST(LoadCurveVelAngioStressPolicy, AngioStressPolicy)
 ADD_PARAMETER(sprout_mag, FE_PARAM_DOUBLE, "sprout_mag");
-ADD_PARAMETER(sprout_width, FE_PARAM_DOUBLE, "sprout_width");
+ADD_PARAMETER(fan_exponential, FE_PARAM_DOUBLE, "fan_exponential");
 ADD_PARAMETER(sprout_range, FE_PARAM_DOUBLE, "sprout_range");
 ADD_PARAMETER(sprout_radius_multiplier, FE_PARAM_DOUBLE, "sprout_radius_multiplier");
 END_PARAMETER_LIST();
@@ -153,7 +153,7 @@ void LoadCurveAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngi
 			double theta = acos(tip->GetDirection(mesh) * r);//same for GetDirection
 
 															 //sprout s mag replaced with giving correct coeficients for scale
-			double p = sprout_mag * pow(cos(theta / 2), sprout_width)* exp(-l / sprout_range);
+			double p = sprout_mag * pow(cos(theta / 2), fan_exponential)* exp(-l / sprout_range);
 			angio_mp->m_as += dyad(r)*p;
 		}
 	}
@@ -162,7 +162,7 @@ void LoadCurveAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngi
 
 BEGIN_PARAMETER_LIST(LoadCurveAngioStressPolicy, AngioStressPolicy)
 ADD_PARAMETER(sprout_mag, FE_PARAM_DOUBLE, "sprout_mag");
-ADD_PARAMETER(sprout_width, FE_PARAM_DOUBLE, "sprout_width");
+ADD_PARAMETER(fan_exponential, FE_PARAM_DOUBLE, "fan_exponential");
 ADD_PARAMETER(sprout_range, FE_PARAM_DOUBLE, "sprout_range");
 ADD_PARAMETER(sprout_radius_multiplier, FE_PARAM_DOUBLE, "sprout_radius_multiplier");
 END_PARAMETER_LIST();
@@ -198,7 +198,7 @@ void GrownSegmentsAngioStressPolicy::AngioStress(AngioElement* angio_element, FE
 			double theta = acos(tip->GetDirection(mesh) * r);//same for GetDirection
 
 															 //sprout s mag replaced with giving correct coeficients for scale
-			double p = sprout_mag * pow(cos(theta / 2), sprout_width)* exp(-l / sprout_range);
+			double p = sprout_mag * pow(cos(theta / 2), fan_exponential)* exp(-l / sprout_range);
 			angio_mp->m_as += dyad(r)*p;
 		}
 	}
@@ -208,7 +208,7 @@ void GrownSegmentsAngioStressPolicy::AngioStress(AngioElement* angio_element, FE
 
 BEGIN_PARAMETER_LIST(GrownSegmentsAngioStressPolicy, AngioStressPolicy)
 ADD_PARAMETER(sprout_mag, FE_PARAM_DOUBLE, "sprout_mag");
-ADD_PARAMETER(sprout_width, FE_PARAM_DOUBLE, "sprout_width");
+ADD_PARAMETER(fan_exponential, FE_PARAM_DOUBLE, "fan_exponential");
 ADD_PARAMETER(sprout_range, FE_PARAM_DOUBLE, "sprout_range");
 ADD_PARAMETER(sprout_radius_multiplier, FE_PARAM_DOUBLE, "sprout_radius_multiplier");
 END_PARAMETER_LIST();
@@ -245,7 +245,7 @@ void GrownSegmentsVelAngioStressPolicy::AngioStress(AngioElement* angio_element,
 			double theta = acos(tip->GetDirection(mesh) * r);//same for GetDirection
 
 															 //sprout s mag replaced with giving correct coeficients for scale
-			double p = tip->growth_velocity *sprout_mag * pow(cos(theta / 2), sprout_width)* exp(-l / sprout_range);
+			double p = tip->growth_velocity *sprout_mag * pow(cos(theta / 2), fan_exponential)* exp(-l / sprout_range);
 			angio_mp->m_as += dyad(r)*p;
 		}
 	}
@@ -255,7 +255,7 @@ void GrownSegmentsVelAngioStressPolicy::AngioStress(AngioElement* angio_element,
 
 BEGIN_PARAMETER_LIST(GrownSegmentsVelAngioStressPolicy, AngioStressPolicy)
 ADD_PARAMETER(sprout_mag, FE_PARAM_DOUBLE, "sprout_mag");
-ADD_PARAMETER(sprout_width, FE_PARAM_DOUBLE, "sprout_width");
+ADD_PARAMETER(fan_exponential, FE_PARAM_DOUBLE, "fan_exponential");
 ADD_PARAMETER(sprout_range, FE_PARAM_DOUBLE, "sprout_range");
 ADD_PARAMETER(sprout_radius_multiplier, FE_PARAM_DOUBLE, "sprout_radius_multiplier");
 END_PARAMETER_LIST();
