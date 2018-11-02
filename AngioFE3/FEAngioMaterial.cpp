@@ -18,6 +18,7 @@
 BEGIN_PARAMETER_LIST(FEAngioMaterial, FEElasticMaterial)
 	
 	ADD_PARAMETER(initial_segment_velocity, FE_PARAM_DOUBLE, "initial_segment_velocity");
+	ADD_PARAMETER(vessel_radius, FE_PARAM_DOUBLE, "vessel_radius");
 
 END_PARAMETER_LIST();
 
@@ -195,7 +196,7 @@ tens4ds FEAngioMaterial::Tangent(FEMaterialPoint& mp)
 		matrix_elastic.m_r0 = elastic_pt.m_r0;
 		matrix_elastic.m_F = elastic_pt.m_F;
 		matrix_elastic.m_J = elastic_pt.m_J;
-		s = angioPt->vessel_weight*common_properties->vessel_material->Tangent(*angioPt->vessPt) + angioPt->matrix_weight*matrix_material->GetElasticMaterial()->Tangent(*angioPt->matPt);
+		s = angioPt->vessel_weight*common_properties->vessel_material->Tangent(*angioPt->vessPt) + angioPt->matrix_weight*matrix_material->Tangent(*angioPt->matPt);
 	}
 	return s;
 }
@@ -818,6 +819,7 @@ void FEAngioMaterial::Cleanup(AngioElement* angio_elem, double end_time, int buf
 	}
 	angio_elem->recent_segments.clear();
 	angio_elem->processed_recent_segments = 0;
+
 }
 
 void FEAngioMaterial::PrepBuffers(AngioElement* angio_elem, double end_time, int buffer_index)
@@ -827,7 +829,18 @@ void FEAngioMaterial::PrepBuffers(AngioElement* angio_elem, double end_time, int
 	{
 		iter->second.clear();
 	}
-	angio_elem->final_active_tips.clear();
+
+	std::vector<Tip*> temp;
+	temp.reserve(angio_elem->final_active_tips.size());
+	for(int i=0; i < angio_elem->final_active_tips.size();i++)
+	{
+		//recycle tips that have not been hit temporally
+		if(angio_elem->final_active_tips[i]->time > end_time)
+		{
+			temp.push_back(angio_elem->final_active_tips[i]);
+		}
+	}
+	angio_elem->final_active_tips = temp;
 }
 
 bool FEAngioMaterial::SeedFragments(std::vector<AngioElement *>& angio_elements, FEMesh* mesh)

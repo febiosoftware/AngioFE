@@ -94,6 +94,12 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, dou
 				min_dt = std::min(min_dt, temp_dt);
 			}
 		}
+		/*
+		if(min_dt > 0.2)
+		{
+			min_dt = 0.2;
+		}
+		*/
 		
 		double ctime = next_time + min_dt;
 
@@ -247,11 +253,8 @@ void FEAngio::GetActiveFinalTipsInRadius(AngioElement* angio_element, double rad
 	tips.reserve(500);
 	pangio->ExtremaInElement(angio_element->_elem, element_bounds);
 
-	for (int i = 0; i < angio_element->face_adjacency_list.size(); i++)
-	{
-		next.insert(angio_element->face_adjacency_list[i]);
-	}
-	visited.insert(angio_element);
+	next.insert(angio_element);
+
 	while (next.size())
 	{
 		AngioElement * cur = *next.begin();
