@@ -239,7 +239,7 @@ double FEAngioMaterial::GetSegmentVelocity(AngioElement * angio_element, vec3d l
 	return velocity_manager->ApplyModifiers(1, local_pos, angio_element, mesh);
 }
 
-double FEAngioMaterial::GetInitialVelocity()
+double FEAngioMaterial::GetInitialVelocity() const
 {
 	return initial_segment_velocity;
 }

@@ -105,7 +105,7 @@ public:
 
 	double GetSegmentVelocity(AngioElement * angio_element, vec3d local_pos, FEMesh* mesh);
 
-	double GetInitialVelocity();
+	double GetInitialVelocity() const;
 
 	// Calculate spatial elasticity tangent
 	tens4ds Tangent(FEMaterialPoint& mp) override;

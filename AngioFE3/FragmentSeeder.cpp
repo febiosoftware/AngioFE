@@ -97,11 +97,11 @@ bool ByElementFragmentSeeder::SeedFragments(std::vector<AngioElement *> &angio_e
 		r0->initial_fragment_id = initial_fragment_id_counter++;
 		int elem_index = edist(angio_mat->m_pangio->rengine);
 		r0->angio_element = angio_elements[elem_index];
-		vec3d local_pos = GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(mesh, r0->angio_element, angio_mat->m_pangio->rengine);
+		vec3d local_pos = GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(mesh, r0->angio_element, r0->angio_element->_rengine);
 		r0->SetLocalPosition(local_pos);
 		r0->time = -1;
 		r0->use_direction = true;
-		r0->direction = angio_mat->m_pangio->uniformRandomDirection(angio_mat->m_pangio->rengine);
+		r0->direction = angio_mat->m_pangio->uniformRandomDirection(r0->angio_element->_rengine);
 		r0->face = r0->angio_element;
 
 		// Finally add this to the AngioElement.
@@ -137,11 +137,11 @@ bool ByElementFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElemen
 		r0->initial_fragment_id = initial_fragment_id_counter;
 		int elem_index = edist(angio_mat->m_pangio->rengine);
 		r0->angio_element = angio_elements[elem_index];
-		vec3d local_pos = GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(mesh, r0->angio_element, angio_mat->m_pangio->rengine);
+		vec3d local_pos = GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(mesh, r0->angio_element, r0->angio_element->_rengine);
 		r0->SetLocalPosition(local_pos);
 		r0->time = -1;
 		r0->use_direction = true;
-		r0->direction = angio_mat->m_pangio->uniformRandomDirection(angio_mat->m_pangio->rengine);
+		r0->direction = angio_mat->m_pangio->uniformRandomDirection(r0->angio_element->_rengine);
 		r0->face = r0->angio_element;
 
 		// Finally add this to the AngioElement.
@@ -174,7 +174,7 @@ bool ByVolumeFragmentSeeder::SeedFragments(std::vector<AngioElement *>& angio_el
 	}
 
 	// Random engine used to sample from distributions.
-	angiofe_random_engine random_engine = angio_mat->m_pangio->rengine;
+	angiofe_random_engine & random_engine = angio_mat->m_pangio->rengine;
 
 	// A uniform distribution must be used, so take a sample from (0, total_volume) and find which element that the sample corresponds to by ordering 
 	// the element's "starting" and "ending" volumes in two separate parallel arrays.
@@ -206,11 +206,11 @@ bool ByVolumeFragmentSeeder::SeedFragments(std::vector<AngioElement *>& angio_el
 		Tip* r0 = new Tip();
 		r0->initial_fragment_id = initial_fragment_id_counter;
 		r0->angio_element = angio_elements[element_index];
-		vec3d local_pos = GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(mesh, r0->angio_element, angio_mat->m_pangio->rengine);
+		vec3d local_pos = GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(mesh, r0->angio_element, r0->angio_element->_rengine);
 		r0->SetLocalPosition(local_pos);
 		r0->time = -1;
 		r0->use_direction = true;
-		r0->direction = angio_mat->m_pangio->uniformRandomDirection(angio_mat->m_pangio->rengine);
+		r0->direction = angio_mat->m_pangio->uniformRandomDirection(r0->angio_element->_rengine);
 		r0->face = r0->angio_element;
 
 		// Finally add this to the AngioElement.

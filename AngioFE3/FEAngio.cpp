@@ -44,6 +44,7 @@ bool CreateConcentrationMap(vector<double>& concentration, FEMaterial* pmat, int
 
 void FEAngio::SetSeeds()
 {
+	rengine.seed(m_fem->GetGlobalConstant("seed"));
 	for(int i=0; i <angio_elements.size();i++)
 	{
 		angio_elements[i]->_angio_mat->SetSeeds(angio_elements[i]);
