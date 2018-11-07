@@ -11,7 +11,6 @@
 #include "FECore/FECoreFactory.h"
 #include "FEAngioMaterial.h"
 #include "AngioPlot.h"
-#include "VesselDirectionContributions.h"
 #ifdef SVN
 #include "svnrev.h"
 #else

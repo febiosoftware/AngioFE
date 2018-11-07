@@ -10,7 +10,6 @@
 #include "FiberManager.h"
 #include "FEAngioMaterialPoint.h"
 #include <FEBioMix/FEBiphasic.h>
-#include "ECMInitializer.h"
 #include "CommonAngioProperites.h"
 #include <FEBioMix/FEMultiphasic.h>
 #include "ContributionMix.h"
