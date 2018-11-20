@@ -17,6 +17,7 @@ protected:
 	int node_set_id = -1;
 	std::unordered_map<int, double> node_id_to_values;
 	int interpolation_mode = 0;//0 use shape functions to interpolate to gauss points, 1 average all nodes in element and set that value at all gauss points
+	//! parameter list
 	DECLARE_PARAMETER_LIST();
 };
 

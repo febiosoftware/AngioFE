@@ -33,6 +33,7 @@ public:
 	FEMaterialPoint* vessPt;
 	FEMaterialPoint* matPt;
 
+	//! parameter list
 	DECLARE_PARAMETER_LIST();
 
 public:

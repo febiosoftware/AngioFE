@@ -36,6 +36,7 @@ public:
 	double ApplyModifiers(double prev, AngioElement* angio_element, vec3d local_pos, FEMesh* mesh) override;
 	void Update(FEMesh * mesh) override;
 protected:
+	//! parameter list
 	DECLARE_PARAMETER_LIST();
 private:
 	double psc_weight = 0.5;

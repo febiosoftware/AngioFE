@@ -32,6 +32,7 @@ public:
 	explicit DensityInitializer(FEModel * pfem) : InitialModifier(pfem) {}
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
 protected:
+	//! parameter list
 	DECLARE_PARAMETER_LIST();
 private:
 	double initial_density = 3.0;

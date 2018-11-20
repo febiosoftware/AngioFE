@@ -15,6 +15,7 @@ public:
 	virtual ~PositionDependentDirection() {}
 	virtual vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) = 0;
 	virtual void Update(FEMesh * mesh, FEAngio* angio) {} //may be used to get values from loadcurves that modify the behavior as a whole
+	//! parameter list
 	DECLARE_PARAMETER_LIST();
 protected:
 	double contribution = 1.0;
@@ -52,6 +53,7 @@ public:
 	virtual ~ECMDensityGradientPDD() {}
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
 	void Update(FEMesh * mesh, FEAngio* angio) override {}
+	//! parameter list
 	DECLARE_PARAMETER_LIST();
 private:
 	double threshold = 0.00001;//vessels will deflect if above threshold
@@ -67,6 +69,7 @@ public:
 	virtual ~RepulsePDD() {}
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
 	void Update(FEMesh * mesh, FEAngio* angio) override {}
+	//! parameter list
 	DECLARE_PARAMETER_LIST();
 private:
 	double threshold = 0.00001;//vessels will deflect if above threshold
@@ -83,6 +86,7 @@ public:
 	virtual ~ConcentrationGradientPDD() {}
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
 	void Update(FEMesh * mesh, FEAngio* angio) override {}
+	//! parameter list
 	DECLARE_PARAMETER_LIST();
 private:
 	double threshold = 0.00001;//vessels will deflect if above threshold
@@ -104,6 +108,7 @@ public:
 	Tip * BestInElement(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh, vec3d tip_origin, vec3d tip_dir, int exclude, double& best_distance);
 	double distance2(FESolidElement * se, vec3d local_pos, Tip * tip, FEMesh* mesh);
 protected:
+	//! parameter list
 	DECLARE_PARAMETER_LIST();
 private:
 	double anastamosis_radius = 100;//! Radius at which the tip starts to grow towards another tip

@@ -11,16 +11,20 @@ class Tip;
 class SegmentGrowthVelocity : public FEMaterial
 {
 public:
+	//! constructor
 	explicit SegmentGrowthVelocity(FEModel* pfem) : FEMaterial(pfem) {}
 	virtual ~SegmentGrowthVelocity() {}
+	//! returns the velocity at the position after it has been modified by this modifier
 	virtual double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_elem, FEMesh* mesh) = 0;
 };
 
 class SegmentGrowthVelocityManager : public FEMaterial
 {
 public:
+	//!constructor
 	explicit SegmentGrowthVelocityManager(FEModel* pfem) : FEMaterial(pfem) { AddProperty(&seg_vel_modifiers, "velocity_modifier"); seg_vel_modifiers.m_brequired = false; }
 	virtual ~SegmentGrowthVelocityManager() {}
+	//! Apply all of the modifier to calculate the velocity at a location
 	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_elem, FEMesh* mesh);
 private:
 	FEVecPropertyT<SegmentGrowthVelocity> seg_vel_modifiers;
@@ -29,11 +33,14 @@ private:
 class SegmentVelocityModifier : public SegmentGrowthVelocity
 {
 public:
+	//!constructor
 	explicit SegmentVelocityModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) {}
+	//! modifies the velocity by the velocity over time parameter
 	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
 	//! performs initialization
 	bool Init() override;
 protected:
+	//! parameter list
 	DECLARE_PARAMETER_LIST();
 private:
 	double segment_velocity_over_time = 1;
@@ -42,10 +49,14 @@ private:
 class SegmentVelocityDensityScaleModifier : public SegmentGrowthVelocity
 {
 public:
+	//!constructor
 	explicit SegmentVelocityDensityScaleModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) { AddProperty(&interpolation_prop, "interpolation_prop"); }
+	//! Scales the velocity based on the ecm density at the location
 	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
+	//! performs initialization
 	bool Init() override;
 protected:
+	//! parameter list
 	DECLARE_PARAMETER_LIST();
 private:
 	FEPropertyT<FEVariableInterpolation> interpolation_prop;

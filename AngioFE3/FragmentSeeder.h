@@ -16,6 +16,7 @@ protected:
 	int number_fragments = 0;
 	static int initial_fragment_id_counter;
 	double initial_vessel_length = 20.0;
+	//! parameter list
 	DECLARE_PARAMETER_LIST();
 };
 
