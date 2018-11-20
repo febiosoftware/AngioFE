@@ -221,11 +221,6 @@ void Fileout::save_feangio_stats(FEAngio& angio)
 	fflush(feangio_state_stream);
 }
 
-void Fileout::save_winfiber(FEAngio& angio)
-{
-
-}
-
 int Fileout::getBranchCount(FEAngio& angio)
 {
 	int count = 0;

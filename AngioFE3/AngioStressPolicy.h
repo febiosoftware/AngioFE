@@ -98,6 +98,7 @@ private:
 class GrownSegmentsVelAngioStressPolicy : public AngioStressPolicy
 {
 public:
+	//! constructor
 	explicit GrownSegmentsVelAngioStressPolicy(FEModel* pfem) : AngioStressPolicy(pfem) {}
 	virtual ~GrownSegmentsVelAngioStressPolicy() {}
 	//! performs initialization

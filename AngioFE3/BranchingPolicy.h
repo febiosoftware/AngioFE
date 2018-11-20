@@ -74,13 +74,16 @@ private:
 class BranchPolicy :public FEMaterial
 {
 public:
+	//! constructor for class
 	BranchPolicy(FEModel* pfem) : FEMaterial(pfem) { 
 		AddProperty(&azimuth_angle, "azimuth_angle"); 
 		AddProperty(&zenith_angle, "zenith_angle");
 		AddProperty(&interpolation_prop, "interpolation_prop");
 	}
 	virtual ~BranchPolicy(){};
+	//! adds the branches for a given element
 	virtual void AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, double final_time, double min_scale_factor, FEMesh* mesh, FEAngio* feangio)=0;
+	//! setup any data structures that are needed on a per element basis
 	virtual void SetupBranchInfo(AngioElement * angio_elem) = 0;
 	//! performs initialization
 	bool Init() override { return azimuth_angle->Init() && zenith_angle->Init(); }
@@ -88,6 +91,7 @@ public:
 	virtual void TimeStepUpdate(double current_time){ azimuth_angle->TimeStepUpdate(current_time); zenith_angle->TimeStepUpdate(current_time);}
 	//! Adds a branch tip at the given natural coordinates
 	void AddBranchTip(AngioElement * angio_element, vec3d local_pos, vec3d parent_direction, double start_time, int vessel_id, int buffer_index, FEMesh* mesh);
+	//! Return the direction of a branch
 	vec3d GetBranchDirection(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element, FEMesh* mesh);
 private:
 	//angles are in radians
@@ -100,9 +104,13 @@ private:
 class FutureBranch
 {
 public:
+	//! constructor for class
 	explicit FutureBranch(vec3d local_pos, Segment * parent, double start_time) : _local_pos(local_pos), _parent(parent), _start_time(start_time) { assert(parent); }
+	//! return the local position
 	vec3d _local_pos;
+	//! the segment this grew from
 	Segment * _parent;
+	//! the time at which the branch starts to grow
 	double _start_time;
 };
 
@@ -110,7 +118,9 @@ public:
 class DelayBranchInfo : public BranchInfo
 {
 public:
+	//! the length before a branch occours
 	double length_to_branch = 0.0;
+	//! all branches which may occour in the future
 	std::list<FutureBranch> future_branches;
 };
 
@@ -119,14 +129,18 @@ public:
 class DelayedBranchingPolicy :public BranchPolicy
 {
 public:
+	//! constructor for class
 	DelayedBranchingPolicy(FEModel* pfem) : BranchPolicy(pfem) { AddProperty(&l2b, "length_to_branch"); AddProperty(&t2e, "time_to_emerge");
 	}
 	virtual ~DelayedBranchingPolicy(){}
 	//! performs initialization
 	bool Init() override {
 		return l2b.Init() && t2e.Init() && BranchPolicy::Init(); }
+	//! update to a given time
 	void TimeStepUpdate(double current_time) override { BranchPolicy::TimeStepUpdate(current_time); l2b->TimeStepUpdate(current_time); t2e->TimeStepUpdate(current_time); }
+	//! add the branches to a given element
 	void AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, double final_time, double min_scale_factor, FEMesh* mesh, FEAngio* feangio) override;
+	//! do the per element setup
 	void SetupBranchInfo(AngioElement * angio_elem) override;
 private:
 	FEPropertyT<FEProbabilityDistribution> l2b;//length to branch
