@@ -150,6 +150,9 @@ FEPluginFactory_T<RandomFiberInitializerPE, FEMATERIAL_ID> random_fiber_initiali
 FEPluginFactory_T<EllipsoidalFiberInitializer, FEMATERIAL_ID> ellipsoidal_fiber_initializer("ellipsoidal_fiber_initializer");
 */
 
+
+FEPluginFactory_T<TipDopingBC, FEBC_ID> tip_doping_bc("tip_doping_bc");
+
 //-----------------------------------------------------------------------------
 FECORE_EXPORT  unsigned int GetSDKVersion()
 {
@@ -273,6 +276,9 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		*/
 		//other needed items
 		&common_angio_properties_factory
+		
+		//boundary conditions
+		,&tip_doping_bc
 	};
 
 	if(i < addon_classes.size())

@@ -179,6 +179,7 @@ public:	// parameters read directly from file
 	std::unordered_map<FESolidElement *, AngioElement *> se_to_angio_element;
 	std::unordered_map<FENode *, std::vector<FESolidElement*>> nodes_to_elements;
 	std::unordered_map<AngioElement *, std::vector<AngioElement *>> angio_elements_to_all_adjacent_elements;//adjacent is shares a node with the element
+	std::unordered_map < FEAngioMaterial *, std::vector<AngioElement *>> elements_by_material;
 private:
 	//both nodes and elements id's go from 1 to n+1 for n items
 	//first element is padding so the id can be used to lookup the data for that node
@@ -196,7 +197,7 @@ private:
 	std::vector<AngioElement *> angio_elements;//the dense list of angio elements
 	std::unordered_map<FESolidElement*,std::pair<AngioElement *,int>> se_to_angio_elem;//the int is the index which is used in neighbor lookups
 	std::vector<AngioElement *> angio_elements_with_holes;//the possibly sparse list of elements .. used to serialize data
-	std::unordered_map < FEAngioMaterial *, std::vector<AngioElement *>> elements_by_material;
+	
 	std::vector<FEAngioMaterial*> angio_materials;
 	int buffer_index = 0;
 
