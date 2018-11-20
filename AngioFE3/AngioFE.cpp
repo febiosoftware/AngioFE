@@ -112,9 +112,6 @@ FEPluginFactory_T<NodalDataGradientGGP, FEMATERIAL_ID> nodal_data_gradient_ggp_f
 FEPluginFactory_T<DirectionChangeGGP, FEMATERIAL_ID> direction_change_ggp_factory("direction_change_ggp");
 */
 
-//Chemical Deposit and related classes
-FEPluginFactory_T<SoluteDepositInfo, FEMATERIAL_ID> solute_deposit_info_factory("solute_deposit_info");
-
 
 // Plot Classes
 FEPluginFactory_T<FEPlotAngioStress          , FEPLOTDATA_ID> plot_angio_stress            ("angio stress"          );
@@ -252,9 +249,6 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 
 		// Interpolation Classes
 		&per_element_vi_factory,
-
-		//Chemical Deposit Classes
-		&solute_deposit_info_factory,
 
 
 		/*

@@ -1,6 +1,5 @@
 #pragma once
 #include <FECore/BC.h>
-#include "ChemicalDepositInfo.h"
 
 
 class TipDopingBC: public FEPrescribedDOF
