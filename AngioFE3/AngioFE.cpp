@@ -113,13 +113,7 @@ FEPluginFactory_T<DirectionChangeGGP, FEMATERIAL_ID> direction_change_ggp_factor
 */
 
 //Chemical Deposit and related classes
-FEPluginFactory_T<TipDopingManager, FEMATERIAL_ID> tip_doping_manager_factory("tip_doping_manager");
-FEPluginFactory_T<TipDoping, FEMATERIAL_ID> tip_doping_factory("tip_doping");
-
-FEPluginFactory_T<gaussian_rbf_norm, FEMATERIAL_ID> gaussian_rbd_norm_factory("gaussian_rbf_norm");
 FEPluginFactory_T<SoluteDepositInfo, FEMATERIAL_ID> solute_deposit_info_factory("solute_deposit_info");
-FEPluginFactory_T<NarrowIntptSelector, FEMATERIAL_ID> narrow_int_pt_selector_factory("narrow_int_pt_selector");
-FEPluginFactory_T<AdjacentElementIntptSelector, FEMATERIAL_ID> adjacent_element_int_pt_selector_factory("adjacent_element_int_pt_selector");
 
 
 // Plot Classes
@@ -260,8 +254,7 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		&per_element_vi_factory,
 
 		//Chemical Deposit Classes
-		&tip_doping_manager_factory, &tip_doping_factory, &gaussian_rbd_norm_factory,
-		&solute_deposit_info_factory, &narrow_int_pt_selector_factory, &adjacent_element_int_pt_selector_factory,
+		&solute_deposit_info_factory,
 
 
 		/*

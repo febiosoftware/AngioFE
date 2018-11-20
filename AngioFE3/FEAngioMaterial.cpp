@@ -41,8 +41,6 @@ FEAngioMaterial::FEAngioMaterial(FEModel* pfem) : FEElasticMaterial(pfem)
 	branch_policy.m_brequired = false;
 	AddProperty(&proto_branch_policy, "proto_branch_policy");
 	proto_branch_policy.m_brequired = false;
-	AddProperty(&tip_doping_manager, "tip_doping_manager");
-	tip_doping_manager.m_brequired = false;
 }
 
 FEAngioMaterial::~FEAngioMaterial()
