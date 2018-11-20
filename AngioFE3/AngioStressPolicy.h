@@ -25,6 +25,7 @@ class SigmoidAngioStressPolicy : public AngioStressPolicy
 public:
 	explicit SigmoidAngioStressPolicy(FEModel* pfem) : AngioStressPolicy(pfem) {}
 	virtual ~SigmoidAngioStressPolicy() {}
+	//! performs initialization
 	bool Init() override;
 	void UpdateScale() override;
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
@@ -45,6 +46,7 @@ class LoadCurveVelAngioStressPolicy : public AngioStressPolicy
 public:
 	explicit LoadCurveVelAngioStressPolicy(FEModel* pfem) : AngioStressPolicy(pfem) {}
 	virtual ~LoadCurveVelAngioStressPolicy() {}
+	//! performs initialization
 	bool Init() override;
 	void UpdateScale() override;
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
@@ -63,6 +65,7 @@ class LoadCurveAngioStressPolicy : public AngioStressPolicy
 public:
 	explicit LoadCurveAngioStressPolicy(FEModel* pfem) : AngioStressPolicy(pfem) {}
 	virtual ~LoadCurveAngioStressPolicy() {}
+	//! performs initialization
 	bool Init() override;
 	void UpdateScale() override;
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
@@ -81,6 +84,7 @@ class GrownSegmentsVelAngioStressPolicy : public AngioStressPolicy
 public:
 	explicit GrownSegmentsVelAngioStressPolicy(FEModel* pfem) : AngioStressPolicy(pfem) {}
 	virtual ~GrownSegmentsVelAngioStressPolicy() {}
+	//! performs initialization
 	bool Init() override;
 	void UpdateScale() override;
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
@@ -99,6 +103,7 @@ class GrownSegmentsAngioStressPolicy : public AngioStressPolicy
 public:
 	explicit GrownSegmentsAngioStressPolicy(FEModel* pfem) : AngioStressPolicy(pfem) {}
 	virtual ~GrownSegmentsAngioStressPolicy() {}
+	//! performs initialization
 	bool Init() override;
 	void UpdateScale() override;
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
@@ -117,6 +122,7 @@ class NullAngioStressPolicy : public AngioStressPolicy
 public:
 	explicit NullAngioStressPolicy(FEModel* pfem) : AngioStressPolicy(pfem) {}
 	virtual ~NullAngioStressPolicy() {}
+	//! performs initialization
 	bool Init() override { return true; }
 	void UpdateScale() override {}
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override {}

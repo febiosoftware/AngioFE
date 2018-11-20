@@ -24,6 +24,7 @@ class NodeDataInterpolationManager :public FEMaterial
 {
 public:
 	NodeDataInterpolationManager(FEModel * pfem) :FEMaterial(pfem) { AddProperty(&node_data_interpolation_vals, "node_interpolation_value", false); }
+	//! performs initialization
 	bool Init() override { return FEMaterial::Init(); }
 	void DoInterpolations(FEAngio * angio, FEMesh* mesh, FEAngioMaterial* angio_mat);
 private:
@@ -34,6 +35,7 @@ class DensityValuesNodeDataInterpolation : public NodeDataInterpolation
 {
 public:
 	DensityValuesNodeDataInterpolation(FEModel * pfem) :NodeDataInterpolation(pfem) {}
+	//! performs initialization
 	bool Init() override { return FEMaterial::Init(); }
 	double & ValueReference(FEMaterialPoint * mp) override;
 	const char * GetDataName() const override;
@@ -43,6 +45,7 @@ class RepulseValuesNodeDataInterpolation : public NodeDataInterpolation
 {
 public:
 	RepulseValuesNodeDataInterpolation(FEModel * pfem) :NodeDataInterpolation(pfem) {}
+	//! performs initialization
 	bool Init() override { return FEMaterial::Init(); }
 	double & ValueReference(FEMaterialPoint * mp) override;
 	const char * GetDataName() const override;

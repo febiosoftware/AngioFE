@@ -24,7 +24,7 @@ public:
 	explicit FEAngio(FEModel& fem);
 	~FEAngio();
 
-	// initialize the FEAnio class
+	//! initialize the FEAnio class
 	bool Init();
 
 	std::pair<int, int> GetMinMaxElementIDs() const;

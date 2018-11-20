@@ -30,6 +30,7 @@ public:
 	//nan will be returned if the distribution fails to find a suitable number
 	double NextValue(angiofe_random_engine & re) override;
 
+	//! performs initialization
 	bool Init() override;
 	void TimeStepUpdate(double current_time) override;
 
@@ -50,7 +51,7 @@ public:
 	//this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
 	//nan will be returned if the distribution fails to find a suitable number
 	double NextValue(angiofe_random_engine & re) override;
-
+	//! performs initialization
 	bool Init() override;
 	void TimeStepUpdate(double current_time) override;
 
@@ -74,7 +75,7 @@ public:
 	//this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
 	//nan will be returned if the distribution fails to find a suitable number
 	double NextValue(angiofe_random_engine & re) override;
-
+	//! performs initialization
 	bool Init() override;
 	void TimeStepUpdate(double current_time) override;
 
@@ -99,7 +100,7 @@ public:
 	//this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
 	//nan will be returned if the distribution fails to find a suitable number
 	double NextValue(angiofe_random_engine & re) override;
-
+	//! performs initialization
 	bool Init() override;
 	void TimeStepUpdate(double current_time) override;
 private:
@@ -125,7 +126,7 @@ public:
 	//this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
 	//nan will be returned if the distribution fails to find a suitable number
 	double NextValue(angiofe_random_engine & re) override;
-
+	//! performs initialization
 	bool Init() override;
 	void TimeStepUpdate(double current_time) override;
 private:
@@ -150,7 +151,7 @@ public:
 	//this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
 	//nan will be returned if the distribution fails to find a suitable number
 	double NextValue(angiofe_random_engine & re) override;
-
+	//! performs initialization
 	bool Init() override;
 	void TimeStepUpdate(double current_time) override;
 private:
@@ -174,7 +175,7 @@ public:
 	//this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
 	//nan will be returned if the distribution fails to find a suitable number
 	double NextValue(angiofe_random_engine & re) override;
-
+	//! performs initialization
 	bool Init() override;
 
 	void TimeStepUpdate(double current_time) override;
@@ -199,7 +200,7 @@ public:
 	//this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
 	//nan will be returned if the distribution fails to find a suitable number
 	double NextValue(angiofe_random_engine & re) override;
-
+	//! performs initialization
 	bool Init() override;
 
 	void TimeStepUpdate(double current_time) override;

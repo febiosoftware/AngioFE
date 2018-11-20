@@ -9,25 +9,41 @@ class FEAngio;
 class Tip
 {
 public:
+	//! constructor
 	Tip(){}
-	Tip(Tip * other, FEMesh * mesh);//used to copy another tip
-	//sets the local positions clamps the values to -1 to 1
+	//! used to copy another tip
+	Tip(Tip * other, FEMesh * mesh);
+	//! sets the local positions clamps the values to -1 to 1
 	void SetLocalPosition(vec3d pos);
+	//! returns the local position
 	vec3d GetLocalPosition() const;
-	AngioElement * angio_element= nullptr;//the element that contains the local_pos coordinates
+	//! The element that contains the local_pos coordinates
+	AngioElement * angio_element= nullptr;
+	//! Time at which the tip occours
 	double time=0.0;
+	//! Velocity at which the tip grew
 	double growth_velocity = 0.0;
-	//int face;//-1 for inside the element
-	AngioElement* face= nullptr;//the element where growth originated from
-	Segment * parent=nullptr;//may be nullptr for no parent segment
-	int initial_fragment_id = -1;//will be initialized to values greater than or equal to zero
+	//! The element where growth originated from
+	AngioElement* face= nullptr;
+	//! Segment that contains this this tip. May be nullptr for no parent segment 
+	Segment * parent=nullptr;
+	//! Will be initialized to values greater than or equal to zero, unique values per vessel
+	int initial_fragment_id = -1;
+	//! identifies whether or not a given tip is the base of a branch
 	bool is_branch = false;
+	//! Use the direction member or not
 	bool use_direction = false;
-	vec3d direction;//only used if the tip is a branch
+	//! Only used if the tip is a branch
+	vec3d direction;
+	//! Use direction or the direction of the parent segment
 	vec3d GetDirection(FEMesh* mesh) const;
+	//! Return the global position of the tip
 	vec3d GetPosition(FEMesh * mesh) const;
-	vec3d GetRefPosition(FEMesh * mesh) const;//get tip position in refernce frame
+	//! returns the global position of the tip in the refernce frame
+	vec3d GetRefPosition(FEMesh * mesh) const;
+	//! Prints information about the tip to the console
 	void PrintTipInfo(FEMesh *mesh) const;
+	//! Prints information about the tip to the console
 	void PrintTipInfo(FEMesh *mesh, std::string title) const;
 private:
 	vec3d local_pos;

@@ -31,6 +31,7 @@ class SegmentVelocityModifier : public SegmentGrowthVelocity
 public:
 	explicit SegmentVelocityModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) {}
 	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
+	//! performs initialization
 	bool Init() override;
 protected:
 	DECLARE_PARAMETER_LIST();

@@ -7,7 +7,7 @@ class FEAngio;
 
 class Tip;
 
-//the component of vessel growth that is dependent on position within the mesh
+//! The component of vessel growth that is dependent on position within the mesh
 class PositionDependentDirection : public FEMaterial
 {
 public:
@@ -20,6 +20,7 @@ protected:
 	double contribution = 1.0;
 };
 
+//! Contain the collection of Position Dependent Direction modifiers
 class PositionDependentDirectionManager : public FEMaterial
 {
 public:
@@ -31,6 +32,7 @@ private:
 	FEVecPropertyT<PositionDependentDirection> pdd_modifiers;
 };
 
+//! Implements a position dependent modifier that modifies growth direction based on fiber direction
 class FiberPDD : public PositionDependentDirection
 {
 public:
@@ -42,6 +44,7 @@ private:
 	FEPropertyT<FEVariableInterpolation> interpolation_prop;
 };
 
+//! Implements a position dependent modifier that modifies growth direction if the density gradient is above a given threshold
 class ECMDensityGradientPDD : public PositionDependentDirection
 {
 public:
@@ -56,7 +59,7 @@ private:
 	FEPropertyT<FEVariableInterpolation> interpolation_prop;
 };
 
-//the replacement for the bouncy boundary condition
+//! The replacement for the bouncy boundary condition
 class RepulsePDD : public PositionDependentDirection
 {
 public:
@@ -72,7 +75,7 @@ private:
 	FEPropertyT<FEVariableInterpolation> interpolation_prop;
 };
 
-//
+//! Implements a chemical concentration based position direction modifier
 class ConcentrationGradientPDD : public PositionDependentDirection
 {
 public:
@@ -88,6 +91,7 @@ private:
 	FEPropertyT<FEVariableInterpolation> interpolation_prop;
 };
 
+//! Implements anastamosis as a position dependent direction growth modifier
 class AnastamosisPDD : public PositionDependentDirection
 {
 public:
@@ -102,8 +106,8 @@ public:
 protected:
 	DECLARE_PARAMETER_LIST();
 private:
-	double anastamosis_radius = 100;//radius at which the tip starts to grow towards another tip
+	double anastamosis_radius = 100;//! Radius at which the tip starts to grow towards another tip
 	double fuse_radius = 30;
 	double fuse_angle = 0.25;
-	bool alpha_override = true;//replace the alpha to have this take over
+	bool alpha_override = true;//! Replace the alpha to have this take over
 };

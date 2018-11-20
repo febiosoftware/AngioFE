@@ -6,51 +6,71 @@
 
 class FEAngio;
 
-//base class, derived classes store the infomation needed by the brancher on a per element basis
+//! Base class, derived classes store the infomation needed by the brancher on a per element basis
 class BranchInfo
 {
 public:
 	virtual ~BranchInfo(){}
 };
 
+//! Implements a class that will return the zentih angle for a given branch
 class ZenithAngle : public FEMaterial
 {
 public:
+	//! Constructor for zenith angle
 	ZenithAngle(FEModel* pfem) : FEMaterial(pfem) {}
+	//! Gives the zenith angle based on the parameters
 	virtual double GetZenithAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element) = 0;
+	//! performs any modifications the zenith angle as time changes
 	virtual void TimeStepUpdate(double current_time) = 0;
 };
 
+//! Implements a class that will return the azimuth angle for a given branch
 class AzimuthAngle :public FEMaterial
 {
 public:
+	//! Constructor for azimuth angle
 	AzimuthAngle(FEModel* pfem) : FEMaterial(pfem) {}
+	//! Gives the zenith angle based on the parameters
 	virtual double GetAzimuthAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element) = 0;
+	//! performs any modifications the zenith angle as time changes
 	virtual void TimeStepUpdate(double current_time) = 0;
 };
 
+//! Implements a probability distribution to determine the zenith angle
 class ZenithAngleProbabilityDistribution : public ZenithAngle
 {
 public:
+	//! constructor for class
 	ZenithAngleProbabilityDistribution(FEModel* pfem) : ZenithAngle(pfem) { AddProperty(&angle, "angle"); }
+	//! returns the zenith angle for a branch based on a probability distribution
 	double GetZenithAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element) override;
+	//! performs initialization
 	bool Init() override { return angle->Init(); }
+	//! Updates the zenith angle to the given time step(may ajust probabilities based on time)
 	void TimeStepUpdate(double current_time) override { angle->TimeStepUpdate(current_time); }
 
 private:
 	FEPropertyT<FEProbabilityDistribution> angle;
 };
 
+//! Implements a probability distribution to determine the azimuth angle
 class AzimuthAngleProbabilityDistribution :public AzimuthAngle
 {
 public:
+	//! constructor for class
 	AzimuthAngleProbabilityDistribution(FEModel* pfem) : AzimuthAngle(pfem) { AddProperty(&angle, "angle"); }
+	//! Returns the azimuth angle based on a probability distribution
 	double GetAzimuthAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element) override;
+	//! performs initialization
 	bool Init() override {return angle->Init();}
+	//! Updates the zenith angle to the given time step(may ajust probabilities based on time)
 	void TimeStepUpdate(double current_time) override { angle->TimeStepUpdate(current_time); }
 private:
 	FEPropertyT<FEProbabilityDistribution> angle;
 };
+
+//! A Branch Policy determines where and when branches occour
 class BranchPolicy :public FEMaterial
 {
 public:
@@ -62,9 +82,11 @@ public:
 	virtual ~BranchPolicy(){};
 	virtual void AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, double final_time, double min_scale_factor, FEMesh* mesh, FEAngio* feangio)=0;
 	virtual void SetupBranchInfo(AngioElement * angio_elem) = 0;
+	//! performs initialization
 	bool Init() override { return azimuth_angle->Init() && zenith_angle->Init(); }
+	//! Updates the branch policy to the given time step
 	virtual void TimeStepUpdate(double current_time){ azimuth_angle->TimeStepUpdate(current_time); zenith_angle->TimeStepUpdate(current_time);}
-	//adds a branch tip at the given natural coordinates
+	//! Adds a branch tip at the given natural coordinates
 	void AddBranchTip(AngioElement * angio_element, vec3d local_pos, vec3d parent_direction, double start_time, int vessel_id, int buffer_index, FEMesh* mesh);
 	vec3d GetBranchDirection(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element, FEMesh* mesh);
 private:
@@ -73,6 +95,8 @@ private:
 	FEPropertyT<ZenithAngle> zenith_angle;
 	FEPropertyT<FEVariableInterpolation> interpolation_prop;
 };
+
+//! The data needed for a future branch
 class FutureBranch
 {
 public:
@@ -82,7 +106,7 @@ public:
 	double _start_time;
 };
 
-//info needed by delayed branchin on a per element 
+//! Info needed by delayed branchin on a per element 
 class DelayBranchInfo : public BranchInfo
 {
 public:
@@ -90,14 +114,15 @@ public:
 	std::list<FutureBranch> future_branches;
 };
 
-
-//length to branch is calculated only when the last value of length to branch has been hit
+//! As growth occours length to branch is calculated, once length to branch is hit a time to emerge is sampled from a probability distribution
+//! Length to branch is calculated only when the last value of length to branch has been hit
 class DelayedBranchingPolicy :public BranchPolicy
 {
 public:
 	DelayedBranchingPolicy(FEModel* pfem) : BranchPolicy(pfem) { AddProperty(&l2b, "length_to_branch"); AddProperty(&t2e, "time_to_emerge");
 	}
 	virtual ~DelayedBranchingPolicy(){}
+	//! performs initialization
 	bool Init() override {
 		return l2b.Init() && t2e.Init() && BranchPolicy::Init(); }
 	void TimeStepUpdate(double current_time) override { BranchPolicy::TimeStepUpdate(current_time); l2b->TimeStepUpdate(current_time); t2e->TimeStepUpdate(current_time); }
@@ -108,7 +133,7 @@ private:
 	FEPropertyT<FEProbabilityDistribution> t2e;//time to emerge
 	double discretization_length = 1.0;
 
-	//helper class for delayed branching policy
+	//! Helper class for delayed branching policy
 	class BranchPoint
 	{
 	public:

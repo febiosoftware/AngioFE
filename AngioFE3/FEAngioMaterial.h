@@ -96,17 +96,17 @@ public:
 	FEMaterial * GetMaterial() { return dynamic_cast<FEMaterial*>(this); }
 	//begin functions from FEMaterial
 
-	// material initialization
+	//! material initialization
 	bool Init() override;
 
-	// Calculate Cauchy-stress
+	//! Calculate Cauchy-stress
 	mat3ds Stress(FEMaterialPoint& mp) override;
 
 	double GetSegmentVelocity(AngioElement * angio_element, vec3d local_pos, FEMesh* mesh);
 
 	double GetInitialVelocity() const;
 
-	// Calculate spatial elasticity tangent
+	//! Calculate spatial elasticity tangent
 	tens4ds Tangent(FEMaterialPoint& mp) override;
 
 	//! create material point data for this material
@@ -122,7 +122,6 @@ public:
 	FEPropertyT<BranchPolicy> branch_policy;
 	FEPropertyT<BranchPolicy> proto_branch_policy;
 	FEPropertyT<NodeDataInterpolationManager> nodedata_interpolation_manager;
-	FEPropertyT<TipDopingManager> tip_doping_manager;
 	double vessel_radius = 7.0;
 private:
 	DECLARE_PARAMETER_LIST();
