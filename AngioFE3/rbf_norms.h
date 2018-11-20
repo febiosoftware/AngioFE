@@ -1,5 +1,6 @@
 #pragma once
 #include <FECore/FEMaterial.h>
+/*
 
 class rbf_norm : public FEMaterial
 {
@@ -17,3 +18,5 @@ public:
 	explicit gaussian_rbf_norm(FEModel* pfem) : rbf_norm(pfem) {}
 	double rbfnorm(vec3d pos, vec3d center) override;
 };
+
+*/

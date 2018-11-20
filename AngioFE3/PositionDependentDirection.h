@@ -11,13 +11,17 @@ class Tip;
 class PositionDependentDirection : public FEMaterial
 {
 public:
+	//! constructor
 	explicit PositionDependentDirection(FEModel* pfem) : FEMaterial(pfem) {}
 	virtual ~PositionDependentDirection() {}
+	//! return the direction given by this component
 	virtual vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) = 0;
-	virtual void Update(FEMesh * mesh, FEAngio* angio) {} //may be used to get values from loadcurves that modify the behavior as a whole
+	//! may be used to get values from loadcurves that modify the behavior as a whole
+	virtual void Update(FEMesh * mesh, FEAngio* angio) {} 
 	//! parameter list
 	DECLARE_PARAMETER_LIST();
 protected:
+	//! how this modifier is mixed with the previous direction
 	double contribution = 1.0;
 };
 
@@ -25,10 +29,13 @@ protected:
 class PositionDependentDirectionManager : public FEMaterial
 {
 public:
+	//! constructor
 	explicit PositionDependentDirectionManager(FEModel* pfem) : FEMaterial(pfem) { AddProperty(&pdd_modifiers, "pdd_modifier"); pdd_modifiers.m_brequired = false; }
 	virtual ~PositionDependentDirectionManager() {}
+	//! return the direction given by all direction modifiers
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int buffer, bool& continue_growth, vec3d& tip_dir, double& alpha, FEMesh* mesh, FEAngio* pangio);
-	void Update(FEMesh * mesh, FEAngio* angio) {} //may be used to get values from loadcurves that modify the behavior as a whole
+	//! may be used to get values from loadcurves that modify the behavior as a whole
+	void Update(FEMesh * mesh, FEAngio* angio); 
 private:
 	FEVecPropertyT<PositionDependentDirection> pdd_modifiers;
 };
@@ -37,9 +44,12 @@ private:
 class FiberPDD : public PositionDependentDirection
 {
 public:
+	//! constructor
 	explicit FiberPDD(FEModel* pfem) : PositionDependentDirection(pfem) { AddProperty(&interpolation_prop, "interpolation_prop"); }
 	virtual ~FiberPDD() {}
+	//! return the direction given by the fibers at this location
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
+	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio) override;
 private:
 	FEPropertyT<FEVariableInterpolation> interpolation_prop;
@@ -49,9 +59,12 @@ private:
 class ECMDensityGradientPDD : public PositionDependentDirection
 {
 public:
+	//! constructor
 	explicit ECMDensityGradientPDD(FEModel* pfem) : PositionDependentDirection(pfem) { AddProperty(&interpolation_prop, "interpolation_prop"); }
 	virtual ~ECMDensityGradientPDD() {}
+	//! return the direction given by the ecm density gradient
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
+	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio) override {}
 	//! parameter list
 	DECLARE_PARAMETER_LIST();
@@ -65,9 +78,12 @@ private:
 class RepulsePDD : public PositionDependentDirection
 {
 public:
+	//! constructor
 	explicit RepulsePDD(FEModel* pfem) : PositionDependentDirection(pfem) { AddProperty(&interpolation_prop, "interpolation_prop"); }
 	virtual ~RepulsePDD() {}
+	//! return the direction given by the repulse component
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
+	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio) override {}
 	//! parameter list
 	DECLARE_PARAMETER_LIST();
@@ -82,9 +98,12 @@ private:
 class ConcentrationGradientPDD : public PositionDependentDirection
 {
 public:
+	//! constructor
 	explicit ConcentrationGradientPDD(FEModel* pfem) : PositionDependentDirection(pfem) {}
 	virtual ~ConcentrationGradientPDD() {}
+	//! return the direction given by the concentration gradient
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
+	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio) override {}
 	//! parameter list
 	DECLARE_PARAMETER_LIST();
@@ -99,13 +118,20 @@ private:
 class AnastamosisPDD : public PositionDependentDirection
 {
 public:
+	//! constructor
 	explicit AnastamosisPDD(FEModel* pfem) : PositionDependentDirection(pfem) {}
 	virtual ~AnastamosisPDD() {}
+	//! return the direction given by the anastamosis modifier
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
+	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio) override {}
+	//! returns the tip that the position should fuse with
 	Tip * FuseWith(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh, vec3d tip_pos, vec3d tip_dir, int exclude, double radius);
+	//! return whether or not a tip can be fused with
 	bool ValidTip(Tip* tip, vec3d tip_dir, FEMesh * mesh);
+	//! returns the best tip within an element
 	Tip * BestInElement(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh, vec3d tip_origin, vec3d tip_dir, int exclude, double& best_distance);
+	//! return the distance squared between a tip and a local position
 	double distance2(FESolidElement * se, vec3d local_pos, Tip * tip, FEMesh* mesh);
 protected:
 	//! parameter list

@@ -1,5 +1,6 @@
 #include "rbf_norms.h"
 
+/*
 double gaussian_rbf_norm::rbfnorm(vec3d pos, vec3d center)
 {
 	double dist = (pos - center).norm();
@@ -11,3 +12,4 @@ double gaussian_rbf_norm::rbfnorm(vec3d pos, vec3d center)
 	inverse_critical_radius *= inverse_critical_radius;
 	return exp(-inverse_critical_radius);
 }
+*/

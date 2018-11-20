@@ -11,18 +11,24 @@ class Tip;
 class ContributionMix : public FEMaterial
 {
 public:
+	//! constructor
 	explicit ContributionMix(FEModel* pfem) : FEMaterial(pfem) {}
 	virtual ~ContributionMix() {}
+	//! return the contribution mix at a given location
 	virtual double ApplyModifiers(double prev, AngioElement* angio_element, vec3d local_pos, FEMesh* mesh) = 0;
+	//! updates the contribution mix to a given time
 	virtual void Update(FEMesh * mesh) {}
 };
 
 class ContributionMixManager : public FEMaterial
 {
 public:
+	//! constructor
 	explicit ContributionMixManager(FEModel* pfem) : FEMaterial(pfem) { AddProperty(&cm_modifiers, "psc_modifier"); cm_modifiers.m_brequired = false; }
 	virtual ~ContributionMixManager() {}
+	//! return the contribution mix at a given location
 	double ApplyModifiers(double prev, AngioElement* angio_element, vec3d local_pos, FEMesh* mesh);
+	//! updates the contribution mix manager to a given time
 	void Update(FEMesh * mesh) {}
 private:
 	FEVecPropertyT<ContributionMix> cm_modifiers;
@@ -31,9 +37,12 @@ private:
 class PSCPDDContributionMix : public ContributionMix
 {
 public:
+	//! constructor
 	explicit PSCPDDContributionMix(FEModel* pfem) : ContributionMix(pfem) {}
 	virtual ~PSCPDDContributionMix() {}
+	//! return the contribution mix at a given location
 	double ApplyModifiers(double prev, AngioElement* angio_element, vec3d local_pos, FEMesh* mesh) override;
+	//! updates the contribution mix to a given time
 	void Update(FEMesh * mesh) override;
 protected:
 	//! parameter list

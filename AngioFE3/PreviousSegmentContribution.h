@@ -11,9 +11,12 @@ class Tip;
 class PreviousSegmentContribution : public FEMaterial
 {
 public:
+	//! constructor
 	explicit PreviousSegmentContribution(FEModel* pfem) : FEMaterial(pfem) {}
 	virtual ~PreviousSegmentContribution() {}
+	//! returns the direction contribution from the previous segment
 	virtual vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, vec3d prev_direction, FEMesh* mesh) = 0;
+	//! may update this based on the timestep
 	virtual void Update(FEMesh * mesh) {}
 };
 
@@ -21,9 +24,12 @@ public:
 class PreviousSegmentContributionManager : public FEMaterial
 {
 public:
+	//! constructor
 	explicit PreviousSegmentContributionManager(FEModel* pfem) : FEMaterial(pfem) { AddProperty(&psc_modifiers, "psc_modifier"); psc_modifiers.m_brequired = false; }
 	virtual ~PreviousSegmentContributionManager() {}
+	//! returns the combination contribution of all PSC modifiers
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, vec3d prev_direction, FEMesh* mesh);
+	//! may update this based on the timestep
 	void Update(FEMesh * mesh) {}
 private:
 	FEVecPropertyT<PreviousSegmentContribution> psc_modifiers;
@@ -33,7 +39,9 @@ class PreviousSegmentPSC : public PreviousSegmentContribution
 {
 	//overrides the previous segment contribution with the previous segment direction
 public:
+	//! constructor
 	explicit PreviousSegmentPSC(FEModel* pfem) : PreviousSegmentContribution(pfem) {}
 	virtual ~PreviousSegmentPSC() {}
+	//returns the direction of the previous segment
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, vec3d prev_direction, FEMesh* mesh) override;
 };

@@ -20,6 +20,14 @@ vec3d PositionDependentDirectionManager::ApplyModifiers(vec3d prev, AngioElement
 	return prev;
 }
 
+void PositionDependentDirectionManager::Update(FEMesh * mesh, FEAngio* angio)
+{
+	for (int i = 0; i < pdd_modifiers.size(); i++)
+	{
+		pdd_modifiers[i]->Update(mesh, angio);
+	}
+}
+
 BEGIN_PARAMETER_LIST(ECMDensityGradientPDD, PositionDependentDirection)
 ADD_PARAMETER(threshold, FE_PARAM_DOUBLE, "threshold");
 ADD_PARAMETER(alpha_override, FE_PARAM_BOOL, "alpha_override");
