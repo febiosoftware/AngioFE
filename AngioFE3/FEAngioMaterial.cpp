@@ -846,10 +846,6 @@ bool FEAngioMaterial::SeedFragments(std::vector<AngioElement *>& angio_elements,
 	return common_properties->fseeder->SeedFragments(angio_elements, mesh, this, 0);
 }
 
-vec3d FEAngioMaterial::ApplySegmentDirectionModifiers(Tip * tip, double dt)
-{
-	
-}
 
 
 //-----------------------------------------------------------------------------

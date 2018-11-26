@@ -16,16 +16,19 @@ class FEModel;
 class FEAngioMaterial;
 class FEAngioMaterialBase;
 
-//-----------------------------------------------------------------------------
-// The FEAngio class contains all the functionality of the growth model.
+
+//! The FEAngio class contains all the functionality of the growth model.
 class FEAngio
 {
 public:
+	//! constructor
 	explicit FEAngio(FEModel& fem);
+	//! destructor
 	~FEAngio();
 
 	//! initialize the FEAnio class
 	bool Init();
+
 
 	std::pair<int, int> GetMinMaxElementIDs() const;
 
