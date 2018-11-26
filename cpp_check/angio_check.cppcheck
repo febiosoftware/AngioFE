@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="1">
+    <builddir>angio_check-cppcheck-build-dir</builddir>
+    <importproject>../VS2017/AngioFE3.sln</importproject>
+    <analyze-all-vs-configs>true</analyze-all-vs-configs>
+    <exclude>
+        <path name="E:/Documents/FEBio2/"/>
+        <path name="E:/Documents/FEBio2/NumCore/"/>
+        <path name="E:/Documents/FEBio2/FECore/"/>
+        <path name="E:/Documents/FEBio2/FEBioXML/"/>
+        <path name="E:/Documents/FEBio2/FEBioTest/"/>
+        <path name="E:/Documents/FEBio2/FEBioPlot/"/>
+        <path name="E:/Documents/FEBio2/FEBioOpt/"/>
+        <path name="E:/Documents/FEBio2/FEBioMix/"/>
+        <path name="E:/Documents/FEBio2/FEBioMech/"/>
+        <path name="E:/Documents/FEBio2/FEBioLib/"/>
+        <path name="E:/Documents/FEBio2/FEBioHeat/"/>
+        <path name="E:/Documents/FEBio2/FEBioFluid/"/>
+        <path name="E:/Documents/FEBio2/FEBio2/"/>
+    </exclude>
+</project>
