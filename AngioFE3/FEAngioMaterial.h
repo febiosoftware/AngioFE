@@ -6,7 +6,6 @@
 #include <FECore/FENormalProjection.h>
 #include "FEAngio.h"
 #include "FEProbabilityDistribution.h"
-#include "KDTree/kdtree.h"
 #include "FiberManager.h"
 #include "FEAngioMaterialPoint.h"
 #include <FEBioMix/FEBiphasic.h>

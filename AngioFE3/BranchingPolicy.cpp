@@ -2,6 +2,7 @@
 #include "angio3d.h"
 #include "Segment.h"
 #include "FEAngio.h"
+#include <iostream>
 
 void BranchPolicy::AddBranchTip(AngioElement * angio_element, vec3d local_pos, vec3d parent_direction, double start_time, int vessel_id, int buffer_index, FEMesh* mesh)
 {
