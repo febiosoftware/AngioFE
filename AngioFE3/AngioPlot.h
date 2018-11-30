@@ -1,18 +1,6 @@
 #pragma once
 #include <FECore/FEPlotData.h>
 
-//base class for computationally intensive plot variables that cannot be cached
-//-----------------------------------------------------------------------------
-class CIFEDomainData : public FEDomainData
-{
-public:
-	//! constructor
-	explicit CIFEDomainData(Var_Type t, Storage_Fmt s) : FEDomainData(t, s) {}
-	//! update any cached data as this fucntion
-	virtual void Update(FEModel* model) = 0;
-
-};
-
 //-----------------------------------------------------------------------------
 class FEPlotAngioStress : public FEDomainData
 {

@@ -12,10 +12,9 @@ class Segment;
 class Tip;
 class BranchInfo;
 
-/** Contains the data that is needed by the plugin on a per element basis.
- * This class mirrors FEElements but does not inhertit from FEElement.
- * If this inherited from FEElement a large number of custom domain classes would need to be created.
- */
+
+ 
+//! Contains the data that is needed by the plugin on a per element basis. This class mirrors FEElements but does not inhertit from FEElement. If this inherited from FEElement a large number of custom domain classes would need to be created.
 class AngioElement
 {
 public:

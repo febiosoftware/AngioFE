@@ -32,39 +32,47 @@ public:
 
 	std::pair<int, int> GetMinMaxElementIDs() const;
 
-	// Get the FE model
+	//! Get the FE model
 	FEBioModel* GetFEModel() const;
 
-	//check the get FEModel above it may not be useful in any way
+	//! return the mesh associated with this model
 	FEMesh * GetMesh() const;
 
+	//! reset all perfomance timers
 	void ResetTimers();
 
+	//! get the angio material component of a material if it exists, returns nullptr if there is no angio component
 	static FEAngioMaterial * GetAngioComponent(FEMaterial * mat);
 	
-	//gets the global position of the local coordinates given an element
+	//! gets the global position of the local coordinates given an element
 	vec3d Position(FESolidElement * se, vec3d local) const;
 
+	//! updates all of the segment lengths in angio elements
 	void CalculateSegmentLengths(FEMesh* mesh);
+
+	//! updates the weighting between the matrix and vessel submaterials
 	void AdjustMatrixVesselWeights(FEMesh* mesh);
 
 #ifndef __linux__
+	//! generate a rotation matrix in which all rotations are equally probable
 	mat3d unifromRandomRotationMatrix(angiofe_random_engine & rengine) const;
 #else
-	//needed to compile on gcc see documentation for comments on random
+	//! needed to compile on gcc see documentation for comments on random
 	mat3d unifromRandomRotationMatrix(angiofe_random_engine & rengine);
 #endif
 	
 
-
+	//! generate a rotation matrix from euler angles
 	mat3d rotationMatrix(double alpha, double beta, double gamma) const;
+	//! returns a random direction(equal probability of each area on the surface of the unit sphere)
 	vec3d uniformRandomDirection(angiofe_random_engine& rengine);
+	//! returns a random number within the unit cube
 	vec3d uniformInUnitCube();
 
-	//accessors for the DataStore
+	//! accessors for the DataStore
 	double GetDoubleFromDataStore(int record, int elem_id, int item = 0);
 
-	//calcualtes the gradient at the given natural coordinates, the function variables are stored at the integration points
+	//! calcualtes the gradient at the given natural coordinates, the function variables are stored at the integration points
 	static vec3d gradient(FESolidElement * se, std::vector<double> & fn, vec3d pt);
 
 	//these freindships are for displaying/reading the data and are okay
@@ -84,7 +92,7 @@ public:
 	friend class NodeDataInterpolationManager;
 	friend class NodeDataInterpolation;
 
-	// Natural coordinate bounds based on the element type.
+	//! Natural coordinate bounds based on the element type.
 	static double NaturalCoordinatesUpperBound_r(int et);
 	static double NaturalCoordinatesUpperBound_s(int et);
 	static double NaturalCoordinatesUpperBound_t(int et);

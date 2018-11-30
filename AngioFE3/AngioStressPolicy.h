@@ -7,6 +7,7 @@ class FEAngio;
 class AngioElement;
 class Tip;
 
+//! base class for calculating the stress from the vascular network
 class AngioStressPolicy : public FEMaterial
 {
 public:
@@ -24,6 +25,7 @@ protected:
 	double radius = 1000;
 };
 
+//! legacy stress calculations
 class SigmoidAngioStressPolicy : public AngioStressPolicy
 {
 public:
@@ -49,6 +51,7 @@ private:
 	//the default value cuts of tips stresses that are below 5% of a tip on top of a gauss point
 };
 
+//! a stress calculation at the tips which includes velocity
 class LoadCurveVelAngioStressPolicy : public AngioStressPolicy
 {
 public:
@@ -71,7 +74,8 @@ private:
 	double sprout_radius_multiplier = 3;//multiplied by sprout range implicitly gives the cutoff for the tips that are included
 										//the default value cuts of tips stresses that are below ~5% of a tip on top of a gauss point
 };
-//used to update the old code
+
+//! stress at the tips. Most trusted stress policy
 class LoadCurveAngioStressPolicy : public AngioStressPolicy
 {
 public:
@@ -95,6 +99,7 @@ private:
 										//the default value cuts of tips stresses that are below 5% of a tip on top of a gauss point
 };
 
+//! stress calculated from the segments, includes velocity
 class GrownSegmentsVelAngioStressPolicy : public AngioStressPolicy
 {
 public:
@@ -118,6 +123,7 @@ private:
 										//the default value cuts of tips stresses that are below 5% of a tip on top of a gauss point
 };
 
+//! stress calculations from the segments.
 class GrownSegmentsAngioStressPolicy : public AngioStressPolicy
 {
 public:
@@ -141,6 +147,7 @@ private:
 										//the default value cuts of tips stresses that are below 5% of a tip on top of a gauss point
 };
 
+//! a stress calculation that does nothing
 class NullAngioStressPolicy : public AngioStressPolicy
 {
 public:
