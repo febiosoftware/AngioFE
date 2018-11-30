@@ -7,7 +7,7 @@ class FEAngio;
 
 class Tip;
 
-//The component of the mixture that represents the direction of the conttribution from the previous segment
+//! The component of the mixture that represents the direction of the conttribution from the previous segment
 class PreviousSegmentContribution : public FEMaterial
 {
 public:
@@ -20,7 +20,7 @@ public:
 	virtual void Update(FEMesh * mesh) {}
 };
 
-//The component of the mixture that represents the direction of the conttribution from the previous segment
+//! The component of the mixture that represents the direction of the conttribution from the previous segment
 class PreviousSegmentContributionManager : public FEMaterial
 {
 public:
@@ -35,6 +35,7 @@ private:
 	FEVecPropertyT<PreviousSegmentContribution> psc_modifiers;
 };
 
+//! a contribution that is entirely the previous segment direction
 class PreviousSegmentPSC : public PreviousSegmentContribution
 {
 	//overrides the previous segment contribution with the previous segment direction

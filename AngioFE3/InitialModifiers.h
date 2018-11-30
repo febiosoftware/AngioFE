@@ -3,6 +3,7 @@
 #include "AngioElement.h"
 
 class FEAngio;
+//! Anything that should be applied to all elements within an angio material, applied before nodedatainterpolation values
 class InitialModifier : public FEMaterial
 {
 public:
@@ -12,6 +13,7 @@ public:
 	virtual void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)=0;
 };
 
+//! applies all initial modifiers
 class InitialModifierManager: public FEMaterial
 {
 public:
@@ -23,6 +25,7 @@ private:
 	FEVecPropertyT<InitialModifier> initial_modifiers;
 };
 
+//! sets fibers to a random orientation
 class FiberRandomizer : public InitialModifier
 {
 public:
@@ -32,6 +35,7 @@ public:
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
 };
 
+//! sets the ecm density within a material
 class DensityInitializer : public InitialModifier
 {
 public:

@@ -2,9 +2,7 @@
 #include "StdAfx.h"
 #include <FECore/FEMaterialPoint.h>
 
-//-----------------------------------------------------------------------------
-// A new material point class is defined to store the elastic parameters for 
-// each integration point.
+//! per integration point values for angiofe
 class FEAngioMaterialPoint : public FEMaterialPoint
 {
 public:

@@ -1,7 +1,7 @@
 #pragma once
 #include <FECore/FEPlotData.h>
 
-//-----------------------------------------------------------------------------
+//! plots the stress from the stress policy
 class FEPlotAngioStress : public FEDomainData
 {
 public:
@@ -11,7 +11,7 @@ public:
 	bool Save(FEDomain& d, FEDataStream& str) override;
 };
 
-//-----------------------------------------------------------------------------
+//! Plot the componet of stress from the matrix material
 class FEPlotMatrixStress : public FEDomainData
 {
 public:
@@ -22,7 +22,7 @@ public:
 };
 
 
-//-----------------------------------------------------------------------------
+//! plot the visco component of the matrix material
 class FEPlotMatrixViscoStress : public FEDomainData
 {
 public:
@@ -33,7 +33,7 @@ public:
 };
 
 
-//-----------------------------------------------------------------------------
+//! Plot the elastic component of the matrix material
 class FEPlotMatrixElasticStress : public FEDomainData
 {
 public:
@@ -43,7 +43,7 @@ public:
 	bool Save(FEDomain& d, FEDataStream& str) override;
 };
 
-//-----------------------------------------------------------------------------
+//! plot the material orientation of the matrix elastic material
 class FEPlotMatrixElastic_m_Q : public FEDomainData
 {
 public:
@@ -54,7 +54,7 @@ public:
 };
 
 
-//-----------------------------------------------------------------------------
+//! plot the stress of the vessel material
 class FEPlotVesselStress : public FEDomainData
 {
 public:
@@ -64,7 +64,7 @@ public:
 	bool Save(FEDomain& d, FEDataStream& str) override;
 };
 
-//-----------------------------------------------------------------------------
+//! plot the weight of the vessel material
 class FEPlotVesselWeight : public FEDomainData
 {
 public:
@@ -73,7 +73,8 @@ public:
 	//! plot vessel weight
 	bool Save(FEDomain& d, FEDataStream& str) override;
 };
-//-----------------------------------------------------------------------------
+
+//! plot the weight of the matrix material
 class FEPlotMatrixWeight : public FEDomainData
 {
 public:
@@ -82,7 +83,8 @@ public:
 	//! plot matrix weight
 	bool Save(FEDomain& d, FEDataStream& str) override;
 };
-//-----------------------------------------------------------------------------
+
+//! Plot the matrix material's tangent
 class FEPlotMatrixTangent : public FEDomainData
 {
 public:
@@ -93,7 +95,7 @@ public:
 };
 
 
-//-----------------------------------------------------------------------------
+//! plot the branches per element
 class FEPlotBranches : public FEDomainData
 {
 public:
@@ -103,7 +105,7 @@ public:
 	bool Save(FEDomain& d, FEDataStream& str) override;
 };
 
-//-----------------------------------------------------------------------------
+//! plot the anastamoses per element
 class FEPlotAnastamoses : public FEDomainData
 {
 public:
@@ -113,7 +115,7 @@ public:
 	bool Save(FEDomain& d, FEDataStream& str) override;
 };
 
-//-----------------------------------------------------------------------------
+//! plot the segment length per element
 class FEPlotSegmentLength : public FEDomainData
 {
 public:
@@ -123,7 +125,7 @@ public:
 	bool Save(FEDomain& d, FEDataStream& str) override;
 };
 
-//-----------------------------------------------------------------------------
+//! plot the segment length per element in the reference frame
 class FEPlotRefSegmentLength : public FEDomainData
 {
 public:
@@ -133,7 +135,7 @@ public:
 	bool Save(FEDomain& d, FEDataStream& str) override;
 };
 
-//-----------------------------------------------------------------------------
+//! plot the ecm density per element
 class FEPlotAngioECMDensity : public FEDomainData
 {
 public:
@@ -143,7 +145,7 @@ public:
 	bool Save(FEDomain& d, FEDataStream& str)  override;
 };
 
-//-----------------------------------------------------------------------------
+//! plot the primary direction that vessels grow per element
 class FEPlotPrimaryVesselDirection : public FEDomainData
 {
 public:

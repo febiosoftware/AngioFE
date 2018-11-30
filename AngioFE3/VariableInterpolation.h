@@ -7,6 +7,8 @@ class FESolidElement;
 //! this may need to be updated to do more quadrature related interpolation of values
 //! this might do the calculations more than is needed if multiple tips are in the same element at the same time
 //! consider rewritting this once data has been collected on actual simulations
+
+//! base class for doing interpolation to all locations within an element
 class FEVariableInterpolation : public FEMaterial
 {
 public:
@@ -18,7 +20,7 @@ public:
 	virtual quatd Interpolate(FESolidElement *se, std::vector<quatd> & values_at_gauss_points, vec3d local_pos, FEMesh* mesh) = 0;
 };
 
-//discontinuous interp[olation of values at the gauss points
+//! discontinuous interp[olation of values at the gauss points
 class PerElementVI : public FEVariableInterpolation
 {
 public:

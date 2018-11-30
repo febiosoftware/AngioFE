@@ -2,6 +2,7 @@
 #include <FECore/BC.h>
 
 
+//! (Incomplete) Prescribed dof to allow tips to deposit chemicals within a multiphasic material
 class TipDopingBC: public FEPrescribedDOF
 {
 public:

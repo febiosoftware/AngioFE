@@ -6,6 +6,7 @@
 class FEAngio;
 class FEAngioMaterial;
 
+//! the ability to set certain values on a per node basis
 class NodeDataInterpolation :public FEMaterial
 {
 public:
@@ -28,6 +29,7 @@ protected:
 	DECLARE_PARAMETER_LIST();
 };
 
+//! applies all node data interpolation values
 class NodeDataInterpolationManager :public FEMaterial
 {
 public:
@@ -41,6 +43,7 @@ private:
 	FEVecPropertyT<NodeDataInterpolation> node_data_interpolation_vals;
 };
 
+//! set ecm density values on a per node basis
 class DensityValuesNodeDataInterpolation : public NodeDataInterpolation
 {
 public:
@@ -54,6 +57,7 @@ public:
 	const char * GetDataName() const override;
 };
 
+//! set repulse values on a per node basis(replaces bouncy boundary condition)
 class RepulseValuesNodeDataInterpolation : public NodeDataInterpolation
 {
 public:

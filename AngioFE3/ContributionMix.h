@@ -7,7 +7,7 @@ class FEAngio;
 
 class Tip;
 
-//determines the mixture between the position dependent direction and previous segment contribution 
+//! determines the mixture between the position dependent direction and previous segment contribution 
 class ContributionMix : public FEMaterial
 {
 public:
@@ -20,6 +20,7 @@ public:
 	virtual void Update(FEMesh * mesh) {}
 };
 
+//! combines the contribution mixes
 class ContributionMixManager : public FEMaterial
 {
 public:
@@ -34,6 +35,7 @@ private:
 	FEVecPropertyT<ContributionMix> cm_modifiers;
 };
 
+//! set the contribution mix to a value or a load curve
 class PSCPDDContributionMix : public ContributionMix
 {
 public:

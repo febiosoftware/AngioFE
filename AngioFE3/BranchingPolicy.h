@@ -124,8 +124,7 @@ public:
 	std::list<FutureBranch> future_branches;
 };
 
-//! As growth occours length to branch is calculated, once length to branch is hit a time to emerge is sampled from a probability distribution
-//! Length to branch is calculated only when the last value of length to branch has been hit
+//! As growth occours length to branch is calculated, once length to branch is hit a time to emerge is sampled from a probability distribution.Length to branch is calculated only when the last value of length to branch has been hit
 class DelayedBranchingPolicy :public BranchPolicy
 {
 public:

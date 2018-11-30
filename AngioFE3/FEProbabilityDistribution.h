@@ -1,7 +1,7 @@
 #pragma once
 #include "StdAfx.h"
 #include <FECore/FEMaterial.h>
-//pure virtual base class for probability distributions
+//! pure virtual base class for probability distributions
 class FEProbabilityDistribution : public FEMaterial
 {
 public:
@@ -27,6 +27,7 @@ private:
 	DECLARE_PARAMETER_LIST();
 };
 
+//! get random numbers from a normal distribution
 class FENormalDistribution : public FEProbabilityDistribution
 {
 public:
@@ -52,6 +53,7 @@ private:
 	DECLARE_PARAMETER_LIST();
 };
 
+//! get random numbers from a uniform distribution
 class FEUniformDistribution : public FEProbabilityDistribution
 {
 public:
@@ -80,6 +82,7 @@ private:
 	DECLARE_PARAMETER_LIST();
 };
 
+//! get random numbers from a exponential distribution
 class FEExponentialDistribution : public FEProbabilityDistribution
 {
 public:
@@ -109,6 +112,7 @@ private:
 	DECLARE_PARAMETER_LIST();
 };
 
+//! get random numbers from a cauchy distribution
 class FECauchyDistribution : public FEProbabilityDistribution
 {
 public:
@@ -138,7 +142,7 @@ private:
 	DECLARE_PARAMETER_LIST();
 };
 
-
+//! get random numbers from a chisquared distribution
 class FEChiSquaredDistribution : public FEProbabilityDistribution
 {
 public:
@@ -168,6 +172,7 @@ private:
 	DECLARE_PARAMETER_LIST();
 };
 
+//! get random numbers from a weibull distribution
 class FEWeibullDistribution : public FEProbabilityDistribution
 {
 public:
@@ -197,6 +202,7 @@ private:
 	DECLARE_PARAMETER_LIST();
 };
 
+//! get random numbers from a gamma distribution
 class FEGammaDistribution : public FEProbabilityDistribution
 {
 public:
@@ -226,6 +232,7 @@ private:
 	DECLARE_PARAMETER_LIST();
 };
 
+//! return a given value
 class FEFixedDistribution : public FEProbabilityDistribution
 {
 public:

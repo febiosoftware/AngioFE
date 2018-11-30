@@ -5,7 +5,7 @@
 #include "BranchingPolicy.h"
 #include "FragmentSeeder.h"
 
-
+//! separate out components that may be shared if an angio material needs to inherit from another material
 class CommonAngioProperties :public FEMaterial
 {
 public:

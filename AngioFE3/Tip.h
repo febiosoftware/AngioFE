@@ -5,7 +5,7 @@
 class Segment;
 class FEAngio;
 
-
+//! a location where growth has occoured, or can occour on the next growth step/substep.
 class Tip
 {
 public:

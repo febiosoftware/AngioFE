@@ -7,7 +7,7 @@ class FEAngio;
 class Tip;
 
 
-// Get the length over one unit of time at the given position
+//! Get the segment velocity at the given position
 class SegmentGrowthVelocity : public FEMaterial
 {
 public:
@@ -18,6 +18,7 @@ public:
 	virtual double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_elem, FEMesh* mesh) = 0;
 };
 
+//! return the segment velocity at a given location. A combination of all velocity modifier
 class SegmentGrowthVelocityManager : public FEMaterial
 {
 public:
@@ -30,6 +31,7 @@ private:
 	FEVecPropertyT<SegmentGrowthVelocity> seg_vel_modifiers;
 };
 
+//! a fixed or load curve value for velocity
 class SegmentVelocityModifier : public SegmentGrowthVelocity
 {
 public:
@@ -46,6 +48,7 @@ private:
 	double segment_velocity_over_time = 1;
 };
 
+//! scales the segment velocity based on the ecm density
 class SegmentVelocityDensityScaleModifier : public SegmentGrowthVelocity
 {
 public:

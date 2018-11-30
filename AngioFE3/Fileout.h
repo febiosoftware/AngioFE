@@ -14,6 +14,7 @@
 
 class FEAngio;
 
+//! class that contains the streams for doing output
 class Fileout
 {
 public:
