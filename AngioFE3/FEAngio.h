@@ -29,7 +29,7 @@ public:
 	//! initialize the FEAnio class
 	bool Init();
 
-
+	//! returns the min and max element id's within the model
 	std::pair<int, int> GetMinMaxElementIDs() const;
 
 	//! Get the FE model
@@ -94,102 +94,129 @@ public:
 
 	//! Natural coordinate bounds based on the element type.
 	static double NaturalCoordinatesUpperBound_r(int et);
+	//! Natural coordinates bounds
 	static double NaturalCoordinatesUpperBound_s(int et);
+	//! Natural coordinates bounds
 	static double NaturalCoordinatesUpperBound_t(int et);
+	//! Natural coordinates bounds
 	static double NaturalCoordinatesLowerBound_r(int et);
+	//! Natural coordinates bounds
 	static double NaturalCoordinatesLowerBound_s(int et);
+	//! Natural coordinates bounds
 	static double NaturalCoordinatesLowerBound_t(int et);
 
+	//! clamp the vector to the natural coordinate system
 	static vec3d clamp_natc(int et, vec3d natc);
 
-	//returns the extrema in global coordinates of the given elem
+	//! returns the extrema in global coordinates of the given elem
 	void ExtremaInElement(FESolidElement * se, std::vector<vec3d> & extrema) const;
 
-	//returns the minimun distance between the two sets of points
+	//! returns the minimun distance between the two sets of points
 	static double MinDistance(std::vector<vec3d> & element_bounds0, std::vector<vec3d>  & element_bounds1);
 
+	//! grow the segments
 	void GrowSegments(double min_scale_factor, double bounds_tolerance, double min_angle, int growth_substeps);
 
+	//! grow the segments before t=0
 	void ProtoGrowSegments(double min_scale_factor, double bounds_tolerance, double min_angle, int growth_substeps);
 
+	//! get the final active tips in a radius, used in stress calculations
 	static void GetActiveFinalTipsInRadius(AngioElement* angio_element, double radius, FEAngio* pangio, std::vector<Tip *> & tips);
+	//! get the tips in a radius, used in stress calculations
 	static void GetActiveTipsInRadius(AngioElement* angio_element, double radius, int buffer, FEAngio* pangio, std::vector<Tip *> & tips, int excliude);
+	//! get the tips in a radius, used in stress calculations
 	static void GetGrownTipsInRadius(AngioElement* angio_element, double radius, FEAngio* pangio, std::vector<Tip *> & tips);
 
-	//returns the length between the two points as if they are conencted by a line segment in the natrual coordinates of the element
-	//only the difference between the points if the elements are linear
+	//! returns the length between the two points as if they are conencted by a line segment in the natrual coordinates of the element only the difference between the points if the elements are linear
 	double InElementLength(FESolidElement * se, vec3d pt0, vec3d pt1) const;
 
+	//! returns the concentration of a given solute at a material point
 	static double GetConcentration(FEMaterial* mat, FEMaterialPoint * mp, int sol_id);
 private:
 	
-	// Initialize the nodal ECM values
+	//! Initialize the nodal ECM values
 	bool InitECMDensity();
 
-	// Init FE stuff
+	//! Init FE stuff
 	bool InitFEM();
 
+	//! finalize Finite element initialization
 	void FinalizeFEM();
 
+	//! populate the adjacency information for the mesh
 	void FillInAdjacencyInfo(FEMesh * mesh, FEElemElemList * eel, AngioElement *angio_element, int elem_index);
 
+	//! setup initialization of angio elements(only run once)
 	void SetupAngioElements();
 
+	//! set the seeds in angio elements
 	void SetSeeds();
 
+	//! seed the tips within the angio elements
 	bool SeedFragments();
 
+	//! modify the step size taken by febio
 	void ApplydtToTimestepper(double dt, bool initial = false);
 	
-
+	//! return the tip position in the reference frame
 	vec3d ReferenceCoordinates(Tip * tip) const;
 
+	//! setup the map from nodes to elements
 	void SetupNodesToElement(int min_element_id);
 
 
-	// do the final output
+	//! do the final output
 	void Output();
 
-	//returns the scale factor that would project this ray onto the unit cube, pt must be within the unit cube
+	//! returns the scale factor that would project this ray onto the unit cube, pt must be within the unit cube
 	bool ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d & dir, vec3d & pt, double & sf, double min_sf = 0.00001) const;
 
-	
+	//! returns whether or not a ray can be projected onto the surface of an element
 	bool ProjectToElement(FESolidElement& el, const vec3d& p, FEMesh* mesh, double r[3]);
 
+	//! populates the vector with elements that contain the node
 	void GetElementsContainingNode(FENode * node, std::vector<FESolidElement*> & elements);
 
+	//! returns whether or not the natural coordinates are valid
 	static bool IsInBounds(FESolidElement* se, double r[3], double eps= 0.000001);
 
 
 	
-
+	//! fill in the adjacency information for an angio element
 	void FillInFaces(FEMesh * mesh, AngioElement * angio_element);
 
+	//! the callback that controls the plugin's execution
 	static bool feangio_callback(FEModel* pfem, unsigned int nwhen, void* pd)
 	{
 		FEAngio* pfa = reinterpret_cast<FEAngio*>(pd);
 		return pfa->OnCallback(pfem, nwhen);
 	}
 
+	//! callback 
 	bool OnCallback(FEModel* pfem, unsigned int nwhen);
 
 public:	// parameters read directly from file
 
 	// miscellaneous
-	unsigned int	m_irseed;			// Seed number for the random number generator
-    
-	int		total_bdyf;
-	int		FE_state;			// State counter to count the number of solved FE states
+	//! Seed number for the random number generator
+	unsigned int	m_irseed;			
+  
 
 	std::vector<FEAngioMaterial*>	m_pmat;	//!< the angio-material pointer
-	std::vector<int>                m_pmat_ids;
+	std::vector<int>                m_pmat_ids;//!< the material id's
 
+	//! global random engine
 	angiofe_random_engine rengine;
 
-	FEBioModel * m_fem;//just do the cast once
+	//! pointer to the fbio model
+	FEBioModel * m_fem;
+	//! solid element to angio element
 	std::unordered_map<FESolidElement *, AngioElement *> se_to_angio_element;
+	//! nodes to elements
 	std::unordered_map<FENode *, std::vector<FESolidElement*>> nodes_to_elements;
+	//! all node adjacent elements
 	std::unordered_map<AngioElement *, std::vector<AngioElement *>> angio_elements_to_all_adjacent_elements;//adjacent is shares a node with the element
+	//! elements by material
 	std::unordered_map < FEAngioMaterial *, std::vector<AngioElement *>> elements_by_material;
 private:
 	//both nodes and elements id's go from 1 to n+1 for n items

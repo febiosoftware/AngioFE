@@ -18,11 +18,14 @@ class BranchInfo;
 class AngioElement
 {
 public:
+
+	//! constructor
 	AngioElement(FESolidElement * elem, FEAngioMaterial * angio_mat, FEMaterial * mat, FEMesh * mesh) : _elem(elem), _angio_mat(angio_mat), _mat(mat)
 	{
 		//active_tips[0][this]
 	};
 
+	//! get the length of the segments within the element at a given time
 	double GetLengthAtTime(FEMesh* mesh, double time) const;
 
 	//! pointer to element  

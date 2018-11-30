@@ -603,12 +603,7 @@ vec3d FEAngio::clamp_natc(int et, vec3d natc)
 //-----------------------------------------------------------------------------
 FEAngio::FEAngio(FEModel& fem) : ztopi(std::uniform_real_distribution<double>(0, PI)), 
 	zto2pi(std::uniform_real_distribution<double>(0, 2 * PI)), n1to1(std::uniform_real_distribution<double>(-1, 1))
-{
-	// Body force counter
-	total_bdyf = 0;
-	
-	FE_state = 0;
-
+{	
 	// Input random seed number
 	m_irseed = 0;
 
@@ -1257,7 +1252,6 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 
 		fileout->save_feangio_stats(*this);
 		ResetTimers();
-		++FE_state;
 		if (!m_fem->GetGlobalConstant("no_io"))
 		{
 			// save active tips

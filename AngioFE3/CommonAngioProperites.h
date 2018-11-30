@@ -9,10 +9,13 @@
 class CommonAngioProperties :public FEMaterial
 {
 public:
+	//! constructor
 	CommonAngioProperties(FEModel * pfem);
 	~CommonAngioProperties(){}
 
 	//FEPropertyT<GrowDirectionModifiers> gdms;
+	//! fragment seeder
 	FEPropertyT<FragmentSeeder> fseeder;
+	//! vessel material
 	FEPropertyT<FESolidMaterial> vessel_material;
 };
