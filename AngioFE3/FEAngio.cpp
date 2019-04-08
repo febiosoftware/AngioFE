@@ -40,13 +40,17 @@ bool CreateFiberMap(vector<vec3d>& fiber, FEMaterial* pmat);
 // create a density map based on material point density
 bool CreateDensityMap(vector<double>& density, vector<double>& anisotropy, FEMaterial* pmat);
 
+// need to rename from vegfID to solute id
 bool CreateConcentrationMap(vector<double>& concentration, FEMaterial* pmat, int vegfID);
 
 void FEAngio::SetSeeds()
 {
+	// gets seed for random engine
 	rengine.seed(m_fem->GetGlobalConstant("seed"));
+	// for each angio element
 	for(int i=0; i <angio_elements.size();i++)
 	{
+		// call set seeds for the element
 		angio_elements[i]->_angio_mat->SetSeeds(angio_elements[i]);
 	}
 }
@@ -54,27 +58,33 @@ void FEAngio::SetSeeds()
 bool FEAngio::SeedFragments()
 {
 	bool rv = true;
+	// for each angio element across materials
 	for(auto iter = elements_by_material.begin(); iter != elements_by_material.end(); ++iter)
 	{
+		// Call seed fragments for the element
 		rv &= iter->first->SeedFragments(iter->second, GetMesh());
 	}
 	return rv;
 }
 
-
-
+// ensures that the FE step matches the angio step
 void FEAngio::ApplydtToTimestepper(double dt, bool initial)
 {
 	FEAnalysis * fea = m_fem->GetCurrentStep();
+	// if the FE step is bigger than the angio step
 	if(fea->m_dt > dt)
 	{
+		//set the fe step to the angio step
 		fea->m_dt = dt;
 	}
 }
 
+// 
 void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, double min_angle, int growth_substeps)
 {
+	// get the current time
 	auto   time_info = m_fem->GetTime();
+	// get the current FE step
 	FEAnalysis * cs = m_fem->GetCurrentStep();
 	auto   mesh = GetMesh();
 	static double min_dt;
@@ -83,15 +93,21 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, dou
 	
 
 	// Is it valid for this to run more than once? only 
+	// if the current time is greater than the next time
 	if(time_info.currentTime >= next_time)
-	{
+	{	// 
 		min_dt = std::numeric_limits<double>::max();
+		// parallel for with value min_dt shared
 		#pragma omp parallel for shared(min_dt)
+		// for each angio element
 		for (int i = 0; i < angio_element_count; ++i)
 		{
+			// determines the minimum timestep for each angio element to allow growth safely
 			double temp_dt = angio_elements[i]->_angio_mat->GetMin_dt(angio_elements[i], mesh);
+			// this part must be executed one thread at a time to prevent overwriting
 			#pragma omp critical
 			{
+				// change min_dt to the lesser of min_dt and temp dt
 				min_dt = std::min(min_dt, temp_dt);
 			}
 		}
@@ -102,29 +118,39 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, dou
 		}
 		*/
 		
+		// current time is next time plus min_dt
 		double ctime = next_time + min_dt;
-
+		// allow 16 iterations to be run on each thread as they become available
 		#pragma omp parallel for schedule(dynamic, 16)
+		// for each angio element
 		for (int j = 0; j <angio_element_count; j++)
 		{
+			// prep the buffers
 			angio_elements[j]->_angio_mat->PrepBuffers(angio_elements[j], next_time, buffer_index);
 		}
 //worse performace than separate declarations
 //#pragma omp parallel
 		{
+			// for each growth substep
 			for (int i = 0; i <growth_substeps; i++)
 			{
-#pragma omp parallel for schedule(dynamic, 16)
+				// for 16 iteration chunks
+				#pragma omp parallel for schedule(dynamic, 16)
+				// for each angio element
 				for (int j = 0; j <angio_element_count; j++)
 				{
+					// Grow segments
 					angio_elements.at(j)->_angio_mat->GrowSegments(angio_elements.at(j), ctime, buffer_index, min_scale_factor,bounds_tolerance, min_angle);
 				}
 
-#pragma omp parallel for schedule(dynamic, 16)
+				#pragma omp parallel for schedule(dynamic, 16)
+				// for each angio element 
 				for (int j = 0; j <angio_element_count; j++)
 				{
+					// Post growth update for each element
 					angio_elements[j]->_angio_mat->PostGrowthUpdate(angio_elements[j], ctime, cs->m_tend , min_scale_factor, buffer_index, mesh, this);
 				}
+				// update the buffer index
 				buffer_index = (buffer_index + 1) % 2;
 			}
 		}
@@ -158,21 +184,27 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 	double min_dt = std::numeric_limits<double>::max();
 	size_t angio_element_count = angio_elements.size();
 
+	// while mechanical analysis still hasn't begun
 	while(next_time < 0)
 	{
 		// Is it valid for this to run more than once? only 
 		if (time_info.currentTime >= next_time)
 		{
-#pragma omp parallel for shared(min_dt)
+			#pragma omp parallel for shared(min_dt)
+			// for each angio element
 			for (int i = 0; i < angio_element_count; ++i)
 			{
+				// get min dt for all element
 				double temp_dt = angio_elements[i]->_angio_mat->GetMin_dt(angio_elements[i], mesh);
-#pragma omp critical
+				// only one thread can perform this at a time
+				#pragma omp critical
 				{
+					// set min_dt to the lower of min_dt and temp_dt
 					min_dt = std::min(min_dt, temp_dt);
 				}
 			}
 
+			// update current time
 			double ctime = next_time + min_dt;
 			//clamp the dt to hit zero
 			if(ctime > 0)
@@ -181,7 +213,8 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 				ctime = 0;
 			}
 
-#pragma omp parallel for schedule(dynamic, 32)
+			// prepare buffers for each angio element
+			#pragma omp parallel for schedule(dynamic, 32)
 			for (int j = 0; j <angio_element_count; j++)
 			{
 				angio_elements[j]->_angio_mat->PrepBuffers(angio_elements[j], next_time, buffer_index);
@@ -192,15 +225,19 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 				int n = 3;
 				for (int i = 0; i <n; i++)
 				{
-#pragma omp parallel for schedule(dynamic, 32)
+					#pragma omp parallel for schedule(dynamic, 32)
+					// for each element
 					for (int j = 0; j <angio_element_count; j++)
 					{
+						// grow the segments
 						angio_elements.at(j)->_angio_mat->ProtoGrowSegments(angio_elements.at(j), ctime, buffer_index, min_scale_factor, bounds_tolerance, min_angle);
 					}
 
-#pragma omp parallel for schedule(dynamic, 32)
+					#pragma omp parallel for schedule(dynamic, 32)
+					// for each angio element
 					for (int j = 0; j <angio_element_count; j++)
 					{
+						// update the elements
 						angio_elements[j]->_angio_mat->ProtoPostGrowthUpdate(angio_elements[j], ctime, min_scale_factor, buffer_index, mesh, this);
 					}
 					buffer_index = (buffer_index + 1) % 2;
@@ -214,7 +251,7 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 		{
 			next_time += min_dt;
 			printf("\nproto angio dt chosen is: %lg next angio time\n", min_dt);
-#pragma omp parallel for schedule(dynamic, 16)
+			#pragma omp parallel for schedule(dynamic, 16)
 			for (int j = 0; j <angio_element_count; j++)
 			{
 				angio_elements[j]->_angio_mat->Cleanup(angio_elements[j], next_time, buffer_index);
@@ -228,6 +265,8 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 	fileout->bulk_save_vessel_state(*this);
 }
 
+// takes a given element then first counts the tips in that element then adds all adjacent elements to an inspection list and keep adding tips and adjacent elements until
+// they are out of bounds. 
 void FEAngio::GetActiveFinalTipsInRadius(AngioElement* angio_element, double radius, FEAngio* pangio, std::vector<Tip *> & tips)
 {
 	std::unordered_set<AngioElement *> visited;
@@ -236,17 +275,23 @@ void FEAngio::GetActiveFinalTipsInRadius(AngioElement* angio_element, double rad
 	visited.reserve(1000);
 	tips.reserve(500);
 	pangio->ExtremaInElement(angio_element->_elem, element_bounds);
-
+	// add element to be inspected
 	next.insert(angio_element);
-
+	// while there are still elements in next
 	while (next.size())
 	{
+		// get angio element
 		AngioElement * cur = *next.begin();
+		// remove it from the buffer
 		next.erase(next.begin());
+		// add it to the visited buffer
 		visited.insert(cur);
 		std::vector<vec3d> cur_element_bounds;
+		// Get the extrema for the current element
 		pangio->ExtremaInElement(cur->_elem, cur_element_bounds);
+		// get the minimum distance from the bounds of the element that we're calculating tips in the radius of to the iteration's element
 		double cdist = FEAngio::MinDistance(element_bounds, cur_element_bounds);
+		// if the distance is in the desired range
 		if (cdist <= radius)
 		{
 			//add the tips and the add all unvisited adjacent elements to next
@@ -367,10 +412,13 @@ vec3d FEAngio::ReferenceCoordinates(Tip * tip) const
 	FESolidElement * se= tip->angio_element->_elem;
 
 	double arr[FEElement::MAX_NODES];
+	// get tip local coordinates
 	vec3d local_pos = tip->GetLocalPosition();
 	se->shape_fnc(arr, local_pos.x, local_pos.y, local_pos.z);
+	// for each node in the element
 	for (int j = 0; j < se->Nodes(); j++)
 	{
+		// add the initial global position
 		r += mesh.Node(se->m_node[j]).m_r0* arr[j];
 	}
 
@@ -592,6 +640,9 @@ double FEAngio::NaturalCoordinatesLowerBound_t(int et)
 	}
 	return std::numeric_limits<double>::max();
 }
+
+// clamping checks if an element is in the prescribed range and if not moves it to the closest acceptable value in the range
+// This clamps a position (natc) to the range given by the natural coordinates for an element type et
 vec3d FEAngio::clamp_natc(int et, vec3d natc)
 {
 	return vec3d(std::max(std::min(NaturalCoordinatesUpperBound_r(et),natc.x ), NaturalCoordinatesLowerBound_r(et)),
@@ -627,7 +678,8 @@ FEMesh * FEAngio::GetMesh() const
 	return &m_fem->GetMesh();
 }
 
-//consider moving this to FEBio
+// consider moving this to FEBio
+// this returns the range of elements (why is this necessary?)
 std::pair<int, int> FEAngio::GetMinMaxElementIDs() const
 {
 	FEMesh * mesh = GetMesh();
@@ -637,14 +689,21 @@ std::pair<int, int> FEAngio::GetMinMaxElementIDs() const
 	int m_minID = -1;
 	int m_maxID = -1;
 	int NDOM = mesh->Domains();
+	// for each material domain
 	for (int i = 0; i<NDOM; ++i)
 	{
+		// get the mesh of the domain
 		FEDomain& dom = mesh->Domain(i);
+		// get the number of elements in the domain
 		int NE = dom.Elements();
+		// for each element
 		for (int j = 0; j<NE; ++j)
 		{
+			//  get the element number
 			FEElement& el = dom.ElementRef(j);
+			// get the element id
 			int eid = el.GetID();
+
 			if ((eid < m_minID) || (m_minID == -1)) m_minID = eid;
 			if ((eid > m_maxID) || (m_maxID == -1)) m_maxID = eid;
 		}
@@ -677,6 +736,7 @@ bool FEAngio::Init()
 // Initialize FE model.
 bool FEAngio::InitFEM()
 {
+	// for each material
 	for (int i = 0; i < m_fem->Materials(); i++)
 	{
 		FEAngioMaterial * cmat = nullptr;
@@ -689,7 +749,9 @@ bool FEAngio::InitFEM()
 		{
 			id = mat->GetID();
 			assert(id != -1);
+			// add the current angio material to the material pointer
 			m_pmat.emplace_back(cmat);
+			// add the current angio material's id to the ids
 			m_pmat_ids.emplace_back(id);
 			//TODO: check that material parameters are set here
 			//cmat->ApplySym();
@@ -711,8 +773,10 @@ void FEAngio::FillInAdjacencyInfo(FEMesh * mesh,FEElemElemList * eel, AngioEleme
 	//one element of adjaceny per face
 	FESolidElement * se = angio_element->_elem;
 	assert(se);
+	// for each face in the solid element
 	for(int i=0; i < mesh->Faces(*se);i++)
 	{
+		// get the neighboring element
 		FEElement * elem = eel->Neighbor(elem_index, i);
 		FESolidElement * nse = dynamic_cast<FESolidElement*>(elem);
 		if(nse)
@@ -754,6 +818,7 @@ void FEAngio::SetupAngioElements()
 
 	//we are using the lut in FEMesh so the speed should be good
 	//the table now contains only angio elements
+	// for each element 
 	for (int i = 0; i < mesh->Elements(); i++)
 	{
 		FESolidElement * elem = dynamic_cast<FESolidElement*>(mesh->FindElementFromID(min_elementID + i));
@@ -999,11 +1064,12 @@ vec3d FEAngio::gradient(FESolidElement * se, std::vector<double> & fn, vec3d pt)
 //-----------------------------------------------------------------------------
 static void solve_3x3(double A[3][3], double b[3], double x[3])
 {
+	// get the determinant
 	double D = A[0][0] * A[1][1] * A[2][2] + A[0][1] * A[1][2] * A[2][0] + A[1][0] * A[2][1] * A[0][2] \
 		- A[1][1] * A[2][0] * A[0][2] - A[2][2] * A[1][0] * A[0][1] - A[0][0] * A[2][1] * A[1][2];
 
 	assert(D != 0);
-
+	// get the minors of A
 	double Ai[3][3];
 	Ai[0][0] = A[1][1] * A[2][2] - A[2][1] * A[1][2];
 	Ai[0][1] = A[2][1] * A[0][2] - A[0][1] * A[2][2];
@@ -1017,6 +1083,7 @@ static void solve_3x3(double A[3][3], double b[3], double x[3])
 	Ai[2][1] = A[2][0] * A[0][1] - A[0][0] * A[2][1];
 	Ai[2][2] = A[0][0] * A[1][1] - A[0][1] * A[1][0];
 
+	// solve Ax=b for x as x = A^-1 b
 	x[0] = (Ai[0][0] * b[0] + Ai[0][1] * b[1] + Ai[0][2] * b[2]) / D;
 	x[1] = (Ai[1][0] * b[0] + Ai[1][1] * b[1] + Ai[1][2] * b[2]) / D;
 	x[2] = (Ai[2][0] * b[0] + Ai[2][1] * b[1] + Ai[2][2] * b[2]) / D;
@@ -1649,10 +1716,11 @@ bool FEAngio::IsInBounds(FESolidElement* se, double r[3], double eps)
 		(r[2] <= NaturalCoordinatesUpperBound_t(se->Type()) + eps) && (r[2] >= NaturalCoordinatesLowerBound_t(se->Type())- eps);
 }
 
-
+// 
 void FEAngio::ExtremaInElement(FESolidElement * se, std::vector<vec3d> & extrema) const
 {
 	auto mesh = GetMesh();
+	// make extrema the size of the number of nodes in the element type
 	extrema.reserve(se->Nodes());
 	switch(se->Type())
 	{
@@ -1669,8 +1737,10 @@ void FEAngio::ExtremaInElement(FESolidElement * se, std::vector<vec3d> & extrema
 	case FE_HEX20G27:
 	case FE_HEX20G8:
 	case FE_HEX27G27:
+		// for each node in the element
 		for (int j = 0; j < se->Nodes(); j++)
 		{
+			// add the current global position to extrema
 			extrema.push_back(mesh->Node(se->m_node[j]).m_rt);
 		}
 

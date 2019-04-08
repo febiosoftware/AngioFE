@@ -3,7 +3,7 @@
 
 #include "StdAfx.h"
 
-#define FECORE_DLL
+//#define FECORE_DLL
 #define FECORE_API
 
 #include "FECore/FECoreKernel.h"
@@ -58,6 +58,7 @@ FEPluginFactory_T<RepulseValuesNodeDataInterpolation, FEMATERIAL_ID> repulse_val
 FEPluginFactory_T<SegmentGrowthVelocityManager       , FEMATERIAL_ID> segment_growth_velocity_manager_factory("segment_growth_velocity_manager");
 FEPluginFactory_T<SegmentVelocityModifier            , FEMATERIAL_ID> segment_velocity_modifier_factory("segment_velocity_modifier");
 FEPluginFactory_T<SegmentVelocityDensityScaleModifier, FEMATERIAL_ID> segment_velocity_density_scale_modifier_factory("segment_velocity_density_scale_modifier");
+FEPluginFactory_T<SegmentVelocityRefDensityScaleModifier, FEMATERIAL_ID> segment_velocity_ref_density_scale_modifier_factory("segment_velocity_ref_density_scale_modifier");
 
 // PSC Classes
 FEPluginFactory_T<PreviousSegmentContributionManager, FEMATERIAL_ID> previous_segment_contribution_manager_factory("previous_segment_contribution_manager");
@@ -158,8 +159,8 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 
 FECORE_EXPORT  void GetPluginVersion(int & major, int & minor, int & patch)
 {
-	major = 2;
-	minor = 1;
+	major = 3;
+	minor = 0;
 	patch = SVNREVISION;
 }
 
@@ -230,6 +231,7 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		&segment_growth_velocity_manager_factory,
 		&segment_velocity_modifier_factory,
 		&segment_velocity_density_scale_modifier_factory,
+		&segment_velocity_ref_density_scale_modifier_factory,
 
 		// PSC Modifier Classes
 		&previous_segment_contribution_manager_factory,

@@ -34,7 +34,7 @@ public:
 	FEAngioMaterial * _angio_mat=nullptr;
 	//! pointer to top level material(may be angio material or multiphasic material)
 	FEMaterial * _mat= nullptr;
-	//! random engine for the elment(sequence all random rolls within the element sequentially wrt time)
+	//! random engine for the elment (sequence all random rolls within the element sequentially wrt time)
 	std::mt19937_64 _rengine;
 
 	//begin buffers
@@ -48,7 +48,7 @@ public:
 	std::vector<Segment *> recent_segments;
 	//! count to make sure all recent segments are handled correctly
 	int processed_recent_segments = 0;
-	//this might be further optimized to a lookup into a constant lookup table given the element type that is doing the looking up ... its possible to do this at compile time
+	//this might be further optimized to a constant lookup table given the element type that is doing the looking up ... its possible to do this at compile time
 	//this should reduce this to a jump based on the element type
 	//! map of tips to the element which they should try to grow into on the next growth substep
 	std::unordered_map<AngioElement*, std::vector<Tip *>> active_tips[2];

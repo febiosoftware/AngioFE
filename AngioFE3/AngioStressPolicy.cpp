@@ -35,27 +35,40 @@ void SigmoidAngioStressPolicy::UpdateScale()
 void SigmoidAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
 {
 	std::vector<Tip*> final_active_tips;
+	// Get active tips within a radius
 	FEAngio::GetActiveFinalTipsInRadius(angio_element, sprout_range * sprout_radius_multiplier, pangio, final_active_tips);
-
+	// for each integration point
 	for(int i=0;i < angio_element->_elem->GaussPoints();i++)
 	{
+		// get the material point of the gauss point
 		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
+		// get eh angio material point at the gauss point
 		FEAngioMaterialPoint * angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+		// get the elastic material point at the gauss point
 		FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
+		// get the density scale for the integration point
 		double den_scale = angio_element->_angio_mat->FindDensityScale(angio_mp);
+		// assert that the material point and gauss point are in the same point
 		assert(mp && angio_mp);
+		// zero the angio point
 		angio_mp->m_as.zero();
+		// get global position of elastic material point?
 		vec3d y =  emp->m_rt;
+		// for each active tip
 		for(int j=0; j < final_active_tips.size();j++)
 		{
 			Tip * tip = final_active_tips[j];
+			// get the tip position in the mesh
 			vec3d x = tip->GetPosition(mesh);//consider moving this out and calling it less
+			// determine vector from tip to integration point
 			vec3d r = y - x;
 			double l = r.unit();
+			// get the angle between the tip and the sprout direction
 			double theta = acos(tip->GetDirection(mesh) * r);//same for GetDirection
 
 			//sprout s mag replaced with giving correct coeficients for scale
 			double p = den_scale * scale *sprout_mag * pow(cos(theta / 2), fan_exponential)* exp(-l / sprout_range);
+			// make a dyad times the prssure
 			angio_mp->m_as += dyad(r)*p;
 		}
 	}
@@ -87,25 +100,34 @@ void LoadCurveVelAngioStressPolicy::UpdateScale()
 void LoadCurveVelAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
 {
 	std::vector<Tip*> final_active_tips;
+	// get all tips within a radius
 	FEAngio::GetActiveFinalTipsInRadius(angio_element, sprout_range * sprout_radius_multiplier, pangio, final_active_tips);
-
+	// for each gauss point in the element
 	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
 	{
+		// get the material point
 		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
+		// get the angio material point
 		FEAngioMaterialPoint * angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+		// get the elastic material point
 		FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
 		assert(mp && angio_mp);
 		angio_mp->m_as.zero();
+		// get the global position of the material point
 		vec3d y = emp->m_rt;
 		for (int j = 0; j < final_active_tips.size(); j++)
 		{
 			Tip * tip = final_active_tips[j];
+			// get global position of tip
 			vec3d x = tip->GetPosition(mesh);//consider moving this out and calling it less
+			// get vector from tip to gauss point
 			vec3d r = y - x;
 			double l = r.unit();
+			// get angle between tip direction and r
 			double theta = acos(tip->GetDirection(mesh) * r);//same for GetDirection
 
-															 //sprout s mag replaced with giving correct coeficients for scale
+			//sprout s mag replaced with giving correct coeficients for scale
+			// this growth velocity may need to be a scaling term that is a function of velocity
 			double p = tip->growth_velocity *sprout_mag * pow(cos(theta / 2), fan_exponential)* exp(-l / sprout_range);
 			angio_mp->m_as += dyad(r)*p;
 		}
@@ -152,7 +174,7 @@ void LoadCurveAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngi
 			double l = r.unit();
 			double theta = acos(tip->GetDirection(mesh) * r);//same for GetDirection
 
-															 //sprout s mag replaced with giving correct coeficients for scale
+			//sprout s mag replaced with giving correct coeficients for scale
 			double p = sprout_mag * pow(cos(theta / 2), fan_exponential)* exp(-l / sprout_range);
 			angio_mp->m_as += dyad(r)*p;
 		}

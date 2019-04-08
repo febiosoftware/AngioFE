@@ -19,24 +19,31 @@ extern FEAngio* pfeangio;
 //-----------------------------------------------------------------------------
 bool FEPlotAngioStress::Save(FEDomain& d, FEDataStream& str)
 {
+	// get the angio component of the material and check if it is an angio material
 	FEAngioMaterial* pmat = pfeangio->GetAngioComponent(d.GetMaterial());
 	if (pmat == nullptr) return false;
 
+	// get the solid domain from the FE domain
 	FESolidDomain& dom = dynamic_cast<FESolidDomain&>(d);
 	int NE = dom.Elements();
+	// for each element get the stress
 	for (int i=0; i<NE; ++i)
 	{
 		FESolidElement& el = dom.Element(i);
 		int nint = el.GaussPoints();
 		mat3ds s;
 		s.zero();
+		// for each gauss point get the stress
 		for (int j=0; j<nint; ++j)
 		{
+			// get the material point of the gauss point
 			FEMaterialPoint& mp = *(el.GetMaterialPoint(j));
+			// get the angio material point of the material point to get the stress then add it to the stress sum
 			FEAngioMaterialPoint * angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(&mp);
 			mat3ds & sj = angio_mp->m_as;
 			s += sj;
 		}
+		// average sum of gauss point stress
 		s /= static_cast<double>(nint);
 
 		str << s;
@@ -91,6 +98,7 @@ bool FEPlotVesselStress::Save(FEDomain& d, FEDataStream& str)
 		{
 			FEMaterialPoint& mp = *(el.GetMaterialPoint(j));
 			FEAngioMaterialPoint* angioPt = FEAngioMaterialPoint::FindAngioMaterialPoint(&mp);
+			// get elastic stress from vessel
 			FEElasticMaterialPoint& vessel_elastic = *angioPt->vessPt->ExtractData<FEElasticMaterialPoint>();
 			mat3ds & sj = vessel_elastic.m_s;
 			
@@ -172,6 +180,7 @@ bool FEPlotMatrixTangent::Save(FEDomain& d, FEDataStream& str)
 		for (int j = 0; j<nint; ++j)
 		{
 			FEMaterialPoint& mp = *(el.GetMaterialPoint(j));
+			// evaluate the tangent at the material point
 			tens4ds ten = pmat->GetMatrixMaterial()->GetElasticMaterial()->Tangent(mp);
 			tens4ds sj = ten;
 			s += sj;
@@ -274,13 +283,17 @@ bool FEPlotMatrixElastic_m_Q::Save(FEDomain& d, FEDataStream& str)
 
 bool FEPlotBranches::Save(FEDomain& d, FEDataStream& str)
 {
+	// for each element
 	for(int i=0; i < d.Elements();i++)
 	{
 		FEElement & elem = d.ElementRef(i);
+		// get teh solid element
 		FESolidElement *se = dynamic_cast<FESolidElement*>(&elem);
 		if(se)
 		{
+			// convert solid element to angio element
 			AngioElement * angio_element = pfeangio->se_to_angio_element.at(se);
+			// get the branch count for the element and output to the stream
 			str << static_cast<double>(angio_element->branch_count);
 		}
 	}

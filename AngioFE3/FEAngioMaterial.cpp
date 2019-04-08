@@ -405,8 +405,8 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	{
 		return;
 	}
-
-	vec3d global_dir = mix(psc_dir, pdd_dir , (alpha));
+	vec3d global_dir = mix3d(psc_dir, pdd_dir, (alpha));
+	// vec3d global_dir = mix(psc_dir, pdd_dir , (alpha));
 	global_dir.unit();
 
 	vec3d global_pos;
@@ -726,7 +726,8 @@ int FEAngioMaterial::SelectNextTip(std::vector<AngioElement*> & possible_locatio
 		{
 			return i;
 		}
-		vec3d global_dir = mix(psc_dir, pdd_dir, (alpha));
+		vec3d global_dir = mix3d(psc_dir, pdd_dir, (alpha));
+		//vec3d global_dir = mix(psc_dir, pdd_dir, (alpha));
 		global_dir.unit();
 		vec3d possible_dir = possible_locations[i]->_angio_mat->pdd_manager->ApplyModifiers({ 1,0,0 }, possible_locations[i], possible_local_coordinates[i], tip->initial_fragment_id, buffer, continue_growth, psc_dir, alpha, mesh, m_pangio);
 		double Gr[FEElement::MAX_NODES];

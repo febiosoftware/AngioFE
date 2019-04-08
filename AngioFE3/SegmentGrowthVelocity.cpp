@@ -48,9 +48,34 @@ BEGIN_PARAMETER_LIST(SegmentVelocityDensityScaleModifier, SegmentGrowthVelocity)
 ADD_PARAMETER(m_density_scale_factor, FE_PARAM_VEC3D, "density_scale_factor");
 END_PARAMETER_LIST();
 
+// SL: Added so that growth is scaled only by the referential density
+double SegmentVelocityRefDensityScaleModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh)
+{
+	std::vector<double> density_at_integration_points;
 
+	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
+	{
+		FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
+		FEElasticMaterialPoint* elastic_mp = gauss_point->ExtractData<FEElasticMaterialPoint>();
 
+		density_at_integration_points.push_back(angio_mp->ref_ecm_density);
+	}
 
+	double density_at_point = interpolation_prop->Interpolate(angio_element->_elem, density_at_integration_points, natural_coords, mesh);
+	double density_scale = m_density_scale_factor.x + m_density_scale_factor.y * exp(-m_density_scale_factor.z * density_at_point);
+
+	return density_scale * prev;
+}
+
+bool SegmentVelocityRefDensityScaleModifier::Init()
+{
+	return true;
+}
+
+BEGIN_PARAMETER_LIST(SegmentVelocityRefDensityScaleModifier, SegmentGrowthVelocity)
+ADD_PARAMETER(m_density_scale_factor, FE_PARAM_VEC3D, "density_scale_factor");
+END_PARAMETER_LIST();
 
 
 

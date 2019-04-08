@@ -57,7 +57,8 @@ vec3d ECMDensityGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_elem
 		{
 			alpha = contribution;
 		}
-		return mix(prev, perpendicularToGradient, contribution);
+		return mix3d(prev, perpendicularToGradient, contribution);
+		//return mix(prev, perpendicularToGradient, contribution);
 	}
 	return prev;
 }
@@ -91,7 +92,8 @@ vec3d RepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d 
 			{
 				alpha = contribution;
 			}
-			return mix(prev,grad, contribution);
+			return mix3d(prev, grad, contribution);
+			// return mix(prev,grad, contribution);
 		}
 	}
 	else
@@ -113,7 +115,8 @@ vec3d RepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d 
 			{
 				alpha = contribution;
 			}
-			return mix(prev, grad, contribution);
+			return mix3d(prev, grad, contribution);
+			// return mix(prev, grad, contribution);
 		}
 	}
 	return prev;
@@ -144,7 +147,8 @@ vec3d ConcentrationGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_e
 		{
 			alpha = contribution;
 		}
-		return mix(prev, grad, contribution);
+		return mix3d(prev, grad, contribution);
+		// return mix(prev, grad, contribution);
 	}
 	return prev;
 }
@@ -185,8 +189,8 @@ vec3d AnastamosisPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, ve
 			angio_element->anastamoses++;
 			continute_growth = false;
 		}
-
-		return mix(prev, dir, contribution);
+		return mix3d(prev, dir, contribution);
+		// return mix(prev, dir, contribution);
 	}
 	return prev;
 }
@@ -304,5 +308,6 @@ vec3d FiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d lo
 
 	quatd rv = interpolation_prop->Interpolate(angio_element->_elem, gauss_data, local_pos, mesh);
 	vec3d fiber_direction = rv.GetVector();
-	return mix(prev, fiber_direction, contribution);
+	return mix3d(prev, fiber_direction, contribution);
+	// return mix(prev, fiber_direction, contribution);
 }

@@ -65,3 +65,20 @@ private:
 	FEPropertyT<FEVariableInterpolation> interpolation_prop;
 	vec3d m_density_scale_factor = vec3d(-0.016, 5.1605, 0.5112);
 };
+
+class SegmentVelocityRefDensityScaleModifier : public SegmentGrowthVelocity
+{
+public:
+	//!constructor
+	explicit SegmentVelocityRefDensityScaleModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) { AddProperty(&interpolation_prop, "interpolation_prop"); }
+	//! Scales the velocity based on the ecm density at the location
+	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
+	//! performs initialization
+	bool Init() override;
+protected:
+	//! parameter list
+	DECLARE_PARAMETER_LIST();
+private:
+	FEPropertyT<FEVariableInterpolation> interpolation_prop;
+	vec3d m_density_scale_factor = vec3d(-0.016, 5.1605, 0.5112);
+};
