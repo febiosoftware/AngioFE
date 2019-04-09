@@ -762,7 +762,8 @@ bool FEAngio::InitFEM()
 
 	felog.printf("%d Angio materials found. Stress approach will be used.", m_pmat.size());
 
-	// register the callback
+	// register the 
+
 	m_fem->AddCallback(FEAngio::feangio_callback, CB_UPDATE_TIME | CB_MAJOR_ITERS | CB_SOLVED | CB_STEP_ACTIVE | CB_INIT, this);
 
 	return true;
@@ -1340,6 +1341,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		fileout = nullptr;
 			
 	}
+	return true;
 }
 
 void FEAngio::ResetTimers()

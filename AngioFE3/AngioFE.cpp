@@ -143,7 +143,7 @@ FEPluginFactory_T<EllipsoidalFiberInitializer, FEMATERIAL_ID> ellipsoidal_fiber_
 */
 
 
-FEPluginFactory_T<TipDopingBC, FEBC_ID> tip_doping_bc("tip_doping_bc");
+FEPluginFactory_T<TipDepositionBC, FEBC_ID> tip_deposition_bc("tip_deposition_bc");
 
 //-----------------------------------------------------------------------------
 FECORE_EXPORT  unsigned int GetSDKVersion()
@@ -267,7 +267,7 @@ FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
 		&common_angio_properties_factory
 		
 		//boundary conditions
-		,&tip_doping_bc
+		,&tip_deposition_bc
 	};
 
 	if(i < addon_classes.size())
