@@ -13,6 +13,7 @@
 #include "FEBioMix/FETriphasic.h"
 #include "FEBioMix/FEMultiphasicSolidDomain.h"
 #include "FEBioMix/FEMultiphasicShellDomain.h"
+#include <iostream>
 
 extern FEAngio* pfeangio;
 
@@ -352,26 +353,32 @@ bool FEPlotRefSegmentLength::Save(FEDomain& d, FEDataStream& str)
 //-----------------------------------------------------------------------------
 bool FEPlotAngioECMDensity::Save(FEDomain& d, FEDataStream& str)
 {
-	for (int i = 0; i < d.Elements(); i++)
+	//Check if the domain has an angio component i.e. make sure this is not a rigid body
+	FEAngioMaterial* pmat = pfeangio->GetAngioComponent(d.GetMaterial());
+	if (pmat != nullptr)
 	{
-		FEElement & elem = d.ElementRef(i);
-		FESolidElement *se = dynamic_cast<FESolidElement*>(&elem);
-		if (se)
+		for (int i = 0; i < d.Elements(); i++)
 		{
-			AngioElement * angio_element = pfeangio->se_to_angio_element.at(se);
-			double den = 0.0;
-			for(int j=0; j<angio_element->_elem->GaussPoints();j++)
+			FEElement & elem = d.ElementRef(i);
+			FESolidElement *se = dynamic_cast<FESolidElement*>(&elem);
+			if (se)
 			{
-				FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(j);
-				FEAngioMaterialPoint *angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
-				FEElasticMaterialPoint* emp = mp->ExtractData<FEElasticMaterialPoint>();
-				den += angio_pt->ref_ecm_density* (1.0/emp->m_J);
+				AngioElement* angio_element = pfeangio->se_to_angio_element.at(se);
+				double den = 0.0;
+				for (int j = 0; j < angio_element->_elem->GaussPoints(); j++)
+					{
+						FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(j);
+						FEAngioMaterialPoint *angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+						FEElasticMaterialPoint* emp = mp->ExtractData<FEElasticMaterialPoint>();
+						den += angio_pt->ref_ecm_density* (1.0 / emp->m_J);
+						}
+						den /= angio_element->_elem->GaussPoints();
+						str << den;
+					}
+
 			}
-			den /= angio_element->_elem->GaussPoints();
-			str << den;
-		}
 	}
-	return true;
+		return true;
 }
 
 bool FEPlotPrimaryVesselDirection::Save(FEDomain& d, FEDataStream& str)
