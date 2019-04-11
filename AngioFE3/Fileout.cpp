@@ -18,7 +18,7 @@ Fileout::Fileout(FEAngio& angio)
 {
     logstream.open("out_log.csv");
 	//write the headers
-	logstream << "Time,Segments,Total Length,Vessels,Branches,Anastamoses,Active Tips" << endl;
+	logstream << "Time,Material,Segments,Total Length,Vessels,Branches,Anastamoses,Active Tips" << endl;
 
 #ifndef NDEBUG
 	vessel_csv_stream.open("vessels.csv");
@@ -73,8 +73,9 @@ void Fileout::printStatus(FEAngio& angio, double time)
 {
 	//just store the status in a csv
 	//logstream << "Time,Segments,Total Length,Vessels,Branchs,Anastamoses,Active Tips" << endl;
-
-	logstream << angio.GetFEModel()->GetTime().currentTime << ","<< getSegmentCount(angio) <<"," << getSegmentLength(angio,time)<< ",," << getBranchCount(angio) << ",," << getTipCount(angio) << std::endl;
+	for (size_t i = 0; i < angio.m_pmat.size(); i++) {
+		logstream << angio.GetFEModel()->GetTime().currentTime << "," << i << "," << getSegmentCount(angio) << "," << getSegmentLength(angio, time) << ",," << getBranchCount(angio) << ",," << getTipCount(angio) << std::endl;
+	}
 }
 
 void PrintSegment(vec3d r0, vec3d r1)
@@ -202,7 +203,20 @@ void Fileout::save_timeline(FEAngio& angio)
 
 void Fileout::save_final_vessel_csv(FEAngio & angio)
 {
+	FILE * final_vessel_file = fopen("final_vessels.csv", "wt");
+	assert(final_vessel_file);
+	fprintf(final_vessel_file, "x0,y0,z0,x1,y1,z1,start time\n");
+	FEMesh * mesh = angio.GetMesh();
+	for (int i = 0; i < angio.angio_elements.size(); i++)
+	{
+		for (int j = 0; j < angio.angio_elements[i]->grown_segments.size(); j++) {
+			auto seg = *(angio.angio_elements[i]->grown_segments[j]);
+			vec3d p0 = seg.front->GetPosition(mesh);
+			vec3d p1 = seg.back->GetPosition(mesh);
+			fprintf(final_vessel_file, "%-12.7f,%-12.7f,%-12.7f,%-12.7f,%-12.7f,%-12.7f,%-12.7f\n", p0.x, p0.y, p0.z, p1.x, p1.y, p1.z,seg.back->time);
+		}
 
+	}
 
 }
 
