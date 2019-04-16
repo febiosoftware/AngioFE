@@ -45,7 +45,9 @@ class FiberPDD : public PositionDependentDirection
 {
 public:
 	//! constructor
-	explicit FiberPDD(FEModel* pfem) : PositionDependentDirection(pfem) { AddProperty(&interpolation_prop, "interpolation_prop"); }
+	explicit FiberPDD(FEModel* pfem) : PositionDependentDirection(pfem) { 
+		AddProperty(&interpolation_prop, "interpolation_prop"); 
+	}
 	virtual ~FiberPDD() {}
 	//! return the direction given by the fibers at this location
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
@@ -79,7 +81,9 @@ class RepulsePDD : public PositionDependentDirection
 {
 public:
 	//! constructor
-	explicit RepulsePDD(FEModel* pfem) : PositionDependentDirection(pfem) { AddProperty(&interpolation_prop, "interpolation_prop"); }
+	explicit RepulsePDD(FEModel* pfem) : PositionDependentDirection(pfem) {
+		AddProperty(&interpolation_prop, "interpolation_prop"); 
+	}
 	virtual ~RepulsePDD() {}
 	//! return the direction given by the repulse component
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
@@ -99,7 +103,7 @@ class ConcentrationGradientPDD : public PositionDependentDirection
 {
 public:
 	//! constructor
-	explicit ConcentrationGradientPDD(FEModel* pfem) : PositionDependentDirection(pfem) {}
+	explicit ConcentrationGradientPDD(FEModel* pfem) : PositionDependentDirection(pfem) { }
 	virtual ~ConcentrationGradientPDD() {}
 	//! return the direction given by the concentration gradient
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
@@ -119,7 +123,7 @@ class AnastamosisPDD : public PositionDependentDirection
 {
 public:
 	//! constructor
-	explicit AnastamosisPDD(FEModel* pfem) : PositionDependentDirection(pfem) {}
+	explicit AnastamosisPDD(FEModel* pfem) : PositionDependentDirection(pfem) { }
 	virtual ~AnastamosisPDD() {}
 	//! return the direction given by the anastamosis modifier
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continute_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;

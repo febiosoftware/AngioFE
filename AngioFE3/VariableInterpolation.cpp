@@ -1,6 +1,7 @@
 #include "VariableInterpolation.h"
 #include "FECore/FEElement.h"
 #include "FECore/FEMesh.h"
+#include "angio3d.h"
 
 double PerElementVI::Interpolate(FESolidElement *se, std::vector<double> & values_at_gauss_points, vec3d local_pos, FEMesh* mesh)
 {
@@ -50,4 +51,12 @@ quatd PerElementVI::Interpolate(FESolidElement *se, std::vector<quatd> & values_
 		val.z += nz[j] * H[j];
 	}
 	return val;
+}
+
+vec3d LinInterp::ApplyMix(vec3d psc_dir, vec3d pdd_dir, double contribution) {
+	return mix(psc_dir, pdd_dir, contribution);
+}
+
+vec3d LinRot::ApplyMix(vec3d psc_dir, vec3d pdd_dir, double contribution) {
+	return mix3d(psc_dir, pdd_dir, contribution);
 }

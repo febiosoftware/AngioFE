@@ -143,6 +143,7 @@ public:
 	FEPropertyT<NodeDataInterpolationManager> nodedata_interpolation_manager;
 	//! radius of vessels used to calculate mixture between matrix and vessel materials
 	double vessel_radius = 7.0;
+	FEPropertyT<FEMixMethod> mix_method;
 private:
 	DECLARE_PARAMETER_LIST();
 
@@ -150,7 +151,6 @@ private:
 	double dt_safety_multiplier = 1.0;
 
 	FEPropertyT<FESolidMaterial> matrix_material;
-	
 	FEPropertyT<PositionDependentDirectionManager> pdd_manager;
 	FEPropertyT<PreviousSegmentContributionManager> psc_manager;
 	FEPropertyT<ContributionMixManager> cm_manager;
