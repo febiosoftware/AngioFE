@@ -408,7 +408,6 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		return;
 	}
 	vec3d global_dir = mix_method->ApplyMix(psc_dir, pdd_dir, alpha);
-	 //vec3d global_dir = mix(psc_dir, pdd_dir , (alpha));
 	global_dir.unit();
 
 	vec3d global_pos;

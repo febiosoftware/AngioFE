@@ -6,6 +6,7 @@
 #include "FEAngioMaterialPoint.h"
 #include "FEAngio.h"
 #include "FEAngioMaterial.h"
+#include <iostream>
 
 BEGIN_PARAMETER_LIST(PositionDependentDirection, FEMaterial)
 ADD_PARAMETER(contribution, FE_PARAM_DOUBLE, "contribution");
@@ -57,7 +58,9 @@ vec3d ECMDensityGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_elem
 		{
 			alpha = contribution;
 		}
-		return angio_element->_angio_mat->mix_method->ApplyMix(prev, perpendicularToGradient, contribution);
+		vec3d new_dir = angio_element->_angio_mat->mix_method->ApplyMix(prev, perpendicularToGradient, contribution);
+		if (prev* perpendicularToGradient < 0) { new_dir = -new_dir; }
+		return new_dir;
 		//return mix3d(prev, perpendicularToGradient, contribution);
 	}
 	return prev;
@@ -92,7 +95,10 @@ vec3d RepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d 
 			{
 				alpha = contribution;
 			}
-			return angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, contribution);
+			vec3d new_dir = angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, contribution);
+			if (prev* grad < 0) { new_dir = -new_dir; }
+			return new_dir;
+			//return angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, contribution);
 			//return mix(prev,grad, contribution);
 		}
 	}
@@ -115,7 +121,10 @@ vec3d RepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d 
 			{
 				alpha = contribution;
 			}
-			return angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, contribution);
+			vec3d new_dir = angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, contribution);
+			if (prev* grad < 0) { new_dir = -new_dir; }
+			return new_dir;
+			//return angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, contribution);
 			//return mix(prev, grad, contribution);
 		}
 	}
@@ -147,7 +156,10 @@ vec3d ConcentrationGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_e
 		{
 			alpha = contribution;
 		}
-		return angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, contribution);
+		vec3d new_dir = angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, contribution);
+		if (prev* grad< 0) { new_dir = -new_dir; }
+		return new_dir;
+		//return angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, contribution);
 		//return mix(prev, grad, contribution);
 	}
 	return prev;
@@ -189,7 +201,10 @@ vec3d AnastamosisPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, ve
 			angio_element->anastamoses++;
 			continute_growth = false;
 		}
-		return angio_element->_angio_mat->mix_method->ApplyMix(prev, dir, contribution);
+		vec3d new_dir = angio_element->_angio_mat->mix_method->ApplyMix(prev, dir, contribution);
+		if (prev* dir< 0) { new_dir = -new_dir; }
+		return new_dir;
+		//return angio_element->_angio_mat->mix_method->ApplyMix(prev, dir, contribution);
 		//return mix(prev, dir, contribution);
 	}
 	return prev;
@@ -305,9 +320,9 @@ vec3d FiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d lo
 		axis = emp->m_F * emp->m_Q * axis;
 		gauss_data.push_back({ axis });
 	}
-
+	
 	quatd rv = interpolation_prop->Interpolate(angio_element->_elem, gauss_data, local_pos, mesh);
 	vec3d fiber_direction = rv.GetVector();
-	return angio_element->_angio_mat->mix_method->ApplyMix(prev, fiber_direction, contribution);
+	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_direction, contribution);
 	// return mix(prev, fiber_direction, contribution);
 }

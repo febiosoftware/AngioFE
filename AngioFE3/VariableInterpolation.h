@@ -39,6 +39,8 @@ public:
 	explicit FEMixMethod(FEModel * pfem) : FEMaterial(pfem){}
 	// interpolate doubles
 	virtual vec3d ApplyMix(vec3d psc_dir, vec3d pdd_dir, double contribution) = 0;
+	// interpolate along an axis (selects direction of growth)
+	virtual vec3d ApplyMixAxis(vec3d psc_dir, vec3d pdd_dir, double contribution) = 0;
 };
 
 // Legacy method. This mixes the two vectors using a linear interpolation of their components
@@ -46,6 +48,7 @@ class LinInterp : public FEMixMethod {
 public:
 	explicit LinInterp(FEModel * pfem) : FEMixMethod(pfem) {}
 	vec3d ApplyMix(vec3d psc_dir, vec3d pdd_dir, double contribution) override;
+	vec3d ApplyMixAxis(vec3d psc_dir, vec3d pdd_dir, double contribution) override;
 };
 
 // New method. This determines a rotation matrix for the rotation in the plane spanned by the two vectors then the first vector is rotated towards the second by a scale between 0-1 where 0 returns the original vector and 1 returns the second.
@@ -53,4 +56,5 @@ class LinRot : public FEMixMethod {
 public:
 	explicit LinRot(FEModel * pfem) : FEMixMethod(pfem) {}
 	vec3d ApplyMix(vec3d psc_dir, vec3d pdd_dir, double contribution) override;
+	vec3d ApplyMixAxis(vec3d psc_dir, vec3d pdd_dir, double contribution) override;
 };

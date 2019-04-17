@@ -2,7 +2,7 @@
 #include "FECore/FEElement.h"
 #include "FECore/FEMesh.h"
 #include "angio3d.h"
-
+#include <iostream>
 double PerElementVI::Interpolate(FESolidElement *se, std::vector<double> & values_at_gauss_points, vec3d local_pos, FEMesh* mesh)
 {
 	double ao[FEElement::MAX_NODES];
@@ -57,6 +57,16 @@ vec3d LinInterp::ApplyMix(vec3d psc_dir, vec3d pdd_dir, double contribution) {
 	return mix(psc_dir, pdd_dir, contribution);
 }
 
+vec3d LinInterp::ApplyMixAxis(vec3d psc_dir, vec3d pdd_dir, double contribution) {
+	if (psc_dir * pdd_dir < 0) {pdd_dir = -pdd_dir; }
+	return mix(psc_dir, pdd_dir, contribution);
+}
+
 vec3d LinRot::ApplyMix(vec3d psc_dir, vec3d pdd_dir, double contribution) {
+	return mix3d(psc_dir, pdd_dir, contribution);
+}
+
+vec3d LinRot::ApplyMixAxis(vec3d psc_dir, vec3d pdd_dir, double contribution) {
+	if (psc_dir * pdd_dir < 0) { pdd_dir = -pdd_dir; }
 	return mix3d(psc_dir, pdd_dir, contribution);
 }
