@@ -20,6 +20,27 @@ void AngioStressPolicy::UpdateToLoadCurve(const char* param_name, double& value)
 	}
 }
 
+double AngioStressPolicy::GetDensScale(AngioElement* angio_element, Tip* tip, FEMesh* mesh, int is_ref) {
+	std::vector<double> density_at_integration_points;
+
+	//this is really slow and it isn't apparent why.
+	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
+	{
+		FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
+		FEElasticMaterialPoint* elastic_mp = gauss_point->ExtractData<FEElasticMaterialPoint>();
+		// determines whether to use the referential or current density
+		double m_J = pow(elastic_mp->m_J,is_ref);
+		density_at_integration_points.push_back(angio_mp->ref_ecm_density * (1.0 / m_J));
+	}
+	//Get interpolation method
+	FEModel* m_pfem = this->GetFEModel();
+	PerElementVI interp = PerElementVI(m_pfem);
+	double density_at_point = interp.Interpolate(angio_element->_elem, density_at_integration_points, tip->GetLocalPosition(), mesh);
+	double density_scale = m_density_scale_factor.x + m_density_scale_factor.y * exp(-m_density_scale_factor.z * density_at_point);
+	if (density_scale < 0) { return 0; }
+	else { return density_scale; }
+}
 
 bool SigmoidAngioStressPolicy::Init()
 {
@@ -183,6 +204,100 @@ void LoadCurveAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngi
 }
 
 BEGIN_PARAMETER_LIST(LoadCurveAngioStressPolicy, AngioStressPolicy)
+ADD_PARAMETER(sprout_mag, FE_PARAM_DOUBLE, "sprout_mag");
+ADD_PARAMETER(fan_exponential, FE_PARAM_DOUBLE, "fan_exponential");
+ADD_PARAMETER(sprout_range, FE_PARAM_DOUBLE, "sprout_range");
+ADD_PARAMETER(sprout_radius_multiplier, FE_PARAM_DOUBLE, "sprout_radius_multiplier");
+END_PARAMETER_LIST();
+
+bool LoadCurveDenAngioStressPolicy::Init()
+{
+	return true;
+}
+
+void LoadCurveDenAngioStressPolicy::UpdateScale()
+{
+
+}
+
+void LoadCurveDenAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
+{
+	std::vector<Tip*> final_active_tips;
+	FEAngio::GetActiveFinalTipsInRadius(angio_element, sprout_range * sprout_radius_multiplier, pangio, final_active_tips);
+
+	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
+	{
+		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
+		FEAngioMaterialPoint * angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+		FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
+		assert(mp && angio_mp);
+		angio_mp->m_as.zero();
+		vec3d y = emp->m_rt;
+		for (int j = 0; j < final_active_tips.size(); j++)
+		{
+			Tip * tip = final_active_tips[j]; 
+			vec3d x = tip->GetPosition(mesh);//consider moving this out and calling it less
+			vec3d r = y - x;
+			double l = r.unit();
+			double theta = acos(tip->GetDirection(mesh) * r);//same for GetDirection
+
+			//sprout s mag replaced with giving correct coeficients for scale
+			double density_scale = this->GetDensScale(angio_element, tip, mesh, 1);
+			double p = density_scale * sprout_mag * pow(cos(theta / 2), fan_exponential)* exp(-l / sprout_range);
+			angio_mp->m_as += dyad(r)*p;
+		}
+	}
+
+}
+
+BEGIN_PARAMETER_LIST(LoadCurveDenAngioStressPolicy, AngioStressPolicy)
+ADD_PARAMETER(sprout_mag, FE_PARAM_DOUBLE, "sprout_mag");
+ADD_PARAMETER(fan_exponential, FE_PARAM_DOUBLE, "fan_exponential");
+ADD_PARAMETER(sprout_range, FE_PARAM_DOUBLE, "sprout_range");
+ADD_PARAMETER(sprout_radius_multiplier, FE_PARAM_DOUBLE, "sprout_radius_multiplier");
+END_PARAMETER_LIST();
+
+bool LoadCurveRefDenAngioStressPolicy::Init()
+{
+	return true;
+}
+
+void LoadCurveRefDenAngioStressPolicy::UpdateScale()
+{
+
+}
+
+void LoadCurveRefDenAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
+{
+	std::vector<Tip*> final_active_tips;
+	FEAngio::GetActiveFinalTipsInRadius(angio_element, sprout_range * sprout_radius_multiplier, pangio, final_active_tips);
+
+	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
+	{
+		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
+		FEAngioMaterialPoint * angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+		FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
+		assert(mp && angio_mp);
+		angio_mp->m_as.zero();
+		vec3d y = emp->m_rt;
+		for (int j = 0; j < final_active_tips.size(); j++)
+		{
+			Tip * tip = final_active_tips[j];
+			vec3d x = tip->GetPosition(mesh);//consider moving this out and calling it less
+			vec3d r = y - x;
+			double l = r.unit();
+			double theta = acos(tip->GetDirection(mesh) * r);//same for GetDirection
+
+			//sprout s mag replaced with giving correct coeficients for scale
+			double density_scale = this->GetDensScale(angio_element, tip, mesh, 0);
+			double p = density_scale * sprout_mag * pow(cos(theta / 2), fan_exponential)* exp(-l / sprout_range);
+			angio_mp->m_as += dyad(r)*p;
+		}
+	}
+
+}
+
+BEGIN_PARAMETER_LIST(LoadCurveRefDenAngioStressPolicy, AngioStressPolicy)
 ADD_PARAMETER(sprout_mag, FE_PARAM_DOUBLE, "sprout_mag");
 ADD_PARAMETER(fan_exponential, FE_PARAM_DOUBLE, "fan_exponential");
 ADD_PARAMETER(sprout_range, FE_PARAM_DOUBLE, "sprout_range");
