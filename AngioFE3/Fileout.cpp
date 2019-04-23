@@ -93,7 +93,7 @@ void Fileout::save_vessel_state(FEAngio& angio)
 	unsigned int new_seg_count = 0;
 	for(int i=0; i < angio.angio_elements.size();i++)
 	{
-		new_seg_count += unsigned int (angio.angio_elements[i]->recent_segments.size());
+		new_seg_count += angio.angio_elements[i]->recent_segments.size();
 	}
 
 	//write segcount and time
@@ -143,7 +143,7 @@ void Fileout::bulk_save_vessel_state(FEAngio& angio)
 	unsigned int new_seg_count = 0;
 	for (int i = 0; i <angio.angio_elements.size(); i++)
 	{
-		new_seg_count += unsigned int (angio.angio_elements[i]->grown_segments.size());
+		new_seg_count += angio.angio_elements[i]->grown_segments.size();
 	}
 
 	//write segcount and time
