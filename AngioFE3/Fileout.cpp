@@ -32,7 +32,7 @@ Fileout::Fileout(FEAngio& angio)
 	fwrite(&magic, sizeof(unsigned int), 1, vessel_state_stream);
 	fwrite(&version, sizeof(unsigned int), 1, vessel_state_stream);
 	fwrite(&num_bitmasks, sizeof(unsigned int), 1, vessel_state_stream);
-	for(int j=0; j < num_bitmasks;j++)
+	for(unsigned int j=0; j < num_bitmasks;j++)
 	{
 		unsigned int c_bitmask = 0;
 		unsigned int place_holder = 1;
@@ -91,16 +91,16 @@ void PrintSegment(vec3d r0, vec3d r1)
 void Fileout::save_vessel_state(FEAngio& angio)
 {
 	unsigned int new_seg_count = 0;
-	for(int i=0; i <angio.angio_elements.size();i++)
+	for(int i=0; i < angio.angio_elements.size();i++)
 	{
-		new_seg_count += angio.angio_elements[i]->recent_segments.size();
+		new_seg_count += unsigned int (angio.angio_elements[i]->recent_segments.size());
 	}
 
 	//write segcount and time
 	fwrite(&new_seg_count, sizeof(unsigned int), 1, vessel_state_stream);
 	auto ti = angio.GetFEModel()->GetTime();
 	float rtime = static_cast<float>(ti.currentTime);
-	fwrite(&rtime, sizeof(float), 1, vessel_state_stream) == sizeof(float);
+	fwrite(&rtime, sizeof(float), 1, vessel_state_stream);// == sizeof(float); SL: Not sure what the equivalency was doing
 
 	unsigned int crc_segcount = 0;
 	for (int i = 0; i <angio.angio_elements.size(); i++)
@@ -143,14 +143,14 @@ void Fileout::bulk_save_vessel_state(FEAngio& angio)
 	unsigned int new_seg_count = 0;
 	for (int i = 0; i <angio.angio_elements.size(); i++)
 	{
-		new_seg_count += angio.angio_elements[i]->grown_segments.size();
+		new_seg_count += unsigned int (angio.angio_elements[i]->grown_segments.size());
 	}
 
 	//write segcount and time
 	fwrite(&new_seg_count, sizeof(unsigned int), 1, vessel_state_stream);
 	auto ti = angio.GetFEModel()->GetTime();
 	float rtime = static_cast<float>(ti.currentTime);
-	fwrite(&rtime, sizeof(float), 1, vessel_state_stream) == sizeof(float);
+	fwrite(&rtime, sizeof(float), 1, vessel_state_stream);// == sizeof(float); SL: Not sure what this equivalency is doing
 
 	unsigned int crc_segcount = 0;
 	for (int i = 0; i <angio.angio_elements.size(); i++)
@@ -250,7 +250,7 @@ int Fileout::getSegmentCount(FEAngio& angio)
 	int count = 0;
 	for (int i = 0; i < angio.angio_elements.size(); i++)
 	{
-		count += angio.angio_elements[i]->grown_segments.size();
+		count += int (angio.angio_elements[i]->grown_segments.size());
 	}
 	return count;
 }
@@ -276,7 +276,7 @@ int Fileout::getTipCount(FEAngio& angio)
 	{
 		for(auto iter = angio.angio_elements[i]->next_tips.begin(); iter != angio.angio_elements[i]->next_tips.end();++iter)
 		{
-			count += iter->second.size();
+			count += int (iter->second.size());
 		}
 	}
 	return count;

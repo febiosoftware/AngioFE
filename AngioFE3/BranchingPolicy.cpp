@@ -126,9 +126,9 @@ void DelayedBranchingPolicy::AddBranches(AngioElement * angio_elem, int buffer_i
 			length += feangio->InElementLength(angio_elem->_elem, seg->back->GetLocalPosition(), seg->front->GetLocalPosition());
 		}
 		iter->length = length;
-		iter->discrete_sections = floor(length/discretization_length);
+		iter->discrete_sections = int (floor(length/discretization_length));
 	}
-	angio_elem->processed_recent_segments = angio_elem->recent_segments.size();
+	angio_elem->processed_recent_segments = int (angio_elem->recent_segments.size());
 	assert(dynamic_cast<DelayBranchInfo*>(angio_elem->branch_info));
 	double & remaing_l2b = dynamic_cast<DelayBranchInfo*>(angio_elem->branch_info)->length_to_branch;
 
@@ -149,7 +149,7 @@ void DelayedBranchingPolicy::AddBranches(AngioElement * angio_elem, int buffer_i
 			if(remaing_length >= remaing_l2b)
 			{
 				double distance_in = cur.processed + remaing_l2b;
-				int actual_section = std::floor(distance_in/discretization_length);
+				int actual_section = int (std::floor(distance_in/discretization_length));
 				Segment * seg = cur.current_segments[actual_section % cur.current_segments.size() ];
 				double start_time = mix(cur._end_time, cur._start_time, (distance_in / cur.length));
 				vec3d tip_pos = seg->NatcAtTime(start_time);

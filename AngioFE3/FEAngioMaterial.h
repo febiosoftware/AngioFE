@@ -144,6 +144,7 @@ public:
 	//! radius of vessels used to calculate mixture between matrix and vessel materials
 	double vessel_radius = 7.0;
 	FEPropertyT<FEMixMethod> mix_method;
+	FEPropertyT<SegmentGrowthVelocityManager> velocity_manager;
 private:
 	DECLARE_PARAMETER_LIST();
 
@@ -154,7 +155,7 @@ private:
 	FEPropertyT<PositionDependentDirectionManager> pdd_manager;
 	FEPropertyT<PreviousSegmentContributionManager> psc_manager;
 	FEPropertyT<ContributionMixManager> cm_manager;
-	FEPropertyT<SegmentGrowthVelocityManager> velocity_manager;
+//	FEPropertyT<SegmentGrowthVelocityManager> velocity_manager;
 	FEPropertyT<CommonAngioProperties> common_properties;
 	
 };

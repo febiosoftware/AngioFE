@@ -84,7 +84,7 @@ ByElementFragmentSeeder::ByElementFragmentSeeder(FEModel * model) : FragmentSeed
 
 bool ByElementFragmentSeeder::SeedFragments(std::vector<AngioElement *> &angio_elements, FEMesh* mesh, FEAngioMaterial* angio_mat, int buffer_index)
 {
-	std::uniform_int_distribution<int> edist(0, angio_elements.size()-1);
+	std::uniform_int_distribution<int> edist(0, int(angio_elements.size()-1));
 
 	if(angio_elements.size() == 0)
 	{
@@ -124,7 +124,7 @@ ByElementFragmentSeederBiDirectional::ByElementFragmentSeederBiDirectional(FEMod
 
 bool ByElementFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElement *> &angio_elements, FEMesh* mesh, FEAngioMaterial* angio_mat, int buffer_index)
 {
-	std::uniform_int_distribution<int> edist(0, angio_elements.size() - 1);
+	std::uniform_int_distribution<int> edist(0, int (angio_elements.size()-1));
 
 	if (angio_elements.size() == 0)
 	{
@@ -200,7 +200,7 @@ bool ByVolumeFragmentSeeder::SeedFragments(std::vector<AngioElement *>& angio_el
 		double volume_sample = vol_dist(random_engine);
 
 		// Perform a binary search of the pre-sorted parallel arrays (only requires one of them) to find the index of the element that will get the tip.
-		size_t element_index = findElement(volume_sample, 0, angio_elements.size(), element_beginning_volume, element_ending_volume);
+		size_t element_index = findElement(volume_sample, 0, int (angio_elements.size()), element_beginning_volume, element_ending_volume);
 
 		// Build the fragment using a tip and build it in the proper element.
 		Tip* r0 = new Tip();
@@ -262,7 +262,7 @@ bool ByVolumeFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElement
 		double volume_sample = vol_dist(random_engine);
 
 		// Perform a binary search of the pre-sorted parallel arrays (only requires one of them) to find the index of the element that will get the tip.
-		size_t element_index = findElement(volume_sample, 0, angio_elements.size() - 1, element_beginning_volume, element_ending_volume);
+		size_t element_index = findElement(volume_sample, 0, int(angio_elements.size()-1), element_beginning_volume, element_ending_volume);
 
 		// Build the fragment using a tip and build it in the element.
 		Tip* r0 = new Tip();

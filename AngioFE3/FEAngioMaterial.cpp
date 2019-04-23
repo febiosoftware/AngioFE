@@ -228,7 +228,7 @@ double FEAngioMaterial::StrainEnergyDensity(FEMaterialPoint& mp)
 void FEAngioMaterial::SetSeeds(AngioElement* angio_elem)
 {
 	static int offset = 0;
-	static int seed = m_pangio->m_fem->GetGlobalConstant("seed");
+	static int seed = int (m_pangio->m_fem->GetGlobalConstant("seed"));
 	std::seed_seq sq{ offset + seed };
 	angio_elem->_rengine.seed(sq);
 	offset++;
@@ -236,7 +236,8 @@ void FEAngioMaterial::SetSeeds(AngioElement* angio_elem)
 
 double FEAngioMaterial::GetSegmentVelocity(AngioElement * angio_element, vec3d local_pos, FEMesh* mesh)
 {
-	return velocity_manager->ApplyModifiers(1, local_pos, angio_element, mesh);
+	double const vel_init = 1;
+	return velocity_manager->ApplyModifiers(vel_init, local_pos, angio_element, mesh);
 }
 
 double FEAngioMaterial::GetInitialVelocity() const

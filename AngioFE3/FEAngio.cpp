@@ -30,6 +30,7 @@
 #include "GrowDirectionModifier.h"
 #include "NodeDataInterpolation.h"
 #include <omp.h>
+#include <iostream>
 
 
 
@@ -46,7 +47,7 @@ bool CreateConcentrationMap(vector<double>& concentration, FEMaterial* pmat, int
 void FEAngio::SetSeeds()
 {
 	// gets seed for random engine
-	rengine.seed(m_fem->GetGlobalConstant("seed"));
+	rengine.seed(int (m_fem->GetGlobalConstant("seed")));
 	// for each angio element
 	for(int i=0; i <angio_elements.size();i++)
 	{
@@ -83,7 +84,8 @@ void FEAngio::ApplydtToTimestepper(double dt, bool initial)
 void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, double min_angle, int growth_substeps)
 {
 	// get the current time
-	auto   time_info = m_fem->GetTime();
+	FETimeInfo time_info = m_fem->GetTime();
+	//double fe_ctime = time_info.currentTime;
 	// get the current FE step
 	FEAnalysis * cs = m_fem->GetCurrentStep();
 	auto   mesh = GetMesh();
@@ -111,13 +113,9 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, dou
 				min_dt = std::min(min_dt, temp_dt);
 			}
 		}
-		/*
-		if(min_dt > 0.2)
-		{
-			min_dt = 0.2;
-		}
-		*/
-		
+		// check that the max_angio time is not greater than the angio dt max.
+		if (min_dt > max_angio_dt) { min_dt = max_angio_dt; }
+				
 		// current time is next time plus min_dt
 		double ctime = next_time + min_dt;
 		// allow 16 iterations to be run on each thread as they become available
@@ -203,6 +201,8 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 					min_dt = std::min(min_dt, temp_dt);
 				}
 			}
+
+			//min_dt = 0;
 
 			// update current time
 			double ctime = next_time + min_dt;
@@ -1147,7 +1147,7 @@ vec3d FEAngio::Position(FESolidElement * se, vec3d local) const
 
 void FEAngio::CalculateSegmentLengths(FEMesh* mesh)
 {
-	int angio_elements_size = angio_elements.size();
+	int angio_elements_size = int (angio_elements.size());
 #pragma omp parallel for schedule(dynamic, 16)
 	for(int i=0; i < angio_elements_size;i++)
 	{
@@ -1162,7 +1162,7 @@ void FEAngio::CalculateSegmentLengths(FEMesh* mesh)
 
 void FEAngio::AdjustMatrixVesselWeights(class FEMesh* mesh)
 {
-	int angio_elements_size = angio_elements.size();
+	int angio_elements_size = int (angio_elements.size());
 #pragma omp parallel for schedule(dynamic, 16)
 	for (int i = 0; i < angio_elements_size; i++)
 	{
@@ -1220,7 +1220,8 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		min_scale_factor = m_fem->GetGlobalConstant("min_scale_factor");
 		bounds_tolerance = m_fem->GetGlobalConstant("bounds_tolerance");
 		min_angle = m_fem->GetGlobalConstant("min_angle");
-		growth_substeps = m_fem->GetGlobalConstant("growth_substeps");
+		max_angio_dt = m_fem->GetGlobalConstant("max_angio_dt"); if (max_angio_dt == 0) { max_angio_dt = 0.25; }
+		growth_substeps = int (m_fem->GetGlobalConstant("growth_substeps"));
 		size_t angio_element_count = angio_elements.size();
 		FEMesh * mesh = GetMesh();
 #pragma omp parallel for schedule(dynamic, 16)
@@ -1290,6 +1291,14 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		}
 		update_branch_policy_timestep_timer.stop();
 
+		// update velocity scales
+		for (size_t i = 0; i < m_pmat.size(); i++)
+		{
+			for (int j = 0; j < m_pmat[i]->velocity_manager->seg_vel_modifiers.size(); j++)
+			{
+				m_pmat[i]->velocity_manager->seg_vel_modifiers[j]->UpdateScale();
+			}
+		}
 
 		//new function to find the start time grow time and if this is the final iteration this timestep
 		grow_timer.start();

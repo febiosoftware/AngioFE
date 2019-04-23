@@ -16,6 +16,7 @@ public:
 	virtual ~SegmentGrowthVelocity() {}
 	//! returns the velocity at the position after it has been modified by this modifier
 	virtual double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_elem, FEMesh* mesh) = 0;
+	virtual void UpdateScale() = 0;
 };
 
 //! return the segment velocity at a given location. A combination of all velocity modifier
@@ -27,8 +28,9 @@ public:
 	virtual ~SegmentGrowthVelocityManager() {}
 	//! Apply all of the modifier to calculate the velocity at a location
 	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_elem, FEMesh* mesh);
-private:
 	FEVecPropertyT<SegmentGrowthVelocity> seg_vel_modifiers;
+private:
+	
 };
 
 //! a fixed or load curve value for velocity
@@ -41,6 +43,7 @@ public:
 	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
 	//! performs initialization
 	bool Init() override;
+	void UpdateScale() override;
 protected:
 	//! parameter list
 	DECLARE_PARAMETER_LIST();
@@ -58,6 +61,7 @@ public:
 	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
 	//! performs initialization
 	bool Init() override;
+	void UpdateScale() override;
 protected:
 	//! parameter list
 	DECLARE_PARAMETER_LIST();
@@ -75,10 +79,52 @@ public:
 	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
 	//! performs initialization
 	bool Init() override;
+	void UpdateScale() override;
 protected:
 	//! parameter list
 	DECLARE_PARAMETER_LIST();
 private:
 	FEPropertyT<FEVariableInterpolation> interpolation_prop;
 	vec3d m_density_scale_factor = vec3d(-0.016, 5.1605, 0.5112);
+};
+
+class SigmoidSegmentVelocity : public SegmentGrowthVelocity
+{
+public:
+	//!constructor
+	explicit SigmoidSegmentVelocity(FEModel* pfem) : SegmentGrowthVelocity(pfem) {}
+	//! Scales the velocity based on the ecm density at the location
+	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
+	//! performs initialization
+	bool Init() override;
+	void UpdateScale() override;
+protected:
+	//! parameter list
+	DECLARE_PARAMETER_LIST();
+private:
+	double scale = 1;
+	double a = 100;
+	double b = 1; 
+	double c = 5;
+};
+
+class GompertzSegmentVelocity : public SegmentGrowthVelocity
+{
+public:
+	//!constructor
+	explicit GompertzSegmentVelocity(FEModel* pfem) : SegmentGrowthVelocity(pfem) {}
+	//! Scales the velocity based on the ecm density at the location
+	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
+	//! performs initialization
+	bool Init() override;
+	void UpdateScale() override;
+protected:
+	//! parameter list
+	DECLARE_PARAMETER_LIST();
+private:
+	double scale = 1;
+	double a = 284;
+	double b = 0.5;
+	double c = 1;
+	double d = 5;
 };

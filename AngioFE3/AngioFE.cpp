@@ -71,6 +71,8 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS(SegmentVelocityModifier, FEMATERIAL_ID, "segment_velocity_modifier");
 	REGISTER_FECORE_CLASS(SegmentVelocityDensityScaleModifier, FEMATERIAL_ID, "segment_velocity_density_scale_modifier");
 	REGISTER_FECORE_CLASS(SegmentVelocityRefDensityScaleModifier, FEMATERIAL_ID, "segment_velocity_ref_density_scale_modifier");
+	REGISTER_FECORE_CLASS(SigmoidSegmentVelocity, FEMATERIAL_ID, "sigmoid_segment_velocity");
+	REGISTER_FECORE_CLASS(GompertzSegmentVelocity, FEMATERIAL_ID, "gompertz_segment_velocity");
 
 	// PSC Classes
 	REGISTER_FECORE_CLASS(PreviousSegmentContributionManager, FEMATERIAL_ID, "previous_segment_contribution_manager");
@@ -132,123 +134,6 @@ FECORE_EXPORT  void GetPluginVersion(int & major, int & minor, int & patch)
 	patch = SVNREVISION;
 }
 
-//-----------------------------------------------------------------------------
-
-/*
-FECORE_EXPORT  FECoreFactory * PluginGetFactory(int i)
-{
-	std::vector<FECoreFactory *> addon_classes{
-		&angiofe_task_factory,
-		&angio_mat_factory,
-		//plot classes
-		&plot_angio_stress,
-		&plot_angio_ecm,
-		&plot_branches,
-		&plot_anastamoses,
-		&plot_segment_length,
-		&plot_reference_frame_segment_length,
-		&plot_vessel_stress, &plot_matrix_stress,
-		&plot_vessel_weight, &plot_matrix_weight, &plot_matrix_tangent, &plot_matrix_visco_stress,
-		&plot_matrix_elastic_m_Q, &plot_matrix_elastic_stress, &plot_primary_vessel_direction,
-
-		//angio stress policy classes
-		&sigmoid_angio_stress_policy_factory, &load_curve_vel_angio_stress_policy_factory ,&load_curve_angio_stress_policy_factory,
-		&grown_segments_angio_stress_policy_factory,
-		&grown_segments_vel_angio_stress_policy_factory,
-
-		/*
-		//fiber initializers
-		&null_fiber_initializer, &random_fiber_initializer,
-		&random_fiber_initializer_non_mangling, &explicit_distribution_fiber_initializer,
-		&random_fiber_initializer_pe, &ellipsoidal_fiber_initializer,
-		*\/
-
-		//branching factories
-&delayed_branching_policy_factory,
-
-//branching related classes
-&azimuth_angle_probability_distribution_factory,
-&zenith_angle_probability_distribution_factory,
-
-//grow direction modifiers
-
-//vessel contribution modifiers
-
-//fragment seeders
-&by_element_fragment_seeder_factory,
-&by_element_fragment_seeder_bidirectional_factory,
-&by_volume_fragment_seeder_factory,
-&by_volume_fragment_seeder_bidirectional_factory,
-
-//initial modifiers
-&inital_modifier_manager_factory,
-&nodedata_interpolation_manager_factory,
-&fiber_randomizer_factory,
-&density_initializer_factory,
-&ecm_ref_density,
-&repulse_value,
-
-//boundary conditions
-
-//random distribution
-&cauchy_distribution_factory, &chi_squared_distribution_factory, &weibull_distribution_factory,
-&gamma_distribution_factory, &normal_distribution_factory, &exponential_distribution_factory,
-&uniform_distribution_factory, &fixed_distribution_factory,
-
-//ggp's
-
-// Segment Velocity Modifiers
-&segment_growth_velocity_manager_factory,
-&segment_velocity_modifier_factory,
-&segment_velocity_density_scale_modifier_factory,
-&segment_velocity_ref_density_scale_modifier_factory,
-
-// PSC Modifier Classes
-&previous_segment_contribution_manager_factory,
-&previous_segment_psc_factory,
-
-// PDD Modifier Classes
-&position_dependent_direction_manager_factory,
-&fiber_pdd_factory,
-&anastamosis_pdd_factory,
-&ecm_density_gradient_factory,
-&repulse_factory,
-&concentration_gradient_factory,
-
-// ContributionMix Classes
-&contribution_mix_manager_factory,
-&psd_pdd_contribution_mix_factory,
-
-// Interpolation Classes
-&per_element_vi_factory,
-
-
-/*
-&plot2_ggp_factory, &gradient_plot2_ggp_factory,
-&matrix_converter_ggp_factory, &forked_ggp_factory, &cross_ggp_factory,
-&threshold_ggp_factory, &nodal_data_ggp_factory, &nodal_data_gradient_ggp_factory,
-&arc_cos_ggp_factory, &arc_sin_ggp_factory, &cos_ggp_factory, &sin_ggp_factory,
-&matrix_inverse_ggp_factory, &eigen_vectors_ggp_factory, &eigen_values_ggp_factory,
-&setter_ggp_factory, &matrix_setter_ggp_factory,
-&assert_ggp_factory, &unit_diagonal_factory, &direction_change_ggp_factory,
-&matrix_mix_ggp_factory,
-*\/
-//other needed items
-&common_angio_properties_factory
-
-//boundary conditions
-, &tip_deposition_bc
-	};
-
-	if (i < addon_classes.size())
-	{
-		return addon_classes[i];
-	}
-	return nullptr;
-
-}
-*/
-//-----------------------------------------------------------------------------
 FECORE_EXPORT  void PluginCleanup()
 {
 

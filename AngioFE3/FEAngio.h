@@ -246,8 +246,9 @@ private:
 	const double eps = 0.001;
 
 	double min_scale_factor;
-	double bounds_tolerance;
-	double min_angle;
-	int growth_substeps;
+	double bounds_tolerance = 1e-3;
+	double min_angle = 0.35;
+	int growth_substeps = 3;
+	double max_angio_dt = 0.25;
 	int auto_stepper_key = -1;
 };
