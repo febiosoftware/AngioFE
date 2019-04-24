@@ -73,9 +73,12 @@ void Fileout::printStatus(FEAngio& angio, double time)
 {
 	//just store the status in a csv
 	//logstream << "Time,Segments,Total Length,Vessels,Branchs,Anastamoses,Active Tips" << endl;
-	// currently this is calculating the values for all materials each loop which is wasteful. Will need to change so it queries only per material eventually.
+	std::vector <int> SC = getSegmentCount_pm(angio);
+	std::vector <double> SL = getSegmentLength_pm(angio, time);
+	std::vector <int> BC = getBranchCount_pm(angio);
+	std::vector <int> TC = getTipCount_pm(angio);
 	for (size_t i = 0; i < angio.m_pmat.size(); i++) {
-		logstream << angio.GetFEModel()->GetTime().currentTime << "," << i << "," << getSegmentCount_pm(angio)[i] << "," << getSegmentLength_pm(angio, time)[i] << ",," << getBranchCount_pm(angio)[i] << ",," << getTipCount_pm(angio)[i] << std::endl;
+		logstream << angio.GetFEModel()->GetTime().currentTime << "," << i << "," << SC[i] << "," << SL[i] << ",," << BC[i] << ",," << TC[i] << std::endl;
 	}
 }
 
