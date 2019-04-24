@@ -73,8 +73,9 @@ void Fileout::printStatus(FEAngio& angio, double time)
 {
 	//just store the status in a csv
 	//logstream << "Time,Segments,Total Length,Vessels,Branchs,Anastamoses,Active Tips" << endl;
+	// currently this is calculating the values for all materials each loop which is wasteful. Will need to change so it queries only per material eventually.
 	for (size_t i = 0; i < angio.m_pmat.size(); i++) {
-		logstream << angio.GetFEModel()->GetTime().currentTime << "," << i << "," << getSegmentCount(angio) << "," << getSegmentLength(angio, time) << ",," << getBranchCount(angio) << ",," << getTipCount(angio) << std::endl;
+		logstream << angio.GetFEModel()->GetTime().currentTime << "," << i << "," << getSegmentCount_pm(angio)[i] << "," << getSegmentLength_pm(angio, time)[i] << ",," << getBranchCount_pm(angio)[i] << ",," << getTipCount_pm(angio)[i] << std::endl;
 	}
 }
 
@@ -245,12 +246,42 @@ int Fileout::getBranchCount(FEAngio& angio)
 	return count;
 }
 
+std::vector <int> Fileout::getBranchCount_pm(FEAngio& angio)
+{
+	std::vector <int> count;
+	for (int i = 0; i < angio.m_pmat_ids.size(); i++) {
+		count.emplace_back(0);
+	}
+	for (int i = 0; i < angio.angio_elements.size(); i++)
+	{
+		FESolidElement * se = angio.angio_elements[i]->_elem;
+		int mat_id = se->GetMatID();
+		count[mat_id] += angio.angio_elements[i]->branch_count;
+	}
+	return count;
+}
+
 int Fileout::getSegmentCount(FEAngio& angio)
 {
 	int count = 0;
 	for (int i = 0; i < angio.angio_elements.size(); i++)
 	{
 		count += int (angio.angio_elements[i]->grown_segments.size());
+	}
+	return count;
+}
+
+std::vector <int> Fileout::getSegmentCount_pm(FEAngio& angio)
+{
+	std::vector <int> count;
+	for (int i = 0; i < angio.m_pmat_ids.size(); i++) {
+		count.emplace_back(0);
+	}
+	for (int i = 0; i < angio.angio_elements.size(); i++)
+	{
+		FESolidElement * se = angio.angio_elements[i]->_elem;
+		int mat_id = se->GetMatID();
+		count[mat_id] += angio.angio_elements[i]->grown_segments.size();
 	}
 	return count;
 }
@@ -269,6 +300,24 @@ double Fileout::getSegmentLength(FEAngio& angio, double time)
 	return len;
 }
 
+std::vector <double> Fileout::getSegmentLength_pm(FEAngio& angio, double time)
+{
+	std::vector <double> len;
+	for (int i = 0; i < angio.m_pmat_ids.size(); i++) {
+		len.emplace_back(0);
+	}
+	FEMesh * mesh = angio.GetMesh();
+	for (int i = 0; i < angio.angio_elements.size(); i++)
+	{
+		FESolidElement * se = angio.angio_elements[i]->_elem;
+		int mat_id = se->GetMatID();
+		double temp = angio.angio_elements[i]->GetLengthAtTime(mesh, time);
+#pragma omp critical
+		len[mat_id] += temp;
+	}
+	return len;
+}
+
 int Fileout::getTipCount(FEAngio& angio)
 {
 	int count = 0;
@@ -282,4 +331,21 @@ int Fileout::getTipCount(FEAngio& angio)
 	return count;
 }
 
+std::vector <int> Fileout::getTipCount_pm(FEAngio& angio)
+{
+	std::vector <int> count;
+	for (int i = 0; i < angio.m_pmat_ids.size(); i++) {
+		count.emplace_back(0);
+	}
+	for (int i = 0; i < angio.angio_elements.size(); i++)
+	{
+		FESolidElement * se = angio.angio_elements[i]->_elem;
+		int mat_id = se->GetMatID();
+		for (auto iter = angio.angio_elements[i]->next_tips.begin(); iter != angio.angio_elements[i]->next_tips.end(); ++iter)
+		{
+			count[mat_id] += int(iter->second.size());
+		}
+	}
+	return count;
+}
 

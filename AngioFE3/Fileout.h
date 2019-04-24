@@ -39,10 +39,17 @@ public:
 
 private:
 	int getBranchCount(FEAngio& angio);
+	// get per angio material
+	std::vector <int> getBranchCount_pm(FEAngio& angio);
 	int getSegmentCount(FEAngio& angio);
+	// get per angio material
+	std::vector <int> getSegmentCount_pm(FEAngio& angio);
 	double getSegmentLength(FEAngio& angio, double time);
+	// get per angio material
+	std::vector <double> getSegmentLength_pm(FEAngio& angio, double time);
 	int getTipCount(FEAngio& angio);
-
+	// get per angio material
+	std::vector <int> getTipCount_pm(FEAngio& angio);
 	std::ofstream logstream;
 
 	FILE*	m_stream4 = 0;	// active tips
