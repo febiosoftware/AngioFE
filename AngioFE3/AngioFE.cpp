@@ -81,6 +81,7 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	// PDD Classes
 	REGISTER_FECORE_CLASS(PositionDependentDirectionManager, FEMATERIAL_ID, "position_dependent_direction_manager");
 	REGISTER_FECORE_CLASS(FiberPDD, FEMATERIAL_ID, "fiber_pdd");
+	REGISTER_FECORE_CLASS(LaGrangePStrainPDD, FEMATERIAL_ID, "lagrange_principal_pdd");
 	REGISTER_FECORE_CLASS(AnastamosisPDD, FEMATERIAL_ID, "anastamosis_pdd");
 	REGISTER_FECORE_CLASS(ECMDensityGradientPDD, FEMATERIAL_ID, "ecm_density_gradient_pdd");
 	REGISTER_FECORE_CLASS(RepulsePDD, FEMATERIAL_ID, "repulse_pdd");

@@ -2,6 +2,8 @@
 #include "FEAngioMaterialPoint.h"
 #include <FEBioMech/FEElasticMaterial.h>
 #include "FEAngio.h"
+//#include <FEBioMech/FEEllipsoidalFiberDistribution.h>
+//#include <FEBioMech/FEFiberDensityDistribution.h>
 
 void InitialModifierManager::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
@@ -10,9 +12,20 @@ void InitialModifierManager::ApplyModifier(AngioElement * angio_element, FEMesh 
 		initial_modifiers[i]->ApplyModifier(angio_element, mesh, feangio);
 	}
 }
-
-
-
+/*
+void IsotropicEFDFiberInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
+{
+	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++) {
+		//FEParam* mf = pfem->FindParameter("m_spa");
+		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
+		FEAngioMaterialPoint * angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+		FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
+		
+		//FEEllipsodialFiberDensityDistribution * angio_FDD = mp->ExtractData<FEEllipsodialFiberDensityDistribution>();
+	}
+}
+*/
+// Rename this to AlignedFiberRandomizer or DiscreteFiberRandomizer
 void FiberRandomizer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
 	for(int i=0; i < angio_element->_elem->GaussPoints();i++)

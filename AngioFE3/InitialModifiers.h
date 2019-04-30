@@ -35,6 +35,15 @@ public:
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
 };
 
+class IsotropicEFDFiberInitializer : public InitialModifier 
+{
+public:
+	//! constructor
+	explicit IsotropicEFDFiberInitializer(FEModel * pfem) : InitialModifier(pfem) {}
+	//! apply Isotropic EFD to each mdoel
+	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
+};
+
 //! sets the ecm density within a material
 class DensityInitializer : public InitialModifier
 {
