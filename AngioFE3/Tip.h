@@ -1,6 +1,7 @@
 #pragma once
 #include <FECore/vec3d.h>
 #include "AngioElement.h"
+#include <FEBioMix/FESBMPointSource.h>
 
 class Segment;
 class FEAngio;
@@ -14,7 +15,7 @@ public:
 	//! used to copy another tip
 	Tip(Tip * other, FEMesh * mesh);
 	//! sets the local positions clamps the values to -1 to 1
-	void SetLocalPosition(vec3d pos);
+	void SetLocalPosition(vec3d pos, FEMesh * mesh);
 	//! returns the local position
 	vec3d GetLocalPosition() const;
 	//! The element that contains the local_pos coordinates
@@ -45,6 +46,10 @@ public:
 	void PrintTipInfo(FEMesh *mesh) const;
 	//! Prints information about the tip to the console
 	void PrintTipInfo(FEMesh *mesh, std::string title) const;
+	FESBMPointSource* TipSBM = nullptr;
+	void InitSBM(FEMesh* mesh);
+	void UpdateSBM(FEMesh * mesh);
+
 private:
 	vec3d local_pos;
 };

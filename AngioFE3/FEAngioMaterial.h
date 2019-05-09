@@ -18,7 +18,7 @@
 #include "AngioStressPolicy.h"
 #include "InitialModifiers.h"
 #include "NodeDataInterpolation.h"
-#include "TipDeposition.h"
+#include "TipSpecies.h"
 
 class AngioElement;
 
@@ -145,6 +145,7 @@ public:
 	double vessel_radius = 7.0;
 	FEPropertyT<FEMixMethod> mix_method;
 	FEPropertyT<SegmentGrowthVelocityManager> velocity_manager;
+	FEPropertyT<TipSpeciesManager> tip_species_manager;
 private:
 	DECLARE_PARAMETER_LIST();
 
@@ -154,6 +155,7 @@ private:
 	FEPropertyT<FESolidMaterial> matrix_material;
 	FEPropertyT<PositionDependentDirectionManager> pdd_manager;
 	FEPropertyT<PreviousSegmentContributionManager> psc_manager;
+	FEPropertyT<TipSpecies> tip_species;
 	FEPropertyT<ContributionMixManager> cm_manager;
 //	FEPropertyT<SegmentGrowthVelocityManager> velocity_manager;
 	FEPropertyT<CommonAngioProperties> common_properties;

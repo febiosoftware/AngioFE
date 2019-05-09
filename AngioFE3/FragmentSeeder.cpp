@@ -98,7 +98,7 @@ bool ByElementFragmentSeeder::SeedFragments(std::vector<AngioElement *> &angio_e
 		int elem_index = edist(angio_mat->m_pangio->rengine);
 		r0->angio_element = angio_elements[elem_index];
 		vec3d local_pos = GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(mesh, r0->angio_element, r0->angio_element->_rengine);
-		r0->SetLocalPosition(local_pos);
+		r0->SetLocalPosition(local_pos, mesh);
 		r0->time = -1;
 		r0->use_direction = true;
 		r0->direction = angio_mat->m_pangio->uniformRandomDirection(r0->angio_element->_rengine);
@@ -138,22 +138,39 @@ bool ByElementFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElemen
 		int elem_index = edist(angio_mat->m_pangio->rengine);
 		r0->angio_element = angio_elements[elem_index];
 		vec3d local_pos = GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(mesh, r0->angio_element, r0->angio_element->_rengine);
-		r0->SetLocalPosition(local_pos);
+		r0->SetLocalPosition(local_pos, mesh);
 		r0->time = -1;
 		r0->use_direction = true;
 		r0->direction = angio_mat->m_pangio->uniformRandomDirection(r0->angio_element->_rengine);
 		r0->face = r0->angio_element;
-
+		FEModel* fem = GetFEModel();
+		r0->InitSBM(mesh);
 		// Finally add this to the AngioElement.
 		r0->angio_element->next_tips.at(r0->angio_element).push_back(r0);
 
 		// Now add an oppositely directed tip.
-		Tip * r1 = new Tip(r0, mesh);
+		Tip * r1 = new Tip();
+		r1->angio_element = r0->angio_element;
+		r1->face = r0->face;
+		r1->time = r0->time;
+		r1->growth_velocity = r0->growth_velocity;
+		r1->SetLocalPosition(r0->GetLocalPosition(), mesh);
+		
+		//deparent the new tip
+		r1->initial_fragment_id = initial_fragment_id_counter;
+		r1->use_direction = true;
+		r1->direction = -r0->direction; r1->direction.unit();
+		r1->InitSBM(mesh);
+		r1->angio_element->next_tips.at(r1->angio_element).push_back(r1);
+		initial_fragment_id_counter++;
+
+		/*Tip * r1 = new Tip(r0, mesh);
 		r0->initial_fragment_id = initial_fragment_id_counter++;
 		r1->use_direction = true;
 		r1->direction = -r0->direction;
 		r1->angio_element->next_tips.at(r1->angio_element).push_back(r1);
-
+		r1->InitSBM(mesh);
+		*/
 		// Just shove it in growth may not be complete
 		//r0->angio_element->_angio_mat->GrowthInElement(0, r0, 1, -1, initial_vessel_length, true);
 
@@ -207,7 +224,7 @@ bool ByVolumeFragmentSeeder::SeedFragments(std::vector<AngioElement *>& angio_el
 		r0->initial_fragment_id = initial_fragment_id_counter;
 		r0->angio_element = angio_elements[element_index];
 		vec3d local_pos = GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(mesh, r0->angio_element, r0->angio_element->_rengine);
-		r0->SetLocalPosition(local_pos);
+		r0->SetLocalPosition(local_pos, mesh);
 		r0->time = -1;
 		r0->use_direction = true;
 		r0->direction = angio_mat->m_pangio->uniformRandomDirection(r0->angio_element->_rengine);
@@ -269,7 +286,7 @@ bool ByVolumeFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElement
 		r0->initial_fragment_id = initial_fragment_id_counter;
 		r0->angio_element = angio_elements[element_index];
 		vec3d local_pos = GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(mesh, r0->angio_element, angio_mat->m_pangio->rengine);
-		r0->SetLocalPosition(local_pos);
+		r0->SetLocalPosition(local_pos, mesh);
 		r0->time = -1;
 		r0->use_direction = true;
 		r0->direction = angio_mat->m_pangio->uniformRandomDirection(angio_mat->m_pangio->rengine);

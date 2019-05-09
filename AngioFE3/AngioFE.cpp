@@ -91,6 +91,10 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS(ContributionMixManager, FEMATERIAL_ID, "contribution_mix_manager");
 	REGISTER_FECORE_CLASS(PSCPDDContributionMix, FEMATERIAL_ID, "psc_pdd_contribution_mix");
 
+	// Species Manager Classes
+	REGISTER_FECORE_CLASS(TipSpeciesManager, FEMATERIAL_ID, "SBM_Manager");
+	REGISTER_FECORE_CLASS(TipSpecies, FEMATERIAL_ID, "SBM");
+
 	// Mix Methods
 	REGISTER_FECORE_CLASS(LinInterp, FEMATERIAL_ID, "LinInterp");
 	REGISTER_FECORE_CLASS(LinRot, FEMATERIAL_ID, "LinRot");
@@ -124,7 +128,7 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 
 	REGISTER_FECORE_CLASS(FEPlotMatrixElastic_m_Q, FEPLOTDATA_ID, "matrix elastic mQ");
 
-	REGISTER_FECORE_CLASS(TipDepositionBC, FEBC_ID, "tip_deposition_bc");
+	//REGISTER_FECORE_CLASS(TipDepositionBC, FEBC_ID, "tip_deposition_bc");
 
 }
 

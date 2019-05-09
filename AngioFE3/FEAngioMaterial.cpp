@@ -35,14 +35,11 @@ FEAngioMaterial::FEAngioMaterial(FEModel* pfem) : FEElasticMaterial(pfem)
 	AddProperty(&cm_manager, "cm_manager");
 	AddProperty(&mix_method, "mix_method");
 	AddProperty(&velocity_manager, "velocity_manager");
-	AddProperty(&im_manager, "im_manager");
-	im_manager.m_brequired = false;
-	AddProperty(&nodedata_interpolation_manager, "nodedata_interpolation_manager");
-	nodedata_interpolation_manager.m_brequired = false;
-	AddProperty(&branch_policy, "branch_policy");
-	branch_policy.m_brequired = false;
-	AddProperty(&proto_branch_policy, "proto_branch_policy");
-	proto_branch_policy.m_brequired = false;
+	AddProperty(&im_manager, "im_manager"); im_manager.m_brequired = false;
+	AddProperty(&nodedata_interpolation_manager, "nodedata_interpolation_manager"); nodedata_interpolation_manager.m_brequired = false;
+	AddProperty(&branch_policy, "branch_policy"); branch_policy.m_brequired = false;
+	AddProperty(&proto_branch_policy, "proto_branch_policy"); proto_branch_policy.m_brequired = false;
+	AddProperty(&tip_species_manager, "tip_species_manager"); tip_species_manager.m_brequired = false;
 }
 
 FEAngioMaterial::~FEAngioMaterial()
@@ -434,7 +431,12 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		Segment * seg = new Segment();
 		next->time = end_time;
 		next->angio_element = angio_element;
-		next->SetLocalPosition(real_natc);
+		next->SetLocalPosition(real_natc, mesh);
+
+		//
+		//next->TipSBM->UpdatePos(natc_to_global * real_natc);
+		//
+
 		next->parent = seg;
 		next->face = angio_element;
 		next->growth_velocity = grow_vel;
@@ -472,8 +474,15 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 
 		next->angio_element = angio_element;
 
+		next->TipSBM = active_tip->TipSBM;
+		if (active_tip->TipSBM)
+		{
+			//active_tip->TipSBM->Deactivate();
+			active_tip->TipSBM = nullptr;
+		}
+
 		//still need to update the local position of the tip
-		next->SetLocalPosition(local_pos + (nat_dir * possible_grow_length));
+		next->SetLocalPosition(local_pos + (nat_dir * possible_grow_length), mesh);
 
 		next->parent = seg;
 		next->face = angio_element;
@@ -532,7 +541,12 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 				Tip * adj = new Tip(next, mesh);
 				adj->angio_element = possible_locations[index];
 				adj->face = angio_element;
-				adj->SetLocalPosition(possible_local_coordinates[index]);
+				adj->SetLocalPosition(possible_local_coordinates[index], mesh);
+
+				//
+				//adj->TipSBM->UpdatePos(natc_to_global * possible_local_coordinates[index]);
+				//
+
 				adj->use_direction = true;
 				adj->growth_velocity = grow_vel;
 				angio_element->active_tips[next_buffer_index].at(possible_locations[index]).push_back(adj);
@@ -607,7 +621,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		Segment * seg = new Segment();
 		next->time = end_time;
 		next->angio_element = angio_element;
-		next->SetLocalPosition(real_natc);
+		next->SetLocalPosition(real_natc, mesh);
 		next->parent = seg;
 		next->face = angio_element;
 		//growth velocity must be zero to work with grown segments stress policy
@@ -647,9 +661,15 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		next->time = tip_time_start;
 
 		next->angio_element = angio_element;
+		next->TipSBM = active_tip->TipSBM; 
+		if (active_tip->TipSBM)
+		{
+			//active_tip->TipSBM->Deactivate();
+			active_tip->TipSBM = nullptr;
+		}
 
 		//still need to update the local position of the tip
-		next->SetLocalPosition(local_pos + (nat_dir * possible_grow_length));
+		next->SetLocalPosition(local_pos + (nat_dir * possible_grow_length), mesh);
 
 		next->parent = seg;
 		next->face = angio_element;
@@ -697,7 +717,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 				Tip * adj = new Tip(next, mesh);
 				adj->angio_element = possible_locations[index];
 				adj->face = angio_element;
-				adj->SetLocalPosition(possible_local_coordinates[index]);
+				adj->SetLocalPosition(possible_local_coordinates[index], mesh);
 				adj->use_direction = true;
 				//growth velocity must be zero to work with grown segments stress policy
 				adj->growth_velocity = 0;

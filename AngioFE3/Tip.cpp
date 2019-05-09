@@ -96,9 +96,27 @@ Tip::Tip(Tip * other, FEMesh * mesh)
 	initial_fragment_id = other->initial_fragment_id;
 	direction = other->GetDirection(mesh);
 	direction.unit();
+	FEModel* fem = angio_element->_mat->GetFEModel();
+	TipSBM = other->TipSBM;
+	//TipSBM = new FESBMPointSource(fem);
+	//InitSBM(mesh);
+	if (other->TipSBM) { 
+		//other->TipSBM->Deactivate();
+		other->TipSBM = nullptr;
+		//other->TipSBM->UpdateSBM(1, 0);
+		//other->TipSBM->Deactivate(); 
+	}
+	/*if (TipSBM)
+	{
+		TipSBM->UpdatePos(GetPosition(mesh));
+		TipSBM->UpdateSBM(1, 1e-12);
+		TipSBM->Update();
+	}*/
+	//UpdateSBM(mesh);
+	//InitSBM(mesh);
 }
 
-void Tip::SetLocalPosition(vec3d pos)
+void Tip::SetLocalPosition(vec3d pos, FEMesh* mesh)
 {
 	assert(angio_element);
 	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (pos.x + pos.y + pos.z) < 1.01 : true);
@@ -115,9 +133,48 @@ void Tip::SetLocalPosition(vec3d pos)
 	local_pos.x = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound_r(angio_element->_elem->Type()), local_pos.x), FEAngio::NaturalCoordinatesLowerBound_r(angio_element->_elem->Type()));
 	local_pos.y = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound_s(angio_element->_elem->Type()), local_pos.y), FEAngio::NaturalCoordinatesLowerBound_s(angio_element->_elem->Type()));
 	local_pos.z = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound_t(angio_element->_elem->Type()), local_pos.z), FEAngio::NaturalCoordinatesLowerBound_t(angio_element->_elem->Type()));
+	vec3d GlobalPos = GetPosition(mesh);
+	TipSBM->UpdatePos(GlobalPos);
+	if (TipSBM) { TipSBM->Update(); }
 }
 
 vec3d Tip::GetLocalPosition() const
 {
 	return local_pos;
+}
+
+void Tip::InitSBM(FEMesh* mesh)
+{
+	FEModel* fem = angio_element->_mat->GetFEModel();
+	FEDomain* dom = &mesh->Domain(0);
+	FEMultiphasic* mat = dynamic_cast<FEMultiphasic*>(dom->GetMaterial());
+	//int sbms = mat->SBMs();
+	//int sbmj = mat->GetSBM(0)->GetSBMID() + 1;
+	//std::cout << "sbms is " << sbms << " sbmj is " << sbmj << endl;
+	TipSBM = new FESBMPointSource(fem);
+	// assign the SBM properties for each property
+	for (int i = 0; i < angio_element->_angio_mat->tip_species_manager->tip_species_prop.size(); i++) 
+	{
+		int SID = angio_element->_angio_mat->tip_species_manager->tip_species_prop[i]->GetSBMID();
+		double prod_rate = angio_element->_angio_mat->tip_species_manager->tip_species_prop[i]->GetPR();
+		TipSBM->UpdateSBM(SID, prod_rate);
+	}
+	TipSBM->UpdatePos(GetPosition(mesh));
+	TipSBM->Init();
+	TipSBM->Activate();
+}
+
+void Tip::UpdateSBM(FEMesh* mesh)
+{
+	if (TipSBM)
+	{
+		TipSBM->UpdatePos(GetPosition(mesh));
+		for (int i = 0; i < angio_element->_angio_mat->tip_species_manager->tip_species_prop.size(); i++) 
+		{
+			int SID = angio_element->_angio_mat->tip_species_manager->tip_species_prop[i]->GetSBMID();
+			double prod_rate = angio_element->_angio_mat->tip_species_manager->tip_species_prop[i]->GetPR();
+			TipSBM->UpdateSBM(SID, prod_rate);
+		}
+		TipSBM->Update();
+	}
 }
