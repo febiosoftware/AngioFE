@@ -97,23 +97,8 @@ Tip::Tip(Tip * other, FEMesh * mesh)
 	direction = other->GetDirection(mesh);
 	direction.unit();
 	FEModel* fem = angio_element->_mat->GetFEModel();
-	TipSBM = other->TipSBM;
-	//TipSBM = new FESBMPointSource(fem);
-	//InitSBM(mesh);
-	if (other->TipSBM) { 
-		//other->TipSBM->Deactivate();
-		other->TipSBM = nullptr;
-		//other->TipSBM->UpdateSBM(1, 0);
-		//other->TipSBM->Deactivate(); 
-	}
-	/*if (TipSBM)
-	{
-		TipSBM->UpdatePos(GetPosition(mesh));
-		TipSBM->UpdateSBM(1, 1e-12);
-		TipSBM->Update();
-	}*/
-	//UpdateSBM(mesh);
-	//InitSBM(mesh);
+	Species = other->Species;
+	other->Species.clear();
 }
 
 void Tip::SetLocalPosition(vec3d pos, FEMesh* mesh)
@@ -134,8 +119,13 @@ void Tip::SetLocalPosition(vec3d pos, FEMesh* mesh)
 	local_pos.y = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound_s(angio_element->_elem->Type()), local_pos.y), FEAngio::NaturalCoordinatesLowerBound_s(angio_element->_elem->Type()));
 	local_pos.z = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound_t(angio_element->_elem->Type()), local_pos.z), FEAngio::NaturalCoordinatesLowerBound_t(angio_element->_elem->Type()));
 	vec3d GlobalPos = GetPosition(mesh);
-	TipSBM->UpdatePos(GlobalPos);
-	if (TipSBM) { TipSBM->Update(); }
+	for (unsigned it = 0; it < Species.bucket_count(); it++)
+	{
+		if (Species[it] != nullptr) {
+			Species[it]->UpdatePos(GlobalPos);
+			Species[it]->Update();
+		}
+	}
 }
 
 vec3d Tip::GetLocalPosition() const
@@ -148,33 +138,32 @@ void Tip::InitSBM(FEMesh* mesh)
 	FEModel* fem = angio_element->_mat->GetFEModel();
 	FEDomain* dom = &mesh->Domain(0);
 	FEMultiphasic* mat = dynamic_cast<FEMultiphasic*>(dom->GetMaterial());
-	//int sbms = mat->SBMs();
-	//int sbmj = mat->GetSBM(0)->GetSBMID() + 1;
-	//std::cout << "sbms is " << sbms << " sbmj is " << sbmj << endl;
-	TipSBM = new FESBMPointSource(fem);
 	// assign the SBM properties for each property
-	for (int i = 0; i < angio_element->_angio_mat->tip_species_manager->tip_species_prop.size(); i++) 
-	{
-		int SID = angio_element->_angio_mat->tip_species_manager->tip_species_prop[i]->GetSBMID();
-		double prod_rate = angio_element->_angio_mat->tip_species_manager->tip_species_prop[i]->GetPR();
-		TipSBM->UpdateSBM(SID, prod_rate);
+	TipSpeciesManager* m_species = angio_element->_angio_mat->tip_species_manager;
+	if (m_species) {
+		for (int i = 0; i < m_species->tip_species_prop.size(); i++)
+		{
+			// get the sbm id
+			int SBMID = m_species->tip_species_prop[i]->GetSBMID();
+			// get the production rate/concentration
+			double prod_rate = m_species->tip_species_prop[i]->GetPR();
+			// Create new source
+			Species[SBMID] = new FESBMPointSource(fem);
+			// update the id, rate, and position of the new species 
+			Species[SBMID]->UpdateSBM(SBMID, prod_rate);
+			Species[SBMID]->UpdatePos(GetPosition(mesh));
+			// initialize and activate the bc
+			Species[SBMID]->Init();
+			Species[SBMID]->Activate();
+		}
 	}
-	TipSBM->UpdatePos(GetPosition(mesh));
-	TipSBM->Init();
-	TipSBM->Activate();
 }
 
 void Tip::UpdateSBM(FEMesh* mesh)
 {
-	if (TipSBM)
+	for (unsigned it = 0; it < Species.bucket_count(); it++)
 	{
-		TipSBM->UpdatePos(GetPosition(mesh));
-		for (int i = 0; i < angio_element->_angio_mat->tip_species_manager->tip_species_prop.size(); i++) 
-		{
-			int SID = angio_element->_angio_mat->tip_species_manager->tip_species_prop[i]->GetSBMID();
-			double prod_rate = angio_element->_angio_mat->tip_species_manager->tip_species_prop[i]->GetPR();
-			TipSBM->UpdateSBM(SID, prod_rate);
-		}
-		TipSBM->Update();
+		Species[it]->UpdatePos(GetPosition(mesh));
+		Species[it]->Update();
 	}
 }

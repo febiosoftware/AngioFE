@@ -474,13 +474,9 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 
 		next->angio_element = angio_element;
 
-		next->TipSBM = active_tip->TipSBM;
-		if (active_tip->TipSBM)
-		{
-			//active_tip->TipSBM->Deactivate();
-			active_tip->TipSBM = nullptr;
-		}
-
+		next->Species = active_tip->Species;
+		active_tip->Species.clear();
+		
 		//still need to update the local position of the tip
 		next->SetLocalPosition(local_pos + (nat_dir * possible_grow_length), mesh);
 
@@ -516,18 +512,6 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 					{
 						possible_locations.push_back(angio_element->adjacency_list[i]);
 						possible_local_coordinates.push_back(FEAngio::clamp_natc(angio_element->adjacency_list[i]->_elem->Type(),vec3d(r[0], r[1], r[2])));
-						/*
-						Tip * adj = new Tip(next, mesh);
-						adj->angio_element = angio_element->adjacency_list[i];
-						adj->face = angio_element;
-						adj->SetLocalPosition(vec3d(r[0], r[1], r[2]));
-						adj->use_direction = true;
-						adj->growth_velocity = grow_vel;
-
-						angio_element->active_tips[next_buffer_index].at(ang_elem).push_back(adj);
-
-						break; // Place the tip in exactly one element
-						*/
 					}
 				}
 			}
@@ -542,11 +526,6 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 				adj->angio_element = possible_locations[index];
 				adj->face = angio_element;
 				adj->SetLocalPosition(possible_local_coordinates[index], mesh);
-
-				//
-				//adj->TipSBM->UpdatePos(natc_to_global * possible_local_coordinates[index]);
-				//
-
 				adj->use_direction = true;
 				adj->growth_velocity = grow_vel;
 				angio_element->active_tips[next_buffer_index].at(possible_locations[index]).push_back(adj);
@@ -661,12 +640,8 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		next->time = tip_time_start;
 
 		next->angio_element = angio_element;
-		next->TipSBM = active_tip->TipSBM; 
-		if (active_tip->TipSBM)
-		{
-			//active_tip->TipSBM->Deactivate();
-			active_tip->TipSBM = nullptr;
-		}
+		next->Species = active_tip->Species;
+		active_tip->Species.clear();
 
 		//still need to update the local position of the tip
 		next->SetLocalPosition(local_pos + (nat_dir * possible_grow_length), mesh);
