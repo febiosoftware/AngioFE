@@ -115,6 +115,11 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, dou
 		}
 		// check that the max_angio time is not greater than the angio dt max.
 		if (min_dt > max_angio_dt) { min_dt = max_angio_dt; }
+		// check that the step is not too small
+		if ((min_angio_dt != -1) && (min_dt < min_angio_dt)) 
+		{ 
+			min_dt = min_angio_dt; 
+		}
 				
 		// current time is next time plus min_dt
 		double ctime = next_time + min_dt;
@@ -1221,6 +1226,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		bounds_tolerance = m_fem->GetGlobalConstant("bounds_tolerance");
 		min_angle = m_fem->GetGlobalConstant("min_angle");
 		max_angio_dt = m_fem->GetGlobalConstant("max_angio_dt"); if (max_angio_dt == 0) { max_angio_dt = 0.25; }
+		min_angio_dt = m_fem->GetGlobalConstant("min_angio_dt"); 
 		growth_substeps = int (m_fem->GetGlobalConstant("growth_substeps"));
 		size_t angio_element_count = angio_elements.size();
 		FEMesh * mesh = GetMesh();

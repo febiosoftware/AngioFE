@@ -250,5 +250,6 @@ private:
 	double min_angle = 0.35;
 	int growth_substeps = 3;
 	double max_angio_dt = 0.25;
+	double min_angio_dt = -1;
 	int auto_stepper_key = -1;
 };
