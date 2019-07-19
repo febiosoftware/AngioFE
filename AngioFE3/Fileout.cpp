@@ -85,8 +85,8 @@ void Fileout::printStatus(FEAngio& angio, double time)
 void PrintSegment(vec3d r0, vec3d r1)
 {
 #ifndef NDEBUG
-	std::cout << "r0: " << r0.x << "," << r0.y << "," << r0.z << std::endl;
-	std::cout << "r1: " << r1.x << "," << r1.y << "," << r1.z << std::endl;
+	std::cout << "r0: " << r0.x << "," << r0.y << "," << r0.z << "," << 1e-2 << std::endl;
+	std::cout << "r1: " << r1.x << "," << r1.y << "," << r1.z << "," << 1e-2 << std::endl;
 #endif
 }
 
@@ -125,12 +125,16 @@ void Fileout::save_vessel_state(FEAngio& angio)
 			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
 			cur = static_cast<float>(r0.z);
 			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
+			cur = static_cast<float>(1e-2);
+			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
 
 			cur = static_cast<float>(r1.x);
 			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
 			cur = static_cast<float>(r1.y);
 			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
 			cur = static_cast<float>(r1.z);
+			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
+			cur = static_cast<float>(1e-2);
 			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
 
 			r1 = angio.ReferenceCoordinates(front_tip);
@@ -175,12 +179,16 @@ void Fileout::bulk_save_vessel_state(FEAngio& angio)
 			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
 			cur = static_cast<float>(r0.z);
 			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
+			cur = static_cast<float>(1e-2);
+			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
 
 			cur = static_cast<float>(r1.x);
 			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
 			cur = static_cast<float>(r1.y);
 			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
 			cur = static_cast<float>(r1.z);
+			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
+			cur = static_cast<float>(1e-2);
 			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
 
 			r1 = angio.ReferenceCoordinates(front_tip);
