@@ -119,13 +119,13 @@ void Tip::SetLocalPosition(vec3d pos, FEMesh* mesh)
 	local_pos.y = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound_s(angio_element->_elem->Type()), local_pos.y), FEAngio::NaturalCoordinatesLowerBound_s(angio_element->_elem->Type()));
 	local_pos.z = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound_t(angio_element->_elem->Type()), local_pos.z), FEAngio::NaturalCoordinatesLowerBound_t(angio_element->_elem->Type()));
 	vec3d GlobalPos = GetPosition(mesh);
-	for (unsigned it = 0; it < Species.bucket_count(); it++)
+	/*for (unsigned it = 0; it < Species.bucket_count(); it++)
 	{
 		if (Species[it] != nullptr) {
 			Species[it]->UpdatePos(GlobalPos);
 			Species[it]->Update();
 		}
-	}
+	}*/
 }
 
 vec3d Tip::GetLocalPosition() const
