@@ -7,6 +7,13 @@
 #include "FEAngio.h"
 #include <iostream>
 
+struct EigComp {
+	bool operator()(const std::pair<double, vec3d>& x, std::pair<double, vec3d>& y) const {
+		if ((x.first) > (y.first)) return true;
+		else return false;
+	}
+};
+
 // scales prev (should be just value of 1 if this is placed first) by the constant growth length over time
 double SegmentVelocityModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh)
 {
@@ -92,6 +99,51 @@ void SegmentVelocityRefDensityScaleModifier::UpdateScale()
 
 BEGIN_PARAMETER_LIST(SegmentVelocityRefDensityScaleModifier, SegmentGrowthVelocity)
 ADD_PARAMETER(m_density_scale_factor, FE_PARAM_VEC3D, "density_scale_factor");
+END_PARAMETER_LIST();
+
+double SegmentVelocity3PModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh)
+{
+	mat3ds E;
+	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
+	{
+		FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
+		FEElasticMaterialPoint* elastic_mp = gauss_point->ExtractData<FEElasticMaterialPoint>();
+		E += elastic_mp->Strain();
+	}
+
+	E = E / (angio_element->_elem->GaussPoints());
+	// get eigenvalues and eigenvectors
+	double d[3]; vec3d r[3];
+	E.eigen(d, r);
+	// Create vector of pairs of eigenvalues and eigenvectors
+	//std::vector<std::pair<double, vec3d>> v = { { d[0],r[0] },{ d[1],r[1] },{ d[2],r[2] } };
+	// Sort based on absolute value of eigenvalues
+	double c_strain = std::min(d[0], std::min(d[1], d[2]));
+	//std::sort(v.begin(), v.end(), EigComp());
+	//double 3P_s = v[2].first;
+	//double c_strain = v[2].first;
+	if (c_strain < threshold) { 
+		return scale * prev; 
+	}
+	else {
+		return prev;
+	}
+}
+
+bool SegmentVelocity3PModifier::Init()
+{
+	return true;
+}
+
+void SegmentVelocity3PModifier::UpdateScale()
+{
+
+}
+
+BEGIN_PARAMETER_LIST(SegmentVelocity3PModifier, SegmentGrowthVelocity)
+ADD_PARAMETER(scale, FE_PARAM_DOUBLE, "scale");
+ADD_PARAMETER(threshold, FE_PARAM_DOUBLE, "threshold");
 END_PARAMETER_LIST();
 
 double SigmoidSegmentVelocity::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh)

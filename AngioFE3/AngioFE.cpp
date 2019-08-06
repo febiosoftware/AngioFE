@@ -71,6 +71,7 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS(SegmentVelocityModifier, FEMATERIAL_ID, "segment_velocity_modifier");
 	REGISTER_FECORE_CLASS(SegmentVelocityDensityScaleModifier, FEMATERIAL_ID, "segment_velocity_density_scale_modifier");
 	REGISTER_FECORE_CLASS(SegmentVelocityRefDensityScaleModifier, FEMATERIAL_ID, "segment_velocity_ref_density_scale_modifier");
+	REGISTER_FECORE_CLASS(SegmentVelocity3PModifier, FEMATERIAL_ID, "segment_velocity_3P_modifier");
 	REGISTER_FECORE_CLASS(SigmoidSegmentVelocity, FEMATERIAL_ID, "sigmoid_segment_velocity");
 	REGISTER_FECORE_CLASS(GompertzSegmentVelocity, FEMATERIAL_ID, "gompertz_segment_velocity");
 
