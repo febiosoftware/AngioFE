@@ -97,8 +97,8 @@ Tip::Tip(Tip * other, FEMesh * mesh)
 	direction = other->GetDirection(mesh);
 	direction.unit();
 	FEModel* fem = angio_element->_mat->GetFEModel();
-	Species = other->Species;
-	other->Species.clear();
+	//Species = other->Species;
+	//other->Species.clear();
 }
 
 void Tip::SetLocalPosition(vec3d pos, FEMesh* mesh)
@@ -133,7 +133,7 @@ vec3d Tip::GetLocalPosition() const
 	return local_pos;
 }
 
-void Tip::InitSBM(FEMesh* mesh)
+/*void Tip::InitSBM(FEMesh* mesh)
 {
 	FEModel* fem = angio_element->_mat->GetFEModel();
 	FEDomain* dom = &mesh->Domain(0);
@@ -166,4 +166,4 @@ void Tip::UpdateSBM(FEMesh* mesh)
 		Species[it]->UpdatePos(GetPosition(mesh));
 		Species[it]->Update();
 	}
-}
+}*/

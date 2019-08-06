@@ -144,7 +144,7 @@ bool ByElementFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElemen
 		r0->direction = angio_mat->m_pangio->uniformRandomDirection(r0->angio_element->_rengine);
 		r0->face = r0->angio_element;
 		FEModel* fem = GetFEModel();
-		r0->InitSBM(mesh);
+		//r0->InitSBM(mesh);
 		// Finally add this to the AngioElement.
 		r0->angio_element->next_tips.at(r0->angio_element).push_back(r0);
 
@@ -160,7 +160,7 @@ bool ByElementFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElemen
 		r1->initial_fragment_id = initial_fragment_id_counter;
 		r1->use_direction = true;
 		r1->direction = -r0->direction; r1->direction.unit();
-		r1->InitSBM(mesh);
+		//r1->InitSBM(mesh);
 		r1->angio_element->next_tips.at(r1->angio_element).push_back(r1);
 		initial_fragment_id_counter++;
 

@@ -39,7 +39,7 @@ FEAngioMaterial::FEAngioMaterial(FEModel* pfem) : FEElasticMaterial(pfem)
 	AddProperty(&nodedata_interpolation_manager, "nodedata_interpolation_manager"); nodedata_interpolation_manager.m_brequired = false;
 	AddProperty(&branch_policy, "branch_policy"); branch_policy.m_brequired = false;
 	AddProperty(&proto_branch_policy, "proto_branch_policy"); proto_branch_policy.m_brequired = false;
-	AddProperty(&tip_species_manager, "tip_species_manager"); tip_species_manager.m_brequired = false;
+	//AddProperty(&tip_species_manager, "tip_species_manager"); tip_species_manager.m_brequired = false;
 }
 
 FEAngioMaterial::~FEAngioMaterial()
@@ -474,8 +474,8 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 
 		next->angio_element = angio_element;
 
-		next->Species = active_tip->Species;
-		active_tip->Species.clear();
+		//next->Species = active_tip->Species;
+		//active_tip->Species.clear();
 		
 		//still need to update the local position of the tip
 		next->SetLocalPosition(local_pos + (nat_dir * possible_grow_length), mesh);
@@ -640,8 +640,8 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		next->time = tip_time_start;
 
 		next->angio_element = angio_element;
-		next->Species = active_tip->Species;
-		active_tip->Species.clear();
+		//next->Species = active_tip->Species;
+		//active_tip->Species.clear();
 
 		//still need to update the local position of the tip
 		next->SetLocalPosition(local_pos + (nat_dir * possible_grow_length), mesh);

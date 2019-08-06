@@ -3,7 +3,7 @@
 #include <FECore/FEMaterial.h>
 #include "AngioElement.h"
 
-class FEAngio;
+/*class FEAngio;
 
 //! (Incomplete) Prescribed dof to allow tips to deposit chemicals within a multiphasic material
 class TipSpecies: public FEMaterial
@@ -32,3 +32,4 @@ public:
 protected:
 private:
 };
+*/
