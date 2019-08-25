@@ -535,7 +535,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	else
 	{
 		//handle the difficult cases here
-		//this occours when the tip is close to a face
+		//this occurs when the tip is close to a face
 		//this also might be when a segment is supposed to die
 		//assert(false);
 	}

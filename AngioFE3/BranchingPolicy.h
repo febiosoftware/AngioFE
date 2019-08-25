@@ -70,7 +70,7 @@ private:
 	FEPropertyT<FEProbabilityDistribution> angle;
 };
 
-//! A Branch Policy determines where and when branches occour
+//! A Branch Policy determines where and when branches occur
 class BranchPolicy :public FEMaterial
 {
 public:
@@ -118,13 +118,13 @@ public:
 class DelayBranchInfo : public BranchInfo
 {
 public:
-	//! the length before a branch occours
+	//! the length before a branch occurs
 	double length_to_branch = 0.0;
-	//! all branches which may occour in the future
+	//! all branches which may occur in the future
 	std::list<FutureBranch> future_branches;
 };
 
-//! As growth occours length to branch is calculated, once length to branch is hit a time to emerge is sampled from a probability distribution.Length to branch is calculated only when the last value of length to branch has been hit
+//! As growth occurs length to branch is calculated, once length to branch is hit a time to emerge is sampled from a probability distribution.Length to branch is calculated only when the last value of length to branch has been hit
 class DelayedBranchingPolicy :public BranchPolicy
 {
 public:

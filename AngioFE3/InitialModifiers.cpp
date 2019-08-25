@@ -25,6 +25,7 @@ void IsotropicEFDFiberInitializer::ApplyModifier(AngioElement * angio_element, F
 	}
 }
 */
+
 // Rename this to AlignedFiberRandomizer or DiscreteFiberRandomizer
 void FiberRandomizer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {

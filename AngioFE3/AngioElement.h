@@ -66,6 +66,6 @@ public:
 	double global_segment_length = 0.0;
 	//! segment length within the reference frame within this element
 	double refernce_frame_segment_length = 0.0;
-	//! number of anastamoses that have occoured
+	//! number of anastamoses that have occured
 	int anastamoses = 0;
 };

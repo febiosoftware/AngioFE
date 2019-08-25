@@ -123,12 +123,15 @@ vec3d RepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d 
 {
 	std::vector<double> repulse_at_integration_points;
 
+	// find which angio elements have repulse values
 	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
 	{
 		FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
 		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
 		FEElasticMaterialPoint* elastic_mp = gauss_point->ExtractData<FEElasticMaterialPoint>();
 
+		// not sure why this is included. It is pushing back the repulse value divided by the deformation.
+		// probably to account for changes in mp positions?
 		repulse_at_integration_points.push_back(angio_mp->repulse_value * (1.0 / elastic_mp->m_J));
 	}
 	if(grad_threshold)
@@ -153,23 +156,34 @@ vec3d RepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d 
 	{
 		double nodal_repulse[FEElement::MAX_NODES];
 		double H[FEElement::MAX_NODES];
+		// project the repulse value from integration points to the nodes
 		angio_element->_elem->project_to_nodes(&repulse_at_integration_points[0],nodal_repulse);
 		double val = 0;
+		// determine shape function value for the local position
 		angio_element->_elem->shape_fnc(H, local_pos.x, local_pos.y, local_pos.z);
+		// for each node in an angio element determine the contributions from the shape functions
 		for(int i=0; i < angio_element->_elem->Nodes();i++)
 		{
 			val += H[i] * nodal_repulse[i];
 		}
-		vec3d grad = pangio->gradient(angio_element->_elem, repulse_at_integration_points, local_pos);
+		//SL: moving this into the loop below so it is only calculated when necessary 
+		// vec3d grad = pangio->gradient(angio_element->_elem, repulse_at_integration_points, local_pos);
+		// if the value from the shape functions is greater than the threshold then the vessel will be repulsed
 		if(val > threshold)
 		{
+			// determine the gradient in each angio element of the repulse value at a given local position
+			vec3d grad = pangio->gradient(angio_element->_elem, repulse_at_integration_points, local_pos);
+			// new direction will be in the opposite of the other direction.
 			grad = -grad;
+			// if alpha_override is set to 1 then set alpha to 1. Seems like an unneccessary step
 			if (alpha_override)
 			{
 				alpha = contribution;
 			}
+			// new vector direction is mix of previous and deflected direction.
 			vec3d new_dir = angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, contribution);
-			if (prev* grad < 0) { new_dir = -new_dir; }
+			// if previous direction dotted with grad is -ve i.e. the angle between them is greater than 90 degrees. not sure if this makes sense. 
+			// if (prev* grad < 0) { new_dir = -new_dir; }
 			return new_dir;
 			//return angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, contribution);
 			//return mix(prev, grad, contribution);

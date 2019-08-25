@@ -112,7 +112,7 @@ public:
 private:
 	double threshold = 0.00001;//vessels will deflect if above threshold
 	bool alpha_override = true;//replace the alpha to have this take over
-	bool grad_threshold = true;//use a gradient to detect areas where repulsion should occour.
+	bool grad_threshold = false;//use a gradient to detect areas where repulsion should occur.
 	FEPropertyT<FEVariableInterpolation> interpolation_prop;
 };
 

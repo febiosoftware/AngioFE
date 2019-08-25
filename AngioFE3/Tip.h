@@ -6,7 +6,7 @@
 class Segment;
 class FEAngio;
 
-//! a location where growth has occoured, or can occour on the next growth step/substep.
+//! a location where growth has occured, or can occur on the next growth step/substep.
 class Tip
 {
 public:
@@ -20,7 +20,7 @@ public:
 	vec3d GetLocalPosition() const;
 	//! The element that contains the local_pos coordinates
 	AngioElement * angio_element= nullptr;
-	//! Time at which the tip occours
+	//! Time at which the tip occurs
 	double time=0.0;
 	//! Velocity at which the tip grew
 	double growth_velocity = 0.0;

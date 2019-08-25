@@ -49,10 +49,10 @@ public:
 	//! the smallest safe step an elment can take
 	double GetMin_dt(AngioElement* angio_elem, FEMesh* mesh);
 
-	//! vascular growth that occours before time =0
+	//! vascular growth that occurs before time =0
 	void ProtoGrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle);
 	
-	//! vascular growth that occours after time =0
+	//! vascular growth that occurs after time =0
 	void GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle);
 
 	//! performs vascular growth within an element

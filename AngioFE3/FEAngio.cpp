@@ -1599,20 +1599,25 @@ bool FEAngio::ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d
 
 double FEAngio::InElementLength(FESolidElement * se, vec3d pt0, vec3d pt1) const
 {
+	// Get the mesh
 	auto mesh = GetMesh();
+	// Get the number of nodes for the element's type
 	double H[FEElement::MAX_NODES];
 	vec3d g_pt0, g_pt1;
+	// Get the shape function values at the first point
 	se->shape_fnc(H, pt0.x, pt0.y, pt0.z);
+	// For each node get the current position of tip 1's positional shape function scale
 	for (int j = 0; j < se->Nodes(); j++)
 	{
 		g_pt0 += mesh->Node(se->m_node[j]).m_rt* H[j];
 	}
+	// For each node get the current position of tip 2's positional shape function scale
 	se->shape_fnc(H, pt1.x, pt1.y, pt1.z);
 	for (int j = 0; j < se->Nodes(); j++)
 	{
 		g_pt1 += mesh->Node(se->m_node[j]).m_rt* H[j];
 	}
-
+	// Return the L2 norm (length) of this within the element itself.
 	return (g_pt0 - g_pt1).norm();
 }
 
