@@ -97,8 +97,8 @@ Tip::Tip(Tip * other, FEMesh * mesh)
 	direction = other->GetDirection(mesh);
 	direction.unit();
 	FEModel* fem = angio_element->_mat->GetFEModel();
-	//Species = other->Species;
-	//other->Species.clear();
+	Species = other->Species;
+	other->Species.clear();
 }
 
 void Tip::SetLocalPosition(vec3d pos, FEMesh* mesh)
@@ -119,13 +119,13 @@ void Tip::SetLocalPosition(vec3d pos, FEMesh* mesh)
 	local_pos.y = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound_s(angio_element->_elem->Type()), local_pos.y), FEAngio::NaturalCoordinatesLowerBound_s(angio_element->_elem->Type()));
 	local_pos.z = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound_t(angio_element->_elem->Type()), local_pos.z), FEAngio::NaturalCoordinatesLowerBound_t(angio_element->_elem->Type()));
 	vec3d GlobalPos = GetPosition(mesh);
-	/*for (unsigned it = 0; it < Species.bucket_count(); it++)
+	for (unsigned it = 0; it < Species.bucket_count(); it++)
 	{
 		if (Species[it] != nullptr) {
 			Species[it]->UpdatePos(GlobalPos);
 			Species[it]->Update();
 		}
-	}*/
+	}
 }
 
 vec3d Tip::GetLocalPosition() const
@@ -133,7 +133,7 @@ vec3d Tip::GetLocalPosition() const
 	return local_pos;
 }
 
-/*void Tip::InitSBM(FEMesh* mesh)
+void Tip::InitSBM(FEMesh* mesh)
 {
 	FEModel* fem = angio_element->_mat->GetFEModel();
 	FEDomain* dom = &mesh->Domain(0);
@@ -166,4 +166,4 @@ void Tip::UpdateSBM(FEMesh* mesh)
 		Species[it]->UpdatePos(GetPosition(mesh));
 		Species[it]->Update();
 	}
-}*/
+}
