@@ -31,6 +31,7 @@
 #include "NodeDataInterpolation.h"
 #include <omp.h>
 #include <iostream>
+#include <math.h>
 
 
 
@@ -337,7 +338,7 @@ void FEAngio::GetActiveTipsInRadius(AngioElement* angio_element, double radius, 
 		visited.insert(cur);
 		std::vector<vec3d> cur_element_bounds;
 		pangio->ExtremaInElement(cur->_elem, cur_element_bounds);
-		double cdist = FEAngio::MinDistance(element_bounds, cur_element_bounds);
+		double cdist = FEAngio::MinDistance(element_bounds, cur_element_bounds); std::cout << cdist << endl;
 		if (cdist <= radius)
 		{
 			for(auto iter = cur->active_tips[buffer].begin(); iter != cur->active_tips[buffer].end(); ++iter)
@@ -352,8 +353,6 @@ void FEAngio::GetActiveTipsInRadius(AngioElement* angio_element, double radius, 
 					}
 				}
 			}
-			
-
 			for (int i = 0; i < cur->face_adjacency_list.size(); i++)
 			{
 				if (!visited.count(cur->face_adjacency_list[i]))
@@ -1224,7 +1223,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		//start the protogrowth phase
 		min_scale_factor = m_fem->GetGlobalConstant("min_scale_factor");
 		bounds_tolerance = m_fem->GetGlobalConstant("bounds_tolerance");
-		min_angle = m_fem->GetGlobalConstant("min_angle");
+		min_angle = m_fem->GetGlobalConstant("min_angle"); min_angle = cos(((std::_Pi/180)*min_angle));
 		max_angio_dt = m_fem->GetGlobalConstant("max_angio_dt"); if (max_angio_dt == 0) { max_angio_dt = 0.25; }
 		min_angio_dt = m_fem->GetGlobalConstant("min_angio_dt"); 
 		growth_substeps = int (m_fem->GetGlobalConstant("growth_substeps"));

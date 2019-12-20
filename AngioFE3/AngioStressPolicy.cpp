@@ -89,7 +89,7 @@ void SigmoidAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio*
 
 			//sprout s mag replaced with giving correct coeficients for scale
 			double p = den_scale * scale *sprout_mag * pow(cos(theta / 2), fan_exponential)* exp(-l / sprout_range);
-			// make a dyad times the prssure
+			// make a dyad times the pressure
 			angio_mp->m_as += dyad(r)*p;
 		}
 	}

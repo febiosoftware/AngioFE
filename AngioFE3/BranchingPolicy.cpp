@@ -154,7 +154,7 @@ void DelayedBranchingPolicy::AddBranches(AngioElement * angio_elem, int buffer_i
 		BranchPoint & cur = bps.front();
 		// what is processed. Not sure what this is comparing here
 		// cur.processed is the processed length for the branch while cur.length is the remaining length in the element?
-		std::cout << "cur.processed is " << cur.processed << " cur.length is " << cur.length << endl;
+		//std::cout << "cur.processed is " << cur.processed << " cur.length is " << cur.length << endl;
 		if(cur.processed < cur.length)
 		{
 			// remaining_length is the difference in the current length and the processed length

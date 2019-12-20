@@ -149,7 +149,7 @@ public:
 private:
 	DECLARE_PARAMETER_LIST();
 
-	double initial_segment_velocity = 40.0;
+	double initial_segment_velocity = 7.5;
 	double dt_safety_multiplier = 1.0;
 
 	FEPropertyT<FESolidMaterial> matrix_material;

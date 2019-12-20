@@ -245,7 +245,7 @@ private:
 
 	const double eps = 0.001;
 
-	double min_scale_factor;
+	double min_scale_factor = 0.01;
 	double bounds_tolerance = 1e-3;
 	double min_angle = 0.35;
 	int growth_substeps = 3;
