@@ -33,8 +33,6 @@
 #include <iostream>
 #include <math.h>
 
-
-
 //-----------------------------------------------------------------------------
 // create a map of fiber vectors based on the material's orientatin
 bool CreateFiberMap(vector<vec3d>& fiber, FEMaterial* pmat);
@@ -1223,7 +1221,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		//start the protogrowth phase
 		min_scale_factor = m_fem->GetGlobalConstant("min_scale_factor");
 		bounds_tolerance = m_fem->GetGlobalConstant("bounds_tolerance");
-		min_angle = m_fem->GetGlobalConstant("min_angle"); min_angle = cos(((std::_Pi/180)*min_angle));
+		min_angle = m_fem->GetGlobalConstant("min_angle"); min_angle = cos(((PI/180)*min_angle));
 		max_angio_dt = m_fem->GetGlobalConstant("max_angio_dt"); if (max_angio_dt == 0) { max_angio_dt = 0.25; }
 		min_angio_dt = m_fem->GetGlobalConstant("min_angio_dt"); 
 		growth_substeps = int (m_fem->GetGlobalConstant("growth_substeps"));
