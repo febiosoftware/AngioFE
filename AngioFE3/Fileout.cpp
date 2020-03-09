@@ -345,8 +345,10 @@ std::vector <int> Fileout::getTipCount_pm(FEAngio& angio)
 		FESolidElement * se = angio.angio_elements[i]->_elem;
 		int mat_id = se->GetMatID();
 		for (auto iter = angio.angio_elements[i]->next_tips.begin(); iter != angio.angio_elements[i]->next_tips.end(); ++iter)
+		//for (auto iter = angio.angio_elements[i]->active_tips.begin(); iter != angio.angio_elements[i]->active_tips.end(); ++iter)
 		{
 			count[mat_id] += int(iter->second.size());
+			//count[mat_id] += iter->second.size();
 		}
 	}
 	return count;

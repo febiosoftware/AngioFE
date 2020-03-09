@@ -373,6 +373,8 @@ vec3d FiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d lo
 {
 	std::vector<quatd> gauss_data;
 	std::vector<quatd> nodal_data;
+	//FEElasticMaterial* pmm = dynamic_cast<FEElasticMaterial*> (angio_element->_mat->GetElasticMaterial);
+	std::cout << "material is " << angio_element->_angio_mat->GetMatrixMaterial()->GetElasticMaterial()->FindProperty("m_Base") << endl;
 	for (int i = 0; i< angio_element->_elem->GaussPoints(); i++)
 	{
 		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);

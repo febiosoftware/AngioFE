@@ -1388,7 +1388,7 @@ bool FEAngio::ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d
 	vec3d upper_bounds(FEAngio::NaturalCoordinatesUpperBound_r(se->Type()), FEAngio::NaturalCoordinatesUpperBound_s(se->Type()), FEAngio::NaturalCoordinatesUpperBound_t(se->Type()));
 	vec3d lower_bounds(FEAngio::NaturalCoordinatesLowerBound_r(se->Type()), FEAngio::NaturalCoordinatesLowerBound_s(se->Type()), FEAngio::NaturalCoordinatesLowerBound_t(se->Type()));
 
-	// This is computed differently depending on the element type.
+	// Determine the limiting direction from the current position to a face based on the element type. Store it in the memory allocated as the factor/sf.
 	switch (se->Type())
 	{
 	case FE_Element_Type::FE_HEX8G1:
@@ -1439,22 +1439,25 @@ bool FEAngio::ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d
 			auto double_it = std::min_element(possible_values.begin(), possible_values.end());
 			sf = *double_it;
 
-			/*
+			/* This should be fine to remove since it is contained in the following lines: SL
 			if(sf < min_sf)
 			{
 				return false;
 			}
 			*/
 
+			// if the scale factor is under the min scale factor remove it from the possible locations
 			while (sf < min_sf)
 			{
 				possible_values.erase(double_it);
 
+				// if all possible factors are too small return false
 				if (possible_values.size() == 0)
 				{
 					return false;
 				}
 
+				// update sf to the next smallest value
 				double_it = std::min_element(possible_values.begin(), possible_values.end());
 				sf = *double_it;
 			}

@@ -85,18 +85,21 @@ void Tip::PrintTipInfo(FEMesh *mesh) const
 #endif
 }
 
+// create a new tip based on the pre-existing tip.
 Tip::Tip(Tip * other, FEMesh * mesh)
 {
+	// get the other tip's parameters.
 	angio_element = other->angio_element;
 	face = other->face;
 	time = other->time;
 	growth_velocity = other->growth_velocity;
 	local_pos = other->local_pos;
-	//deparent the new tip
+	// deparent the new tip
 	initial_fragment_id = other->initial_fragment_id;
 	direction = other->GetDirection(mesh);
 	direction.unit();
 	FEModel* fem = angio_element->_mat->GetFEModel();
+	// inherit species in the new tip and remove them in the parent.
 	Species = other->Species;
 	other->Species.clear();
 }
