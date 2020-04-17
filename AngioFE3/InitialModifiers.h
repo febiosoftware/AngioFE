@@ -35,13 +35,21 @@ public:
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
 };
 
-class IsotropicEFDFiberInitializer : public InitialModifier 
+class EFDFiberInitializer : public InitialModifier 
 {
 public:
 	//! constructor
-	explicit IsotropicEFDFiberInitializer(FEModel * pfem) : InitialModifier(pfem) {}
+	explicit EFDFiberInitializer(FEModel * pfem) : InitialModifier(pfem) {}
 	//! apply Isotropic EFD to each mdoel
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
+protected:
+	//! parameter list
+	DECLARE_PARAMETER_LIST();
+private:
+	vec3d initial_spa = vec3d(1,1,1);
+	vec3d initial_axes_a = vec3d(1, 0, 0);
+	vec3d initial_axes_b = vec3d(0, 1, 0);
+	vec3d initial_axes_c = vec3d(0, 0, 1);
 };
 
 //! sets the ecm density within a material

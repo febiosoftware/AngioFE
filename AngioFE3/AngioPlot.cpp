@@ -381,6 +381,49 @@ bool FEPlotAngioECMDensity::Save(FEDomain& d, FEDataStream& str)
 		return true;
 }
 
+
+bool FEPlotAngioSPA::Save(FEDomain& d, FEDataStream& str)
+{
+	//Check if the domain has an angio component i.e. make sure this is not a rigid body
+	FEAngioMaterial* pmat = pfeangio->GetAngioComponent(d.GetMaterial());
+	if (pmat != nullptr)
+	{
+		// for each element
+		for (int i = 0; i < d.Elements(); i++)
+		{
+			FEElement & elem = d.ElementRef(i);
+			FESolidElement *se = dynamic_cast<FESolidElement*>(&elem);
+			if (se) {
+				// get the pointer to the angio element
+				AngioElement* angio_element = pfeangio->se_to_angio_element.at(se);
+
+				// store the transformed spa
+				// should go somewhere else...
+				angio_element->UpdateSPA();
+				str << angio_element->angioSPA;
+			}
+		}
+	}
+	return true;
+}
+
+bool FEPlotAngioFractionalAnisotropy::Save(FEDomain& d, FEDataStream& str)
+{
+	for (int i=0; i < d.Elements(); i++)
+	{
+		FEElement & elem = d.ElementRef(i);
+		FESolidElement *se = dynamic_cast<FESolidElement*>(&elem);
+		if (se) {
+			// get pointer to the angio element
+			AngioElement* angio_element = pfeangio->se_to_angio_element.at(se);
+			// store the fractional anisotropy.
+			// should go somewhere else...
+			angio_element->UpdateAngioFractionalAnisotropy();
+			str << angio_element->angioFA;
+		}
+	}
+}
+
 bool FEPlotPrimaryVesselDirection::Save(FEDomain& d, FEDataStream& str)
 {
 	FEMesh * mesh = pfeangio->GetMesh();

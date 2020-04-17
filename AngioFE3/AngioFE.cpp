@@ -61,6 +61,7 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS(InitialModifierManager, FEMATERIAL_ID, "im_manager");
 	REGISTER_FECORE_CLASS(NodeDataInterpolationManager, FEMATERIAL_ID, "nodedata_interpolation_manager");
 	REGISTER_FECORE_CLASS(FiberRandomizer, FEMATERIAL_ID, "fiber_randomizer");
+	REGISTER_FECORE_CLASS(EFDFiberInitializer, FEMATERIAL_ID, "EFD_initializer");
 	REGISTER_FECORE_CLASS(DensityInitializer, FEMATERIAL_ID, "density_initializer");
 	REGISTER_FECORE_CLASS(DensityValuesNodeDataInterpolation, FEMATERIAL_ID, "ref_ecm_density");
 	REGISTER_FECORE_CLASS(RepulseValuesNodeDataInterpolation, FEMATERIAL_ID, "repulse_value");
@@ -82,6 +83,7 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	// PDD Classes
 	REGISTER_FECORE_CLASS(PositionDependentDirectionManager, FEMATERIAL_ID, "position_dependent_direction_manager");
 	REGISTER_FECORE_CLASS(FiberPDD, FEMATERIAL_ID, "fiber_pdd");
+	REGISTER_FECORE_CLASS(FractionalAnisotropyPDD, FEMATERIAL_ID, "fractional_anisotropy_pdd")
 	REGISTER_FECORE_CLASS(LaGrangePStrainPDD, FEMATERIAL_ID, "lagrange_principal_pdd");
 	REGISTER_FECORE_CLASS(AnastamosisPDD, FEMATERIAL_ID, "anastamosis_pdd");
 	REGISTER_FECORE_CLASS(ECMDensityGradientPDD, FEMATERIAL_ID, "ecm_density_gradient_pdd");
@@ -121,6 +123,8 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS(FEPlotMatrixElasticStress, FEPLOTDATA_ID, "matrix elastic stress");
 
 	REGISTER_FECORE_CLASS(FEPlotAngioECMDensity, FEPLOTDATA_ID, "angio ECM density");
+	REGISTER_FECORE_CLASS(FEPlotAngioSPA, FEPLOTDATA_ID, "Angio SPA");
+	REGISTER_FECORE_CLASS(FEPlotAngioFractionalAnisotropy, FEPLOTDATA_ID, "Angio Fractional Anisotropy")
 	REGISTER_FECORE_CLASS(FEPlotBranches, FEPLOTDATA_ID, "branch_count");
 	REGISTER_FECORE_CLASS(FEPlotAnastamoses, FEPLOTDATA_ID, "anastamoses");
 	REGISTER_FECORE_CLASS(FEPlotSegmentLength, FEPLOTDATA_ID, "segment_length");

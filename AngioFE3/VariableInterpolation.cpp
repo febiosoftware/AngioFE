@@ -67,6 +67,6 @@ vec3d LinRot::ApplyMix(vec3d psc_dir, vec3d pdd_dir, double contribution) {
 }
 
 vec3d LinRot::ApplyMixAxis(vec3d psc_dir, vec3d pdd_dir, double contribution) {
-	if (psc_dir * pdd_dir < 0) { pdd_dir = -pdd_dir; }
+	if (psc_dir * pdd_dir < 0) 	{pdd_dir = -pdd_dir;}
 	return mix3d(psc_dir, pdd_dir, contribution);
 }

@@ -1108,16 +1108,22 @@ static void solve_3x3(double A[3][3], double b[3], double x[3])
 
 FEAngioMaterial * FEAngio::GetAngioComponent(FEMaterial * mat)
 {
+	// try to cast an angio material
 	auto angm = dynamic_cast<FEAngioMaterial*>(mat);
+	// if it is not an angio material check if it is a multiphasic material
 	if (!angm)
 	{
+		// try to cast a multiphasic material
 		FEMultiphasic * mmat = dynamic_cast<FEMultiphasic*>(mat);
+		// if it is a multiphasic material then get the solid component of the multiphasic material and cast it to the angio material
 		if(mmat)
 			angm = dynamic_cast<FEAngioMaterial*>(mmat->GetSolid());
 	}
+	// if it wasn't an angio material or multiphasic material see if it was triphasic
 	if (!angm)
 	{
 		FETriphasic * mmat = dynamic_cast<FETriphasic*>(mat);
+		// if a triphasic material is found cast the solid to an angio material.
 		if(mmat)
 			angm = dynamic_cast<FEAngioMaterial*>(mmat->GetSolid());
 	}
@@ -1228,6 +1234,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		size_t angio_element_count = angio_elements.size();
 		FEMesh * mesh = GetMesh();
 #pragma omp parallel for schedule(dynamic, 16)
+		// apply the initial modifiers to each angio element
 		for (int i = 0; i < angio_element_count; i++)
 		{
 			if(angio_elements[i]->_angio_mat->im_manager)
@@ -1257,7 +1264,9 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 				angio_elements[i]->_angio_mat->branch_policy->SetupBranchInfo(angio_elements[i]);
 			}
 		}
+		// start the growth timer
 		grow_timer.start();
+		// grow segments
 		ProtoGrowSegments(min_scale_factor, bounds_tolerance, min_angle, growth_substeps);
 		grow_timer.stop();
 

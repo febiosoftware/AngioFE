@@ -2,6 +2,7 @@
 #include "FECore/FEModel.h"
 #include "FECore/LoadCurve.h"
 #include <FECore/FEDataLoadCurve.h>
+#include <numeric>
 
 //implemenations of FENormalDistribution
 double FENormalDistribution::NextValue(angiofe_random_engine & re)

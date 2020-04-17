@@ -145,6 +145,24 @@ public:
 	bool Save(FEDomain& d, FEDataStream& str)  override;
 };
 
+class FEPlotAngioSPA : public FEDomainData
+{
+public:
+	//! constructor
+	explicit FEPlotAngioSPA(FEModel* pfem) : FEDomainData(PLT_MAT3F, FMT_ITEM) {}
+	//! plot the semi principal axes per element
+	bool Save(FEDomain&d, FEDataStream& str) override;
+};
+
+class FEPlotAngioFractionalAnisotropy : public FEDomainData
+{
+public:
+	//! constructor
+	explicit FEPlotAngioFractionalAnisotropy(FEModel* pfem) : FEDomainData(PLT_FLOAT, FMT_ITEM) {}
+	//! plot the semi principal axes per element
+	bool Save(FEDomain&d, FEDataStream& str) override;
+};
+
 //! plot the primary direction that vessels grow per element
 class FEPlotPrimaryVesselDirection : public FEDomainData
 {

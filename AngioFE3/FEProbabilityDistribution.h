@@ -1,6 +1,11 @@
 #pragma once
 #include "StdAfx.h"
 #include <FECore/FEMaterial.h>
+
+#ifndef PI
+#define PI 3.14159265358979
+#endif
+
 //! pure virtual base class for probability distributions
 class FEProbabilityDistribution : public FEMaterial
 {

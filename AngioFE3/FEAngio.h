@@ -247,7 +247,7 @@ private:
 
 	double min_scale_factor = 0.01;
 	double bounds_tolerance = 1e-3;
-	double min_angle = 0.35;
+	double min_angle = 75;
 	int growth_substeps = 3;
 	double max_angio_dt = 0.25;
 	double min_angio_dt = -1;

@@ -7,6 +7,7 @@
 #include <unordered_set>
 
 
+
 class FEAngioMaterial;
 class Segment;
 class Tip;
@@ -27,6 +28,12 @@ public:
 
 	//! get the length of the segments within the element at a given time
 	double GetLengthAtTime(FEMesh* mesh, double time) const;
+	//! get the angio fractional anisotropy
+	void UpdateAngioFractionalAnisotropy();
+	//! Update the angioSPA based on deformation/rotation
+	void UpdateSPA();
+	//! Construct the elliptical distribution between 2 orthogonal SPA and sample it
+	double GetEllipseAngle(const double a, const double b);
 
 	//! pointer to element  
 	FESolidElement * _elem=nullptr;
@@ -68,4 +75,10 @@ public:
 	double refernce_frame_segment_length = 0.0;
 	//! number of anastamoses that have occured
 	int anastamoses = 0;
+	//! initial orientation of spa
+	mat3d initial_angioSPA;
+	//! updated angioSPA
+	mat3d angioSPA;
+	//! Angio fractional anisotropy
+	double angioFA;
 };

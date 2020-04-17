@@ -7,6 +7,7 @@
 #include "FEAngio.h"
 #include "FEAngioMaterial.h"
 #include <iostream>
+#include <algorithm>
 
 BEGIN_PARAMETER_LIST(PositionDependentDirection, FEMaterial)
 ADD_PARAMETER(contribution, FE_PARAM_DOUBLE, "contribution");
@@ -28,6 +29,11 @@ void PositionDependentDirectionManager::Update(FEMesh * mesh, FEAngio* angio)
 		pdd_modifiers[i]->Update(mesh, angio);
 	}
 }
+
+/*bool sortinrev(const pair<double, int> &a, const pair<double, int> &b)
+{
+	return (a.first > b.first);
+}*/
 
 BEGIN_PARAMETER_LIST(LaGrangePStrainPDD, PositionDependentDirection)
 ADD_PARAMETER(beta, FE_PARAM_DOUBLE, "beta");
@@ -374,7 +380,7 @@ vec3d FiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d lo
 	std::vector<quatd> gauss_data;
 	std::vector<quatd> nodal_data;
 	//FEElasticMaterial* pmm = dynamic_cast<FEElasticMaterial*> (angio_element->_mat->GetElasticMaterial);
-	std::cout << "material is " << angio_element->_angio_mat->GetMatrixMaterial()->GetElasticMaterial()->FindProperty("m_Base") << endl;
+	//std::cout << "material is " << angio_element->_angio_mat->GetMatrixMaterial()->GetElasticMaterial()->FindProperty("m_Base") << endl;
 	for (int i = 0; i< angio_element->_elem->GaussPoints(); i++)
 	{
 		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
@@ -388,4 +394,47 @@ vec3d FiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d lo
 	vec3d fiber_direction = rv.GetVector();
 	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_direction, contribution);
 	// return mix(prev, fiber_direction, contribution);
+}
+
+void FractionalAnisotropyPDD::Update(FEMesh * mesh, FEAngio* angio)
+{
+
+}
+
+vec3d FractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio)
+{
+	angio_element->UpdateSPA();
+	angio_element->UpdateAngioFractionalAnisotropy();
+
+	// get the vectors of the principal directions and sort in descending order
+	std::vector<pair<double, int>> v;
+	v.push_back(pair<double, int>(angio_element->angioSPA.col(0).norm(), 0));
+	v.push_back(pair<double, int>(angio_element->angioSPA.col(1).norm(), 1));
+	v.push_back(pair<double, int>(angio_element->angioSPA.col(2).norm(), 2));
+	sort(v.begin(), v.end(), sortinrev);
+
+	// store the indices
+	int i = v[0].second;
+	int j = v[1].second;
+	int k = v[2].second;
+
+	vec3d axis_0 = angio_element->angioSPA.col(i); axis_0.unit();
+	vec3d axis_1 = angio_element->angioSPA.col(j); axis_1.unit();
+	vec3d axis_2 = angio_element->angioSPA.col(k); axis_2.unit();
+	double r0 = (angio_element->angioSPA.col(i).norm());
+	double r1 = (angio_element->angioSPA.col(j).norm());
+	double r2 = (angio_element->angioSPA.col(k).norm());
+
+	double theta_12 = angio_element->GetEllipseAngle(r0,r1);
+	double theta_13 = angio_element->GetEllipseAngle(r0,r2);
+	
+	// rotate the primary direction by theta_12 about the normal between them
+	vec3d axis = mix3d_t(axis_0, axis_1, theta_12); axis.unit();
+	vec3d fiber_dir = mix3d_t(axis, axis_2, theta_13); fiber_dir.unit();
+	// determine the fiber directon contribution from the fractional anisotropy
+	if (angio_element->angioFA > 0.5)	{alpha = 0.7;}
+	else { alpha = 0.7; }
+	//double FA_cont = std::min(angio_element->angioFA, 0.4);
+	//FA_cont = ((1-0.36)/(0.4-0))*FA_cont + 0.36;
+	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_dir, alpha);
 }
