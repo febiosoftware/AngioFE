@@ -146,6 +146,26 @@ ADD_PARAMETER(scale, FE_PARAM_DOUBLE, "scale");
 ADD_PARAMETER(threshold, FE_PARAM_DOUBLE, "threshold");
 END_PARAMETER_LIST();
 
+double SegmentVelocityFAModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh)
+{
+	return prev*angio_element->angioFA;
+}
+
+bool SegmentVelocityFAModifier::Init()
+{
+	return true;
+}
+
+void SegmentVelocityFAModifier::UpdateScale()
+{
+
+}
+
+BEGIN_PARAMETER_LIST(SegmentVelocityFAModifier, SegmentGrowthVelocity)
+ADD_PARAMETER(scale, FE_PARAM_DOUBLE, "scale");
+ADD_PARAMETER(threshold, FE_PARAM_DOUBLE, "threshold");
+END_PARAMETER_LIST();
+
 double SigmoidSegmentVelocity::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh)
 {
 	return scale*prev;

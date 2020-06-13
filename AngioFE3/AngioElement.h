@@ -33,7 +33,8 @@ public:
 	//! Update the angioSPA based on deformation/rotation
 	void UpdateSPA();
 	//! Construct the elliptical distribution between 2 orthogonal SPA and sample it
-	double GetEllipseAngle(const double a, const double b);
+	double GetEllipseAngle(const double a, const double b, const double dist_min, const double dist_max, const int n);
+	//double GetEllipseAngle2(const double a, const double b);
 
 	//! pointer to element  
 	FESolidElement * _elem=nullptr;

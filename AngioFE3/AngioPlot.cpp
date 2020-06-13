@@ -230,7 +230,7 @@ bool FEPlotMatrixElasticStress::Save(FEDomain& d, FEDataStream& str)
 	if (pmat == nullptr) return false;
 
 	FESolidDomain& dom = dynamic_cast<FESolidDomain&>(d);
-	int NE = dom.Elements();
+	int NE = dom.Elements();	
 	for (int i = 0; i<NE; ++i)
 	{
 		FESolidElement& el = dom.Element(i);
@@ -381,6 +381,36 @@ bool FEPlotAngioECMDensity::Save(FEDomain& d, FEDataStream& str)
 		return true;
 }
 
+//-----------------------------------------------------------------------------
+bool FEPlotAngioRepulseVal::Save(FEDomain& d, FEDataStream& str)
+{
+	//Check if the domain has an angio component i.e. make sure this is not a rigid body
+	FEAngioMaterial* pmat = pfeangio->GetAngioComponent(d.GetMaterial());
+	if (pmat != nullptr)
+	{
+		for (int i = 0; i < d.Elements(); i++)
+		{
+			FEElement & elem = d.ElementRef(i);
+			FESolidElement *se = dynamic_cast<FESolidElement*>(&elem);
+			if (se)
+			{
+				AngioElement* angio_element = pfeangio->se_to_angio_element.at(se);
+				double repulse_val = 0.0;
+				for (int j = 0; j < angio_element->_elem->GaussPoints(); j++)
+				{
+					FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(j);
+					FEAngioMaterialPoint *angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+					FEElasticMaterialPoint* elastic_mp = mp->ExtractData<FEElasticMaterialPoint>();
+					repulse_val += angio_mp->repulse_value * (1.0 / elastic_mp->m_J);
+				}
+				repulse_val /= angio_element->_elem->GaussPoints();
+				str << repulse_val;
+			}
+
+		}
+	}
+	return true;
+}
 
 bool FEPlotAngioSPA::Save(FEDomain& d, FEDataStream& str)
 {

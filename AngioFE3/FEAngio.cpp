@@ -742,11 +742,13 @@ bool FEAngio::InitFEM()
 	for (int i = 0; i < m_fem->Materials(); i++)
 	{
 		FEAngioMaterial * cmat = nullptr;
+		// get the material id
 		FEMaterial * mat = m_fem->GetMaterial(i);
 		int id = -1;
+		// get the angio component of the material
 		cmat = GetAngioComponent(mat);
 		
-
+		// if an angio material was successfully found
 		if (cmat)
 		{
 			id = mat->GetID();
@@ -764,7 +766,7 @@ bool FEAngio::InitFEM()
 
 	felog.printf("%d Angio materials found. Stress approach will be used.", m_pmat.size());
 
-	// register the 
+	// register the angio callback
 
 	m_fem->AddCallback(FEAngio::feangio_callback, CB_UPDATE_TIME | CB_MAJOR_ITERS | CB_SOLVED | CB_STEP_ACTIVE | CB_INIT, this);
 
@@ -824,41 +826,50 @@ void FEAngio::SetupAngioElements()
 	// for each element 
 	for (int i = 0; i < mesh->Elements(); i++)
 	{
+		// get the solid element
 		FESolidElement * elem = dynamic_cast<FESolidElement*>(mesh->FindElementFromID(min_elementID + i));
 		if (elem)
 		{
+			// get the material and angio part of the material
 			FEMaterial * mat = model->GetMaterial(elem->GetMatID());
 			FEAngioMaterial*angio_mat = GetAngioComponent(mat);
 			AngioElement * angio_element = nullptr;
 			if (angio_mat)
 			{
+				// create a new angio element and add it to the container
 				angio_element = new AngioElement(elem, angio_mat, mat, mesh);
 				angio_elements.push_back(angio_element);
+				//if this is the last element create a pointer for the angio element vector and an array for the elements by material
 				if (elements_by_material.find(angio_mat) == elements_by_material.end())
 				{
 					std::vector<AngioElement *> ang_elem;
 					elements_by_material[angio_mat] = ang_elem;
 				}
+				// if this is the last angio material append it to the angio material container
 				if(std::find(angio_materials.begin(), angio_materials.end() ,angio_mat) == angio_materials.end())
 				{
 					angio_materials.push_back(angio_mat);
 				}
+				// add the element to the elements by material
 				elements_by_material[angio_mat].push_back(angio_element);
+				// copy the solid element information
 				se_to_angio_elem[elem] = { angio_element,i };
 			}
 			//now fill in the version with holes
 			angio_elements_with_holes.push_back(angio_element);
 		}
 	}
+	// for each angio element fill in the adjacency info
 	for(int i=0; i < angio_elements.size();i++)
 	{
 		FillInAdjacencyInfo(mesh, &eel,  angio_elements[i], se_to_angio_elem[angio_elements[i]->_elem].second);
 	}
+	// for each angio element copy the solid element information
 	for(int i=0; i < angio_elements.size();i++)
 	{
 		se_to_angio_element[angio_elements[i]->_elem] = angio_elements[i];
 	}
-	
+	// for each angio element copy the nodal solid element data.
 	for(int i=0; i < angio_elements.size();i++)
 	{
 		for(int j=0; j < angio_elements[i]->_elem->Nodes();j++)
@@ -879,11 +890,13 @@ void FEAngio::SetupAngioElements()
 			}
 		}
 	}
+	// for each angio element fill in face info
 	for (int i = 0; i < angio_elements.size(); i++)
 	{
 		FillInFaces(mesh, angio_elements[i]);
 	}
 	//make sure that no maps are inserted into during multithreaded code
+	// for each angio element fill in the tip information
 	for (int i = 0; i < angio_elements.size(); i++)
 	{
 		std::vector<AngioElement*> & adj_list = angio_elements_to_all_adjacent_elements[angio_elements[i]];
@@ -1243,6 +1256,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 			}
 		}
 		//now override any specific information that needs it
+		// for each element by material do the node interpolations
 		for(auto iter = elements_by_material.begin(); iter != elements_by_material.end(); ++iter)
 		{
 			if(iter->first->nodedata_interpolation_manager)

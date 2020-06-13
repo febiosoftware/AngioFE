@@ -61,8 +61,10 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS(InitialModifierManager, FEMATERIAL_ID, "im_manager");
 	REGISTER_FECORE_CLASS(NodeDataInterpolationManager, FEMATERIAL_ID, "nodedata_interpolation_manager");
 	REGISTER_FECORE_CLASS(FiberRandomizer, FEMATERIAL_ID, "fiber_randomizer");
+	REGISTER_FECORE_CLASS(DiscreteFiberEFDRandomizer, FEMATERIAL_ID, "discrete_fiber_efd_randomizer");
 	REGISTER_FECORE_CLASS(EFDFiberInitializer, FEMATERIAL_ID, "EFD_initializer");
 	REGISTER_FECORE_CLASS(DensityInitializer, FEMATERIAL_ID, "density_initializer");
+	REGISTER_FECORE_CLASS(RepulseInitializer, FEMATERIAL_ID, "repulse_value_initializer");
 	REGISTER_FECORE_CLASS(DensityValuesNodeDataInterpolation, FEMATERIAL_ID, "ref_ecm_density");
 	REGISTER_FECORE_CLASS(RepulseValuesNodeDataInterpolation, FEMATERIAL_ID, "repulse_value");
 
@@ -73,6 +75,7 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS(SegmentVelocityDensityScaleModifier, FEMATERIAL_ID, "segment_velocity_density_scale_modifier");
 	REGISTER_FECORE_CLASS(SegmentVelocityRefDensityScaleModifier, FEMATERIAL_ID, "segment_velocity_ref_density_scale_modifier");
 	REGISTER_FECORE_CLASS(SegmentVelocity3PModifier, FEMATERIAL_ID, "segment_velocity_3P_modifier");
+	REGISTER_FECORE_CLASS(SegmentVelocityFAModifier, FEMATERIAL_ID, "segment_velocity_fa_modifier");
 	REGISTER_FECORE_CLASS(SigmoidSegmentVelocity, FEMATERIAL_ID, "sigmoid_segment_velocity");
 	REGISTER_FECORE_CLASS(GompertzSegmentVelocity, FEMATERIAL_ID, "gompertz_segment_velocity");
 
@@ -123,6 +126,7 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS(FEPlotMatrixElasticStress, FEPLOTDATA_ID, "matrix elastic stress");
 
 	REGISTER_FECORE_CLASS(FEPlotAngioECMDensity, FEPLOTDATA_ID, "angio ECM density");
+	REGISTER_FECORE_CLASS(FEPlotAngioRepulseVal, FEPLOTDATA_ID, "angio repulse value");
 	REGISTER_FECORE_CLASS(FEPlotAngioSPA, FEPLOTDATA_ID, "Angio SPA");
 	REGISTER_FECORE_CLASS(FEPlotAngioFractionalAnisotropy, FEPLOTDATA_ID, "Angio Fractional Anisotropy")
 	REGISTER_FECORE_CLASS(FEPlotBranches, FEPLOTDATA_ID, "branch_count");

@@ -35,6 +35,24 @@ public:
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
 };
 
+//! sets fibers to an EFD distribution
+class DiscreteFiberEFDRandomizer : public InitialModifier
+{
+public:
+	//! constructor
+	explicit DiscreteFiberEFDRandomizer(FEModel * pfem) : InitialModifier(pfem) {}
+	//! apply random fibers to all elements
+	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
+protected:
+	//! parameter list
+	DECLARE_PARAMETER_LIST();
+private:
+	vec3d efd_spa = vec3d(1, 1, 1);
+	vec3d efd_axes_a = vec3d(1, 0, 0);
+	vec3d efd_axes_b = vec3d(0, 1, 0);
+	vec3d efd_axes_c = vec3d(0, 0, 1);
+};
+
 class EFDFiberInitializer : public InitialModifier 
 {
 public:
@@ -65,4 +83,18 @@ protected:
 	DECLARE_PARAMETER_LIST();
 private:
 	double initial_density = 3.0;
+};
+
+class RepulseInitializer : public InitialModifier
+{
+public:
+	//! constructor
+	explicit RepulseInitializer(FEModel * pfem) : InitialModifier(pfem) {}
+	//! initialize all densities
+	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
+protected:
+	//! parameter list
+	DECLARE_PARAMETER_LIST();
+private:
+	double initial_repulse_value = 0.0;
 };

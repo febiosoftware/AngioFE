@@ -145,6 +145,16 @@ public:
 	bool Save(FEDomain& d, FEDataStream& str)  override;
 };
 
+//! plot the repulse value per element
+class FEPlotAngioRepulseVal : public FEDomainData
+{
+public:
+	//! constructor
+	explicit FEPlotAngioRepulseVal(FEModel* pfem) : FEDomainData(PLT_FLOAT, FMT_ITEM) {}
+	//! plot the repulse value per element
+	bool Save(FEDomain& d, FEDataStream& str)  override;
+};
+
 class FEPlotAngioSPA : public FEDomainData
 {
 public:

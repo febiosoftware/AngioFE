@@ -27,13 +27,12 @@ double AngioElement::GetLengthAtTime(FEMesh* mesh, double time) const
 	return (a.first > b.first);
 }*/
 
-double AngioElement::GetEllipseAngle(const double a, const double b)
+double AngioElement::GetEllipseAngle(const double a, const double b, const double dist_min, const double dist_max, const int n)
 {
 	// initialize vals
-	double p_i = -90;
-	double p_f = PI / 2;
-	int n = 180;
-	double div = (PI/180)*(181/180);
+	double p_i = dist_min;
+	double p_f = dist_max;
+	double div = (PI/180)*((n+1)/n);
 
 	// theta
 	std::vector<double> t(n);
@@ -46,6 +45,7 @@ double AngioElement::GetEllipseAngle(const double a, const double b)
 	// cumulative area vector
 	std::vector<double> ac_t(n);
 	
+	t.at(0) = dist_min;
 	a_t.at(0) = 0;
 	r_t.at(0) = (a*b) / sqrt(pow(b*cos(t.at(0)), 2) + pow(a*sin(t.at(0)), 2));
 	for (int i = 1; i < n; i++)
@@ -67,9 +67,55 @@ double AngioElement::GetEllipseAngle(const double a, const double b)
 	// get a random number
 	double rn = ud(_rengine);
 	// find the rc_t value closest to the random number and get the position
-	int i = std::distance(ac_t.begin(), std::lower_bound(ac_t.begin(), ac_t.end(), rn));
-	return t.at(i);
+	int fi = std::distance(ac_t.begin(), std::lower_bound(ac_t.begin(), ac_t.end(), rn));
+	return t.at(fi);
 }
+
+/*double AngioElement::GetEllipseAngle2(const double a, const double b)
+{
+	// initialize vals
+	double p_i = -PI;
+	double p_f = PI;
+	int n = 360;
+	double div = (PI/180)*(361 / 360);
+
+	// theta
+	std::vector<double> t(n);
+	// radius
+	std::vector<double> r_t(n);
+	// radius cumulative sum
+	std::vector<double> rc_t(n);
+	// area vector
+	std::vector<double> a_t(n);
+	// cumulative area vector
+	std::vector<double> ac_t(n);
+
+	t.at(0) = -PI;
+	a_t.at(0) = 0;
+	r_t.at(0) = (a*b) / sqrt(pow(b*cos(t.at(0)), 2) + pow(a*sin(t.at(0)), 2));
+	for (int i = 1; i < n; i++)
+	{
+		// assign the angle
+		t.at(i) = (p_i + i*div);
+		// get the radius
+		r_t.at(i) = (a*b) / sqrt(pow(b*cos(t.at(i)), 2) + pow(a*sin(t.at(i)), 2));
+		// get the area
+		a_t.at(i) = (r_t.at(i)*r_t.at(i - 1))*sin(div);
+	}
+	// get the cumulative sum
+	std::partial_sum(a_t.begin(), a_t.end(), ac_t.begin());
+	// divide cumulative sum by sum
+	std::transform(ac_t.begin(), ac_t.end(), ac_t.begin(),
+		std::bind(std::divides<double>(), std::placeholders::_1, ac_t.at(n - 1)));
+	// construct uniform distribution
+	std::uniform_real_distribution<double> ud = std::uniform_real_distribution<double>(0.0, 1.0);
+	// get a random number
+	double rn = ud(_rengine);
+	// find the rc_t value closest to the random number and get the position
+	int fi = std::distance(ac_t.begin(), std::lower_bound(ac_t.begin(), ac_t.end(), rn));
+	return t.at(fi);
+}*/
+
 
 void AngioElement::UpdateAngioFractionalAnisotropy()
 {

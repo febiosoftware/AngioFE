@@ -351,7 +351,9 @@ void FEAngioMaterial::ProtoGrowSegments(AngioElement * angio_elem, double end_ti
 	{
 		if (angio_elem->adjacency_list.at(i))
 		{
+			//copy the vector of active tips in the adjacent angio element
 			std::vector<Tip*> & tips = angio_elem->adjacency_list.at(i)->active_tips[buffer_index].at(angio_elem);
+			// for each tip in the adjacent element grow the tips
 			for (int j = 0; j < tips.size(); j++)
 			{
 				assert(tips.at(j)->angio_element == angio_elem);
@@ -360,7 +362,9 @@ void FEAngioMaterial::ProtoGrowSegments(AngioElement * angio_elem, double end_ti
 		}
 	}
 
-	std::vector<Tip*> & tips = angio_elem->active_tips[buffer_index].at(angio_elem);
+	// copy the vector of active tips in the current angio element
+	std::vector<Tip*> & tips = angio_elem->active_tips[buffer_index].at(angio_elem);\
+	// for each tip in the current element grow the tips.
 	for (int j = 0; j < tips.size(); j++)
 	{
 		assert(tips[j]->angio_element == angio_elem);
@@ -509,10 +513,10 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 			seg->parent = active_tip->parent;
 		}
 
-		// calculate the segment length of seg
-		angio_element->refernce_frame_segment_length += seg->RefLength(mesh);
 		// add the segment to the recent segments vector
 		angio_element->recent_segments.push_back(seg);
+		// calculate the segment length of seg
+		angio_element->refernce_frame_segment_length += seg->RefLength(mesh);
 		// add next to the final active tips
 		angio_element->final_active_tips.push_back(next);
 		assert(next->angio_element);
@@ -603,10 +607,9 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 			else
 			{
 				// in this element assign this tip for evaluation on the next step. We will assign it at the current element by pushing back the active tip.
-				
 				angio_element->final_active_tips.push_back(next);
 				angio_element->next_tips.at(angio_element).push_back(next);
-				next->growth_velocity = 0;
+				//next->growth_velocity = 0;
 			}
 		}
 		// if the tips weren't growing re-add them to the active list for now. In the future may want to have this be the case to handle model boundaries and other stuff.
@@ -623,22 +626,40 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 
 void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle)
 {
+	////////// Initialization //////////
+
+	// get the current angio element and make sure it's active
 	auto angio_element = active_tip->angio_element;
 
 	assert(active_tip);
+	// get the mesh, set the min segment length, and set the next buffer (change to write buffer from read).
 	auto mesh = m_pangio->GetMesh();
 	const double min_segm_len = 0.1;
 	int next_buffer_index = (buffer_index + 1) % 2;
+	// calculate the change in time
 	double dt = end_time - active_tip->time;
+	// determine the length the segment grows.
 	double grow_vel = angio_element->_angio_mat->GetInitialVelocity();
-	double grow_len = grow_vel *dt;
+	if (grow_vel < 0)
+	{
+		return;
+	}
+	assert(grow_vel > 0.0);
+	double grow_len = grow_vel*dt;
 
+	////////// Determine the growth length and new position //////////
+
+	// get the local position of the tip
 	double Gr[FEElement::MAX_NODES];
 	double Gs[FEElement::MAX_NODES];
 	double Gt[FEElement::MAX_NODES];
+	// get the local position of the tip
 	vec3d local_pos = active_tip->GetLocalPosition();
+	// get the shape function derivative values for the element type
 	angio_element->_elem->shape_deriv(Gr, Gs, Gt, local_pos.x, local_pos.y, local_pos.z);
 	vec3d er, es, et; // Basis vectors of the natural coordinates
+
+	// for each node determine the contribution to the conversion between the natural and global coordinate systems.
 	for (int j = 0; j < angio_element->_elem->Nodes(); j++)
 	{
 		er += mesh->Node(angio_element->_elem->m_node[j]).m_rt* Gr[j];
@@ -651,12 +672,20 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 	{
 		et += mesh->Node(angio_element->_elem->m_node[j]).m_rt* Gt[j];
 	}
+	// convert natural coords to global
 	mat3d natc_to_global(er, es, et);
+	// determine the inverse operation to go from global to natural
 	mat3d global_to_natc = natc_to_global.inverse();
+	bool continue_growth = true;
+
+	// get the growth direction
+	// determine the alpha (mix value)
 	vec3d psc_dir = psc_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip->angio_element, active_tip->GetLocalPosition(), active_tip->GetDirection(mesh), mesh);
+	// assign the global direction from the persistence component
 	vec3d global_dir = psc_dir;
 	global_dir.unit();
 
+	// get the new position in global coordinates
 	vec3d global_pos;
 	double H[FEElement::MAX_NODES];
 	angio_element->_elem->shape_fnc(H, local_pos.x, local_pos.y, local_pos.z);
@@ -665,61 +694,87 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		global_pos += mesh->Node(angio_element->_elem->m_node[j]).m_rt* H[j];
 	}
 
-	// Just do the transformations
 	vec3d nat_dir = global_to_natc * global_dir;
+
+	////////// Calculate variables to determine which element to grow into //////////
+
 	double factor;
+	// Determine if the ray cast run along the face of an element. If you see vessels bouncing off unexposed faces this is likely the issue.
+	//This also updates "factor" which scales the length allowed in the element. It is the shortest of the 3 directions that an element can grow before exceeding the bounds while also staying above the min_scale_factor
+	//If it fails that means that all possible factors are less than the min_scale_factor.
 	bool proj_success = m_pangio->ScaleFactorToProjectToNaturalCoordinates(active_tip->angio_element->_elem, nat_dir, local_pos, factor, min_scale_factor); // TODO: HERE
+	// Calculate the position on the face that the tip will grow to.
 	vec3d possible_natc = local_pos + (nat_dir*factor);
+	// determine the hypothetical length to grow
 	double possible_grow_length = m_pangio->InElementLength(active_tip->angio_element->_elem, local_pos, possible_natc);
+	
+	////////// Determine which element to grow into //////////
+	
+	// if the vessel is going to stay in this element (or hit the face) and a face to grow to was found:
 	if ((possible_grow_length >= grow_len) && proj_success)
 	{
-		//this is still in the same element
+		//determine the new natural coordinate position in this element. Not sure that this calculation needs to be this convoluted.
 		vec3d real_natc = local_pos + (nat_dir * (factor * (grow_len / possible_grow_length)));
 		//add the segment and add the new tip to the current angio element
 		Tip * next = new Tip(active_tip, mesh);
 		Segment * seg = new Segment();
 		next->time = end_time;
+		// the new tip is assigned to the current element.
 		next->angio_element = angio_element;
+		// assign the new position to the new tip.
 		next->SetLocalPosition(real_natc, mesh);
+		// assign the new tip as the parent of the segment.
 		next->parent = seg;
+		// assign the current element as location where growth began.
 		next->face = angio_element;
-		//growth velocity must be zero to work with grown segments stress policy
+		// assign the velocity that the tip grew at
+		//growth velocity must be zero to work with grown segments stress policy. Otherwise it would be grow_vel. TODO: Maybe make it use different methods based on the policy?
 		//next->growth_velocity = grow_vel;
 		next->growth_velocity = 0;
+		// copy the parent fragment id from the original tip.
 		next->initial_fragment_id = active_tip->initial_fragment_id;
+		// ensure that if the element is a tet that it does not exceed the element boundaries. This should already have been done in ScaleFactor calculation.
 		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (local_pos.x + local_pos.y + local_pos.z) < 1.01 : true);
 		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (local_pos.x + local_pos.y + local_pos.z) < 1.01 : true);
+		// add the new tip to the element so the element manages the tip.
 		angio_element->next_tips.at(angio_element).push_back(next);
-
-		//move next to use the rest of the remaining dt
+		// make the active tip the back of this segment and make next the front.
 
 		seg->back = active_tip;
 		seg->front = next;
+		// assign the segment's parent seg as the same as the active tip's parent seg
 		if (active_tip->parent)
 		{
 			seg->parent = active_tip->parent;
 		}
 
-
+		// add the segment to the recent segments vector
 		angio_element->recent_segments.push_back(seg);
+		// calculate the segment length of seg
 		angio_element->refernce_frame_segment_length += seg->RefLength(mesh);
+		// add next to the final active tips
 		angio_element->final_active_tips.push_back(next);
 		assert(next->angio_element);
 	}
 	else if (proj_success)
 	{
-		//the segment only grows for a portion of dt
+		//the segment only grows for a portion of dt. This portion is the amount needed to hit the face.
+		//grow len should always be nonzero so this division should be okay. This will need to be accounted for in the future if we explicitly model sprouting.
 		double tip_time_start = active_tip->time + (possible_grow_length / grow_len) * dt;
 		assert(tip_time_start < end_time);
 		//grow len should always be nonzero so this division should be okay
 		//this segment is growing into a new element do the work to do this
 
 		//next is just the end of the segment not the begining of the next segment
+	
+		// create a tip on the element face
 		Tip * next = new Tip();
 		Segment * seg = new Segment();
+		// the tip will appear at the time it takes to reach the face.
 		next->time = tip_time_start;
-
+		// assign the tip to this element.
 		next->angio_element = angio_element;
+		// update species.
 		next->Species = active_tip->Species;
 		active_tip->Species.clear();
 
@@ -740,11 +795,15 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		}
 
 		vec3d pos = next->GetPosition(mesh);
-		angio_element->refernce_frame_segment_length += seg->RefLength(mesh);
 		angio_element->recent_segments.push_back(seg);
+		angio_element->refernce_frame_segment_length += seg->RefLength(mesh);
 
 		std::vector<AngioElement*> possible_locations;
 		std::vector<vec3d> possible_local_coordinates;
+		// check to see if the element is a hex how many exposed faces there are. 0 -> 26, 1 -> 17, 2 -> 11, 3 -> 7
+		/*if (angio_element->adjacency_list.size() != 26) {
+		std::cout << "exposed, size is " << angio_element->adjacency_list.size() << endl;
+		}*/
 		for (int i = 0; i < angio_element->adjacency_list.size(); i++) // TODO: HERE
 		{
 			AngioElement * ang_elem = angio_element->adjacency_list[i];
@@ -755,7 +814,8 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 				{
 					double r[3];//new natural coordinates
 					bool natc_proj = m_pangio->ProjectToElement(*ang_elem->_elem, pos, mesh, r);
-					if (natc_proj && m_pangio->IsInBounds(ang_elem->_elem, r, bounds_tolerance))
+					bool in_bounds = m_pangio->IsInBounds(ang_elem->_elem, r, bounds_tolerance);
+					if (natc_proj && in_bounds)
 					{
 						possible_locations.push_back(angio_element->adjacency_list[i]);
 						possible_local_coordinates.push_back(FEAngio::clamp_natc(angio_element->adjacency_list[i]->_elem->Type(), vec3d(r[0], r[1], r[2])));
@@ -779,10 +839,15 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 				angio_element->active_tips[next_buffer_index].at(possible_locations[index]).push_back(adj);
 			}
 		}
+		// if there are no adjacent elements to grow into then 
+		// currently this just keeps the tip active.
 		else
 		{
 			// in this element assign this tip for evaluation on the next step. We will assign it at the current element by pushing back the active tip.
+			// let's grow it somewhere
+			angio_element->final_active_tips.push_back(next);
 			angio_element->next_tips.at(angio_element).push_back(active_tip);
+			//next->growth_velocity = 0;
 		}
 	}
 }

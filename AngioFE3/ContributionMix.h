@@ -43,12 +43,12 @@ public:
 	explicit PSCPDDContributionMix(FEModel* pfem) : ContributionMix(pfem) {}
 	virtual ~PSCPDDContributionMix() {}
 	//! return the contribution mix at a given location
-	double ApplyModifiers(double prev, AngioElement* angio_element, vec3d local_pos, FEMesh* mesh) override;
+	double ApplyModifiers(double dt, AngioElement* angio_element, vec3d local_pos, FEMesh* mesh) override;
 	//! updates the contribution mix to a given time
 	void Update(FEMesh * mesh) override;
 protected:
 	//! parameter list
 	DECLARE_PARAMETER_LIST();
 private:
-	double psc_weight = 0.5;
+	double psc_weight = 1.0;
 };

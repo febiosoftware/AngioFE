@@ -24,14 +24,17 @@ Fileout::Fileout(FEAngio& angio)
 	vessel_csv_stream.open("vessels.csv");
 	vessel_csv_stream << "x0,y0,z0,x1,y1,z1,time " << endl;
 #endif
-
+	// write the line file
 	vessel_state_stream = fopen("out_vess_state.ang2" , "wb");//check the parameters consider setting the compression level
+	// initialize version and line numbers
 	unsigned int magic = 0xfdb97531;
 	unsigned int version = 1;
 	unsigned int num_bitmasks = angio.m_fem->Materials()/32 + 1;
+	// write the magic number, version, and number of materials
 	fwrite(&magic, sizeof(unsigned int), 1, vessel_state_stream);
 	fwrite(&version, sizeof(unsigned int), 1, vessel_state_stream);
 	fwrite(&num_bitmasks, sizeof(unsigned int), 1, vessel_state_stream);
+	// for each material
 	for(unsigned int j=0; j < num_bitmasks;j++)
 	{
 		unsigned int c_bitmask = 0;

@@ -1,6 +1,7 @@
 #include "NodeDataInterpolation.h"
 #include "FEAngio.h"
 #include <FECore/FENodeDataMap.h>
+#include <iostream>
 
 BEGIN_PARAMETER_LIST(NodeDataInterpolation, FEMaterial)
 ADD_PARAMETER(node_set_id, FE_PARAM_INT, "node_set_id");
@@ -28,16 +29,25 @@ const char * RepulseValuesNodeDataInterpolation::GetDataName() const
 
 void NodeDataInterpolation::PrepValues(FEAngio* angio, FEMesh* mesh, FEAngioMaterial* angio_mat)
 {
+	// convert the node values (lids) to ids
+
+	// for each element in the angio material
 	for(int i=0;i < angio->elements_by_material[angio_mat].size();i++)
 	{
+		//get the solid element
 		FESolidElement * se = angio->elements_by_material[angio_mat][i]->_elem;
+		// make a vector to store nodal values.
 		double nodal_values[FEElement::MAX_NODES];
+		// store the values at the gauss points
 		std::vector<double> values_at_gauss_points;
+		// get the values from the solid element gauss points
 		for(int j=0; j < se->GaussPoints();j++)
 		{
 			values_at_gauss_points.push_back(ValueReference(se->GetMaterialPoint(j)));
 		}
-		se->project_to_nodes(&values_at_gauss_points[0], nodal_values);
+		// project the solid element values to the nodes from the gauss points
+		se->project_to_nodes(&values_at_gauss_points[0], &nodal_values[0]);
+		// for each node in the solid elements 
 		for(int j=0; j < se->Nodes();j++)
 		{
 			node_id_to_values[se->m_node[j]] = nodal_values[j];
@@ -46,20 +56,25 @@ void NodeDataInterpolation::PrepValues(FEAngio* angio, FEMesh* mesh, FEAngioMate
 	}
 	//replace the values using the nodeset and properties
 
+	// copy the nodeset from the id
 	FENodeSet * node_set = mesh->NodeSet(node_set_id);
 	assert(node_set);
+	// create the data array for the desired type of data
 	FEDataArray* da = angio->m_fem->FindDataArray(GetDataName());
 	assert(da);
+	// create a node data map from the data array
 	FENodeDataMap * ndm = dynamic_cast<FENodeDataMap*>(da);
 	assert(ndm);
 	//the number of items is valid
 	assert(ndm->DataCount() <= node_set->size());
+	// get the node list
 	auto node_list = node_set->GetNodeList();
-	//not working
-	//for(int i=0; i<ndm->DataCount();i++)
+	// for each node
 	for (int i = 0; i<node_list.size(); i++)
 	{
+		// get the node id
 		int node_id = node_list[i];
+		// convert the node id to the values
 		node_id_to_values[node_id] = ndm->getValue(i);
 	}
 

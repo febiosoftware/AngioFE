@@ -63,6 +63,23 @@ inline vec3d mix3d_t(vec3d & x, vec3d & y, double t)
 	return rot_mat * x;
 }
 
+// method of rotation about an axis: https://en.wikipedia.org/wiki/Rotation_matrix#In_three_dimensions
+// returns the rotation matrix instead. Can have the og function return a pair in future.
+inline mat3d mix3d_t_r(vec3d & x, vec3d & y, double t)
+{
+	// determine the normal vector to the plane spanned by x and y
+	vec3d normal_vec = x ^ y;
+	normal_vec.unit();
+	mat3d rot_mat;
+	auto nx = normal_vec.x, ny = normal_vec.y, nz = normal_vec.z;
+	double ct = cos(t), st = sin(t);
+	// assemble the rotation matrix about the normal vector within the plane spanned by x and y
+	rot_mat[0][0] = ct + pow(nx, 2) * (1 - ct);	rot_mat[0][1] = nx * ny*(1 - ct) - nz * st;	rot_mat[0][2] = nx * nz*(1 - ct) + ny * st;
+	rot_mat[1][0] = ny * nx*(1 - ct) + nz * st;	rot_mat[1][1] = ct + pow(ny, 2)*(1 - ct);	rot_mat[1][2] = ny * nz*(1 - ct) - nx * st;
+	rot_mat[2][0] = nz * nx*(1 - ct) - ny * st;	rot_mat[2][1] = nz * ny*(1 - ct) + nx * st;	rot_mat[2][2] = ct + pow(nz, 2)*(1 - ct);
+	return rot_mat;
+}
+
 // Binary search used in volume/area seeders.
 static size_t findElement(double val, int lo, int high, double * begin, double * end)
 {

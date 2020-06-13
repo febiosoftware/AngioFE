@@ -108,6 +108,26 @@ private:
 	double threshold = 1;
 };
 
+//! scales the segment velocity based on the fractional anisotropy
+class SegmentVelocityFAModifier : public SegmentGrowthVelocity
+{
+public:
+	//!constructor
+	explicit SegmentVelocityFAModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) { AddProperty(&interpolation_prop, "interpolation_prop"); }
+	//! Scales the velocity based on the ecm density at the location
+	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
+	//! performs initialization
+	bool Init() override;
+	void UpdateScale() override;
+protected:
+	//! parameter list
+	DECLARE_PARAMETER_LIST();
+private:
+	FEPropertyT<FEVariableInterpolation> interpolation_prop;
+	double scale = 1;
+	double threshold = 1;
+};
+
 class SigmoidSegmentVelocity : public SegmentGrowthVelocity
 {
 public:

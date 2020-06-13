@@ -28,6 +28,7 @@ void PositionDependentDirectionManager::Update(FEMesh * mesh, FEAngio* angio)
 	{
 		pdd_modifiers[i]->Update(mesh, angio);
 	}
+	mat3ds eye;
 }
 
 /*bool sortinrev(const pair<double, int> &a, const pair<double, int> &b)
@@ -136,14 +137,17 @@ vec3d RepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d 
 		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
 		FEElasticMaterialPoint* elastic_mp = gauss_point->ExtractData<FEElasticMaterialPoint>();
 
-		// not sure why this is included. It is pushing back the repulse value divided by the deformation.
-		// probably to account for changes in mp positions?
+		// Get the replse value and scale it by any deformation
 		repulse_at_integration_points.push_back(angio_mp->repulse_value * (1.0 / elastic_mp->m_J));
 	}
+	// if the threshold method should be used
 	if(grad_threshold)
 	{
+		// get the gradient for the element from the repulse value at the integration points from the current position
 		vec3d grad = pangio->gradient(angio_element->_elem, repulse_at_integration_points, local_pos);
+		// get the magnitude and compare to the threshold
 		double gradnorm = grad.norm();
+		std::cout << "gradnorm is " << gradnorm << endl;
 		if (gradnorm > threshold)
 		{
 			grad = -grad;
@@ -151,13 +155,15 @@ vec3d RepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d 
 			{
 				alpha = contribution;
 			}
-			vec3d new_dir = angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, contribution);
+			// use the negative of the gradient of the repulse values to tell vessels which direction to grow away from
+			vec3d new_dir = angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, alpha);
 			if (prev* grad < 0) { new_dir = -new_dir; }
 			return new_dir;
 			//return angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, contribution);
 			//return mix(prev,grad, contribution);
-		}
+		}	
 	}
+	// if the gradient method is not being used
 	else
 	{
 		double nodal_repulse[FEElement::MAX_NODES];
@@ -187,7 +193,7 @@ vec3d RepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d 
 				alpha = contribution;
 			}
 			// new vector direction is mix of previous and deflected direction.
-			vec3d new_dir = angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, contribution);
+			vec3d new_dir = angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, 1);
 			// if previous direction dotted with grad is -ve i.e. the angle between them is greater than 90 degrees. not sure if this makes sense. 
 			// if (prev* grad < 0) { new_dir = -new_dir; }
 			return new_dir;
@@ -389,7 +395,7 @@ vec3d FiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d lo
 		axis = emp->m_F * emp->m_Q * axis;
 		gauss_data.push_back({ axis });
 	}
-	
+
 	quatd rv = interpolation_prop->Interpolate(angio_element->_elem, gauss_data, local_pos, mesh);
 	vec3d fiber_direction = rv.GetVector();
 	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_direction, contribution);
@@ -425,16 +431,27 @@ vec3d FractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* angio_el
 	double r1 = (angio_element->angioSPA.col(j).norm());
 	double r2 = (angio_element->angioSPA.col(k).norm());
 
-	double theta_12 = angio_element->GetEllipseAngle(r0,r1);
-	double theta_13 = angio_element->GetEllipseAngle(r0,r2);
-	
+	double theta_12 = angio_element->GetEllipseAngle(r0, r1,-PI/2,PI,180);
+	double theta_13 = angio_element->GetEllipseAngle(r0, r2,-PI/2,PI,180);
+
 	// rotate the primary direction by theta_12 about the normal between them
 	vec3d axis = mix3d_t(axis_0, axis_1, theta_12); axis.unit();
 	vec3d fiber_dir = mix3d_t(axis, axis_2, theta_13); fiber_dir.unit();
 	// determine the fiber directon contribution from the fractional anisotropy
-	if (angio_element->angioFA > 0.5)	{alpha = 0.7;}
-	else { alpha = 0.7; }
-	//double FA_cont = std::min(angio_element->angioFA, 0.4);
-	//FA_cont = ((1-0.36)/(0.4-0))*FA_cont + 0.36;
+	/*if (alpha_override)
+	{
+		alpha = contribution;
+	}*/
+	//double FA_cont = std::min(angio_element->angioFA, 0.36);
+	//std::cout << "contribution is " << contribution << endl;
+	alpha = std::min((contribution*(((0.75 - 0.36) / (0.6 - 0))*angio_element->angioFA + 0.36)),0.75);
+	/*if (angio_element->angioFA > 0.5) 
+	{ 
+		alpha = contribution*(((1 - 0.36) / (0.75 - 0))*FA_cont + 0.36); 
+	}*/
 	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_dir, alpha);
 }
+
+BEGIN_PARAMETER_LIST(FractionalAnisotropyPDD,PositionDependentDirection)
+ADD_PARAMETER(alpha_override, FE_PARAM_BOOL, "alpha_override");
+END_PARAMETER_LIST();

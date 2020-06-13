@@ -70,8 +70,10 @@ public:
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio) override;
+	DECLARE_PARAMETER_LIST();
 private:
 	FEPropertyT<FEVariableInterpolation> interpolation_prop;
+	bool alpha_override = true;// replace alpha with the override
 };
 
 class LaGrangePStrainPDD : public PositionDependentDirection
@@ -127,7 +129,7 @@ public:
 	//! parameter list
 	DECLARE_PARAMETER_LIST();
 private:
-	double threshold = 0.00001;//vessels will deflect if above threshold
+	double threshold = 1;//vessels will deflect if above threshold
 	bool alpha_override = true;//replace the alpha to have this take over
 	bool grad_threshold = false;//use a gradient to detect areas where repulsion should occur.
 	FEPropertyT<FEVariableInterpolation> interpolation_prop;
