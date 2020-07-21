@@ -1,5 +1,5 @@
 #pragma once
-#include <FECore/BC.h>
+#include <FECore/FEBoundaryCondition.h>
 #include <FECore/FEMaterial.h>
 #include "AngioElement.h"
 
@@ -17,7 +17,7 @@ public:
 	//! idealy changes how the concentrations are updated to be based on the location of tips
 	//void Update();
 protected:
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
 	int SBM_ID = 0;
 	double prod_rate = 0.0;
@@ -26,9 +26,10 @@ private:
 class TipSpeciesManager : public FEMaterial
 {
 public:
-	explicit TipSpeciesManager(FEModel* pfem) : FEMaterial(pfem) { AddProperty(&tip_species_prop, "tip_species_prop"); tip_species_prop.m_brequired = false; }
+	explicit TipSpeciesManager(FEModel* pfem) : FEMaterial(pfem) { AddClassProperty(this, &tip_species_prop, "tip_species_prop"), FEProperty::Optional; }
 	virtual ~TipSpeciesManager() {}
-	FEVecPropertyT<TipSpecies> tip_species_prop;
+	std::vector<TipSpecies*>	tip_species_prop;	//!< pointers to elastic materials
+	//TipSpecies* tip_species_prop;
 protected:
 private:
 };

@@ -88,8 +88,8 @@ void Fileout::printStatus(FEAngio& angio, double time)
 void PrintSegment(vec3d r0, vec3d r1)
 {
 #ifndef NDEBUG
-	std::cout << "r0: " << r0.x << "," << r0.y << "," << r0.z << std::endl;
-	std::cout << "r1: " << r1.x << "," << r1.y << "," << r1.z << std::endl;
+	//std::cout << "r0: " << r0.x << "," << r0.y << "," << r0.z << std::endl;
+	//std::cout << "r1: " << r1.x << "," << r1.y << "," << r1.z << std::endl;
 #endif
 }
 

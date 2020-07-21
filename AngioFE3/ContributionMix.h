@@ -1,6 +1,6 @@
 #pragma once
 #include <FECore/FEMaterial.h>
-#include <FEBioMech/FESPRProjection.h>
+#include <FECore/FESPRProjection.h>
 #include "AngioElement.h"
 #include "VariableInterpolation.h"
 class FEAngio;
@@ -25,14 +25,15 @@ class ContributionMixManager : public FEMaterial
 {
 public:
 	//! constructor
-	explicit ContributionMixManager(FEModel* pfem) : FEMaterial(pfem) { AddProperty(&cm_modifiers, "psc_modifier"); cm_modifiers.m_brequired = false; }
+	explicit ContributionMixManager(FEModel* pfem) : FEMaterial(pfem) { AddClassProperty(this, &cm_modifiers, "psc_modifier", FEProperty::Optional); }
 	virtual ~ContributionMixManager() {}
 	//! return the contribution mix at a given location
 	double ApplyModifiers(double prev, AngioElement* angio_element, vec3d local_pos, FEMesh* mesh);
 	//! updates the contribution mix manager to a given time
 	void Update(FEMesh * mesh) {}
 private:
-	FEVecPropertyT<ContributionMix> cm_modifiers;
+	std::vector<ContributionMix*>	cm_modifiers;	//!< pointers to elastic materials
+	//ContributionMix* cm_modifiers;
 };
 
 //! set the contribution mix to a value or a load curve
@@ -48,7 +49,7 @@ public:
 	void Update(FEMesh * mesh) override;
 protected:
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
 	double psc_weight = 1.0;
 };

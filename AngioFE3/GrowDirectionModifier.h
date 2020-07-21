@@ -5,7 +5,7 @@
 #include "FECore/FEMaterial.h"
 #include <FECore/DataRecord.h>
 #include <FECore/Archive.h>
-#include "FEBioPlot/FEBioPlotFile2.h"
+#include "FEBioPlot/FEBioPlotFile.h"
 class FEAngioMaterialBase;
 class FEAngio;
 

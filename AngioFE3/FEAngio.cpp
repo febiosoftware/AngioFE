@@ -6,7 +6,7 @@
 #include "FEAngio.h"
 #include "Segment.h"
 #include "FECore/FECoreKernel.h"
-#include "FECore/FEDataLoadCurve.h"
+#include "FECore/FELoadCurve.h"
 #include "FEBioMech/FEElasticMaterial.h"
 #include "FEBioMech/FEElasticMixture.h"
 #include "FEBioMix/FESolute.h"
@@ -32,6 +32,7 @@
 #include <omp.h>
 #include <iostream>
 #include <math.h>
+#include "FECore/FEDomainMap.h"
 
 //-----------------------------------------------------------------------------
 // create a map of fiber vectors based on the material's orientatin
@@ -413,7 +414,7 @@ vec3d FEAngio::ReferenceCoordinates(Tip * tip) const
 	//Point has already been positioned
 	FESolidElement * se= tip->angio_element->_elem;
 
-	double arr[FEElement::MAX_NODES];
+	double arr[FESolidElement::MAX_NODES];
 	// get tip local coordinates
 	vec3d local_pos = tip->GetLocalPosition();
 	se->shape_fnc(arr, local_pos.x, local_pos.y, local_pos.z);
@@ -763,8 +764,7 @@ bool FEAngio::InitFEM()
 		}
 	}
 	//assert(m_pmat.size());
-
-	felog.printf("%d Angio materials found. Stress approach will be used.", m_pmat.size());
+	feLog("%d Angio materials found. Stress approach will be used.", m_pmat.size());
 
 	// register the angio callback
 
@@ -779,7 +779,7 @@ void FEAngio::FillInAdjacencyInfo(FEMesh * mesh,FEElemElemList * eel, AngioEleme
 	FESolidElement * se = angio_element->_elem;
 	assert(se);
 	// for each face in the solid element
-	for(int i=0; i < mesh->Faces(*se);i++)
+	for(int i=0; i < se->Faces();i++)
 	{
 		// get the neighboring element
 		FEElement * elem = eel->Neighbor(elem_index, i);
@@ -1049,12 +1049,12 @@ vec3d FEAngio::uniformInUnitCube()
 vec3d FEAngio::gradient(FESolidElement * se, std::vector<double> & fn, vec3d pt)
 {
 	assert(se);
-	FESolidDomain* domain = dynamic_cast<FESolidDomain*>(se->GetDomain());
+	FESolidDomain* domain = dynamic_cast<FESolidDomain*>(se->GetMeshPartition());
 	double Ji[3][3];
 	domain->invjact(*se, Ji, pt.x, pt.y, pt.z);
-	double Gr[FEElement::MAX_NODES], Gs[FEElement::MAX_NODES], Gt[FEElement::MAX_NODES];
+	double Gr[FESolidElement::MAX_NODES], Gs[FESolidElement::MAX_NODES], Gt[FESolidElement::MAX_NODES];
 	se->shape_deriv(Gr, Gs, Gt, pt.x, pt.y, pt.z);
-	double out_values[FEElement::MAX_NODES];
+	double out_values[FESolidElement::MAX_NODES];
 	se->project_to_nodes(&fn[0], out_values);
 
 
@@ -1153,7 +1153,7 @@ FEAngioMaterial * FEAngio::GetAngioComponent(FEMaterial * mat)
 
 vec3d FEAngio::Position(FESolidElement * se, vec3d local) const
 {
-	double arr[FEElement::MAX_NODES];
+	double arr[FESolidElement::MAX_NODES];
 	assert(se);
 	se->shape_fnc(arr, local.x, local.y, local.z);
 	vec3d rc(0, 0, 0);
@@ -1246,6 +1246,28 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		growth_substeps = int (m_fem->GetGlobalConstant("growth_substeps"));
 		size_t angio_element_count = angio_elements.size();
 		FEMesh * mesh = GetMesh();
+		// Do angio material initialization for the mat_axis
+		// Need to loop over all angio domains assigned
+		for (int i = 0; i < mesh->Domains(); i++)
+		{
+			FEDomain &test_dom = mesh->Domain(i);
+			// see if it is an angio domain
+			FEAngioMaterial* test_angmat = dynamic_cast<FEAngioMaterial*>(test_dom.GetMaterial());
+			if (test_angmat)
+			{
+				FEElementSet* elset = mesh->FindElementSet(test_dom.GetName());
+				FEDomainMap* map = new FEDomainMap(FE_MAT3D, FMT_MATPOINTS);
+				map->Create(elset);
+				FEParam* matax = test_angmat->FindParameter("mat_axis");
+				// create parameter
+				FEParamMat3d& p = matax->value<FEParamMat3d>();
+				// create evaluator
+				FEMappedValueMat3d* val = fecore_alloc(FEMappedValueMat3d, GetFEModel());
+				val->setDataMap(map);
+				//set the valuator to the model parameter
+				p.setValuator(val);
+			}
+		}
 #pragma omp parallel for schedule(dynamic, 16)
 		// apply the initial modifiers to each angio element
 		for (int i = 0; i < angio_element_count; i++)
@@ -1625,7 +1647,7 @@ double FEAngio::InElementLength(FESolidElement * se, vec3d pt0, vec3d pt1) const
 	// Get the mesh
 	auto mesh = GetMesh();
 	// Get the number of nodes for the element's type
-	double H[FEElement::MAX_NODES];
+	double H[FESolidElement::MAX_NODES];
 	vec3d g_pt0, g_pt1;
 	// Get the shape function values at the first point
 	se->shape_fnc(H, pt0.x, pt0.y, pt0.z);
@@ -1683,7 +1705,7 @@ void FEAngio::SetupNodesToElement(int min_element_id)
 
 bool FEAngio::ProjectToElement(FESolidElement& el, const vec3d& p, FEMesh* mesh, double r[3])
 {
-	const int MN = FEElement::MAX_NODES;
+	const int MN = FESolidElement::MAX_NODES;
 	vec3d rt[MN];
 
 	// get the element nodal coordinates
@@ -1847,7 +1869,22 @@ bool CreateFiberMap(vector<vec3d>& fiber, FEMaterial* pmat)
 				// generate a coordinate transformation at this integration point
 				FEMaterialPoint* mpoint = el.GetMaterialPoint(n);
 				FEElasticMaterialPoint& pt = *mpoint->ExtractData<FEElasticMaterialPoint>();
-				mat3d m = pt.m_Q;
+
+				//Ask Steve about this
+				FEMesh* mesh = dom.GetMesh();
+				FEElementSet* elset = mesh->FindElementSet(dom.GetName());
+				int local_index = elset->GetLocalIndex(el);
+
+				FEMaterial* Mat_a = dom.GetMaterial();
+				// assumes that materials mat_axis is already mapped which we'll need to do somewhere else.
+				FEParam* matax = Mat_a->FindParameter("mat_axis");
+				FEParamMat3d& p = matax->value<FEParamMat3d>();
+				FEMappedValueMat3d* val = dynamic_cast<FEMappedValueMat3d*>(p.valuator());
+				FEDomainMap* map = dynamic_cast<FEDomainMap*>(val->dataMap());
+				mat3d m_Q = map->valueMat3d(pt);
+
+				mat3d m = m_Q;
+				//mat3d m = pt.m_Q;
 				
 				// grab the first column as the fiber orientation
 				fx[n] = m[0][0];

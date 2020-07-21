@@ -3,6 +3,7 @@
 #include <iostream>
 #include <algorithm>
 #include "FEAngio.h"
+#include "TipSpecies.h"
 
 vec3d Tip::GetDirection(FEMesh* mesh) const
 {
@@ -24,7 +25,7 @@ vec3d Tip::GetDirection(FEMesh* mesh) const
 
 vec3d Tip::GetPosition(FEMesh * mesh) const
 {
-	double arr[FEElement::MAX_NODES];
+	double arr[FESolidElement::MAX_NODES];
 	assert(angio_element);
 	assert(angio_element->_elem);
 	angio_element->_elem->shape_fnc(arr, local_pos.x, local_pos.y, local_pos.z);
@@ -39,7 +40,7 @@ vec3d Tip::GetPosition(FEMesh * mesh) const
 
 vec3d Tip::GetRefPosition(FEMesh * mesh) const
 {
-	double arr[FEElement::MAX_NODES];
+	double arr[FESolidElement::MAX_NODES];
 	assert(angio_element);
 	assert(angio_element->_elem);
 	angio_element->_elem->shape_fnc(arr, local_pos.x, local_pos.y, local_pos.z);
@@ -125,7 +126,7 @@ void Tip::SetLocalPosition(vec3d pos, FEMesh* mesh)
 	for (unsigned it = 0; it < Species.bucket_count(); it++)
 	{
 		if (Species[it] != nullptr) {
-			Species[it]->UpdatePos(GlobalPos);
+			Species[it]->SetPosition(GlobalPos);
 			Species[it]->Update();
 		}
 	}
@@ -153,8 +154,8 @@ void Tip::InitSBM(FEMesh* mesh)
 			// Create new source
 			Species[SBMID] = new FESBMPointSource(fem);
 			// update the id, rate, and position of the new species 
-			Species[SBMID]->UpdateSBM(SBMID, prod_rate);
-			Species[SBMID]->UpdatePos(GetPosition(mesh));
+			Species[SBMID]->SetSBM(SBMID, prod_rate);
+			Species[SBMID]->SetPosition(GetPosition(mesh));
 			// initialize and activate the bc
 			Species[SBMID]->Init();
 			Species[SBMID]->Activate();
@@ -166,7 +167,7 @@ void Tip::UpdateSBM(FEMesh* mesh)
 {
 	for (unsigned it = 0; it < Species.bucket_count(); it++)
 	{
-		Species[it]->UpdatePos(GetPosition(mesh));
+		Species[it]->SetPosition(GetPosition(mesh));
 		Species[it]->Update();
 	}
 }

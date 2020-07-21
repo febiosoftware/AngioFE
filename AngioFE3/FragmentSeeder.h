@@ -24,7 +24,7 @@ protected:
 	//! initial vessel length
 	double initial_vessel_length = 20.0;
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 };
 
 //! seed fragments with all elements having equal probabilities of being choosen

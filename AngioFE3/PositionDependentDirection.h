@@ -1,6 +1,6 @@
 #pragma once
 #include <FECore/FEMaterial.h>
-#include <FEBioMech/FESPRProjection.h>
+#include <FECore/FESPRProjection.h>
 #include "AngioElement.h"
 #include "VariableInterpolation.h"
 class FEAngio;
@@ -19,7 +19,7 @@ public:
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	virtual void Update(FEMesh * mesh, FEAngio* angio) {} 
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 protected:
 	//! how this modifier is mixed with the previous direction
 	double contribution = 1.0;
@@ -30,14 +30,15 @@ class PositionDependentDirectionManager : public FEMaterial
 {
 public:
 	//! constructor
-	explicit PositionDependentDirectionManager(FEModel* pfem) : FEMaterial(pfem) { AddProperty(&pdd_modifiers, "pdd_modifier"); pdd_modifiers.m_brequired = false; }
+	explicit PositionDependentDirectionManager(FEModel* pfem) : FEMaterial(pfem) { AddClassProperty(this, &pdd_modifiers, "pdd_modifier", FEProperty::Required); }
 	virtual ~PositionDependentDirectionManager() {}
 	//! return the direction given by all direction modifiers
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int buffer, bool& continue_growth, vec3d& tip_dir, double& alpha, FEMesh* mesh, FEAngio* pangio);
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio); 
 private:
-	FEVecPropertyT<PositionDependentDirection> pdd_modifiers;
+	std::vector<PositionDependentDirection*>	pdd_modifiers;	//!< pointers to elastic materials
+	//PositionDependentDirection* pdd_modifiers;
 };
 
 //! Implements a position dependent modifier that modifies growth direction based on fiber direction
@@ -46,7 +47,7 @@ class FiberPDD : public PositionDependentDirection
 public:
 	//! constructor
 	explicit FiberPDD(FEModel* pfem) : PositionDependentDirection(pfem) { 
-		AddProperty(&interpolation_prop, "interpolation_prop"); 
+		AddClassProperty(this, &interpolation_prop, "interpolation_prop"); 
 	}
 	virtual ~FiberPDD() {}
 	//! return the direction given by the fibers at this location
@@ -54,7 +55,7 @@ public:
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio) override;
 private:
-	FEPropertyT<FEVariableInterpolation> interpolation_prop;
+	FEVariableInterpolation* interpolation_prop;
 };
 
 //! Implements a position dependent modifier that modifies growth direction based on fiber direction
@@ -63,16 +64,16 @@ class FractionalAnisotropyPDD : public PositionDependentDirection
 public:
 	//! constructor
 	explicit FractionalAnisotropyPDD(FEModel* pfem) : PositionDependentDirection(pfem) {
-		AddProperty(&interpolation_prop, "interpolation_prop");
+		AddClassProperty(this, &interpolation_prop, "interpolation_prop");
 	}
 	virtual ~FractionalAnisotropyPDD() {}
 	//! return the direction given by the fibers at this location
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio) override;
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
-	FEPropertyT<FEVariableInterpolation> interpolation_prop;
+	FEVariableInterpolation* interpolation_prop;
 	bool alpha_override = true;// replace alpha with the override
 };
 
@@ -81,16 +82,16 @@ class LaGrangePStrainPDD : public PositionDependentDirection
 public:
 	//! constructor
 	explicit LaGrangePStrainPDD(FEModel* pfem) : PositionDependentDirection(pfem) {
-		AddProperty(&interpolation_prop, "interpolation_prop");
+		AddClassProperty(this, &interpolation_prop, "interpolation_prop");
 	}
 	virtual ~LaGrangePStrainPDD() {}
 	//! return the direction given by the fibers at this location
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	//void Update(FEMesh * mesh, FEAngio* angio) override;
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
-	FEPropertyT<FEVariableInterpolation> interpolation_prop;
+	FEVariableInterpolation* interpolation_prop;
 	double beta = 0.5;
 };
 
@@ -99,18 +100,18 @@ class ECMDensityGradientPDD : public PositionDependentDirection
 {
 public:
 	//! constructor
-	explicit ECMDensityGradientPDD(FEModel* pfem) : PositionDependentDirection(pfem) { AddProperty(&interpolation_prop, "interpolation_prop"); }
+	explicit ECMDensityGradientPDD(FEModel* pfem) : PositionDependentDirection(pfem) { AddClassProperty(this, &interpolation_prop, "interpolation_prop"); }
 	virtual ~ECMDensityGradientPDD() {}
 	//! return the direction given by the ecm density gradient
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio) override {}
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
 	double threshold = 0.00001;//vessels will deflect if above threshold
 	bool alpha_override = true;//replace the alpha to have this take over
-	FEPropertyT<FEVariableInterpolation> interpolation_prop;
+	FEVariableInterpolation* interpolation_prop;
 };
 
 //! The replacement for the bouncy boundary condition
@@ -119,7 +120,7 @@ class RepulsePDD : public PositionDependentDirection
 public:
 	//! constructor
 	explicit RepulsePDD(FEModel* pfem) : PositionDependentDirection(pfem) {
-		AddProperty(&interpolation_prop, "interpolation_prop"); 
+		AddClassProperty(this, &interpolation_prop, "interpolation_prop"); 
 	}
 	virtual ~RepulsePDD() {}
 	//! return the direction given by the repulse component
@@ -127,12 +128,12 @@ public:
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio) override {}
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
 	double threshold = 1;//vessels will deflect if above threshold
 	bool alpha_override = true;//replace the alpha to have this take over
 	bool grad_threshold = false;//use a gradient to detect areas where repulsion should occur.
-	FEPropertyT<FEVariableInterpolation> interpolation_prop;
+	FEVariableInterpolation* interpolation_prop;
 };
 
 //! Implements a chemical concentration based position direction modifier
@@ -147,13 +148,13 @@ public:
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio) override {}
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
 	//! SL: will need to rethink this default
 	double threshold = 0.00001;//vessels will deflect if above threshold
 	bool alpha_override = true;//replace the alpha to have this take over
 	int sol_id = 0;
-	FEPropertyT<FEVariableInterpolation> interpolation_prop;
+	FEVariableInterpolation* interpolation_prop;
 };
 
 //! Implements anastamosis as a position dependent direction growth modifier
@@ -177,7 +178,7 @@ public:
 	double distance2(FESolidElement * se, vec3d local_pos, Tip * tip, FEMesh* mesh);
 protected:
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
 	double anastamosis_radius = 100;//! Radius at which the tip starts to grow towards another tip
 	double fuse_radius = 30;

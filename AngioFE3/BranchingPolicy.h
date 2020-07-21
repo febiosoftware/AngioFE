@@ -42,7 +42,7 @@ class ZenithAngleProbabilityDistribution : public ZenithAngle
 {
 public:
 	//! constructor for class
-	ZenithAngleProbabilityDistribution(FEModel* pfem) : ZenithAngle(pfem) { AddProperty(&angle, "angle"); }
+	ZenithAngleProbabilityDistribution(FEModel* pfem) : ZenithAngle(pfem) { AddClassProperty(this, &angle, "angle"); }
 	//! returns the zenith angle for a branch based on a probability distribution
 	double GetZenithAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element) override;
 	//! performs initialization
@@ -51,7 +51,7 @@ public:
 	void TimeStepUpdate(double current_time) override { angle->TimeStepUpdate(current_time); }
 
 private:
-	FEPropertyT<FEProbabilityDistribution> angle;
+	FEProbabilityDistribution* angle;
 };
 
 //! Implements a probability distribution to determine the azimuth angle
@@ -59,7 +59,7 @@ class AzimuthAngleProbabilityDistribution :public AzimuthAngle
 {
 public:
 	//! constructor for class
-	AzimuthAngleProbabilityDistribution(FEModel* pfem) : AzimuthAngle(pfem) { AddProperty(&angle, "angle"); }
+	AzimuthAngleProbabilityDistribution(FEModel* pfem) : AzimuthAngle(pfem) { AddClassProperty(this, &angle, "angle", FEProperty::Required); }
 	//! Returns the azimuth angle based on a probability distribution
 	double GetAzimuthAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element) override;
 	//! performs initialization
@@ -67,7 +67,7 @@ public:
 	//! Updates the zenith angle to the given time step(may ajust probabilities based on time)
 	void TimeStepUpdate(double current_time) override { angle->TimeStepUpdate(current_time); }
 private:
-	FEPropertyT<FEProbabilityDistribution> angle;
+	FEProbabilityDistribution* angle;
 };
 
 //! A Branch Policy determines where and when branches occur
@@ -76,9 +76,9 @@ class BranchPolicy :public FEMaterial
 public:
 	//! constructor for class
 	BranchPolicy(FEModel* pfem) : FEMaterial(pfem) { 
-		AddProperty(&azimuth_angle, "azimuth_angle"); 
-		AddProperty(&zenith_angle, "zenith_angle");
-		AddProperty(&interpolation_prop, "interpolation_prop");
+		AddClassProperty(this, &azimuth_angle, "azimuth_angle"); 
+		AddClassProperty(this, &zenith_angle, "zenith_angle");
+		AddClassProperty(this, &interpolation_prop, "interpolation_prop");
 	}
 	virtual ~BranchPolicy(){};
 	//! adds the branches for a given element
@@ -95,9 +95,9 @@ public:
 	vec3d GetBranchDirection(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element, FEMesh* mesh);
 private:
 	//angles are in radians
-	FEPropertyT<AzimuthAngle> azimuth_angle;
-	FEPropertyT<ZenithAngle> zenith_angle;
-	FEPropertyT<FEVariableInterpolation> interpolation_prop;
+	AzimuthAngle* azimuth_angle;
+	ZenithAngle* zenith_angle;
+	FEVariableInterpolation* interpolation_prop;
 };
 
 //! The data needed for a future branch
@@ -129,12 +129,12 @@ class DelayedBranchingPolicy :public BranchPolicy
 {
 public:
 	//! constructor for class
-	DelayedBranchingPolicy(FEModel* pfem) : BranchPolicy(pfem) { AddProperty(&l2b, "length_to_branch"); AddProperty(&t2e, "time_to_emerge");
+	DelayedBranchingPolicy(FEModel* pfem) : BranchPolicy(pfem) { AddClassProperty(this, &l2b, "length_to_branch"); AddClassProperty(this, &t2e, "time_to_emerge");
 	}
 	virtual ~DelayedBranchingPolicy(){}
 	//! performs initialization
 	bool Init() override {
-		return l2b.Init() && t2e.Init() && BranchPolicy::Init(); }
+		return l2b->Init() && t2e->Init() && BranchPolicy::Init(); }
 	//! update to a given time
 	void TimeStepUpdate(double current_time) override { BranchPolicy::TimeStepUpdate(current_time); l2b->TimeStepUpdate(current_time); t2e->TimeStepUpdate(current_time); }
 	//! add the branches to a given element
@@ -142,8 +142,8 @@ public:
 	//! do the per element setup
 	void SetupBranchInfo(AngioElement * angio_elem) override;
 private:
-	FEPropertyT<FEProbabilityDistribution> l2b;//length to branch
-	FEPropertyT<FEProbabilityDistribution> t2e;//time to emerge
+	FEProbabilityDistribution* l2b;//length to branch
+	FEProbabilityDistribution* t2e;//time to emerge
 	double discretization_length = 1.0;
 
 	//! Helper class for delayed branching policy

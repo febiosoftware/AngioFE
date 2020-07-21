@@ -18,11 +18,12 @@ class InitialModifierManager: public FEMaterial
 {
 public:
 	//! constructor
-	explicit InitialModifierManager(FEModel * pfem) :FEMaterial(pfem) { AddProperty(&initial_modifiers, "initial_modifier"); initial_modifiers.m_brequired = false; }
+	explicit InitialModifierManager(FEModel * pfem) :FEMaterial(pfem) { AddClassProperty(this, &initial_modifiers, "initial_modifier", FEProperty::Optional); }
 	//! apply all initial modifiers
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio);
 private:
-	FEVecPropertyT<InitialModifier> initial_modifiers;
+	std::vector<InitialModifier*>	initial_modifiers;	//!< pointers to initial modifiers
+	//InitialModifier* initial_modifiers;
 };
 
 //! sets fibers to a random orientation
@@ -45,7 +46,7 @@ public:
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
 protected:
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
 	vec3d efd_spa = vec3d(1, 1, 1);
 	vec3d efd_axes_a = vec3d(1, 0, 0);
@@ -62,7 +63,7 @@ public:
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
 protected:
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
 	vec3d initial_spa = vec3d(1,1,1);
 	vec3d initial_axes_a = vec3d(1, 0, 0);
@@ -80,7 +81,7 @@ public:
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
 protected:
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
 	double initial_density = 3.0;
 };
@@ -94,7 +95,7 @@ public:
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
 protected:
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
 	double initial_repulse_value = 0.0;
 };

@@ -6,7 +6,7 @@
 #include "FEBioMech/FEFiberMaterialPoint.h"
 #include "FECore/FEElementTraits.h"
 #include "FEBioMech/FEViscoElasticMaterial.h"
-#include "FEBioMech/FESPRProjection.h"
+#include "FECore/FESPRProjection.h"
 #include <iostream>
 #include "angio3d.h"
 #include "AngioElement.h"
@@ -16,30 +16,32 @@
 
 
 //-----------------------------------------------------------------------------
-BEGIN_PARAMETER_LIST(FEAngioMaterial, FEElasticMaterial)
+BEGIN_FECORE_CLASS(FEAngioMaterial, FEElasticMaterial)
 	
-	ADD_PARAMETER(initial_segment_velocity, FE_PARAM_DOUBLE, "initial_segment_velocity");
-	ADD_PARAMETER(vessel_radius, FE_PARAM_DOUBLE, "vessel_radius");
+	
+(initial_segment_velocity, "initial_segment_velocity");
+	
+(vessel_radius, "vessel_radius");
 
-END_PARAMETER_LIST();
+END_FECORE_CLASS();
 
 //-----------------------------------------------------------------------------
 FEAngioMaterial::FEAngioMaterial(FEModel* pfem) : FEElasticMaterial(pfem)
 {
-	AddProperty(&common_properties, "common_properties");
-	AddProperty(&matrix_material, "matrix");
-	AddProperty(&angio_stress_policy, "angio_stress_policy");
+	AddClassProperty(this, &common_properties, "common_properties");
+	AddClassProperty(this, &matrix_material, "matrix");
+	AddClassProperty(this, &angio_stress_policy, "angio_stress_policy");
 
-	AddProperty(&pdd_manager, "pdd_manager");
-	AddProperty(&psc_manager, "psc_manager");
-	AddProperty(&cm_manager, "cm_manager");
-	AddProperty(&mix_method, "mix_method");
-	AddProperty(&velocity_manager, "velocity_manager");
-	AddProperty(&im_manager, "im_manager"); im_manager.m_brequired = false;
-	AddProperty(&nodedata_interpolation_manager, "nodedata_interpolation_manager"); nodedata_interpolation_manager.m_brequired = false;
-	AddProperty(&branch_policy, "branch_policy"); branch_policy.m_brequired = false;
-	AddProperty(&proto_branch_policy, "proto_branch_policy"); proto_branch_policy.m_brequired = false;
-	AddProperty(&tip_species_manager, "tip_species_manager"); tip_species_manager.m_brequired = false;
+	AddClassProperty(this, &pdd_manager, "pdd_manager");
+	AddClassProperty(this, &psc_manager, "psc_manager");
+	AddClassProperty(this, &cm_manager, "cm_manager");
+	AddClassProperty(this, &mix_method, "mix_method");
+	AddClassProperty(this, &velocity_manager, "velocity_manager");
+	AddClassProperty(this, &im_manager, "im_manager", FEProperty::Optional);
+	AddClassProperty(this, &nodedata_interpolation_manager, "nodedata_interpolation_manager", FEProperty::Optional);
+	AddClassProperty(this, &branch_policy, "branch_policy", FEProperty::Optional);
+	AddClassProperty(this, &proto_branch_policy, "proto_branch_policy", FEProperty::Optional);
+		AddClassProperty(this, &tip_species_manager, "tip_species_manager", FEProperty::Optional);
 }
 
 FEAngioMaterial::~FEAngioMaterial()
@@ -95,38 +97,6 @@ bool FEAngioMaterial::Init()
 
 	return true;
 }
-
-
-void FEAngioMaterial::SetLocalCoordinateSystem(FEElement& el, int n, FEMaterialPoint& mp)
-{
-	// get the material's coordinate system (if defined)
-	FECoordSysMap* pmap = GetCoordinateSystemMap();
-	//this allows the local coordinates to work correctly
-	if (pmap)
-	{
-		FEElasticMaterial::SetLocalCoordinateSystem(el, n, mp);
-		FEElasticMaterialPoint& pt = *(mp.ExtractData<FEElasticMaterialPoint>());
-		FEAngioMaterialPoint* angioPt = FEAngioMaterialPoint::FindAngioMaterialPoint(&mp);
-
-		FEElasticMaterialPoint& vessel_elastic = *angioPt->vessPt->ExtractData<FEElasticMaterialPoint>();
-		FEElasticMaterialPoint& matrix_elastic = *angioPt->matPt->ExtractData<FEElasticMaterialPoint>();
-
-		// compound the local map with the global material axes
-		//mat3d Qlocal = pmap->LocalElementCoord(el, n);
-		//pt.m_Q = pt.m_Q * Qlocal;
-
-		vessel_elastic.m_Q = pt.m_Q;
-		matrix_elastic.m_Q = pt.m_Q;
-
-		FEElasticMaterial* vess_elastic = common_properties->vessel_material->GetElasticMaterial();
-		FEElasticMaterial* mat_elastic = matrix_material->GetElasticMaterial();
-
-		vess_elastic->SetLocalCoordinateSystem(el, n, *angioPt->vessPt);
-		mat_elastic->SetLocalCoordinateSystem(el, n, *angioPt->matPt);
-	}
-	
-}
-
 
 //-----------------------------------------------------------------------------
 mat3ds FEAngioMaterial::AngioStress(FEAngioMaterialPoint& angioPt)
@@ -217,7 +187,7 @@ double FEAngioMaterial::StrainEnergyDensity(FEMaterialPoint& mp)
 		matrix_elastic.m_r0 = elastic_pt.m_r0;
 		matrix_elastic.m_F = elastic_pt.m_F;
 		matrix_elastic.m_J = elastic_pt.m_J;
-		sed = angioPt->vessel_weight*common_properties->vessel_material->GetElasticMaterial()->StrainEnergyDensity(*angioPt->vessPt) + angioPt->matrix_weight*matrix_material->GetElasticMaterial()->StrainEnergyDensity(*angioPt->matPt);
+		sed = angioPt->vessel_weight*common_properties->vessel_material->ExtractProperty<FEElasticMaterial>()->StrainEnergyDensity(*angioPt->vessPt) + angioPt->matrix_weight*matrix_material->ExtractProperty<FEElasticMaterial>()->StrainEnergyDensity(*angioPt->matPt);
 	}
 	return sed;
 }
@@ -260,9 +230,9 @@ double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem, FEMesh* mesh)
 
 	for (int i = 0; i < angio_elem->_elem->GaussPoints(); i++)
 	{
-		double Gr[FEElement::MAX_NODES];
-		double Gs[FEElement::MAX_NODES];
-		double Gt[FEElement::MAX_NODES];
+		double Gr[FESolidElement::MAX_NODES];
+		double Gs[FESolidElement::MAX_NODES];
+		double Gt[FESolidElement::MAX_NODES];
 		angio_elem->_elem->shape_deriv(Gr, Gs, Gt, angio_elem->_elem->gr(i), angio_elem->_elem->gs(i), angio_elem->_elem->gt(i));
 
 		// Calculate the length of each side of the element.
@@ -401,9 +371,9 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	////////// Determine the growth length and new position //////////
 
 	// get the local position of the tip
-	double Gr[FEElement::MAX_NODES];
-	double Gs[FEElement::MAX_NODES];
-	double Gt[FEElement::MAX_NODES];
+	double Gr[FESolidElement::MAX_NODES];
+	double Gs[FESolidElement::MAX_NODES];
+	double Gt[FESolidElement::MAX_NODES];
 	vec3d local_pos = active_tip->GetLocalPosition();
 	// get the shape function derivative values for the element type
 	angio_element->_elem->shape_deriv(Gr, Gs, Gt, local_pos.x, local_pos.y, local_pos.z);
@@ -450,7 +420,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	// get new position in global coordinates
 	vec3d global_pos;
 	// transform global to local
-	double H[FEElement::MAX_NODES];
+	double H[FESolidElement::MAX_NODES];
 	angio_element->_elem->shape_fnc(H, local_pos.x, local_pos.y, local_pos.z);
 	for (int j = 0; j < angio_element->_elem->Nodes(); j++)
 	{
@@ -574,7 +544,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 				AngioElement * ang_elem = angio_element->adjacency_list[i];
 				if (ang_elem)
 				{
-					FESolidDomain * sd = dynamic_cast<FESolidDomain*>(ang_elem->_elem->GetDomain());
+					FESolidDomain * sd = dynamic_cast<FESolidDomain*>(ang_elem->_elem->GetMeshPartition());
 					if (sd)
 					{
 						double r[3];//new natural coordinates
@@ -650,9 +620,9 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 	////////// Determine the growth length and new position //////////
 
 	// get the local position of the tip
-	double Gr[FEElement::MAX_NODES];
-	double Gs[FEElement::MAX_NODES];
-	double Gt[FEElement::MAX_NODES];
+	double Gr[FESolidElement::MAX_NODES];
+	double Gs[FESolidElement::MAX_NODES];
+	double Gt[FESolidElement::MAX_NODES];
 	// get the local position of the tip
 	vec3d local_pos = active_tip->GetLocalPosition();
 	// get the shape function derivative values for the element type
@@ -687,7 +657,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 
 	// get the new position in global coordinates
 	vec3d global_pos;
-	double H[FEElement::MAX_NODES];
+	double H[FESolidElement::MAX_NODES];
 	angio_element->_elem->shape_fnc(H, local_pos.x, local_pos.y, local_pos.z);
 	for (int j = 0; j < angio_element->_elem->Nodes(); j++)
 	{
@@ -809,7 +779,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 			AngioElement * ang_elem = angio_element->adjacency_list[i];
 			if (ang_elem)
 			{
-				FESolidDomain * sd = dynamic_cast<FESolidDomain*>(ang_elem->_elem->GetDomain());
+				FESolidDomain * sd = dynamic_cast<FESolidDomain*>(ang_elem->_elem->GetMeshPartition());
 				if (sd)
 				{
 					double r[3];//new natural coordinates
@@ -877,9 +847,9 @@ int FEAngioMaterial::SelectNextTip(std::vector<AngioElement*> & possible_locatio
 		//vec3d global_dir = mix(psc_dir, pdd_dir, (alpha));
 		global_dir.unit();
 		vec3d possible_dir = possible_locations[i]->_angio_mat->pdd_manager->ApplyModifiers({ 1,0,0 }, possible_locations[i], possible_local_coordinates[i], tip->initial_fragment_id, buffer, continue_growth, psc_dir, alpha, mesh, m_pangio);
-		double Gr[FEElement::MAX_NODES];
-		double Gs[FEElement::MAX_NODES];
-		double Gt[FEElement::MAX_NODES];
+		double Gr[FESolidElement::MAX_NODES];
+		double Gs[FESolidElement::MAX_NODES];
+		double Gt[FESolidElement::MAX_NODES];
 		vec3d local_pos = possible_local_coordinates[i];
 		possible_locations[i]->_elem->shape_deriv(Gr, Gs, Gt, local_pos.x, local_pos.y, local_pos.z);
 		vec3d er, es, et; // Basis vectors of the natural coordinates
@@ -999,5 +969,5 @@ bool FEAngioMaterial::SeedFragments(std::vector<AngioElement *>& angio_elements,
 //-----------------------------------------------------------------------------
 FEMaterialPoint* FEAngioMaterial::CreateMaterialPointData()
 {
-	return new FEAngioMaterialPoint(new FEFiberMaterialPoint(FEElasticMaterial::CreateMaterialPointData()), common_properties->vessel_material->CreateMaterialPointData(), matrix_material->CreateMaterialPointData());
+	return new FEAngioMaterialPoint((FEElasticMaterial::CreateMaterialPointData()), common_properties->vessel_material->CreateMaterialPointData(), matrix_material->CreateMaterialPointData());
 }

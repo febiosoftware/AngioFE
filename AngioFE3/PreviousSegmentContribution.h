@@ -1,6 +1,6 @@
 #pragma once
 #include <FECore/FEMaterial.h>
-#include <FEBioMech/FESPRProjection.h>
+#include <FECore/FESPRProjection.h>
 #include "AngioElement.h"
 #include "VariableInterpolation.h"
 class FEAngio;
@@ -25,14 +25,16 @@ class PreviousSegmentContributionManager : public FEMaterial
 {
 public:
 	//! constructor
-	explicit PreviousSegmentContributionManager(FEModel* pfem) : FEMaterial(pfem) { AddProperty(&psc_modifiers, "psc_modifier"); psc_modifiers.m_brequired = false; }
+	explicit PreviousSegmentContributionManager(FEModel* pfem) : FEMaterial(pfem) { AddClassProperty(this, &psc_modifiers, "psc_modifiers", FEProperty::Optional); }
 	virtual ~PreviousSegmentContributionManager() {}
 	//! returns the combination contribution of all PSC modifiers
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, vec3d prev_direction, FEMesh* mesh);
 	//! may update this based on the timestep
 	void Update(FEMesh * mesh) {}
 private:
-	FEVecPropertyT<PreviousSegmentContribution> psc_modifiers;
+private:
+	std::vector<PreviousSegmentContribution*>	psc_modifiers;	//!< pointers to elastic materials
+	//PreviousSegmentContribution* psc_modifiers;
 };
 
 //! a contribution that is entirely the previous segment direction

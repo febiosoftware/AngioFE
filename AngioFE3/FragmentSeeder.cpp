@@ -72,10 +72,10 @@ vec3d FragmentSeeder::GetRandomVectorPositionWithinNaturalCoordinateBoundsByElem
 	}
 }
 
-BEGIN_PARAMETER_LIST(FragmentSeeder, FEMaterial)
-ADD_PARAMETER(number_fragments, FE_PARAM_INT, "number_fragments");
-ADD_PARAMETER(initial_vessel_length, FE_PARAM_DOUBLE, "initial_vessel_length");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(FragmentSeeder, FEMaterial)
+	ADD_PARAMETER(number_fragments, "number_fragments");
+	ADD_PARAMETER(initial_vessel_length, "initial_vessel_length");
+END_FECORE_CLASS();
 
 ByElementFragmentSeeder::ByElementFragmentSeeder(FEModel * model) : FragmentSeeder(model)
 {

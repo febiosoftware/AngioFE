@@ -4,6 +4,7 @@
 #include <FEBioMech/FESolidMaterial.h>
 #include "BranchingPolicy.h"
 #include "FragmentSeeder.h"
+#include <FEBioMech/FEElasticMaterial.h>
 
 //! separate out components that may be shared if an angio material needs to inherit from another material
 class CommonAngioProperties :public FEMaterial
@@ -15,7 +16,7 @@ public:
 
 	//FEPropertyT<GrowDirectionModifiers> gdms;
 	//! fragment seeder
-	FEPropertyT<FragmentSeeder> fseeder;
+	FragmentSeeder* fseeder;
 	//! vessel material
-	FEPropertyT<FESolidMaterial> vessel_material;
+	FEElasticMaterial* vessel_material;
 };

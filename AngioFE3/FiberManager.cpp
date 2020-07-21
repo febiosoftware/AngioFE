@@ -97,13 +97,13 @@ EllipsoidalFiberInitializer::EllipsoidalFiberInitializer(FEModel * model) : Fibe
 
 }
 
-BEGIN_PARAMETER_LIST(EllipsoidalFiberInitializer, FiberInitializer)
+BEGIN_FECORE_CLASS(EllipsoidalFiberInitializer, FiberInitializer)
 ADD_PARAMETER(a, FE_PARAM_DOUBLE, "a");
 ADD_PARAMETER(b, FE_PARAM_DOUBLE, "b");
 ADD_PARAMETER(c, FE_PARAM_DOUBLE, "c");
 
 ADD_PARAMETER(theta_slice , FE_PARAM_DOUBLE, "theta_slice");
 ADD_PARAMETER(phi_slice, FE_PARAM_DOUBLE, "a");
-END_PARAMETER_LIST();
+END_FECORE_CLASS();
 
 */

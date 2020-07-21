@@ -43,7 +43,7 @@ public:
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
 protected:
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
 	double scale=0.027;
 	double y0= -0.004, x0 =2, a= 1.0081, b=0.5436;
@@ -69,7 +69,7 @@ public:
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
 protected:
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
 	double sprout_mag = 0.027;
 	double fan_exponential = 2;
@@ -93,7 +93,7 @@ public:
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
 protected:
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
 	double sprout_mag = 0.027;
 	double fan_exponential = 2;
@@ -116,7 +116,7 @@ public:
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
 protected:
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
 	double sprout_mag = 0.027;
 	double fan_exponential = 2;
@@ -139,7 +139,7 @@ public:
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
 protected:
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
 	double sprout_mag = 0.027;
 	double fan_exponential = 2;
@@ -163,7 +163,7 @@ public:
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
 protected:
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
 	double sprout_mag = 0.027;
 	double fan_exponential = 2;
@@ -187,7 +187,7 @@ public:
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
 protected:
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
 	double sprout_mag = 0.027;
 	double fan_exponential = 2;

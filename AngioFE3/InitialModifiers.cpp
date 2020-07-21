@@ -4,6 +4,7 @@
 #include "FEAngio.h"
 #include <iostream>
 #include "angio3d.h"
+#include "FECore/FEDomainMap.h"
 //#include <FEBioMech/FEEllipsoidalFiberDistribution.h>
 //#include <FEBioMech/FEFiberDensityDistribution.h>
 
@@ -20,6 +21,20 @@ void InitialModifierManager::ApplyModifier(AngioElement * angio_element, FEMesh 
 // TODO: Currently assigns both global material orientation and angio specific orientation. Will need to pick one or have separate functions.
 void FiberRandomizer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
+	//get the FE domain
+	FEDomain* Dom = dynamic_cast<FEDomain*>(angio_element->_elem->GetMeshPartition());
+	//
+	FEElementSet* elset = mesh->FindElementSet(Dom->GetName());
+	int local_index = elset->GetLocalIndex(*angio_element->_elem);
+	
+	FEMaterial* Mat_a = Dom->GetMaterial();
+	// assumes that materials mat_axis is already mapped which we'll need to do somewhere else.
+	FEParam* matax = Mat_a->FindParameter("mat_axis");
+	FEParamMat3d& p = matax->value<FEParamMat3d>();
+	FEMappedValueMat3d* val = dynamic_cast<FEMappedValueMat3d*>(p.valuator());
+	FEDomainMap* map = dynamic_cast<FEDomainMap*>(val->dataMap());
+
+
 	// for each integration point in the element
 	for(int i=0; i < angio_element->_elem->GaussPoints();i++)
 	{
@@ -30,13 +45,9 @@ void FiberRandomizer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh,
 		// get the elastic material point
 		FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
 		// multiply the elastic material point's global orientation by a random matrix
-		emp->m_Q = emp->m_Q * feangio->unifromRandomRotationMatrix(angio_element->_rengine);
-		//then propogate the rotation to the angio submaterials
-		FEElasticMaterialPoint * mat_emp = angio_pt->matPt->ExtractData<FEElasticMaterialPoint>();
-		mat_emp->m_Q = emp->m_Q;
-		// create a vessel material point and copy the elastic material point to it
-		FEElasticMaterialPoint * ves_emp = angio_pt->vessPt->ExtractData<FEElasticMaterialPoint>();
-		ves_emp->m_Q = emp->m_Q;
+		mat3d RandMat = feangio->unifromRandomRotationMatrix(angio_element->_rengine);
+		// get local domain index of element
+		map->setValue(local_index, i, RandMat);
 	}
 }
 
@@ -85,23 +96,39 @@ void DiscreteFiberEFDRandomizer::ApplyModifier(AngioElement * angio_element, FEM
 		//angio_pt->angio_fd = mix3d_t(axis, axis_2, theta_13); angio_pt->angio_fd.unit();
 		mat3d R13 = mix3d_t_r(axis, axis_2, theta_13);
 
+		//get the FE domain
+		FEDomain* Dom = dynamic_cast<FEDomain*>(angio_element->_elem->GetMeshPartition());
+		//
+		FEElementSet* elset = mesh->FindElementSet(Dom->GetName());
+		int local_index = elset->GetLocalIndex(*angio_element->_elem);
+		FEMaterial* Mat_a = Dom->GetMaterial();
+		// assumes that materials mat_axis is already mapped which we'll need to do somewhere else.
+		FEParam* matax = Mat_a->FindParameter("mat_axis");
+		FEParamMat3d& p = matax->value<FEParamMat3d>();
+		FEMappedValueMat3d* val = dynamic_cast<FEMappedValueMat3d*>(p.valuator());
+		FEDomainMap* map = dynamic_cast<FEDomainMap*>(val->dataMap());
+
 		FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
-		emp->m_Q.setCol(0, axis_0); emp->m_Q.setCol(1, axis_1); emp->m_Q.setCol(2, axis_2);
-		emp->m_Q = R13*R12*emp->m_Q;
-		FEElasticMaterialPoint * mat_emp = angio_pt->matPt->ExtractData<FEElasticMaterialPoint>();
-		mat_emp->m_Q = emp->m_Q;
-		// create a vessel material point and copy the elastic material point to it
-		FEElasticMaterialPoint * ves_emp = angio_pt->vessPt->ExtractData<FEElasticMaterialPoint>();
-		ves_emp->m_Q = emp->m_Q;
+		// get local domain index of element
+		mat3d temp_mat;
+		temp_mat.setCol(0, axis_0); temp_mat.setCol(1, axis_1); temp_mat.setCol(2, axis_2);
+		temp_mat = R13*R12*temp_mat;
+		map->setValue(local_index, i, temp_mat);
+
+		//FEElasticMaterialPoint * mat_emp = angio_pt->matPt->ExtractData<FEElasticMaterialPoint>();
+		//mat_emp->m_Q = emp->m_Q;
+		//// create a vessel material point and copy the elastic material point to it
+		//FEElasticMaterialPoint * ves_emp = angio_pt->vessPt->ExtractData<FEElasticMaterialPoint>();
+		//ves_emp->m_Q = emp->m_Q;
 	}
 }
 
-BEGIN_PARAMETER_LIST(DiscreteFiberEFDRandomizer, InitialModifier)
-ADD_PARAMETER(efd_spa, FE_PARAM_VEC3D, "efd_spa");
-ADD_PARAMETER(efd_axes_a, FE_PARAM_VEC3D, "efd_axes_a");
-ADD_PARAMETER(efd_axes_b, FE_PARAM_VEC3D, "efd_axes_b");
-ADD_PARAMETER(efd_axes_c, FE_PARAM_VEC3D, "efd_axes_c");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(DiscreteFiberEFDRandomizer, InitialModifier)
+ADD_PARAMETER(efd_spa, "efd_spa");
+ADD_PARAMETER(efd_axes_a, "efd_axes_a");
+ADD_PARAMETER(efd_axes_b, "efd_axes_b");
+ADD_PARAMETER(efd_axes_c, "efd_axes_c");
+END_FECORE_CLASS();
 
 void EFDFiberInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
@@ -120,12 +147,12 @@ void EFDFiberInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * m
 	angio_element->UpdateAngioFractionalAnisotropy();
 }
 
-BEGIN_PARAMETER_LIST(EFDFiberInitializer, InitialModifier)
-ADD_PARAMETER(initial_axes_a, FE_PARAM_VEC3D, "initial_axes_a");
-ADD_PARAMETER(initial_axes_b, FE_PARAM_VEC3D, "initial_axes_b");
-ADD_PARAMETER(initial_axes_c, FE_PARAM_VEC3D, "initial_axes_c");
-ADD_PARAMETER(initial_spa, FE_PARAM_VEC3D, "initial_spa");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(EFDFiberInitializer, InitialModifier)
+ADD_PARAMETER(initial_axes_a, "initial_axes_a");
+ADD_PARAMETER(initial_axes_b, "initial_axes_b");
+ADD_PARAMETER(initial_axes_c, "initial_axes_c");
+ADD_PARAMETER(initial_spa, "initial_spa");
+END_FECORE_CLASS();
 
 void DensityInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
@@ -138,9 +165,9 @@ void DensityInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * me
 	}
 }
 
-BEGIN_PARAMETER_LIST(DensityInitializer, InitialModifier)
-ADD_PARAMETER(initial_density, FE_PARAM_DOUBLE, "initial_density");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(DensityInitializer, InitialModifier)
+ADD_PARAMETER(initial_density, "initial_density");
+END_FECORE_CLASS();
 
 void RepulseInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
@@ -153,6 +180,6 @@ void RepulseInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * me
 	}
 }
 
-BEGIN_PARAMETER_LIST(RepulseInitializer, InitialModifier)
-ADD_PARAMETER(initial_repulse_value, FE_PARAM_DOUBLE, "initial_repulse_value");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(RepulseInitializer, InitialModifier)
+ADD_PARAMETER(initial_repulse_value, "initial_repulse_value");
+END_FECORE_CLASS();

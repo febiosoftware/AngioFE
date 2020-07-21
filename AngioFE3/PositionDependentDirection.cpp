@@ -6,12 +6,13 @@
 #include "FEAngioMaterialPoint.h"
 #include "FEAngio.h"
 #include "FEAngioMaterial.h"
+#include "FECore/FEDomainMap.h"
 #include <iostream>
 #include <algorithm>
 
-BEGIN_PARAMETER_LIST(PositionDependentDirection, FEMaterial)
-ADD_PARAMETER(contribution, FE_PARAM_DOUBLE, "contribution");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(PositionDependentDirection, FEMaterial)
+ADD_PARAMETER(contribution, "contribution");
+END_FECORE_CLASS();
 
 vec3d PositionDependentDirectionManager::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int buffer, bool& continue_growth, vec3d& tip_dir, double& alpha, FEMesh* mesh, FEAngio* pangio)
 {
@@ -36,9 +37,9 @@ void PositionDependentDirectionManager::Update(FEMesh * mesh, FEAngio* angio)
 	return (a.first > b.first);
 }*/
 
-BEGIN_PARAMETER_LIST(LaGrangePStrainPDD, PositionDependentDirection)
-ADD_PARAMETER(beta, FE_PARAM_DOUBLE, "beta");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(LaGrangePStrainPDD, PositionDependentDirection)
+ADD_PARAMETER(beta, "beta");
+END_FECORE_CLASS();
 
 struct EigComp {
 	bool operator()(const std::pair<double, vec3d>& x , std::pair<double, vec3d>& y) const{
@@ -83,10 +84,10 @@ vec3d LaGrangePStrainPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element
 	return angio_element->_angio_mat->mix_method->ApplyMixAxis(prev, least_strain, beta);
 }
 
-BEGIN_PARAMETER_LIST(ECMDensityGradientPDD, PositionDependentDirection)
-ADD_PARAMETER(threshold, FE_PARAM_DOUBLE, "threshold");
-ADD_PARAMETER(alpha_override, FE_PARAM_BOOL, "alpha_override");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(ECMDensityGradientPDD, PositionDependentDirection)
+ADD_PARAMETER(threshold, "threshold");
+ADD_PARAMETER(alpha_override, "alpha_override");
+END_FECORE_CLASS();
 
 vec3d ECMDensityGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio)
 {
@@ -120,11 +121,11 @@ vec3d ECMDensityGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_elem
 	return prev;
 }
 
-BEGIN_PARAMETER_LIST(RepulsePDD, PositionDependentDirection)
-ADD_PARAMETER(threshold, FE_PARAM_DOUBLE, "threshold");
-ADD_PARAMETER(alpha_override, FE_PARAM_BOOL, "alpha_override");
-ADD_PARAMETER(grad_threshold, FE_PARAM_BOOL, "grad_threshold");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(RepulsePDD, PositionDependentDirection)
+ADD_PARAMETER(threshold, "threshold");
+ADD_PARAMETER(alpha_override, "alpha_override");
+ADD_PARAMETER(grad_threshold, "grad_threshold");
+END_FECORE_CLASS();
 
 vec3d RepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio)
 {
@@ -166,8 +167,8 @@ vec3d RepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d 
 	// if the gradient method is not being used
 	else
 	{
-		double nodal_repulse[FEElement::MAX_NODES];
-		double H[FEElement::MAX_NODES];
+		double nodal_repulse[FESolidElement::MAX_NODES];
+		double H[FESolidElement::MAX_NODES];
 		// project the repulse value from integration points to the nodes
 		angio_element->_elem->project_to_nodes(&repulse_at_integration_points[0],nodal_repulse);
 		double val = 0;
@@ -205,11 +206,11 @@ vec3d RepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d 
 	
 }
 
-BEGIN_PARAMETER_LIST(ConcentrationGradientPDD, PositionDependentDirection)
-ADD_PARAMETER(threshold, FE_PARAM_DOUBLE, "threshold");
-ADD_PARAMETER(alpha_override, FE_PARAM_BOOL, "alpha_override");
-ADD_PARAMETER(sol_id, FE_PARAM_INT, "sol_id");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(ConcentrationGradientPDD, PositionDependentDirection)
+ADD_PARAMETER(threshold, "threshold");
+ADD_PARAMETER(alpha_override, "alpha_override");
+ADD_PARAMETER(sol_id, "sol_id");
+END_FECORE_CLASS();
 
 vec3d ConcentrationGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio)
 {
@@ -242,7 +243,7 @@ vec3d ConcentrationGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_e
 double AnastamosisPDD::distance2(FESolidElement * se, vec3d local_pos, Tip * tip, FEMesh* mesh)
 {
 	vec3d pos;
-	double H[FEElement::MAX_NODES];
+	double H[FESolidElement::MAX_NODES];
 	se->shape_fnc(H, local_pos.x, local_pos.y, local_pos.z);
 	for(int i=0; i < se->Nodes();i++)
 	{
@@ -254,7 +255,7 @@ double AnastamosisPDD::distance2(FESolidElement * se, vec3d local_pos, Tip * tip
 vec3d AnastamosisPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio)
 {
 	vec3d tip_pos;
-	double H[FEElement::MAX_NODES];
+	double H[FESolidElement::MAX_NODES];
 	angio_element->_elem->shape_fnc(H, local_pos.x, local_pos.y, local_pos.z);
 	for (int i = 0; i < angio_element->_elem->Nodes(); i++)
 	{
@@ -369,12 +370,12 @@ Tip * AnastamosisPDD::BestInElement(AngioElement* angio_element, FEAngio* pangio
 }
 
 
-BEGIN_PARAMETER_LIST(AnastamosisPDD, PositionDependentDirection)
-ADD_PARAMETER(anastamosis_radius, FE_PARAM_DOUBLE, "anastamosis_radius");
-ADD_PARAMETER(contribution, FE_PARAM_DOUBLE, "contribution");
-ADD_PARAMETER(fuse_radius, FE_PARAM_DOUBLE, "fuse_radius");
-ADD_PARAMETER(fuse_angle, FE_PARAM_DOUBLE, "fuse_angle");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(AnastamosisPDD, PositionDependentDirection)
+ADD_PARAMETER(anastamosis_radius, "anastamosis_radius");
+ADD_PARAMETER(contribution, "contribution");
+ADD_PARAMETER(fuse_radius, "fuse_radius");
+ADD_PARAMETER(fuse_angle, "fuse_angle");
+END_FECORE_CLASS();
 
 void FiberPDD::Update(FEMesh * mesh, FEAngio* angio)
 {
@@ -392,8 +393,27 @@ vec3d FiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d lo
 		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
 		FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
 		vec3d axis(1, 0, 0);
-		axis = emp->m_F * emp->m_Q * axis;
+
+		//Ask Steve about this
+		//get the FE domain
+		FEDomain* Dom = dynamic_cast<FEDomain*>(angio_element->_elem->GetMeshPartition());
+		//
+		FEElementSet* elset = mesh->FindElementSet(Dom->GetName());
+		int local_index = elset->GetLocalIndex(*angio_element->_elem);
+
+		FEMaterial* Mat_a = Dom->GetMaterial();
+		// assumes that materials mat_axis is already mapped which we'll need to do somewhere else.
+		FEParam* matax = Mat_a->FindParameter("mat_axis");
+		FEParamMat3d& p = matax->value<FEParamMat3d>();
+		FEMappedValueMat3d* val = dynamic_cast<FEMappedValueMat3d*>(p.valuator());
+		FEDomainMap* map = dynamic_cast<FEDomainMap*>(val->dataMap());
+		mat3d m_Q = map->valueMat3d(emp);
+
+		axis = emp->m_F * m_Q * axis;
 		gauss_data.push_back({ axis });
+
+		/*axis = emp->m_F * emp->m_Q * axis;
+		gauss_data.push_back({ axis });*/
 	}
 
 	quatd rv = interpolation_prop->Interpolate(angio_element->_elem, gauss_data, local_pos, mesh);
@@ -452,6 +472,6 @@ vec3d FractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* angio_el
 	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_dir, alpha);
 }
 
-BEGIN_PARAMETER_LIST(FractionalAnisotropyPDD,PositionDependentDirection)
-ADD_PARAMETER(alpha_override, FE_PARAM_BOOL, "alpha_override");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(FractionalAnisotropyPDD,PositionDependentDirection)
+ADD_PARAMETER(alpha_override, "alpha_override");
+END_FECORE_CLASS();

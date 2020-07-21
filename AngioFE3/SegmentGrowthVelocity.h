@@ -1,6 +1,6 @@
 #pragma once
 #include <FECore/FEMaterial.h>
-#include <FEBioMech/FESPRProjection.h>
+#include <FECore/FESPRProjection.h>
 #include "AngioElement.h"
 #include "VariableInterpolation.h"
 class FEAngio;
@@ -24,13 +24,12 @@ class SegmentGrowthVelocityManager : public FEMaterial
 {
 public:
 	//!constructor
-	explicit SegmentGrowthVelocityManager(FEModel* pfem) : FEMaterial(pfem) { AddProperty(&seg_vel_modifiers, "velocity_modifier"); seg_vel_modifiers.m_brequired = false; }
+	explicit SegmentGrowthVelocityManager(FEModel* pfem) : FEMaterial(pfem) { AddClassProperty(this, &seg_vel_modifiers, "velocity_modifier", FEProperty::Optional); }
 	virtual ~SegmentGrowthVelocityManager() {}
 	//! Apply all of the modifier to calculate the velocity at a location
 	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_elem, FEMesh* mesh);
-	FEVecPropertyT<SegmentGrowthVelocity> seg_vel_modifiers;
-private:
-	
+	std::vector<SegmentGrowthVelocity*>	seg_vel_modifiers;	//!< pointers to elastic materials
+	//SegmentGrowthVelocity* seg_vel_modifiers;	
 };
 
 //! a fixed or load curve value for velocity
@@ -46,7 +45,7 @@ public:
 	void UpdateScale() override;
 protected:
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
 	double segment_velocity_over_time = 1;
 };
@@ -56,7 +55,7 @@ class SegmentVelocityDensityScaleModifier : public SegmentGrowthVelocity
 {
 public:
 	//!constructor
-	explicit SegmentVelocityDensityScaleModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) { AddProperty(&interpolation_prop, "interpolation_prop"); }
+	explicit SegmentVelocityDensityScaleModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) { AddClassProperty(this, &interpolation_prop, "interpolation_prop"); }
 	//! Scales the velocity based on the ecm density at the location
 	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
 	//! performs initialization
@@ -64,9 +63,9 @@ public:
 	void UpdateScale() override;
 protected:
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
-	FEPropertyT<FEVariableInterpolation> interpolation_prop;
+	FEVariableInterpolation* interpolation_prop;
 	vec3d m_density_scale_factor = vec3d(-0.016, 5.1605, 0.5112);
 };
 
@@ -74,7 +73,7 @@ class SegmentVelocityRefDensityScaleModifier : public SegmentGrowthVelocity
 {
 public:
 	//!constructor
-	explicit SegmentVelocityRefDensityScaleModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) { AddProperty(&interpolation_prop, "interpolation_prop"); }
+	explicit SegmentVelocityRefDensityScaleModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) { AddClassProperty(this, &interpolation_prop, "interpolation_prop"); }
 	//! Scales the velocity based on the ecm density at the location
 	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
 	//! performs initialization
@@ -82,9 +81,9 @@ public:
 	void UpdateScale() override;
 protected:
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
-	FEPropertyT<FEVariableInterpolation> interpolation_prop;
+	FEVariableInterpolation* interpolation_prop;
 	vec3d m_density_scale_factor = vec3d(-0.016, 5.1605, 0.5112);
 };
 
@@ -93,7 +92,7 @@ class SegmentVelocity3PModifier : public SegmentGrowthVelocity
 {
 public:
 	//!constructor
-	explicit SegmentVelocity3PModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) { AddProperty(&interpolation_prop, "interpolation_prop"); }
+	explicit SegmentVelocity3PModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) { AddClassProperty(this, &interpolation_prop, "interpolation_prop"); }
 	//! Scales the velocity based on the ecm density at the location
 	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
 	//! performs initialization
@@ -101,9 +100,9 @@ public:
 	void UpdateScale() override;
 protected:
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
-	FEPropertyT<FEVariableInterpolation> interpolation_prop;
+	FEVariableInterpolation* interpolation_prop;
 	double scale = 1;
 	double threshold = 1;
 };
@@ -113,7 +112,7 @@ class SegmentVelocityFAModifier : public SegmentGrowthVelocity
 {
 public:
 	//!constructor
-	explicit SegmentVelocityFAModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) { AddProperty(&interpolation_prop, "interpolation_prop"); }
+	explicit SegmentVelocityFAModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) { AddClassProperty(this, &interpolation_prop, "interpolation_prop"); }
 	//! Scales the velocity based on the ecm density at the location
 	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
 	//! performs initialization
@@ -121,9 +120,9 @@ public:
 	void UpdateScale() override;
 protected:
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
-	FEPropertyT<FEVariableInterpolation> interpolation_prop;
+	FEVariableInterpolation* interpolation_prop;
 	double scale = 1;
 	double threshold = 1;
 };
@@ -140,7 +139,7 @@ public:
 	void UpdateScale() override;
 protected:
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
 	double scale = 1;
 	double a = 100;
@@ -160,7 +159,7 @@ public:
 	void UpdateScale() override;
 protected:
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 private:
 	double scale = 1;
 	double a = 284;

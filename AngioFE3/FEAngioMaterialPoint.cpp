@@ -33,9 +33,9 @@ void FEAngioMaterialPoint::Update(const FETimeInfo& timeInfo)
 
 //-----------------------------------------------------------------------------
 // define the material parameters
-BEGIN_PARAMETER_LIST(FEAngioMaterialPoint, FEMaterialPoint)
-ADD_PARAMETER(ref_ecm_density, FE_PARAM_DOUBLE, "ref_ecm_density");
-END_PARAMETER_LIST();
+//BEGIN_FECORE_CLASS(FEAngioMaterialPoint, FEMaterialPoint)
+//ADD_PARAMETER(ref_ecm_density, "ref_ecm_density");
+//END_FECORE_CLASS();
 
 
 

@@ -1,12 +1,12 @@
 #include "VariableInterpolation.h"
-#include "FECore/FEElement.h"
+#include "FECore/FESolidElement.h"
 #include "FECore/FEMesh.h"
 #include "angio3d.h"
 #include <iostream>
 double PerElementVI::Interpolate(FESolidElement *se, std::vector<double> & values_at_gauss_points, vec3d local_pos, FEMesh* mesh)
 {
-	double ao[FEElement::MAX_NODES];
-	double H[FEElement::MAX_NODES];
+	double ao[FESolidElement::MAX_NODES];
+	double H[FESolidElement::MAX_NODES];
 	assert(values_at_gauss_points.size() == se->GaussPoints());
 	//this hack might will only work with vectors
 	se->project_to_nodes(&values_at_gauss_points[0], ao);
@@ -23,9 +23,9 @@ double PerElementVI::Interpolate(FESolidElement *se, std::vector<double> & value
 
 quatd PerElementVI::Interpolate(FESolidElement *se, std::vector<quatd> & values_at_gauss_points, vec3d local_pos, FEMesh* mesh)
 {
-	double nw[FEElement::MAX_NODES], nx[FEElement::MAX_NODES], ny[FEElement::MAX_NODES], nz[FEElement::MAX_NODES];
-	double gw[FEElement::MAX_NODES], gx[FEElement::MAX_NODES], gy[FEElement::MAX_NODES], gz[FEElement::MAX_NODES];
-	double H[FEElement::MAX_NODES];
+	double nw[FESolidElement::MAX_NODES], nx[FESolidElement::MAX_NODES], ny[FESolidElement::MAX_NODES], nz[FESolidElement::MAX_NODES];
+	double gw[FESolidElement::MAX_NODES], gx[FESolidElement::MAX_NODES], gy[FESolidElement::MAX_NODES], gz[FESolidElement::MAX_NODES];
+	double H[FESolidElement::MAX_NODES];
 	assert(values_at_gauss_points.size() == se->GaussPoints());
 	//this hack might will only work with vectors
 	//se->project_to_nodes(&values_at_gauss_points[0], ao);

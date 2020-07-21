@@ -124,40 +124,37 @@ public:
 	//! create material point data for this material
 	FEMaterialPoint* CreateMaterialPointData() override;
 
-	//! Set the local coordinate system for a material point (overridden from FEMaterial)
-	void SetLocalCoordinateSystem(FEElement& el, int n, FEMaterialPoint& mp) override;
-
 	//! calculates the strain energy density. Effects convergence rate
 	double StrainEnergyDensity(FEMaterialPoint& mp) override;
 	//! pointer to controlling class
 	FEAngio*	m_pangio = nullptr;
 	//! policy to calculate stress
-	FEPropertyT<AngioStressPolicy> angio_stress_policy;
+	AngioStressPolicy* angio_stress_policy;
 	//! initialization of elements
-	FEPropertyT<InitialModifierManager> im_manager;
+	InitialModifierManager* im_manager;
 	//! branching policy
-	FEPropertyT<BranchPolicy> branch_policy;
+	BranchPolicy* branch_policy;
 	//! branching policy for time before t=0
-	FEPropertyT<BranchPolicy> proto_branch_policy;
+	BranchPolicy* proto_branch_policy;
 	//! interpolation and initialization of per node properties
-	FEPropertyT<NodeDataInterpolationManager> nodedata_interpolation_manager;
+	NodeDataInterpolationManager* nodedata_interpolation_manager;
 	//! radius of vessels used to calculate mixture between matrix and vessel materials
 	double vessel_radius = 7.0;
-	FEPropertyT<FEMixMethod> mix_method;
-	FEPropertyT<SegmentGrowthVelocityManager> velocity_manager;
-	FEPropertyT<TipSpeciesManager> tip_species_manager;
+	FEMixMethod* mix_method;
+	SegmentGrowthVelocityManager* velocity_manager;
+	TipSpeciesManager* tip_species_manager;
 private:
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 
 	double initial_segment_velocity = 7.5;
 	double dt_safety_multiplier = 1.0;
 
-	FEPropertyT<FESolidMaterial> matrix_material;
-	FEPropertyT<PositionDependentDirectionManager> pdd_manager;
-	FEPropertyT<PreviousSegmentContributionManager> psc_manager;
-	FEPropertyT<TipSpecies> tip_species;
-	FEPropertyT<ContributionMixManager> cm_manager;
-//	FEPropertyT<SegmentGrowthVelocityManager> velocity_manager;
-	FEPropertyT<CommonAngioProperties> common_properties;
+	FESolidMaterial* matrix_material;
+	PositionDependentDirectionManager* pdd_manager;
+	PreviousSegmentContributionManager* psc_manager;
+	TipSpecies* tip_species;
+	ContributionMixManager* cm_manager;
+//	SegmentGrowthVelocityManager> velocity_manager;
+	CommonAngioProperties* common_properties;
 	
 };

@@ -80,7 +80,7 @@ public:
 	}
 	void InitializeFibers(RandomFiberManager * fman) override;
 private:
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 	double a=2,b=1,c=1;
 	int theta_slice = 360;
 	int phi_slice = 360;

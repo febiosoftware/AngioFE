@@ -2,21 +2,20 @@
 #include "AngioElement.h"
 #include "FEAngio.h"
 #include "Tip.h"
-#include <FECore/FEDataLoadCurve.h>
+#include <FECore/FELoadCurve.h>
 
 void AngioStressPolicy::UpdateToLoadCurve(const char* param_name, double& value)
 {
 	//if load curves are used they must use step interpolation
 	FEParam * m = FindParameter(ParamString(param_name));
 	assert(m);
-	int mlci = m->GetLoadCurve();
 
 	FEModel * model = GetFEModel();
-	if (mlci >= 0)
+	FELoadCurve* mlc = dynamic_cast<FELoadCurve*>(model->GetLoadController(m));
+	assert(mlc);
+	if (mlc)
 	{
-		FEDataLoadCurve * mlc = dynamic_cast<FEDataLoadCurve*>(model->GetLoadCurve(mlci));
-		assert(mlc);
-		value = mlc->Value(model->GetTime().currentTime);
+		value = mlc->GetValue(model->GetTime().currentTime);
 	}
 }
 
@@ -96,17 +95,17 @@ void SigmoidAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio*
 	
 }
 
-BEGIN_PARAMETER_LIST(SigmoidAngioStressPolicy, AngioStressPolicy)
-ADD_PARAMETER(sprout_mag, FE_PARAM_DOUBLE, "sprout_mag");
-ADD_PARAMETER(fan_exponential, FE_PARAM_DOUBLE, "fan_exponential");
-ADD_PARAMETER(sprout_range, FE_PARAM_DOUBLE, "sprout_range");
-ADD_PARAMETER(sprout_radius_multiplier, FE_PARAM_DOUBLE, "sprout_radius_multiplier");
-ADD_PARAMETER(a, FE_PARAM_DOUBLE, "a");
-ADD_PARAMETER(b, FE_PARAM_DOUBLE, "b");
-ADD_PARAMETER(x0, FE_PARAM_DOUBLE, "x0");
-ADD_PARAMETER(y0, FE_PARAM_DOUBLE, "y0");
+BEGIN_FECORE_CLASS(SigmoidAngioStressPolicy, AngioStressPolicy)
+ADD_PARAMETER(sprout_mag, "sprout_mag");
+ADD_PARAMETER(fan_exponential, "fan_exponential");
+ADD_PARAMETER(sprout_range, "sprout_range");
+ADD_PARAMETER(sprout_radius_multiplier, "sprout_radius_multiplier");
+ADD_PARAMETER(a, "a");
+ADD_PARAMETER(b, "b");
+ADD_PARAMETER(x0, "x0");
+ADD_PARAMETER(y0, "y0");
 
-END_PARAMETER_LIST();
+END_FECORE_CLASS();
 
 
 bool LoadCurveVelAngioStressPolicy::Init()
@@ -157,12 +156,12 @@ void LoadCurveVelAngioStressPolicy::AngioStress(AngioElement* angio_element, FEA
 }
 
 
-BEGIN_PARAMETER_LIST(LoadCurveVelAngioStressPolicy, AngioStressPolicy)
-ADD_PARAMETER(sprout_mag, FE_PARAM_DOUBLE, "sprout_mag");
-ADD_PARAMETER(fan_exponential, FE_PARAM_DOUBLE, "fan_exponential");
-ADD_PARAMETER(sprout_range, FE_PARAM_DOUBLE, "sprout_range");
-ADD_PARAMETER(sprout_radius_multiplier, FE_PARAM_DOUBLE, "sprout_radius_multiplier");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(LoadCurveVelAngioStressPolicy, AngioStressPolicy)
+ADD_PARAMETER(sprout_mag, "sprout_mag");
+ADD_PARAMETER(fan_exponential, "fan_exponential");
+ADD_PARAMETER(sprout_range, "sprout_range");
+ADD_PARAMETER(sprout_radius_multiplier, "sprout_radius_multiplier");
+END_FECORE_CLASS();
 
 bool LoadCurveAngioStressPolicy::Init()
 {
@@ -203,12 +202,12 @@ void LoadCurveAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngi
 
 }
 
-BEGIN_PARAMETER_LIST(LoadCurveAngioStressPolicy, AngioStressPolicy)
-ADD_PARAMETER(sprout_mag, FE_PARAM_DOUBLE, "sprout_mag");
-ADD_PARAMETER(fan_exponential, FE_PARAM_DOUBLE, "fan_exponential");
-ADD_PARAMETER(sprout_range, FE_PARAM_DOUBLE, "sprout_range");
-ADD_PARAMETER(sprout_radius_multiplier, FE_PARAM_DOUBLE, "sprout_radius_multiplier");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(LoadCurveAngioStressPolicy, AngioStressPolicy)
+ADD_PARAMETER(sprout_mag, "sprout_mag");
+ADD_PARAMETER(fan_exponential, "fan_exponential");
+ADD_PARAMETER(sprout_range, "sprout_range");
+ADD_PARAMETER(sprout_radius_multiplier, "sprout_radius_multiplier");
+END_FECORE_CLASS();
 
 bool LoadCurveDenAngioStressPolicy::Init()
 {
@@ -250,12 +249,12 @@ void LoadCurveDenAngioStressPolicy::AngioStress(AngioElement* angio_element, FEA
 
 }
 
-BEGIN_PARAMETER_LIST(LoadCurveDenAngioStressPolicy, AngioStressPolicy)
-ADD_PARAMETER(sprout_mag, FE_PARAM_DOUBLE, "sprout_mag");
-ADD_PARAMETER(fan_exponential, FE_PARAM_DOUBLE, "fan_exponential");
-ADD_PARAMETER(sprout_range, FE_PARAM_DOUBLE, "sprout_range");
-ADD_PARAMETER(sprout_radius_multiplier, FE_PARAM_DOUBLE, "sprout_radius_multiplier");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(LoadCurveDenAngioStressPolicy, AngioStressPolicy)
+ADD_PARAMETER(sprout_mag, "sprout_mag");
+ADD_PARAMETER(fan_exponential, "fan_exponential");
+ADD_PARAMETER(sprout_range, "sprout_range");
+ADD_PARAMETER(sprout_radius_multiplier, "sprout_radius_multiplier");
+END_FECORE_CLASS();
 
 bool LoadCurveRefDenAngioStressPolicy::Init()
 {
@@ -297,12 +296,12 @@ void LoadCurveRefDenAngioStressPolicy::AngioStress(AngioElement* angio_element, 
 
 }
 
-BEGIN_PARAMETER_LIST(LoadCurveRefDenAngioStressPolicy, AngioStressPolicy)
-ADD_PARAMETER(sprout_mag, FE_PARAM_DOUBLE, "sprout_mag");
-ADD_PARAMETER(fan_exponential, FE_PARAM_DOUBLE, "fan_exponential");
-ADD_PARAMETER(sprout_range, FE_PARAM_DOUBLE, "sprout_range");
-ADD_PARAMETER(sprout_radius_multiplier, FE_PARAM_DOUBLE, "sprout_radius_multiplier");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(LoadCurveRefDenAngioStressPolicy, AngioStressPolicy)
+ADD_PARAMETER(sprout_mag, "sprout_mag");
+ADD_PARAMETER(fan_exponential, "fan_exponential");
+ADD_PARAMETER(sprout_range, "sprout_range");
+ADD_PARAMETER(sprout_radius_multiplier, "sprout_radius_multiplier");
+END_FECORE_CLASS();
 
 bool GrownSegmentsAngioStressPolicy::Init()
 {
@@ -343,12 +342,12 @@ void GrownSegmentsAngioStressPolicy::AngioStress(AngioElement* angio_element, FE
 }
 
 
-BEGIN_PARAMETER_LIST(GrownSegmentsAngioStressPolicy, AngioStressPolicy)
-ADD_PARAMETER(sprout_mag, FE_PARAM_DOUBLE, "sprout_mag");
-ADD_PARAMETER(fan_exponential, FE_PARAM_DOUBLE, "fan_exponential");
-ADD_PARAMETER(sprout_range, FE_PARAM_DOUBLE, "sprout_range");
-ADD_PARAMETER(sprout_radius_multiplier, FE_PARAM_DOUBLE, "sprout_radius_multiplier");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(GrownSegmentsAngioStressPolicy, AngioStressPolicy)
+ADD_PARAMETER(sprout_mag, "sprout_mag");
+ADD_PARAMETER(fan_exponential, "fan_exponential");
+ADD_PARAMETER(sprout_range, "sprout_range");
+ADD_PARAMETER(sprout_radius_multiplier, "sprout_radius_multiplier");
+END_FECORE_CLASS();
 
 
 bool GrownSegmentsVelAngioStressPolicy::Init()
@@ -390,9 +389,9 @@ void GrownSegmentsVelAngioStressPolicy::AngioStress(AngioElement* angio_element,
 }
 
 
-BEGIN_PARAMETER_LIST(GrownSegmentsVelAngioStressPolicy, AngioStressPolicy)
-ADD_PARAMETER(sprout_mag, FE_PARAM_DOUBLE, "sprout_mag");
-ADD_PARAMETER(fan_exponential, FE_PARAM_DOUBLE, "fan_exponential");
-ADD_PARAMETER(sprout_range, FE_PARAM_DOUBLE, "sprout_range");
-ADD_PARAMETER(sprout_radius_multiplier, FE_PARAM_DOUBLE, "sprout_radius_multiplier");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(GrownSegmentsVelAngioStressPolicy, AngioStressPolicy)
+ADD_PARAMETER(sprout_mag, "sprout_mag");
+ADD_PARAMETER(fan_exponential, "fan_exponential");
+ADD_PARAMETER(sprout_range, "sprout_range");
+ADD_PARAMETER(sprout_radius_multiplier, "sprout_radius_multiplier");
+END_FECORE_CLASS();

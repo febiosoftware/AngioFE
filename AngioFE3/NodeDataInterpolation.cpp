@@ -3,10 +3,10 @@
 #include <FECore/FENodeDataMap.h>
 #include <iostream>
 
-BEGIN_PARAMETER_LIST(NodeDataInterpolation, FEMaterial)
-ADD_PARAMETER(node_set_id, FE_PARAM_INT, "node_set_id");
-ADD_PARAMETER(interpolation_mode, FE_PARAM_INT, "interpolation_mode");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(NodeDataInterpolation, FEMaterial)
+ADD_PARAMETER(node_set_id, "node_set_id");
+ADD_PARAMETER(interpolation_mode, "interpolation_mode");
+END_FECORE_CLASS();
 double & DensityValuesNodeDataInterpolation::ValueReference(FEMaterialPoint * mp)
 {
 	return FEAngioMaterialPoint::FindAngioMaterialPoint(mp)->ref_ecm_density;
@@ -37,7 +37,7 @@ void NodeDataInterpolation::PrepValues(FEAngio* angio, FEMesh* mesh, FEAngioMate
 		//get the solid element
 		FESolidElement * se = angio->elements_by_material[angio_mat][i]->_elem;
 		// make a vector to store nodal values.
-		double nodal_values[FEElement::MAX_NODES];
+		double nodal_values[FESolidElement::MAX_NODES];
 		// store the values at the gauss points
 		std::vector<double> values_at_gauss_points;
 		// get the values from the solid element gauss points
@@ -60,17 +60,17 @@ void NodeDataInterpolation::PrepValues(FEAngio* angio, FEMesh* mesh, FEAngioMate
 	FENodeSet * node_set = mesh->NodeSet(node_set_id);
 	assert(node_set);
 	// create the data array for the desired type of data
-	FEDataArray* da = angio->m_fem->FindDataArray(GetDataName());
+	FEDataArray* da = mesh->FindDataMap(GetDataName());
 	assert(da);
 	// create a node data map from the data array
 	FENodeDataMap * ndm = dynamic_cast<FENodeDataMap*>(da);
 	assert(ndm);
 	//the number of items is valid
-	assert(ndm->DataCount() <= node_set->size());
+	assert(ndm->DataCount() <= node_set->Size());
 	// get the node list
 	auto node_list = node_set->GetNodeList();
 	// for each node
-	for (int i = 0; i<node_list.size(); i++)
+	for (int i = 0; i<node_list.Size(); i++)
 	{
 		// get the node id
 		int node_id = node_list[i];
@@ -87,7 +87,7 @@ void NodeDataInterpolation::PrepValues(FEAngio* angio, FEMesh* mesh, FEAngioMate
 		{
 		case 0:
 			//get nodal values
-			double nodal_values[FEElement::MAX_NODES];
+			double nodal_values[FESolidElement::MAX_NODES];
 			for(int j=0; j < angio_element->_elem->Nodes();j++)
 			{
 				nodal_values[j] = node_id_to_values.at(angio_element->_elem->m_node[j]);
@@ -96,7 +96,7 @@ void NodeDataInterpolation::PrepValues(FEAngio* angio, FEMesh* mesh, FEAngioMate
 			for (int j = 0; j < angio_element->_elem->GaussPoints(); j++)
 			{
 				FEMaterialPoint *mp = angio_element->_elem->GetMaterialPoint(j);
-				double H[FEElement::MAX_NODES];
+				double H[FESolidElement::MAX_NODES];
 				angio_element->_elem->shape_fnc(H, angio_element->_elem->gr(j), angio_element->_elem->gs(j), angio_element->_elem->gt(j));
 				double val = 0;
 				for(int k=0; k < angio_element->_elem->Nodes();k++)

@@ -17,9 +17,9 @@ void PSCPDDContributionMix::Update(FEMesh * mesh)
 	// TODO: Implement.
 }
 
-BEGIN_PARAMETER_LIST(PSCPDDContributionMix, ContributionMix)
-ADD_PARAMETER(psc_weight, FE_PARAM_DOUBLE, "psc_weight");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(PSCPDDContributionMix, ContributionMix)
+ADD_PARAMETER(psc_weight, "psc_weight");
+END_FECORE_CLASS();
 
 double ContributionMixManager::ApplyModifiers(double prev, AngioElement* angio_element, vec3d local_pos, FEMesh* mesh)
 {

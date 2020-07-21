@@ -13,6 +13,7 @@
 #include "FEBioMix/FETriphasic.h"
 #include "FEBioMix/FEMultiphasicSolidDomain.h"
 #include "FEBioMix/FEMultiphasicShellDomain.h"
+#include "FECore/FEDomainMap.h"
 #include <iostream>
 
 extern FEAngio* pfeangio;
@@ -182,7 +183,7 @@ bool FEPlotMatrixTangent::Save(FEDomain& d, FEDataStream& str)
 		{
 			FEMaterialPoint& mp = *(el.GetMaterialPoint(j));
 			// evaluate the tangent at the material point
-			tens4ds ten = pmat->GetMatrixMaterial()->GetElasticMaterial()->Tangent(mp);
+			tens4ds ten = pmat->GetMatrixMaterial()->ExtractProperty<FEElasticMaterial>()->Tangent(mp);
 			tens4ds sj = ten;
 			s += sj;
 		}
@@ -271,8 +272,20 @@ bool FEPlotMatrixElastic_m_Q::Save(FEDomain& d, FEDataStream& str)
 		{
 			FEMaterialPoint * mp = (el.GetMaterialPoint(j));
 			FEElasticMaterialPoint*  emp = mp->ExtractData<FEElasticMaterialPoint>();
+			FEMesh* mesh = d.GetMesh();
+			//get the FE domain
+			FEElementSet* elset = mesh->FindElementSet(d.GetName());
+			int local_index = elset->GetLocalIndex(el);
+			//Ask Steve about this
+			FEMaterial* Mat_a = d.GetMaterial();
+			// assumes that materials mat_axis is already mapped which we'll need to do somewhere else.
+			FEParam* matax = Mat_a->FindParameter("mat_axis");
+			FEParamMat3d& p = matax->value<FEParamMat3d>();
+			FEMappedValueMat3d* val = dynamic_cast<FEMappedValueMat3d*>(p.valuator());
+			FEDomainMap* map = dynamic_cast<FEDomainMap*>(val->dataMap());
+			mat3d sj = map->valueMat3d(emp);
 
-			mat3d sj = emp->m_Q;
+			//mat3d sj = emp->m_Q;
 			s += sj;
 		}
 		s /= static_cast<double>(nint);
@@ -452,6 +465,7 @@ bool FEPlotAngioFractionalAnisotropy::Save(FEDomain& d, FEDataStream& str)
 			str << angio_element->angioFA;
 		}
 	}
+	return true;
 }
 
 bool FEPlotPrimaryVesselDirection::Save(FEDomain& d, FEDataStream& str)

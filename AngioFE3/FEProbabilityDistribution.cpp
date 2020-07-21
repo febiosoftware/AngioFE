@@ -1,8 +1,9 @@
 #include "FEProbabilityDistribution.h"
 #include "FECore/FEModel.h"
-#include "FECore/LoadCurve.h"
-#include <FECore/FEDataLoadCurve.h>
+#include "FECore/FELoadCurve.h"
+#include <FECore/FELoadCurve.h>
 #include <numeric>
+#include <FECore/FECoreBase.h>
 
 //implemenations of FENormalDistribution
 double FENormalDistribution::NextValue(angiofe_random_engine & re)
@@ -29,10 +30,10 @@ void FENormalDistribution::TimeStepUpdate(double current_time)
 }
 
 
-BEGIN_PARAMETER_LIST(FENormalDistribution, FEProbabilityDistribution)
-ADD_PARAMETER(mean, FE_PARAM_DOUBLE, "mean");
-ADD_PARAMETER(stddev, FE_PARAM_DOUBLE, "stddev");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(FENormalDistribution, FEProbabilityDistribution)
+ADD_PARAMETER(mean, "mean");
+ADD_PARAMETER(stddev, "stddev");
+END_FECORE_CLASS();
 
 
 double FEUniformDistribution::NextValue(angiofe_random_engine & re)
@@ -69,44 +70,43 @@ void FEUniformDistribution::TimeStepUpdate(double current_time)
 	}
 }
 
-BEGIN_PARAMETER_LIST(FEUniformDistribution, FEProbabilityDistribution)
-ADD_PARAMETER(a, FE_PARAM_DOUBLE, "a");
-ADD_PARAMETER(b, FE_PARAM_DOUBLE, "b");
-ADD_PARAMETER(time_clamped, FE_PARAM_BOOL, "time_clamped");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(FEUniformDistribution, FEProbabilityDistribution)
+ADD_PARAMETER(a, "a");
+ADD_PARAMETER(b, "b");
+ADD_PARAMETER(time_clamped, "time_clamped");
+END_FECORE_CLASS();
 
 
-BEGIN_PARAMETER_LIST(FEProbabilityDistribution, FEMaterial)
-ADD_PARAMETER(max_retries, FE_PARAM_INT, "max_retries");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(FEProbabilityDistribution, FEMaterial)
+ADD_PARAMETER(max_retries, "max_retries");
+END_FECORE_CLASS();
 
 void FEProbabilityDistribution::SetLoadCurveToStep(const char * param)
 {
 	//if load curves are used they must use step interpolation
 	FEParam * m = FindParameter(ParamString(param));
-
-	int mlci = m->GetLoadCurve();
-
+	assert(m);
+	
 	FEModel * model = GetFEModel();
-	if (mlci > 0)
+	FELoadCurve* mlc = dynamic_cast<FELoadCurve*>(model->GetLoadController(m));
+	assert(mlc);
+	if (mlc)
 	{
-		FEDataLoadCurve * mlc = dynamic_cast<FEDataLoadCurve*>(model->GetLoadCurve(mlci));
-		assert(mlc);
-		mlc->SetInterpolation(FEDataLoadCurve::STEP);
+		mlc->SetInterpolation(FEPointFunction::STEP);
 	}
 }
 
 bool FEProbabilityDistribution::ChangeInParam(const char * param, double time, double & prev, double & new_p)
 {
 	FEParam * m = FindParameter(ParamString(param));
-
-	int mlci = m->GetLoadCurve();
+	assert(m);
 
 	FEModel * model = GetFEModel();
-	if (mlci > 0)
+	FELoadCurve* mlc = dynamic_cast<FELoadCurve*>(model->GetLoadController(m));
+	assert(mlc);
+	if (mlc)
 	{
-		FELoadCurve * mlc = model->GetLoadCurve(mlci);
-		new_p = mlc->Value(time);
+		new_p = mlc->GetValue(time);
 		if (new_p != prev)
 		{
 			return true;
@@ -145,10 +145,10 @@ void FEExponentialDistribution::TimeStepUpdate(double current_time)
 }
 
 
-BEGIN_PARAMETER_LIST(FEExponentialDistribution, FEProbabilityDistribution)
-ADD_PARAMETER(lambda, FE_PARAM_DOUBLE, "lambda");
-ADD_PARAMETER(mult, FE_PARAM_DOUBLE, "mult");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(FEExponentialDistribution, FEProbabilityDistribution)
+ADD_PARAMETER(lambda, "lambda");
+ADD_PARAMETER(mult, "mult");
+END_FECORE_CLASS();
 
 //implemenations of FENormalDistribution
 double FECauchyDistribution::NextValue(angiofe_random_engine & re)
@@ -178,10 +178,10 @@ void FECauchyDistribution::TimeStepUpdate(double current_time)
 
 
 
-BEGIN_PARAMETER_LIST(FECauchyDistribution, FEProbabilityDistribution)
-ADD_PARAMETER(a, FE_PARAM_DOUBLE, "a");
-ADD_PARAMETER(b, FE_PARAM_DOUBLE, "b");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(FECauchyDistribution, FEProbabilityDistribution)
+ADD_PARAMETER(a, "a");
+ADD_PARAMETER(b, "b");
+END_FECORE_CLASS();
 
 
 //implemenations of FENormalDistribution
@@ -213,10 +213,10 @@ void FEChiSquaredDistribution::TimeStepUpdate(double current_time)
 
 
 
-BEGIN_PARAMETER_LIST(FEChiSquaredDistribution, FEProbabilityDistribution)
-ADD_PARAMETER(dof, FE_PARAM_DOUBLE, "dof");
-ADD_PARAMETER(mult, FE_PARAM_DOUBLE, "mult");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(FEChiSquaredDistribution, FEProbabilityDistribution)
+ADD_PARAMETER(dof, "dof");
+ADD_PARAMETER(mult, "mult");
+END_FECORE_CLASS();
 
 
 //implemenations of FENormalDistribution
@@ -247,10 +247,10 @@ void FEWeibullDistribution::TimeStepUpdate(double current_time)
 
 
 
-BEGIN_PARAMETER_LIST(FEWeibullDistribution, FEProbabilityDistribution)
-ADD_PARAMETER(a, FE_PARAM_DOUBLE, "a");
-ADD_PARAMETER(b, FE_PARAM_DOUBLE, "b");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(FEWeibullDistribution, FEProbabilityDistribution)
+ADD_PARAMETER(a, "a");
+ADD_PARAMETER(b, "b");
+END_FECORE_CLASS();
 
 
 //implemenations of FENormalDistribution
@@ -282,10 +282,10 @@ void FEGammaDistribution::TimeStepUpdate(double current_time)
 
 
 
-BEGIN_PARAMETER_LIST(FEGammaDistribution, FEProbabilityDistribution)
-ADD_PARAMETER(alpha, FE_PARAM_DOUBLE, "alpha");
-ADD_PARAMETER(beta, FE_PARAM_DOUBLE, "beta");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(FEGammaDistribution, FEProbabilityDistribution)
+ADD_PARAMETER(alpha, "alpha");
+ADD_PARAMETER(beta, "beta");
+END_FECORE_CLASS();
 
 //implemenations of FENormalDistribution
 double FEFixedDistribution::NextValue(angiofe_random_engine & re)
@@ -305,6 +305,6 @@ bool FEFixedDistribution::Init()
 }
 
 
-BEGIN_PARAMETER_LIST(FEFixedDistribution, FEProbabilityDistribution)
-ADD_PARAMETER(value, FE_PARAM_DOUBLE, "value");
-END_PARAMETER_LIST();
+BEGIN_FECORE_CLASS(FEFixedDistribution, FEProbabilityDistribution)
+ADD_PARAMETER(value, "value");
+END_FECORE_CLASS();

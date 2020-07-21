@@ -3,6 +3,8 @@
 #include "Segment.h"
 #include "FEAngio.h"
 #include <iostream>
+#include "FEBioMech\FEElasticMaterialPoint.h"
+#include "FECore/FEDomainMap.h"
 
 void BranchPolicy::AddBranchTip(AngioElement * angio_element, vec3d local_pos, vec3d parent_direction, double start_time, int vessel_id, int buffer_index, FEMesh* mesh)
 {
@@ -27,11 +29,27 @@ vec3d BranchPolicy::GetBranchDirection(vec3d local_pos, vec3d parent_direction, 
 	std::vector<quatd> nodal_data;
 	for (int i = 0; i< angio_element->_elem->GaussPoints(); i++)
 	{
+		//Ask Steve about this
 		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
 		FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
 		vec3d axis(1, 0, 0);
-		axis = emp->m_F * emp->m_Q * axis;
+		//get the FE domain
+		FEDomain* Dom = dynamic_cast<FEDomain*>(angio_element->_elem->GetMeshPartition());
+		//
+		FEElementSet* elset = mesh->FindElementSet(Dom->GetName());
+		int local_index = elset->GetLocalIndex(*angio_element->_elem);
+
+		FEMaterial* Mat_a = Dom->GetMaterial();
+		// assumes that materials mat_axis is already mapped which we'll need to do somewhere else.
+		FEParam* matax = Mat_a->FindParameter("mat_axis");
+		FEParamMat3d& p = matax->value<FEParamMat3d>();
+		FEMappedValueMat3d* val = dynamic_cast<FEMappedValueMat3d*>(p.valuator());
+		FEDomainMap* map = dynamic_cast<FEDomainMap*>(val->dataMap());
+		mat3d m_Q = map->valueMat3d(emp);
+		axis = emp->m_F * m_Q * axis;
 		gauss_data.push_back({ axis });
+		//axis = emp->m_F * emp->m_Q * axis;
+		//gauss_data.push_back({ axis });
 	}
 
 	quatd rv = interpolation_prop->Interpolate(angio_element->_elem, gauss_data, local_pos, mesh);

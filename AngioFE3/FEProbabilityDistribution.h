@@ -29,7 +29,7 @@ protected:
 	//! returns whether a parameter has changed over time
 	bool ChangeInParam(const char * param, double time, double & prev, double & new_p);
 private:
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 };
 
 //! get random numbers from a normal distribution
@@ -55,7 +55,7 @@ private:
 	double stddev = 1.0;//distribution's standard deviation
 
 	std::normal_distribution<double> nd;
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 };
 
 //! get random numbers from a uniform distribution
@@ -84,7 +84,7 @@ private:
 	bool time_clamped = true;
 
 
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 };
 
 //! get random numbers from a exponential distribution
@@ -114,7 +114,7 @@ private:
 	double prev_lambda = 1.0;
 	double prev_mult = mult;
 
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 };
 
 //! get random numbers from a cauchy distribution
@@ -144,7 +144,7 @@ private:
 	double prev_b = b;
 
 
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 };
 
 //! get random numbers from a chisquared distribution
@@ -174,7 +174,7 @@ private:
 	double prev_mult = mult;
 	
 
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 };
 
 //! get random numbers from a weibull distribution
@@ -204,7 +204,7 @@ private:
 	double prev_a = a;
 	double prev_b = b;
 
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 };
 
 //! get random numbers from a gamma distribution
@@ -234,7 +234,7 @@ private:
 	double prev_alpha = alpha;
 	double prev_beta = beta;
 
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 };
 
 //! return a given value
@@ -257,5 +257,5 @@ public:
 private:
 	double value = 1.0;
 
-	DECLARE_PARAMETER_LIST();
+	DECLARE_FECORE_CLASS();
 };

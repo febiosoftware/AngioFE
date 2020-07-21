@@ -1,5 +1,5 @@
 #pragma once
-#include <FECore/FEElement.h>
+#include <FECore/FESolidElement.h>
 #include <random>
 #include <FECore/FEMaterial.h>
 #include <unordered_map>
@@ -15,7 +15,7 @@ class BranchInfo;
 
 
  
-//! Contains the data that is needed by the plugin on a per element basis. This class mirrors FEElements but does not inhertit from FEElement. If this inherited from FEElement a large number of custom domain classes would need to be created.
+//! Contains the data that is needed by the plugin on a per element basis. This class mirrors FESolidElements but does not inhertit from FESolidElement. If this inherited from FESolidElement a large number of custom domain classes would need to be created.
 class AngioElement
 {
 public:
@@ -37,11 +37,11 @@ public:
 	//double GetEllipseAngle2(const double a, const double b);
 
 	//! pointer to element  
-	FESolidElement * _elem=nullptr;
+	FESolidElement * _elem = nullptr;
 	//! pointer to angio material
-	FEAngioMaterial * _angio_mat=nullptr;
+	FEAngioMaterial * _angio_mat = nullptr;
 	//! pointer to top level material(may be angio material or multiphasic material)
-	FEMaterial * _mat= nullptr;
+	FEMaterial * _mat = nullptr;
 	//! random engine for the elment (sequence all random rolls within the element sequentially wrt time)
 	std::mt19937_64 _rengine;
 

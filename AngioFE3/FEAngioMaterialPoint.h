@@ -42,7 +42,8 @@ public:
 	FEMaterialPoint* matPt;
 
 	//! parameter list
-	DECLARE_PARAMETER_LIST();
+	//DECLARE_FECORE_CLASS();
+	// only works with classes that derive from FECoreBase
 
 public:
 	//! return the angio material point from a material point if it exists, return nullptr otherwise
