@@ -32,7 +32,6 @@ public:
 	//! may update this based on the timestep
 	void Update(FEMesh * mesh) {}
 private:
-private:
 	std::vector<PreviousSegmentContribution*>	psc_modifiers;	//!< pointers to elastic materials
 	//PreviousSegmentContribution* psc_modifiers;
 };

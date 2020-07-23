@@ -17,12 +17,8 @@
 
 //-----------------------------------------------------------------------------
 BEGIN_FECORE_CLASS(FEAngioMaterial, FEElasticMaterial)
-	
-	
-(initial_segment_velocity, "initial_segment_velocity");
-	
-(vessel_radius, "vessel_radius");
-
+ADD_PARAMETER(initial_segment_velocity, "initial_segment_velocity");
+ADD_PARAMETER(vessel_radius, "vessel_radius");
 END_FECORE_CLASS();
 
 //-----------------------------------------------------------------------------
