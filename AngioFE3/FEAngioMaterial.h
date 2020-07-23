@@ -127,34 +127,34 @@ public:
 	//! calculates the strain energy density. Effects convergence rate
 	double StrainEnergyDensity(FEMaterialPoint& mp) override;
 	//! pointer to controlling class
-	FEAngio*	m_pangio = nullptr;
+	FEAngio*	m_pangio = 0;
 	//! policy to calculate stress
-	AngioStressPolicy* angio_stress_policy;
+	AngioStressPolicy* angio_stress_policy = 0;
 	//! initialization of elements
-	InitialModifierManager* im_manager;
+	InitialModifierManager* im_manager = 0;
 	//! branching policy
-	BranchPolicy* branch_policy;
+	BranchPolicy* branch_policy = 0;
 	//! branching policy for time before t=0
-	BranchPolicy* proto_branch_policy;
+	BranchPolicy* proto_branch_policy = 0;
 	//! interpolation and initialization of per node properties
-	NodeDataInterpolationManager* nodedata_interpolation_manager;
+	NodeDataInterpolationManager* nodedata_interpolation_manager = 0;
 	//! radius of vessels used to calculate mixture between matrix and vessel materials
 	double vessel_radius = 7.0;
-	FEMixMethod* mix_method;
-	SegmentGrowthVelocityManager* velocity_manager;
-	TipSpeciesManager* tip_species_manager;
+	FEMixMethod* mix_method = 0;
+	SegmentGrowthVelocityManager* velocity_manager = 0;
+	TipSpeciesManager* tip_species_manager = 0;
 private:
 	DECLARE_FECORE_CLASS();
 
 	double initial_segment_velocity = 7.5;
 	double dt_safety_multiplier = 1.0;
 
-	FESolidMaterial* matrix_material;
-	PositionDependentDirectionManager* pdd_manager;
-	PreviousSegmentContributionManager* psc_manager;
-	TipSpecies* tip_species;
-	ContributionMixManager* cm_manager;
+	FESolidMaterial* matrix_material = 0;
+	PositionDependentDirectionManager* pdd_manager = 0;
+	PreviousSegmentContributionManager* psc_manager = 0;
+	TipSpecies* tip_species = 0;
+	ContributionMixManager* cm_manager = 0;
 //	SegmentGrowthVelocityManager> velocity_manager;
-	CommonAngioProperties* common_properties;
+	CommonAngioProperties* common_properties = 0;
 	
 };
