@@ -20,5 +20,5 @@ public:
 	bool Run() override;
 
 private:
-	FEAngio*	m_pangio=nullptr;
+	FEAngio*	m_pangio = nullptr;
 };

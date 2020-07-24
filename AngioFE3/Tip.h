@@ -19,15 +19,15 @@ public:
 	//! returns the local position
 	vec3d GetLocalPosition() const;
 	//! The element that contains the local_pos coordinates
-	AngioElement * angio_element= nullptr;
+	AngioElement * angio_element = nullptr;
 	//! Time at which the tip occurs
-	double time=0.0;
+	double time = 0.0;
 	//! Velocity at which the tip grew
 	double growth_velocity = 0.0;
 	//! The element where growth originated from
-	AngioElement* face= nullptr;
+	AngioElement* face = nullptr;
 	//! Segment that contains this this tip. May be nullptr for no parent segment 
-	Segment * parent=nullptr;
+	Segment * parent = nullptr;
 	//! Will be initialized to values greater than or equal to zero, unique values per vessel
 	int initial_fragment_id = -1;
 	//! identifies whether or not a given tip is the base of a branch

@@ -210,7 +210,7 @@ public:	// parameters read directly from file
 	angiofe_random_engine rengine;
 
 	//! pointer to the fbio model
-	FEBioModel * m_fem;
+	FEBioModel * m_fem = nullptr;
 	//! solid element to angio element
 	std::unordered_map<FESolidElement *, AngioElement *> se_to_angio_element;
 	//! nodes to elements

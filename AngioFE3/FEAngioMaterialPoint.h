@@ -37,9 +37,9 @@ public:
 	double matrix_weight;
 
 	//! pointer to material point of the vessel
-	FEMaterialPoint* vessPt;
+	FEMaterialPoint* vessPt = nullptr;
 	//! pointer to matrix material point
-	FEMaterialPoint* matPt;
+	FEMaterialPoint* matPt = nullptr;
 
 	//! parameter list
 	//DECLARE_FECORE_CLASS();

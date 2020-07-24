@@ -127,34 +127,34 @@ public:
 	//! calculates the strain energy density. Effects convergence rate
 	double StrainEnergyDensity(FEMaterialPoint& mp) override;
 	//! pointer to controlling class
-	FEAngio*	m_pangio = 0;
+	FEAngio*	m_pangio = nullptr;
 	//! policy to calculate stress
-	AngioStressPolicy* angio_stress_policy = 0;
+	AngioStressPolicy* angio_stress_policy = nullptr;
 	//! initialization of elements
-	InitialModifierManager* im_manager = 0;
+	InitialModifierManager* im_manager = nullptr;
 	//! branching policy
-	BranchPolicy* branch_policy = 0;
+	BranchPolicy* branch_policy = nullptr;
 	//! branching policy for time before t=0
-	BranchPolicy* proto_branch_policy = 0;
+	BranchPolicy* proto_branch_policy = nullptr;
 	//! interpolation and initialization of per node properties
-	NodeDataInterpolationManager* nodedata_interpolation_manager = 0;
+	NodeDataInterpolationManager* nodedata_interpolation_manager = nullptr;
 	//! radius of vessels used to calculate mixture between matrix and vessel materials
 	double vessel_radius = 7.0;
-	FEMixMethod* mix_method = 0;
-	SegmentGrowthVelocityManager* velocity_manager = 0;
-	TipSpeciesManager* tip_species_manager = 0;
+	FEMixMethod* mix_method = nullptr;
+	SegmentGrowthVelocityManager* velocity_manager = nullptr;
+	TipSpeciesManager* tip_species_manager = nullptr;
 private:
 	DECLARE_FECORE_CLASS();
 
 	double initial_segment_velocity = 7.5;
 	double dt_safety_multiplier = 1.0;
 
-	FESolidMaterial* matrix_material = 0;
-	PositionDependentDirectionManager* pdd_manager = 0;
-	PreviousSegmentContributionManager* psc_manager = 0;
-	TipSpecies* tip_species = 0;
-	ContributionMixManager* cm_manager = 0;
+	FESolidMaterial* matrix_material = nullptr;
+	PositionDependentDirectionManager* pdd_manager = nullptr;
+	PreviousSegmentContributionManager* psc_manager = nullptr;
+	TipSpecies* tip_species = nullptr;
+	ContributionMixManager* cm_manager = nullptr;
 //	SegmentGrowthVelocityManager> velocity_manager;
-	CommonAngioProperties* common_properties = 0;
+	CommonAngioProperties* common_properties = nullptr;
 	
 };

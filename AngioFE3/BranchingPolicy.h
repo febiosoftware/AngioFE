@@ -51,7 +51,7 @@ public:
 	void TimeStepUpdate(double current_time) override { angle->TimeStepUpdate(current_time); }
 
 private:
-	FEProbabilityDistribution* angle;
+	FEProbabilityDistribution* angle = nullptr;
 };
 
 //! Implements a probability distribution to determine the azimuth angle
@@ -67,7 +67,7 @@ public:
 	//! Updates the zenith angle to the given time step(may ajust probabilities based on time)
 	void TimeStepUpdate(double current_time) override { angle->TimeStepUpdate(current_time); }
 private:
-	FEProbabilityDistribution* angle;
+	FEProbabilityDistribution* angle = nullptr;
 };
 
 //! A Branch Policy determines where and when branches occur
@@ -95,9 +95,9 @@ public:
 	vec3d GetBranchDirection(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element, FEMesh* mesh);
 private:
 	//angles are in radians
-	AzimuthAngle* azimuth_angle;
-	ZenithAngle* zenith_angle;
-	FEVariableInterpolation* interpolation_prop;
+	AzimuthAngle* azimuth_angle = nullptr;
+	ZenithAngle* zenith_angle = nullptr;
+	FEVariableInterpolation* interpolation_prop = nullptr;
 };
 
 //! The data needed for a future branch
@@ -109,7 +109,7 @@ public:
 	//! return the local position
 	vec3d _local_pos;
 	//! the segment this grew from
-	Segment * _parent;
+	Segment * _parent = nullptr;
 	//! the time at which the branch starts to grow
 	double _start_time;
 };
@@ -142,8 +142,8 @@ public:
 	//! do the per element setup
 	void SetupBranchInfo(AngioElement * angio_elem) override;
 private:
-	FEProbabilityDistribution* l2b;//length to branch
-	FEProbabilityDistribution* t2e;//time to emerge
+	FEProbabilityDistribution* l2b = nullptr;//length to branch
+	FEProbabilityDistribution* t2e = nullptr;//time to emerge
 	double discretization_length = 1.0;
 
 	//! Helper class for delayed branching policy

@@ -65,7 +65,7 @@ protected:
 	//! parameter list
 	DECLARE_FECORE_CLASS();
 private:
-	FEVariableInterpolation* interpolation_prop;
+	FEVariableInterpolation* interpolation_prop = nullptr;
 	vec3d m_density_scale_factor = vec3d(-0.016, 5.1605, 0.5112);
 };
 
@@ -83,7 +83,7 @@ protected:
 	//! parameter list
 	DECLARE_FECORE_CLASS();
 private:
-	FEVariableInterpolation* interpolation_prop;
+	FEVariableInterpolation* interpolation_prop = nullptr;
 	vec3d m_density_scale_factor = vec3d(-0.016, 5.1605, 0.5112);
 };
 
@@ -102,7 +102,7 @@ protected:
 	//! parameter list
 	DECLARE_FECORE_CLASS();
 private:
-	FEVariableInterpolation* interpolation_prop;
+	FEVariableInterpolation* interpolation_prop = nullptr;
 	double scale = 1;
 	double threshold = 1;
 };
@@ -122,7 +122,7 @@ protected:
 	//! parameter list
 	DECLARE_FECORE_CLASS();
 private:
-	FEVariableInterpolation* interpolation_prop;
+	FEVariableInterpolation* interpolation_prop = nullptr;
 	double scale = 1;
 	double threshold = 1;
 };

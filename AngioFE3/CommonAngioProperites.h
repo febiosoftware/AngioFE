@@ -16,7 +16,7 @@ public:
 
 	//FEPropertyT<GrowDirectionModifiers> gdms;
 	//! fragment seeder
-	FragmentSeeder* fseeder;
+	FragmentSeeder* fseeder = nullptr;
 	//! vessel material
-	FEElasticMaterial* vessel_material;
+	FEElasticMaterial* vessel_material = nullptr;
 };

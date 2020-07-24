@@ -55,7 +55,7 @@ public:
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio) override;
 private:
-	FEVariableInterpolation* interpolation_prop;
+	FEVariableInterpolation* interpolation_prop = nullptr;
 };
 
 //! Implements a position dependent modifier that modifies growth direction based on fiber direction
@@ -73,7 +73,7 @@ public:
 	void Update(FEMesh * mesh, FEAngio* angio) override;
 	DECLARE_FECORE_CLASS();
 private:
-	FEVariableInterpolation* interpolation_prop;
+	FEVariableInterpolation* interpolation_prop = nullptr;
 	bool alpha_override = true;// replace alpha with the override
 };
 
@@ -91,7 +91,7 @@ public:
 	//void Update(FEMesh * mesh, FEAngio* angio) override;
 	DECLARE_FECORE_CLASS();
 private:
-	FEVariableInterpolation* interpolation_prop;
+	FEVariableInterpolation* interpolation_prop = nullptr;
 	double beta = 0.5;
 };
 
@@ -111,7 +111,7 @@ public:
 private:
 	double threshold = 0.00001;//vessels will deflect if above threshold
 	bool alpha_override = true;//replace the alpha to have this take over
-	FEVariableInterpolation* interpolation_prop;
+	FEVariableInterpolation* interpolation_prop = nullptr;
 };
 
 //! The replacement for the bouncy boundary condition
@@ -133,7 +133,7 @@ private:
 	double threshold = 1;//vessels will deflect if above threshold
 	bool alpha_override = true;//replace the alpha to have this take over
 	bool grad_threshold = false;//use a gradient to detect areas where repulsion should occur.
-	FEVariableInterpolation* interpolation_prop;
+	FEVariableInterpolation* interpolation_prop = nullptr;
 };
 
 //! Implements a chemical concentration based position direction modifier
@@ -154,7 +154,7 @@ private:
 	double threshold = 0.00001;//vessels will deflect if above threshold
 	bool alpha_override = true;//replace the alpha to have this take over
 	int sol_id = 0;
-	FEVariableInterpolation* interpolation_prop;
+	FEVariableInterpolation* interpolation_prop = nullptr;
 };
 
 //! Implements anastamosis as a position dependent direction growth modifier

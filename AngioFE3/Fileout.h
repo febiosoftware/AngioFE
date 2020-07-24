@@ -52,9 +52,9 @@ private:
 	std::vector <int> getTipCount_pm(FEAngio& angio);
 	std::ofstream logstream;
 
-	FILE*	m_stream4 = 0;	// active tips
-	FILE*  vessel_state_stream=0;
-	FILE*  feangio_state_stream=0;
+	FILE*	m_stream4 = nullptr;	// active tips
+	FILE*  vessel_state_stream = nullptr;
+	FILE*  feangio_state_stream = nullptr;
 #ifndef NDEBUG
 	std::ofstream vessel_csv_stream;
 #endif
