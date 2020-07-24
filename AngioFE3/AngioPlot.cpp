@@ -277,7 +277,7 @@ bool FEPlotMatrixElastic_m_Q::Save(FEDomain& d, FEDataStream& str)
 			FEElementSet* elset = mesh->FindElementSet(d.GetName());
 			int local_index = elset->GetLocalIndex(el);
 			//Ask Steve about this
-			FEMaterial* Mat_a = d.GetMaterial();
+			FEMaterial* Mat_a = d.GetMaterial()->ExtractProperty<FEElasticMaterial>();
 			// assumes that materials mat_axis is already mapped which we'll need to do somewhere else.
 			FEParam* matax = Mat_a->FindParameter("mat_axis");
 			FEParamMat3d& p = matax->value<FEParamMat3d>();

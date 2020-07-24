@@ -27,7 +27,7 @@ void FiberRandomizer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh,
 	FEElementSet* elset = mesh->FindElementSet(Dom->GetName());
 	int local_index = elset->GetLocalIndex(*angio_element->_elem);
 	
-	FEMaterial* Mat_a = Dom->GetMaterial();
+	FEMaterial* Mat_a = Dom->GetMaterial()->ExtractProperty<FEElasticMaterial>();
 	// assumes that materials mat_axis is already mapped which we'll need to do somewhere else.
 	FEParam* matax = Mat_a->FindParameter("mat_axis");
 	FEParamMat3d& p = matax->value<FEParamMat3d>();
@@ -101,7 +101,7 @@ void DiscreteFiberEFDRandomizer::ApplyModifier(AngioElement * angio_element, FEM
 		//
 		FEElementSet* elset = mesh->FindElementSet(Dom->GetName());
 		int local_index = elset->GetLocalIndex(*angio_element->_elem);
-		FEMaterial* Mat_a = Dom->GetMaterial();
+		FEMaterial* Mat_a = Dom->GetMaterial()->ExtractProperty<FEElasticMaterial>();
 		// assumes that materials mat_axis is already mapped which we'll need to do somewhere else.
 		FEParam* matax = Mat_a->FindParameter("mat_axis");
 		FEParamMat3d& p = matax->value<FEParamMat3d>();

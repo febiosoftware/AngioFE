@@ -768,7 +768,7 @@ bool FEAngio::InitFEM()
 
 	// register the angio callback
 
-	m_fem->AddCallback(FEAngio::feangio_callback, CB_UPDATE_TIME | CB_MAJOR_ITERS | CB_SOLVED | CB_STEP_ACTIVE | CB_INIT, this);
+	m_fem->AddCallback(FEAngio::feangio_callback, CB_UPDATE_TIME | CB_MAJOR_ITERS | CB_SOLVED | CB_STEP_ACTIVE | CB_INIT, this, CallbackHandler::CB_ADD_FRONT);
 
 	return true;
 }
@@ -1252,7 +1252,8 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		{
 			FEDomain &test_dom = mesh->Domain(i);
 			// see if it is an angio domain
-			FEAngioMaterial* test_angmat = dynamic_cast<FEAngioMaterial*>(test_dom.GetMaterial());
+			FEMaterial* mat = test_dom.GetMaterial();
+			FEAngioMaterial* test_angmat = dynamic_cast<FEAngioMaterial*>(mat->ExtractProperty<FEElasticMaterial>());
 			if (test_angmat)
 			{
 				FEElementSet* elset = mesh->FindElementSet(test_dom.GetName());
@@ -1875,7 +1876,7 @@ bool CreateFiberMap(vector<vec3d>& fiber, FEMaterial* pmat)
 				FEElementSet* elset = mesh->FindElementSet(dom.GetName());
 				int local_index = elset->GetLocalIndex(el);
 
-				FEMaterial* Mat_a = dom.GetMaterial();
+				FEMaterial* Mat_a = dom.GetMaterial()->ExtractProperty<FEElasticMaterial>();
 				// assumes that materials mat_axis is already mapped which we'll need to do somewhere else.
 				FEParam* matax = Mat_a->FindParameter("mat_axis");
 				FEParamMat3d& p = matax->value<FEParamMat3d>();
