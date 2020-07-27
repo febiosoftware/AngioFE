@@ -155,8 +155,8 @@ private:
 		double _start_time = 0.0;
 		double _end_time = 0.0;
 
-		double length =0.0;
-		double processed =0.0;
+		double length = 0.0;
+		double processed = 0.0;
 		int discrete_sections = 0;
 		std::vector<Segment *> current_segments;
 	};

@@ -1258,15 +1258,22 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 			{
 				FEElementSet* elset = mesh->FindElementSet(test_dom.GetName());
 				FEDomainMap* map = new FEDomainMap(FE_MAT3D, FMT_MATPOINTS);
+				//FEDomainMap* densmap = new FEDomainMap(FE_DOUBLE, FMT_MATPOINTS);
 				map->Create(elset);
+				//densmap->Create(elset);
 				FEParam* matax = test_angmat->FindParameter("mat_axis");
 				// create parameter
+				//FEParam* ref_ecm_density = test_angmat->FindParameter("initial_density");
 				FEParamMat3d& p = matax->value<FEParamMat3d>();
+				//FEParamDouble& dens = ref_ecm_density->value<FEParamDouble>();
 				// create evaluator
 				FEMappedValueMat3d* val = fecore_alloc(FEMappedValueMat3d, GetFEModel());
 				val->setDataMap(map);
+				//FEMappedValue* densval = fecore_alloc(FEMappedValue, GetFEModel());
+				//densval->setDataMap(densmap);
 				//set the valuator to the model parameter
 				p.setValuator(val);
+				//dens.setValuator(densval);
 			}
 		}
 #pragma omp parallel for schedule(dynamic, 16)

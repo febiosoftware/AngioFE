@@ -162,6 +162,26 @@ void DensityInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * me
 		FEAngioMaterialPoint *angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
 
 		angio_pt->ref_ecm_density = initial_density;
+
+		//get the FE domain
+		//FEDomain* Dom = dynamic_cast<FEDomain*>(angio_element->_elem->GetMeshPartition());
+		//
+		//FEElementSet* elset = mesh->FindElementSet(Dom->GetName());
+		//int local_index = elset->GetLocalIndex(*angio_element->_elem);
+		//FEMaterial* Mat_a = Dom->GetMaterial();
+		// assumes that materials mat_axis is already mapped which we'll need to do somewhere else.
+		//FEParam* ref_ecm_density = Mat_a->FindParameter("initial_density");
+		//FEParamDouble& p = ref_ecm_density->value<FEParamDouble>();
+		//FEMappedValue* val = dynamic_cast<FEMappedValue*>(p.valuator());
+		//FEDomainMap* map = dynamic_cast<FEDomainMap*>(val->dataMap());
+
+		FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
+		// get local domain index of element
+		mat3d temp_mat;
+		temp_mat.setCol(0, axis_0); temp_mat.setCol(1, axis_1); temp_mat.setCol(2, axis_2);
+		temp_mat = R13*R12*temp_mat;
+		map->setValue(local_index, i, temp_mat);
+
 	}
 }
 

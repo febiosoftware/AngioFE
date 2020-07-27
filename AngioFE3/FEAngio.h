@@ -3,7 +3,10 @@
 #include "Fileout.h"
 #include "FEAngioMaterial.h"
 #include "Segment.h"
-#include "FECore/FESolidDomain.h" //is this include correct or should I just forward declare the class
+#include "FECore/FESolid
+
+
+.h" //is this include correct or should I just forward declare the class
 #include <FEBioLib/FEBioModel.h>
 #include <future>
 #include "AngioElement.h"

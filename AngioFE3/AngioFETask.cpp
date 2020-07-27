@@ -7,7 +7,7 @@
 #include <FECore/FEModel.h>
 using namespace std;
 
-FEAngio* pfeangio = 0;
+FEAngio* pfeangio = nullptr;
 
 //-----------------------------------------------------------------------------
 AngioFETask::AngioFETask(FEModel* pfem) : FECoreTask(pfem)
