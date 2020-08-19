@@ -18,7 +18,6 @@ void InitialModifierManager::ApplyModifier(AngioElement * angio_element, FEMesh 
 
 // Rename this to AlignedFiberRandomizer or DiscreteFiberRandomizer
 // take a given angio element and give it a randomized discrete fiber direction
-// TODO: Currently assigns both global material orientation and angio specific orientation. Will need to pick one or have separate functions.
 void FiberRandomizer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
 	//get the FE domain
@@ -51,16 +50,16 @@ void FiberRandomizer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh,
 	}
 }
 
-// take a given angio element and give it a randomized discrete fiber direction based on user input spa
+// take a given angio element and give it a randomized discrete fiber direction based on user input spd
 void DiscreteFiberEFDRandomizer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
 	efd_axes_a.unit();
 	efd_axes_b.unit();
 	efd_axes_c.unit();
 	mat3d elem_dir;
-	elem_dir.setCol(0, efd_axes_a*efd_spa.x);
-	elem_dir.setCol(1, efd_axes_b*efd_spa.y);
-	elem_dir.setCol(2, efd_axes_c*efd_spa.z);
+	elem_dir.setCol(0, efd_axes_a*efd_spd.x);
+	elem_dir.setCol(1, efd_axes_b*efd_spd.y);
+	elem_dir.setCol(2, efd_axes_c*efd_spd.z);
 
 	std::vector<pair<double, int>> v;
 	v.push_back(pair<double, int>(elem_dir.col(0).norm(), 0));
@@ -124,7 +123,7 @@ void DiscreteFiberEFDRandomizer::ApplyModifier(AngioElement * angio_element, FEM
 }
 
 BEGIN_FECORE_CLASS(DiscreteFiberEFDRandomizer, InitialModifier)
-ADD_PARAMETER(efd_spa, "efd_spa");
+ADD_PARAMETER(efd_spd, "efd_spd");
 ADD_PARAMETER(efd_axes_a, "efd_axes_a");
 ADD_PARAMETER(efd_axes_b, "efd_axes_b");
 ADD_PARAMETER(efd_axes_c, "efd_axes_c");
@@ -132,26 +131,57 @@ END_FECORE_CLASS();
 
 void EFDFiberInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
-	// norm the initial axes
-	initial_axes_a.unit();
-	initial_axes_b.unit();
-	initial_axes_c.unit();
+	//// norm the initial axes
+	//initial_axes_a.unit();
+	//initial_axes_b.unit();
+	//initial_axes_c.unit();
+	//
+	//// scale initial axes by values	
+	//angio_element->initial_angioSPD.setCol(0, initial_axes_a*initial_spd.x);
+	//angio_element->initial_angioSPD.setCol(1, initial_axes_b*initial_spd.y);
+	//angio_element->initial_angioSPD.setCol(2, initial_axes_c*initial_spd.z);
 	
-	// scale initial axes by values	
-	angio_element->initial_angioSPA.setCol(0, initial_axes_a*initial_spa.x);
-	angio_element->initial_angioSPA.setCol(1, initial_axes_b*initial_spa.y);
-	angio_element->initial_angioSPA.setCol(2, initial_axes_c*initial_spa.z);
-	
-	// store the deformed SPA
-	angio_element->angioSPA = angio_element->initial_angioSPA;
+	//double d[3]; vec3d r[3];
+	//p.eig();
+	/*mat3ds ax = mat3ds(p.x)
+	angio_element->initial_angioSPD.setCol(0, initial_axes_a*initial_spd.x);
+	angio_element->initial_angioSPD.setCol(1, initial_axes_b*initial_spd.y);
+	angio_element->initial_angioSPD.setCol(2, initial_axes_c*initial_spd.z);*/
+
+
+	// store the SPD
+	angio_element->initial_angioSPD = m_SPD;
+	angio_element->angioSPD = m_SPD;
 	angio_element->UpdateAngioFractionalAnisotropy();
 }
 
 BEGIN_FECORE_CLASS(EFDFiberInitializer, InitialModifier)
-ADD_PARAMETER(initial_axes_a, "initial_axes_a");
-ADD_PARAMETER(initial_axes_b, "initial_axes_b");
-ADD_PARAMETER(initial_axes_c, "initial_axes_c");
-ADD_PARAMETER(initial_spa, "initial_spa");
+ADD_PARAMETER(m_SPD, "spd");
+//ADD_PARAMETER(initial_axes_a, "initial_axes_a");
+//ADD_PARAMETER(initial_axes_b, "initial_axes_b");
+//ADD_PARAMETER(initial_axes_c, "initial_axes_c");
+//ADD_PARAMETER(initial_spd, "initial_spd");
+END_FECORE_CLASS();
+
+void EFDMatPointFiberInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
+{
+	FESolidElement* se = angio_element->_elem;
+	for (auto i = 0; i < se->GaussPoints(); i++)
+	{
+		FEMaterialPoint* mp = se->GetMaterialPoint(i);
+		FEAngioMaterialPoint * angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+		angio_pt->initial_angioSPD = m_SPD;
+		angio_pt->angioSPD = m_SPD;
+		angio_pt->UpdateAngioFractionalAnisotropy();
+	}
+}
+
+BEGIN_FECORE_CLASS(EFDMatPointFiberInitializer, InitialModifier)
+ADD_PARAMETER(m_SPD, "spd");
+//ADD_PARAMETER(initial_axes_a, "initial_axes_a");
+//ADD_PARAMETER(initial_axes_b, "initial_axes_b");
+//ADD_PARAMETER(initial_axes_c, "initial_axes_c");
+//ADD_PARAMETER(initial_spd, "initial_spd");
 END_FECORE_CLASS();
 
 void DensityInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)

@@ -30,9 +30,9 @@ public:
 	double GetLengthAtTime(FEMesh* mesh, double time) const;
 	//! get the angio fractional anisotropy
 	void UpdateAngioFractionalAnisotropy();
-	//! Update the angioSPA based on deformation/rotation
-	void UpdateSPA();
-	//! Construct the elliptical distribution between 2 orthogonal SPA and sample it
+	//! Update the angioSPD based on deformation/rotation
+	void UpdateSPD();
+	//! Construct the elliptical distribution between 2 orthogonal SPD and sample it
 	double GetEllipseAngle(const double a, const double b, const double dist_min, const double dist_max, const int n);
 	//double GetEllipseAngle2(const double a, const double b);
 
@@ -76,10 +76,10 @@ public:
 	double refernce_frame_segment_length = 0.0;
 	//! number of anastamoses that have occured
 	int anastamoses = 0;
-	//! initial orientation of spa
-	mat3d initial_angioSPA;
-	//! updated angioSPA
-	mat3d angioSPA;
+	//! initial orientation of spd
+	mat3ds initial_angioSPD;
+	//! updated angioSPD
+	mat3ds angioSPD;
 	//! Angio fractional anisotropy
 	double angioFA;
 };

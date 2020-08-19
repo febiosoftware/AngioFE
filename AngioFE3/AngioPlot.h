@@ -155,11 +155,11 @@ public:
 	bool Save(FEDomain& d, FEDataStream& str)  override;
 };
 
-class FEPlotAngioSPA : public FEPlotDomainData
+class FEPlotangioSPD : public FEPlotDomainData
 {
 public:
 	//! constructor
-	explicit FEPlotAngioSPA(FEModel* pfem) : FEPlotDomainData(pfem, PLT_MAT3F, FMT_ITEM) {}
+	explicit FEPlotangioSPD(FEModel* pfem) : FEPlotDomainData(pfem, PLT_MAT3FS, FMT_ITEM) {}
 	//! plot the semi principal axes per element
 	bool Save(FEDomain&d, FEDataStream& str) override;
 };
@@ -169,6 +169,24 @@ class FEPlotAngioFractionalAnisotropy : public FEPlotDomainData
 public:
 	//! constructor
 	explicit FEPlotAngioFractionalAnisotropy(FEModel* pfem) : FEPlotDomainData(pfem, PLT_FLOAT, FMT_ITEM) {}
+	//! plot the semi principal axes per element
+	bool Save(FEDomain&d, FEDataStream& str) override;
+};
+
+class FEPlotMatangioSPD : public FEPlotDomainData
+{
+public:
+	//! constructor
+	explicit FEPlotMatangioSPD(FEModel* pfem) : FEPlotDomainData(pfem, PLT_MAT3FS, FMT_ITEM) {}
+	//! plot the semi principal axes per element
+	bool Save(FEDomain&d, FEDataStream& str) override;
+};
+
+class FEPlotMatAngioFractionalAnisotropy : public FEPlotDomainData
+{
+public:
+	//! constructor
+	explicit FEPlotMatAngioFractionalAnisotropy(FEModel* pfem) : FEPlotDomainData(pfem, PLT_FLOAT, FMT_ITEM) {}
 	//! plot the semi principal axes per element
 	bool Save(FEDomain&d, FEDataStream& str) override;
 };

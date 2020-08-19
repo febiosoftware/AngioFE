@@ -118,7 +118,7 @@ public:
 	//! returns the inital segment velocity
 	double GetInitialVelocity() const;
 
-	//! Calculate spatial elasticity tangent
+	//! Calculate spdtial elasticity tangent
 	tens4ds Tangent(FEMaterialPoint& mp) override;
 
 	//! create material point data for this material

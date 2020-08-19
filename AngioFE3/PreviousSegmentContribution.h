@@ -25,7 +25,7 @@ class PreviousSegmentContributionManager : public FEMaterial
 {
 public:
 	//! constructor
-	explicit PreviousSegmentContributionManager(FEModel* pfem) : FEMaterial(pfem) { AddClassProperty(this, &psc_modifiers, "psc_modifiers", FEProperty::Optional); }
+	explicit PreviousSegmentContributionManager(FEModel* pfem) : FEMaterial(pfem) { AddClassProperty(this, &psc_modifiers, "psc_modifier", FEProperty::Optional); }
 	virtual ~PreviousSegmentContributionManager() {}
 	//! returns the combination contribution of all PSC modifiers
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, vec3d prev_direction, FEMesh* mesh);

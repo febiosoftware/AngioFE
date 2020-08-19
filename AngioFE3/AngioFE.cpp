@@ -63,6 +63,7 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS_EXPLICIT(FiberRandomizer, FEMATERIAL_ID, "fiber_randomizer");
 	REGISTER_FECORE_CLASS_EXPLICIT(DiscreteFiberEFDRandomizer, FEMATERIAL_ID, "discrete_fiber_efd_randomizer");
 	REGISTER_FECORE_CLASS_EXPLICIT(EFDFiberInitializer, FEMATERIAL_ID, "EFD_initializer");
+	REGISTER_FECORE_CLASS_EXPLICIT(EFDMatPointFiberInitializer, FEMATERIAL_ID, "EFD_mat_initializer");
 	REGISTER_FECORE_CLASS_EXPLICIT(DensityInitializer, FEMATERIAL_ID, "density_initializer");
 	REGISTER_FECORE_CLASS_EXPLICIT(RepulseInitializer, FEMATERIAL_ID, "repulse_value_initializer");
 	REGISTER_FECORE_CLASS_EXPLICIT(DensityValuesNodeDataInterpolation, FEMATERIAL_ID, "ref_ecm_density");
@@ -86,7 +87,8 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	// PDD Classes
 	REGISTER_FECORE_CLASS_EXPLICIT(PositionDependentDirectionManager, FEMATERIAL_ID, "position_dependent_direction_manager");
 	REGISTER_FECORE_CLASS_EXPLICIT(FiberPDD, FEMATERIAL_ID, "fiber_pdd");
-	REGISTER_FECORE_CLASS_EXPLICIT(FractionalAnisotropyPDD, FEMATERIAL_ID, "fractional_anisotropy_pdd")
+	REGISTER_FECORE_CLASS_EXPLICIT(FractionalAnisotropyPDD, FEMATERIAL_ID, "fractional_anisotropy_pdd");
+	REGISTER_FECORE_CLASS_EXPLICIT(FractionalAnisotropyMatPointPDD, FEMATERIAL_ID, "mat_fractional_anisotropy_pdd");
 	REGISTER_FECORE_CLASS_EXPLICIT(LaGrangePStrainPDD, FEMATERIAL_ID, "lagrange_principal_pdd");
 	REGISTER_FECORE_CLASS_EXPLICIT(AnastamosisPDD, FEMATERIAL_ID, "anastamosis_pdd");
 	REGISTER_FECORE_CLASS_EXPLICIT(ECMDensityGradientPDD, FEMATERIAL_ID, "ecm_density_gradient_pdd");
@@ -127,8 +129,10 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 
 	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotAngioECMDensity, FEPLOTDATA_ID, "angio ECM density");
 	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotAngioRepulseVal, FEPLOTDATA_ID, "angio repulse value");
-	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotAngioSPA, FEPLOTDATA_ID, "Angio SPA");
-	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotAngioFractionalAnisotropy, FEPLOTDATA_ID, "Angio Fractional Anisotropy")
+	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotangioSPD, FEPLOTDATA_ID, "Angio SPD");
+	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotMatangioSPD, FEPLOTDATA_ID, "Angio Mat SPD");
+	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotAngioFractionalAnisotropy, FEPLOTDATA_ID, "Angio Fractional Anisotropy");
+	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotMatAngioFractionalAnisotropy, FEPLOTDATA_ID, "Angio Mat Fractional Anisotropy");
 	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotBranches, FEPLOTDATA_ID, "branch_count");
 	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotAnastamoses, FEPLOTDATA_ID, "anastamoses");
 	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotSegmentLength, FEPLOTDATA_ID, "segment_length");

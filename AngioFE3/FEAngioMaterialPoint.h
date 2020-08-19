@@ -1,5 +1,6 @@
 #pragma once
 #include "StdAfx.h"
+#include "AngioElement.h"
 #include <FECore/FEMaterialPoint.h>
 
 //! per integration point values for angiofe
@@ -14,6 +15,13 @@ public:
 
 	//! update the material point to a given time
 	void Update(const FETimeInfo& timeInfo) override;
+
+	void UpdateAngioFractionalAnisotropy();
+	//! Update the angioSPD based on deformation/rotation
+	void UpdateSPD();
+	//! Construct the elliptical distribution between 2 orthogonal SPD and sample it
+	double GetEllipseAngle(const double a, const double b, const double dist_min, const double dist_max, const int n, AngioElement* angio_elem);
+	//double GetEllipseAngle2(const double a, const double b);
 
 	//! copy material point data (for running restarts) todo Is this still used?
 	FEMaterialPoint* Copy() override;
@@ -40,6 +48,13 @@ public:
 	FEMaterialPoint* vessPt = nullptr;
 	//! pointer to matrix material point
 	FEMaterialPoint* matPt = nullptr;
+
+	//! initial orientation of spd
+	mat3ds initial_angioSPD;
+	//! updated angioSPD
+	mat3ds angioSPD;
+	//! Angio fractional anisotropy
+	double angioFA;
 
 	//! parameter list
 	//DECLARE_FECORE_CLASS();

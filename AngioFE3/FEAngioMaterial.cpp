@@ -123,7 +123,7 @@ mat3ds FEAngioMaterial::Stress(FEMaterialPoint& mp)
 		FEElasticMaterialPoint& vessel_elastic = *angioPt->vessPt->ExtractData<FEElasticMaterialPoint>();
 		FEElasticMaterialPoint& matrix_elastic = *angioPt->matPt->ExtractData<FEElasticMaterialPoint>();
 
-		vessel_elastic.m_rt = elastic_pt.m_rt;//spatial position
+		vessel_elastic.m_rt = elastic_pt.m_rt;//spdtial position
 		vessel_elastic.m_r0 = elastic_pt.m_r0;//material position
 		vessel_elastic.m_F = elastic_pt.m_F;//deformation gradient
 		vessel_elastic.m_J = elastic_pt.m_J;//determinate

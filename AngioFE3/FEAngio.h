@@ -235,7 +235,7 @@ private:
 
 	std::vector<AngioElement *> angio_elements;//the dense list of angio elements
 	std::unordered_map<FESolidElement*,std::pair<AngioElement *,int>> se_to_angio_elem;//the int is the index which is used in neighbor lookups
-	std::vector<AngioElement *> angio_elements_with_holes;//the possibly sparse list of elements .. used to serialize data
+	std::vector<AngioElement *> angio_elements_with_holes;//the possibly spdrse list of elements .. used to serialize data
 	
 	std::vector<FEAngioMaterial*> angio_materials;
 	int buffer_index = 0;

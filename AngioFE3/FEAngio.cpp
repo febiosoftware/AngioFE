@@ -1260,6 +1260,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 				FEDomainMap* map = new FEDomainMap(FE_MAT3D, FMT_MATPOINTS);
 				//FEDomainMap* densmap = new FEDomainMap(FE_DOUBLE, FMT_MATPOINTS);
 				map->Create(elset);
+				map->fillValue(mat3d::identity());
 				//densmap->Create(elset);
 				FEParam* matax = test_angmat->FindParameter("mat_axis");
 				// create parameter

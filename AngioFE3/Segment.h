@@ -5,7 +5,7 @@
 #include "Tip.h"
 
 
-//! two tips that form a line segment(in the natural coordinate element space), vascular networks are composed of these
+//! two tips that form a line segment(in the natural coordinate element spdce), vascular networks are composed of these
 class Segment  
 {
 public:

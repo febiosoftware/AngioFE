@@ -15,6 +15,7 @@
 #include "FEBioMix/FEMultiphasicShellDomain.h"
 #include "FECore/FEDomainMap.h"
 #include <iostream>
+#include <FECore/mathalg.h>
 
 extern FEAngio* pfeangio;
 
@@ -425,7 +426,7 @@ bool FEPlotAngioRepulseVal::Save(FEDomain& d, FEDataStream& str)
 	return true;
 }
 
-bool FEPlotAngioSPA::Save(FEDomain& d, FEDataStream& str)
+bool FEPlotangioSPD::Save(FEDomain& d, FEDataStream& str)
 {
 	//Check if the domain has an angio component i.e. make sure this is not a rigid body
 	FEAngioMaterial* pmat = pfeangio->GetAngioComponent(d.GetMaterial());
@@ -440,10 +441,10 @@ bool FEPlotAngioSPA::Save(FEDomain& d, FEDataStream& str)
 				// get the pointer to the angio element
 				AngioElement* angio_element = pfeangio->se_to_angio_element.at(se);
 
-				// store the transformed spa
+				// store the transformed spd
 				// should go somewhere else...
-				angio_element->UpdateSPA();
-				str << angio_element->angioSPA;
+				angio_element->UpdateSPD();
+				str << angio_element->angioSPD;
 			}
 		}
 	}
@@ -466,6 +467,95 @@ bool FEPlotAngioFractionalAnisotropy::Save(FEDomain& d, FEDataStream& str)
 		}
 	}
 	return true;
+}
+
+bool FEPlotMatangioSPD::Save(FEDomain& d, FEDataStream& str)
+{
+	//Check if the domain has an angio component i.e. make sure this is not a rigid body
+	FEAngioMaterial* pmat = pfeangio->GetAngioComponent(d.GetMaterial());
+	if (pmat != nullptr)
+	{
+		// for each element
+		for (int i = 0; i < d.Elements(); i++)
+		{
+			FEElement & elem = d.ElementRef(i);
+			FESolidElement *se = dynamic_cast<FESolidElement*>(&elem);
+			if (se) {
+				// get the pointer to the angio element
+				AngioElement* angio_element = pfeangio->se_to_angio_element.at(se);
+
+				// store the transformed spd
+				// should go somewhere else...
+				// vector containing the SPD for each gauss point in the element
+				std::vector<mat3ds> SPDs_gausspts;
+
+				// get each gauss point's SPD
+				for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
+				{
+					// get the angio point
+					FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
+					FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
+					angio_mp->UpdateSPD();
+
+					// Get the SPD
+					SPDs_gausspts.push_back(angio_mp->angioSPD);
+				}
+				// vector containing the SPD for each node in the element
+				mat3ds SPDs_nodes[FESolidElement::MAX_NODES];
+				// vector for the shape function values
+				double nodenum = FESolidElement::MAX_NODES;
+				double weight = 1.0 / FESolidElement::MAX_NODES;
+				double H[FESolidElement::MAX_NODES];
+				for (int i = 0; i < FESolidElement::MAX_NODES; i++)
+				{
+					H[i] = weight;
+				}
+				// project the spds from integration points to the nodes
+				angio_element->_elem->project_to_nodes(&SPDs_gausspts[0], SPDs_nodes);
+				// mat3ds for the interpolated SPD
+				mat3ds SPD_int;
+				
+				// use shape function values in the weighted Average Structure Tensor
+				SPD_int = weightedAverageStructureTensor(SPDs_nodes, H, FESolidElement::MAX_NODES);
+				
+				str << SPD_int;
+			}
+		}
+	}
+	return true;
+}
+
+bool FEPlotMatAngioFractionalAnisotropy::Save(FEDomain& d, FEDataStream& str)
+{
+	for (int i = 0; i < d.Elements(); i++)
+	{
+		FEElement & elem = d.ElementRef(i);
+		FESolidElement *se = dynamic_cast<FESolidElement*>(&elem);
+		if (se) {
+			// get pointer to the angio element
+			AngioElement* angio_element = pfeangio->se_to_angio_element.at(se);
+			// store the fractional anisotropy.
+			// should go somewhere else...
+			angio_element->UpdateAngioFractionalAnisotropy();
+			str << angio_element->angioFA;
+		}
+	}
+	return true;
+	//for (int i = 0; i < d.Elements(); i++)
+	//{
+	//	FEElement & elem = d.ElementRef(i);
+	//	FESolidElement *se = dynamic_cast<FESolidElement*>(&elem);
+	//	if (se) {
+	//		// get pointer to the angio element
+	//		AngioElement* angio_element = pfeangio->se_to_angio_element.at(se);
+	//		// store the fractional anisotropy.
+	//		// should go somewhere else...
+	//		
+	//		angio_element->UpdateAngioFractionalAnisotropy();
+	//		str << angio_element->angioFA;
+	//	}
+	//}
+	//return true;
 }
 
 bool FEPlotPrimaryVesselDirection::Save(FEDomain& d, FEDataStream& str)

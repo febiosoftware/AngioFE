@@ -51,7 +51,7 @@ public:
 	vec3d ApplyMixAxis(vec3d psc_dir, vec3d pdd_dir, double contribution) override;
 };
 
-// New method. This determines a rotation matrix for the rotation in the plane spanned by the two vectors then the first vector is rotated towards the second by a scale between 0-1 where 0 returns the original vector and 1 returns the second.
+// New method. This determines a rotation matrix for the rotation in the plane spdnned by the two vectors then the first vector is rotated towards the second by a scale between 0-1 where 0 returns the original vector and 1 returns the second.
 class LinRot : public FEMixMethod {
 public:
 	explicit LinRot(FEModel * pfem) : FEMixMethod(pfem) {}
