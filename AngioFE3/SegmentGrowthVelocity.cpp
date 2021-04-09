@@ -6,6 +6,7 @@
 #include "FEAngioMaterialPoint.h"
 #include "FEAngio.h"
 #include <iostream>
+#include <FECore/mathalg.h>
 
 struct EigComp {
 	bool operator()(const std::pair<double, vec3d>& x, std::pair<double, vec3d>& y) const {
@@ -148,7 +149,69 @@ END_FECORE_CLASS();
 
 double SegmentVelocityFAModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh)
 {
-	return prev*angio_element->angioFA;
+
+	// vector containing the SPD for each gauss point in the element
+	std::vector<mat3ds> SPDs_gausspts;
+
+	// get each gauss point's SPD
+	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
+	{
+		// get the angio point
+		FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
+		//std::cout << angio_mp->angioSPD.xx() << ", " << angio_mp->angioSPD.yy() << ", " << angio_mp->angioSPD.zz() << ", " << angio_mp->angioSPD.xy() << ", " << angio_mp->angioSPD.yz() << ", " << angio_mp->angioSPD.xz() << endl;
+		// Get the SPD
+		//angio_mp->nhit = 1;
+		//angio_mp->UpdateSPD();
+		//std::cout << angio_mp->angioSPD.xx() << ", " << angio_mp->angioSPD.yy() << ", " << angio_mp->angioSPD.zz() << ", " << angio_mp->angioSPD.xy() << ", " << angio_mp->angioSPD.yz() << ", " << angio_mp->angioSPD.xz() << endl;
+		SPDs_gausspts.push_back(angio_mp->angioSPD);
+	}
+	
+	
+	// array containing the SPD for each node in the element
+	mat3ds SPDs_nodes[FESolidElement::MAX_NODES];
+	// array for the shape function values
+	double H[FESolidElement::MAX_NODES];
+	// project the spds from integration points to the nodes
+	angio_element->_elem->project_to_nodes(&SPDs_gausspts[0], SPDs_nodes);
+	// determine shape function value for the local position
+	angio_element->_elem->shape_fnc(H, natural_coords.x, natural_coords.y, natural_coords.z);
+	//angio_element->_elem->shape_fnc(H, 0, 0, 0);
+	// Get the interpolated SPD from the shape function-weighted Average Structure Tensor
+	mat3ds SPD_int = weightedAverageStructureTensor(SPDs_nodes, H, angio_element->_elem->Nodes());
+	// get the vectors of the principal directions and sort in descending order
+	std::vector<pair<double, int>> v;
+	mat3d ax;
+	ax.setCol(0, vec3d(SPD_int.xx(), SPD_int.xy(), SPD_int.xz()));
+	ax.setCol(1, vec3d(SPD_int.xy(), SPD_int.yy(), SPD_int.yz()));
+	ax.setCol(2, vec3d(SPD_int.xz(), SPD_int.yz(), SPD_int.zz()));
+	v.push_back(pair<double, int>(ax.col(0).norm(), 0));
+	v.push_back(pair<double, int>(ax.col(1).norm(), 1));
+	v.push_back(pair<double, int>(ax.col(2).norm(), 2));
+	sort(v.begin(), v.end(), sortinrev);
+
+	// store the indices
+	int i = v[0].second;
+	int j = v[1].second;
+	int k = v[2].second;
+
+	vec3d axis_0 = ax.col(i); axis_0.unit();
+	vec3d axis_1 = ax.col(j); axis_1.unit();
+	vec3d axis_2 = ax.col(k); axis_2.unit();
+	double r0 = (ax.col(i).norm());
+	double r1 = (ax.col(j).norm());
+	double r2 = (ax.col(k).norm());
+
+	// calculate the fractional anisotropy
+	double angioFA_int = sqrt(0.5)*(sqrt(pow(r0 - r1, 2) + pow(r1 - r2, 2) + pow(r2 - r0, 2)) / (sqrt(pow(r0, 2) + pow(r1, 2) + pow(r2, 2))));
+	if(angioFA_int > 0.5)
+	{
+		scale = 2;
+	}
+	else {
+		scale = 1;
+	}
+	return prev*scale;
 }
 
 bool SegmentVelocityFAModifier::Init()

@@ -22,6 +22,8 @@ public:
 	//! Construct the elliptical distribution between 2 orthogonal SPD and sample it
 	double GetEllipseAngle(const double a, const double b, const double dist_min, const double dist_max, const int n, AngioElement* angio_elem);
 	//double GetEllipseAngle2(const double a, const double b);
+	//! Use Gerard's suggested approach for getting an ellipse angle
+	double GetEllipseAngleAteshian(const double a, const double b, const double dist_min, const double dist_max, const int n, AngioElement* angio_elem);
 
 	//! copy material point data (for running restarts) todo Is this still used?
 	FEMaterialPoint* Copy() override;
@@ -43,6 +45,11 @@ public:
 
 	//! the weight of the matrix material
 	double matrix_weight;
+
+	//! previous deformation gradient
+	mat3d Fp = mat3d(1, 0, 0, 0, 1, 0, 0, 0, 1);
+	mat3d Fi = mat3d(1, 0, 0, 0, 1, 0, 0, 0, 1);
+	bool nhit = 0;
 
 	//! pointer to material point of the vessel
 	FEMaterialPoint* vessPt = nullptr;

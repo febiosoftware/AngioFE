@@ -71,6 +71,17 @@ double AngioElement::GetEllipseAngle(const double a, const double b, const doubl
 	return t.at(fi);
 }
 
+double AngioElement::GetEllipseAngleAteshian(const double a, const double b, const double dist_min, const double dist_max, const int n)
+{
+	// initialize vals
+	double ratio = b / a;
+	double p_i = dist_min;
+	double p_f = dist_max;
+	double t = ratio*(dist_max - dist_min) + p_i;
+	//std::cout << "ratio " << ratio << ", t " << t << endl;
+	return t;
+}
+
 /*double AngioElement::GetEllipseAngle2(const double a, const double b)
 {
 	// initialize vals
@@ -183,4 +194,5 @@ void AngioElement::UpdateSPD()
 	vec3d w = n3*((spd_d.col(k) * n3) / n3.norm2());
 	spd.setCol(k, w);
 	angioSPD = mat3ds(spd[0][0],spd[1][1],spd[2][2],spd[0][1],spd[1][2],spd[0][2]);
+	angioSPD = angioSPD*(3 / angioSPD.tr());
 }

@@ -129,6 +129,73 @@ ADD_PARAMETER(efd_axes_b, "efd_axes_b");
 ADD_PARAMETER(efd_axes_c, "efd_axes_c");
 END_FECORE_CLASS();
 
+// take a given angio element and give it a randomized discrete fiber direction based on user input spd
+void DiscreteFiberEFDMatRandomizer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
+{
+	std::vector<pair<double, int>> v;
+	mat3d ax;
+	ax.setCol(0, vec3d(m_SPD.xx(), m_SPD.xy(), m_SPD.xz()));
+	ax.setCol(1, vec3d(m_SPD.xy(), m_SPD.yy(), m_SPD.yz()));
+	ax.setCol(2, vec3d(m_SPD.xz(), m_SPD.yz(), m_SPD.zz()));
+	v.push_back(pair<double, int>(ax.col(0).norm(), 0));
+	v.push_back(pair<double, int>(ax.col(1).norm(), 1));
+	v.push_back(pair<double, int>(ax.col(2).norm(), 2));
+	sort(v.begin(), v.end(), sortinrev);
+
+	// store the indices
+	int i = v[0].second;
+	int j = v[1].second;
+	int k = v[2].second;
+
+	vec3d axis_0 = ax.col(i); axis_0.unit();
+	vec3d axis_1 = ax.col(j); axis_1.unit();
+	vec3d axis_2 = ax.col(k); axis_2.unit();
+	double r0 = (ax.col(i).norm());
+	double r1 = (ax.col(j).norm());
+	double r2 = (ax.col(k).norm());
+
+	// for each integration point in the element
+	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
+	{
+		// get the material point of the integration point
+		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
+		// get the angio material point
+		FEAngioMaterialPoint * angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+
+		double theta_12 = angio_element->GetEllipseAngle(r0, r1, 0, 2*PI, 360);
+		double theta_13 = angio_element->GetEllipseAngle(r0, r2, 0, 2*PI, 360);
+		// rotate the primary direction by theta_12 about the normal between them
+		vec3d axis = mix3d_t(axis_0, axis_1, theta_12); axis.unit();
+		mat3d R12 = mix3d_t_r(axis_0, axis_1, theta_12);
+		//angio_pt->angio_fd = mix3d_t(axis, axis_2, theta_13); angio_pt->angio_fd.unit();
+		mat3d R13 = mix3d_t_r(axis, axis_2, theta_13);
+
+		//get the FE domain
+		FEDomain* Dom = dynamic_cast<FEDomain*>(angio_element->_elem->GetMeshPartition());
+		//
+		FEElementSet* elset = mesh->FindElementSet(Dom->GetName());
+		int local_index = elset->GetLocalIndex(*angio_element->_elem);
+		FEMaterial* Mat_a = Dom->GetMaterial()->ExtractProperty<FEElasticMaterial>();
+		// assumes that materials mat_axis is already mapped which we'll need to do somewhere else.
+		FEParam* matax = Mat_a->FindParameter("mat_axis");
+		FEParamMat3d& p = matax->value<FEParamMat3d>();
+		FEMappedValueMat3d* val = dynamic_cast<FEMappedValueMat3d*>(p.valuator());
+		FEDomainMap* map = dynamic_cast<FEDomainMap*>(val->dataMap());
+
+		FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
+		// get local domain index of element
+		mat3d temp_mat;
+		temp_mat.setCol(0, axis_0); temp_mat.setCol(1, axis_1); temp_mat.setCol(2, axis_2);
+		temp_mat = R13*R12*temp_mat;
+		//std::cout << "temp_mat" << endl << temp_mat.col(0).x << ", " << temp_mat.col(1).x << ", " << temp_mat.col(2).x << endl << temp_mat.col(0).y << ", " << temp_mat.col(1).y << ", " << temp_mat.col(2).y << endl << temp_mat.col(0).z << ", " << temp_mat.col(1).z << ", " << temp_mat.col(2).z << endl;
+		map->setValue(local_index, i, temp_mat);
+	}
+}
+
+BEGIN_FECORE_CLASS(DiscreteFiberEFDMatRandomizer, InitialModifier)
+ADD_PARAMETER(m_SPD, "spd");
+END_FECORE_CLASS();
+
 void EFDFiberInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
 	//// norm the initial axes
@@ -150,13 +217,13 @@ void EFDFiberInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * m
 
 
 	// store the SPD
-	angio_element->initial_angioSPD = m_SPD;
-	angio_element->angioSPD = m_SPD;
+	angio_element->initial_angioSPD = m_SPDa*(3/m_SPDa.tr());
+	angio_element->angioSPD = m_SPDa*(3 / m_SPDa.tr());
 	angio_element->UpdateAngioFractionalAnisotropy();
 }
 
 BEGIN_FECORE_CLASS(EFDFiberInitializer, InitialModifier)
-ADD_PARAMETER(m_SPD, "spd");
+ADD_PARAMETER(m_SPDa, "spd");
 //ADD_PARAMETER(initial_axes_a, "initial_axes_a");
 //ADD_PARAMETER(initial_axes_b, "initial_axes_b");
 //ADD_PARAMETER(initial_axes_c, "initial_axes_c");
@@ -172,7 +239,9 @@ void EFDMatPointFiberInitializer::ApplyModifier(AngioElement * angio_element, FE
 		FEAngioMaterialPoint * angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
 		angio_pt->initial_angioSPD = m_SPD;
 		angio_pt->angioSPD = m_SPD;
+		//std::cout << angio_pt->angioSPD.xx() << ", " << angio_pt->angioSPD.yy() << ", " << angio_pt->angioSPD.zz() << ", " << angio_pt->angioSPD.xy() << ", " << angio_pt->angioSPD.xz() << ", " << angio_pt->angioSPD.yz() << endl;
 		angio_pt->UpdateAngioFractionalAnisotropy();
+		//std::cout << angio_pt->angioSPD.xx() << ", " << angio_pt->angioSPD.yy() << ", " << angio_pt->angioSPD.zz() << ", " << angio_pt->angioSPD.xy() << ", " << angio_pt->angioSPD.xz() << ", " << angio_pt->angioSPD.yz() << endl;
 	}
 }
 

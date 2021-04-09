@@ -34,6 +34,8 @@ public:
 	void UpdateSPD();
 	//! Construct the elliptical distribution between 2 orthogonal SPD and sample it
 	double GetEllipseAngle(const double a, const double b, const double dist_min, const double dist_max, const int n);
+	//! Construct the elliptical distribution between 2 orthogonal SPD and sample it
+	double GetEllipseAngleAteshian(const double a, const double b, const double dist_min, const double dist_max, const int n);
 	//double GetEllipseAngle2(const double a, const double b);
 
 	//! pointer to element  

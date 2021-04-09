@@ -54,6 +54,20 @@ private:
 	vec3d efd_axes_c = vec3d(0, 0, 1);
 };
 
+class DiscreteFiberEFDMatRandomizer : public InitialModifier
+{
+public:
+	//! constructor
+	explicit DiscreteFiberEFDMatRandomizer(FEModel * pfem) : InitialModifier(pfem) {}
+	//! apply Isotropic EFD to each model
+	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
+protected:
+	//! parameter list
+	DECLARE_FECORE_CLASS();
+private:
+	mat3ds m_SPD;
+};
+
 class EFDFiberInitializer : public InitialModifier 
 {
 public:
@@ -65,11 +79,7 @@ protected:
 	//! parameter list
 	DECLARE_FECORE_CLASS();
 private:
-	//vec3d initial_spd = vec3d(1,1,1);
-	//vec3d initial_axes_a = vec3d(1, 0, 0);
-	//vec3d initial_axes_b = vec3d(0, 1, 0);
-	//vec3d initial_axes_c = vec3d(0, 0, 1);
-	mat3ds m_SPD;
+	mat3ds m_SPDa;
 };
 
 class EFDMatPointFiberInitializer : public InitialModifier
@@ -83,10 +93,6 @@ protected:
 	//! parameter list
 	DECLARE_FECORE_CLASS();
 private:
-	/*vec3d initial_spd = vec3d(1, 1, 1);
-	vec3d initial_axes_a = vec3d(1, 0, 0);
-	vec3d initial_axes_b = vec3d(0, 1, 0);
-	vec3d initial_axes_c = vec3d(0, 0, 1);*/
 	mat3ds m_SPD;
 };
 

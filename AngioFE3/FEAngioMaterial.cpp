@@ -431,7 +431,8 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	//This also updates "factor" which scales the length allowed in the element. It is the shortest of the 3 directions that an element can grow before exceeding the bounds while also staying above the min_scale_factor
 	//If it fails that means that all possible factors are less than the min_scale_factor.
 	bool proj_success = m_pangio->ScaleFactorToProjectToNaturalCoordinates(active_tip->angio_element->_elem, nat_dir, local_pos, factor, min_scale_factor); // TODO: HERE
-	// Calculate the position on the face that the tip will grow to.
+	//bool proj_success = true;
+																																							// Calculate the position on the face that the tip will grow to.
 	vec3d possible_natc = local_pos + (nat_dir*factor);
 	// determine the hypothetical length to grow
 	double possible_grow_length = m_pangio->InElementLength(active_tip->angio_element->_elem, local_pos, possible_natc);
@@ -586,8 +587,13 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 			angio_element->next_tips.at(angio_element).push_back(active_tip); 
 		}
 	}
-	// this is not being hit rn because proj_success always returns true.
-	else{}
+	// generally not hit unless there is large matrix deformation
+
+	else{
+		
+		angio_element->final_active_tips.push_back(active_tip);
+		angio_element->next_tips.at(angio_element).push_back(active_tip);
+	}
 }
 
 void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle)

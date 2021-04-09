@@ -16,6 +16,7 @@
 #include "FECore/FEDomainMap.h"
 #include <iostream>
 #include <FECore/mathalg.h>
+#include "angio3d.h"
 
 extern FEAngio* pfeangio;
 
@@ -471,55 +472,42 @@ bool FEPlotAngioFractionalAnisotropy::Save(FEDomain& d, FEDataStream& str)
 
 bool FEPlotMatangioSPD::Save(FEDomain& d, FEDataStream& str)
 {
-	//Check if the domain has an angio component i.e. make sure this is not a rigid body
-	FEAngioMaterial* pmat = pfeangio->GetAngioComponent(d.GetMaterial());
-	if (pmat != nullptr)
+	for (int i = 0; i < d.Elements(); i++)
 	{
-		// for each element
-		for (int i = 0; i < d.Elements(); i++)
-		{
-			FEElement & elem = d.ElementRef(i);
-			FESolidElement *se = dynamic_cast<FESolidElement*>(&elem);
-			if (se) {
-				// get the pointer to the angio element
-				AngioElement* angio_element = pfeangio->se_to_angio_element.at(se);
-
-				// store the transformed spd
-				// should go somewhere else...
-				// vector containing the SPD for each gauss point in the element
-				std::vector<mat3ds> SPDs_gausspts;
-
-				// get each gauss point's SPD
-				for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
-				{
-					// get the angio point
-					FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
-					FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
-					angio_mp->UpdateSPD();
-
-					// Get the SPD
-					SPDs_gausspts.push_back(angio_mp->angioSPD);
-				}
-				// vector containing the SPD for each node in the element
-				mat3ds SPDs_nodes[FESolidElement::MAX_NODES];
-				// vector for the shape function values
-				double nodenum = FESolidElement::MAX_NODES;
-				double weight = 1.0 / FESolidElement::MAX_NODES;
-				double H[FESolidElement::MAX_NODES];
-				for (int i = 0; i < FESolidElement::MAX_NODES; i++)
-				{
-					H[i] = weight;
-				}
-				// project the spds from integration points to the nodes
-				angio_element->_elem->project_to_nodes(&SPDs_gausspts[0], SPDs_nodes);
-				// mat3ds for the interpolated SPD
-				mat3ds SPD_int;
-				
-				// use shape function values in the weighted Average Structure Tensor
-				SPD_int = weightedAverageStructureTensor(SPDs_nodes, H, FESolidElement::MAX_NODES);
-				
-				str << SPD_int;
+		FEElement & elem = d.ElementRef(i);
+		FESolidElement *se = dynamic_cast<FESolidElement*>(&elem);
+		if (se) {
+			// get pointer to the angio element
+			AngioElement* angio_element = pfeangio->se_to_angio_element.at(se);
+			// vector containing the SPD for each gauss point in the element
+			mat3ds SPDs_gausspts[8];
+			double H[8];
+			// get each gauss point's SPD
+			for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
+			{
+				// get the angio point
+				FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
+				FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
+				// Get the SPD   
+				angio_mp->UpdateSPD();
+				mat3ds temp_SPD = angio_mp->angioSPD;
+				SPDs_gausspts[i] = temp_SPD*(3.0/temp_SPD.tr());
+				//H = angio_element->_elem->H(i);
+				// TODO: calculate all distances from mp to nodes then normalize
+				H[i] = 1.0 / angio_element->_elem->GaussPoints();
 			}
+			// array containing the SPD for each node in the element
+			//mat3ds SPDs_nodes[8];
+			// array for the shape function values
+
+			// project the spds from integration points to the nodes
+			//angio_element->_elem->project_to_nodes(&SPDs_gausspts[0], SPDs_nodes);
+			// Get the interpolated SPD from the shape function-weighted Average Structure Tensor
+			//mat3ds SPD_int = weightedAverageStructureTensor(SPDs_gausspts, H, angio_element->_elem->GaussPoints());
+			mat3ds SPD_int = weightedAverageStructureTensor(SPDs_gausspts, H, angio_element->_elem->GaussPoints());
+			//SPD_int = (3.0 / SPD_int.tr())*SPD_int;
+			SPD_int = SPD_int*(3.0 / SPD_int.tr());
+			str << SPD_int;
 		}
 	}
 	return true;
@@ -534,28 +522,102 @@ bool FEPlotMatAngioFractionalAnisotropy::Save(FEDomain& d, FEDataStream& str)
 		if (se) {
 			// get pointer to the angio element
 			AngioElement* angio_element = pfeangio->se_to_angio_element.at(se);
-			// store the fractional anisotropy.
-			// should go somewhere else...
-			angio_element->UpdateAngioFractionalAnisotropy();
-			str << angio_element->angioFA;
+			// vector containing the SPD for each gauss point in the element
+			mat3ds SPDs_gausspts[FEElement::MAX_INTPOINTS];
+			double H[FEElement::MAX_INTPOINTS ];
+			// get each gauss point's SPD
+			for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
+			{
+				// get the angio point
+				FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
+				FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
+
+				// Get the SPD
+				angio_mp->UpdateSPD();
+				SPDs_gausspts[i] = angio_mp->angioSPD;
+				H[i] = 1.0/angio_element->_elem->GaussPoints();
+			}
+			// array containing the SPD for each node in the element
+			mat3ds SPDs_nodes[FEElement::MAX_NODES];
+			// array for the shape function values
+			
+			// project the spds from integration points to the nodes
+			angio_element->_elem->project_to_nodes(&SPDs_gausspts[0], SPDs_nodes);
+			// Get the interpolated SPD from the shape function-weighted Average Structure Tensor
+			//mat3ds SPD_int = weightedAverageStructureTensor(SPDs_gausspts, H, angio_element->_elem->GaussPoints());
+			mat3ds SPD_int = weightedAverageStructureTensor(SPDs_nodes, H, angio_element->_elem->GaussPoints());
+			
+			// get the vectors of the principal directions and sort in descending order
+			std::vector<pair<double, int>> v;
+			mat3d ax;
+			ax.setCol(0, vec3d(SPD_int.xx(), SPD_int.xy(), SPD_int.xz()));
+			ax.setCol(1, vec3d(SPD_int.xy(), SPD_int.yy(), SPD_int.yz()));
+			ax.setCol(2, vec3d(SPD_int.xz(), SPD_int.yz(), SPD_int.zz()));
+			v.push_back(pair<double, int>(ax.col(0).norm(), 0));
+			v.push_back(pair<double, int>(ax.col(1).norm(), 1));
+			v.push_back(pair<double, int>(ax.col(2).norm(), 2));
+			sort(v.begin(), v.end(), sortinrev);
+
+			// store the indices
+			int i = v[0].second;
+			int j = v[1].second;
+			int k = v[2].second;
+
+			vec3d axis_0 = ax.col(i); axis_0.unit();
+			vec3d axis_1 = ax.col(j); axis_1.unit();
+			vec3d axis_2 = ax.col(k); axis_2.unit();
+			double r0 = (ax.col(i).norm());
+			double r1 = (ax.col(j).norm());
+			double r2 = (ax.col(k).norm());
+
+			// calculate the fractional anisotropy
+			double angioFA_int = sqrt(0.5)*(sqrt(pow(r0 - r1, 2) + pow(r1 - r2, 2) + pow(r2 - r0, 2)) / (sqrt(pow(r0, 2) + pow(r1, 2) + pow(r2, 2))));
+			str << angioFA_int;
 		}
 	}
 	return true;
-	//for (int i = 0; i < d.Elements(); i++)
-	//{
-	//	FEElement & elem = d.ElementRef(i);
-	//	FESolidElement *se = dynamic_cast<FESolidElement*>(&elem);
-	//	if (se) {
-	//		// get pointer to the angio element
-	//		AngioElement* angio_element = pfeangio->se_to_angio_element.at(se);
-	//		// store the fractional anisotropy.
-	//		// should go somewhere else...
-	//		
-	//		angio_element->UpdateAngioFractionalAnisotropy();
-	//		str << angio_element->angioFA;
-	//	}
-	//}
-	//return true;
+}
+
+bool FEPlotEFDFiberDirection::Save(FEDomain& d, FEDataStream& str)
+{
+	FEMesh * mesh = pfeangio->GetMesh();
+	for (int i = 0; i < d.Elements(); i++)
+	{
+		FEElement & elem = d.ElementRef(i);
+		FESolidElement *se = dynamic_cast<FESolidElement*>(&elem);
+		if (se)
+		{
+			AngioElement * angio_element = pfeangio->se_to_angio_element.at(se);
+			vec3d primary_dir;
+			std::vector<quatd> gauss_data;
+			std::vector<quatd> nodal_data;
+
+			for (int i = 0; i< angio_element->_elem->GaussPoints(); i++)
+			{
+				FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
+				FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
+				vec3d axis(1, 0, 0);
+
+				//Ask Steve about this
+				//get the FE domain
+				FEDomain* Dom = dynamic_cast<FEDomain*>(angio_element->_elem->GetMeshPartition());
+				//
+				FEElementSet* elset = mesh->FindElementSet(Dom->GetName());
+				int local_index = elset->GetLocalIndex(*angio_element->_elem);
+
+				FEAngioMaterial* Mat_ang = Dom->GetMaterial()->ExtractProperty<FEAngioMaterial>();
+				FEMaterial * Mat_a = Mat_ang->GetMatrixMaterial();
+				mat3d m_Q = Mat_a->GetLocalCS(*mp);
+
+				axis = emp->m_F * m_Q * axis;
+				primary_dir += axis;
+				//gauss_data.push_back({ axis });
+			}
+			primary_dir = primary_dir / 8; primary_dir.unit();
+			str << primary_dir;
+		}
+	}
+	return true;
 }
 
 bool FEPlotPrimaryVesselDirection::Save(FEDomain& d, FEDataStream& str)
@@ -569,11 +631,11 @@ bool FEPlotPrimaryVesselDirection::Save(FEDomain& d, FEDataStream& str)
 		{
 			AngioElement * angio_element = pfeangio->se_to_angio_element.at(se);
 			vec3d primary_dir;
-			for(int j=0; j < angio_element->grown_segments.size();j++)
+			for (int j = 0; j < angio_element->grown_segments.size(); j++)
 			{
 				primary_dir += angio_element->grown_segments[j]->Direction(mesh)* angio_element->grown_segments[j]->Length(mesh);
 			}
-			str << primary_dir;
+			str << primary_dir.norm();
 		}
 	}
 	return true;

@@ -62,6 +62,7 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS_EXPLICIT(NodeDataInterpolationManager, FEMATERIAL_ID, "nodedata_interpolation_manager");
 	REGISTER_FECORE_CLASS_EXPLICIT(FiberRandomizer, FEMATERIAL_ID, "fiber_randomizer");
 	REGISTER_FECORE_CLASS_EXPLICIT(DiscreteFiberEFDRandomizer, FEMATERIAL_ID, "discrete_fiber_efd_randomizer");
+	REGISTER_FECORE_CLASS_EXPLICIT(DiscreteFiberEFDMatRandomizer, FEMATERIAL_ID, "discrete_fiber_efd_mat_randomizer");
 	REGISTER_FECORE_CLASS_EXPLICIT(EFDFiberInitializer, FEMATERIAL_ID, "EFD_initializer");
 	REGISTER_FECORE_CLASS_EXPLICIT(EFDMatPointFiberInitializer, FEMATERIAL_ID, "EFD_mat_initializer");
 	REGISTER_FECORE_CLASS_EXPLICIT(DensityInitializer, FEMATERIAL_ID, "density_initializer");
@@ -112,6 +113,7 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 
 	//BranchPolicy
 	REGISTER_FECORE_CLASS_EXPLICIT(DelayedBranchingPolicy, FEMATERIAL_ID, "delayed_branching_policy");
+	REGISTER_FECORE_CLASS_EXPLICIT(DelayedBranchingPolicyEFD, FEMATERIAL_ID, "delayed_branching_policy_efd");
 
 	//branch related classes
 	REGISTER_FECORE_CLASS_EXPLICIT(AzimuthAngleProbabilityDistribution, FEMATERIAL_ID, "azimuth_angle_probability_distribution");
@@ -138,6 +140,7 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotSegmentLength, FEPLOTDATA_ID, "segment_length");
 	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotRefSegmentLength, FEPLOTDATA_ID, "reference_frame_segment_length");
 	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotPrimaryVesselDirection, FEPLOTDATA_ID, "primary_segment_direction");
+	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotEFDFiberDirection, FEPLOTDATA_ID, "efd_fiber_direction");
 
 	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotMatrixElastic_m_Q, FEPLOTDATA_ID, "matrix elastic mQ");
 

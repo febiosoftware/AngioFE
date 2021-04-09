@@ -150,9 +150,9 @@ vec3d RepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d 
 		vec3d grad = pangio->gradient(angio_element->_elem, repulse_at_integration_points, local_pos);
 		// get the magnitude and compare to the threshold
 		double gradnorm = grad.norm();
-		std::cout << "gradnorm is " << gradnorm << endl;
+		//std::cout << "gradnorm is " << gradnorm << endl;
 		if (gradnorm > threshold)
-		{
+		{	
 			grad = -grad;
 			if (alpha_override)
 			{
@@ -500,9 +500,11 @@ vec3d FractionalAnisotropyMatPointPDD::ApplyModifiers(vec3d prev, AngioElement* 
 		// get the angio point
 		FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
 		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
-
+		//std::cout << angio_mp->angioSPD.xx() << ", " << angio_mp->angioSPD.yy() << ", " << angio_mp->angioSPD.zz() << ", " << angio_mp->angioSPD.xy() << ", " << angio_mp->angioSPD.yz() << ", " << angio_mp->angioSPD.xz() << endl;
 		// Get the SPD
+		//angio_mp->nhit = 1;
 		angio_mp->UpdateSPD();
+		//std::cout << angio_mp->angioSPD.xx() << ", " << angio_mp->angioSPD.yy() << ", " << angio_mp->angioSPD.zz() << ", " << angio_mp->angioSPD.xy() << ", " << angio_mp->angioSPD.yz() << ", " << angio_mp->angioSPD.xz() << endl;
 		SPDs_gausspts.push_back(angio_mp->angioSPD);
 	}
 	// array containing the SPD for each node in the element
@@ -515,8 +517,7 @@ vec3d FractionalAnisotropyMatPointPDD::ApplyModifiers(vec3d prev, AngioElement* 
 	angio_element->_elem->shape_fnc(H, local_pos.x, local_pos.y, local_pos.z);
 	//angio_element->_elem->shape_fnc(H, 0, 0, 0);
 	// Get the interpolated SPD from the shape function-weighted Average Structure Tensor
-	mat3ds SPD_int = weightedAverageStructureTensor(SPDs_nodes, H, FESolidElement::MAX_NODES);
-
+	mat3ds SPD_int = weightedAverageStructureTensor(SPDs_nodes, H, angio_element->_elem->Nodes());
 	// get the vectors of the principal directions and sort in descending order
 	std::vector<pair<double, int>> v;
 	mat3d ax;
@@ -539,7 +540,6 @@ vec3d FractionalAnisotropyMatPointPDD::ApplyModifiers(vec3d prev, AngioElement* 
 	double r0 = (ax.col(i).norm());
 	double r1 = (ax.col(j).norm());
 	double r2 = (ax.col(k).norm());
-
 	double theta_12 = angio_element->GetEllipseAngle(r0, r1, -PI / 2, PI, 180);
 	double theta_13 = angio_element->GetEllipseAngle(r0, r2, -PI / 2, PI, 180);
 
@@ -553,11 +553,10 @@ vec3d FractionalAnisotropyMatPointPDD::ApplyModifiers(vec3d prev, AngioElement* 
 	}*/
 	//double FA_cont = std::min(angio_element->angioFA, 0.36);
 	//std::cout << "contribution is " << contribution << endl;
-	alpha = std::min((contribution*(((0.75 - 0.36) / (0.6 - 0))*angio_element->angioFA + 0.36)), 0.75);
-	/*if (angio_element->angioFA > 0.5)
-	{
-	alpha = contribution*(((1 - 0.36) / (0.75 - 0))*FA_cont + 0.36);
-	}*/
+	
+	// calculate the fractional anisotropy
+	double angioFA_int = sqrt(0.5)*(sqrt(pow(r0 - r1, 2) + pow(r1 - r2, 2) + pow(r2 - r0, 2)) / (sqrt(pow(r0, 2) + pow(r1, 2) + pow(r2, 2))));
+	alpha = std::min((contribution*(((0.75 - 0.36) / (0.6 - 0))*angioFA_int + 0.36)), 0.75);
 	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_dir, alpha);
 }
 

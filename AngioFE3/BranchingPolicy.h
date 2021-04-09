@@ -161,3 +161,43 @@ private:
 		std::vector<Segment *> current_segments;
 	};
 };
+
+//! As growth occurs length to branch is calculated, once length to branch is hit a time to emerge is sampled from a probability distribution.Length to branch is calculated only when the last value of length to branch has been hit
+class DelayedBranchingPolicyEFD :public BranchPolicy
+{
+public:
+	//! constructor for class
+	DelayedBranchingPolicyEFD(FEModel* pfem) : BranchPolicy(pfem) {
+		AddClassProperty(this, &l2b, "length_to_branch"); AddClassProperty(this, &t2e, "time_to_emerge");
+	}
+	virtual ~DelayedBranchingPolicyEFD() {}
+	//! performs initialization
+	bool Init() override {
+		return l2b->Init() && t2e->Init() && BranchPolicy::Init();
+	}
+	//! update to a given time
+	void TimeStepUpdate(double current_time) override { BranchPolicy::TimeStepUpdate(current_time); l2b->TimeStepUpdate(current_time); t2e->TimeStepUpdate(current_time); }
+	//! add the branches to a given element
+	void AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, double final_time, double min_scale_factor, FEMesh* mesh, FEAngio* feangio) override;
+	//! do the per element setup
+	void SetupBranchInfo(AngioElement * angio_elem) override;
+private:
+	FEProbabilityDistribution* l2b = nullptr;//length to branch
+	FEProbabilityDistribution* t2e = nullptr;//time to emerge
+	double discretization_length = 1.0;
+
+	//! Helper class for delayed branching policy
+	class BranchPoint
+	{
+	public:
+		explicit BranchPoint(double start_time, double end_time) : _start_time(start_time), _end_time(end_time) { assert(end_time > start_time); }
+		//only needed while creating the collection of branch points
+		double _start_time = 0.0;
+		double _end_time = 0.0;
+
+		double length = 0.0;
+		double processed = 0.0;
+		int discrete_sections = 0;
+		std::vector<Segment *> current_segments;
+	};
+};
