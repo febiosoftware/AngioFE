@@ -492,21 +492,14 @@ bool FEPlotMatangioSPD::Save(FEDomain& d, FEDataStream& str)
 				angio_mp->UpdateSPD();
 				mat3ds temp_SPD = angio_mp->angioSPD;
 				SPDs_gausspts[i] = temp_SPD*(3.0/temp_SPD.tr());
-				//H = angio_element->_elem->H(i);
-				// TODO: calculate all distances from mp to nodes then normalize
+				// TODO: calculate all distances from mp to nodes then normalize. Currently assumes equidistance
 				H[i] = 1.0 / angio_element->_elem->GaussPoints();
 			}
 			// array containing the SPD for each node in the element
-			//mat3ds SPDs_nodes[8];
-			// array for the shape function values
-
-			// project the spds from integration points to the nodes
-			//angio_element->_elem->project_to_nodes(&SPDs_gausspts[0], SPDs_nodes);
+			mat3ds SPDs_nodes[8];
 			// Get the interpolated SPD from the shape function-weighted Average Structure Tensor
-			//mat3ds SPD_int = weightedAverageStructureTensor(SPDs_gausspts, H, angio_element->_elem->GaussPoints());
 			mat3ds SPD_int = weightedAverageStructureTensor(SPDs_gausspts, H, angio_element->_elem->GaussPoints());
-			//SPD_int = (3.0 / SPD_int.tr())*SPD_int;
-			SPD_int = SPD_int*(3.0 / SPD_int.tr());
+			SPD_int = (3.0 / SPD_int.tr())*SPD_int;
 			str << SPD_int;
 		}
 	}
