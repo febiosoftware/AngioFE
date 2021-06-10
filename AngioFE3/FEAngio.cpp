@@ -27,7 +27,6 @@
 #include <cfloat> 
 #include <FEBioMix/FETriphasic.h>
 #include <FECore/FENodeDataMap.h>
-#include "GrowDirectionModifier.h"
 #include "NodeDataInterpolation.h"
 #include <omp.h>
 #include <iostream>
