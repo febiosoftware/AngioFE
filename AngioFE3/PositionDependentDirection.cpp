@@ -555,8 +555,11 @@ vec3d FractionalAnisotropyMatPointPDD::ApplyModifiers(vec3d prev, AngioElement* 
 	//std::cout << "contribution is " << contribution << endl;
 	
 	// calculate the fractional anisotropy
-	double angioFA_int = sqrt(0.5)*(sqrt(pow(r0 - r1, 2) + pow(r1 - r2, 2) + pow(r2 - r0, 2)) / (sqrt(pow(r0, 2) + pow(r1, 2) + pow(r2, 2))));
-	alpha = std::min((contribution*(((0.6 - 0.36) / (0.6 - 0))*angioFA_int + 0.36)), 0.75);
+	//double angioFA_int = sqrt(0.5)*(sqrt(pow(r0 - r1, 2) + pow(r1 - r2, 2) + pow(r2 - r0, 2)) / (sqrt(pow(r0, 2) + pow(r1, 2) + pow(r2, 2))));
+	//double angioFA_int = 1.0 - (r1 / r0);
+	//alpha = std::min(angioFA_int, 0.75);
+	//alpha = std::min((contribution*(((0.64 - 0.36) / (0.64 - 0))*angioFA_int + 0.36)), 0.64);
+	alpha = 1.0;
 	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_dir, alpha);
 }
 

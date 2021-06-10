@@ -118,6 +118,7 @@ public:
 	//! performs initialization
 	bool Init() override;
 	void UpdateScale() override;
+	vec3d m_density_scale_factor = vec3d(-0.016, 5.1605, 0.5112);
 protected:
 	//! parameter list
 	DECLARE_FECORE_CLASS();

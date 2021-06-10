@@ -508,64 +508,74 @@ bool FEPlotMatangioSPD::Save(FEDomain& d, FEDataStream& str)
 
 bool FEPlotMatAngioFractionalAnisotropy::Save(FEDomain& d, FEDataStream& str)
 {
-	for (int i = 0; i < d.Elements(); i++)
+	FEAngioMaterial* pmat = pfeangio->GetAngioComponent(d.GetMaterial());
+	if (pmat == nullptr) return false;
+	// get the solid domain from the FE domain
+	FESolidDomain& dom = dynamic_cast<FESolidDomain&>(d);
+	int NE = dom.Elements();
+
+	for (int i = 0; i < NE; i++)
 	{
+		//FESolidElement& el = dom.Element(i);
 		FEElement & elem = d.ElementRef(i);
 		FESolidElement *se = dynamic_cast<FESolidElement*>(&elem);
 		if (se) {
 			// get pointer to the angio element
 			AngioElement* angio_element = pfeangio->se_to_angio_element.at(se);
-			// vector containing the SPD for each gauss point in the element
-			mat3ds SPDs_gausspts[FEElement::MAX_INTPOINTS];
-			double H[FEElement::MAX_INTPOINTS ];
-			// get each gauss point's SPD
-			for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
-			{
-				// get the angio point
-				FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
-				FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
+			if (angio_element) {
+				// vector containing the SPD for each gauss point in the element
+				mat3ds SPDs_gausspts[FEElement::MAX_INTPOINTS];
+				double H[FEElement::MAX_INTPOINTS];
+				// get each gauss point's SPD
+				for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
+				{
+					// get the angio point
+					FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
+					FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
 
-				// Get the SPD
-				angio_mp->UpdateSPD();
-				SPDs_gausspts[i] = angio_mp->angioSPD;
-				H[i] = 1.0/angio_element->_elem->GaussPoints();
+					// Get the SPD
+					angio_mp->UpdateSPD();
+					SPDs_gausspts[i] = angio_mp->angioSPD;
+					H[i] = 1.0 / angio_element->_elem->GaussPoints();
+				}
+				// array containing the SPD for each node in the element
+				mat3ds SPDs_nodes[FEElement::MAX_NODES];
+				// array for the shape function values
+
+				// project the spds from integration points to the nodes
+				angio_element->_elem->project_to_nodes(&SPDs_gausspts[0], SPDs_nodes);
+				// Get the interpolated SPD from the shape function-weighted Average Structure Tensor
+				//mat3ds SPD_int = weightedAverageStructureTensor(SPDs_gausspts, H, angio_element->_elem->GaussPoints());
+				mat3ds SPD_int = weightedAverageStructureTensor(SPDs_nodes, H, angio_element->_elem->GaussPoints());
+
+				// get the vectors of the principal directions and sort in descending order
+				std::vector<pair<double, int>> v;
+				mat3d ax;
+				ax.setCol(0, vec3d(SPD_int.xx(), SPD_int.xy(), SPD_int.xz()));
+				ax.setCol(1, vec3d(SPD_int.xy(), SPD_int.yy(), SPD_int.yz()));
+				ax.setCol(2, vec3d(SPD_int.xz(), SPD_int.yz(), SPD_int.zz()));
+				v.push_back(pair<double, int>(ax.col(0).norm(), 0));
+				v.push_back(pair<double, int>(ax.col(1).norm(), 1));
+				v.push_back(pair<double, int>(ax.col(2).norm(), 2));
+				sort(v.begin(), v.end(), sortinrev);
+
+				// store the indices
+				int i = v[0].second;
+				int j = v[1].second;
+				int k = v[2].second;
+
+				vec3d axis_0 = ax.col(i); axis_0.unit();
+				vec3d axis_1 = ax.col(j); axis_1.unit();
+				vec3d axis_2 = ax.col(k); axis_2.unit();
+				double r0 = (ax.col(i).norm());
+				double r1 = (ax.col(j).norm());
+				double r2 = (ax.col(k).norm());
+
+				// calculate the fractional anisotropy
+				double angioFA_int = sqrt(0.5)*(sqrt(pow(r0 - r1, 2) + pow(r1 - r2, 2) + pow(r2 - r0, 2)) / (sqrt(pow(r0, 2) + pow(r1, 2) + pow(r2, 2))));
+				str << angioFA_int;
 			}
-			// array containing the SPD for each node in the element
-			mat3ds SPDs_nodes[FEElement::MAX_NODES];
-			// array for the shape function values
 			
-			// project the spds from integration points to the nodes
-			angio_element->_elem->project_to_nodes(&SPDs_gausspts[0], SPDs_nodes);
-			// Get the interpolated SPD from the shape function-weighted Average Structure Tensor
-			//mat3ds SPD_int = weightedAverageStructureTensor(SPDs_gausspts, H, angio_element->_elem->GaussPoints());
-			mat3ds SPD_int = weightedAverageStructureTensor(SPDs_nodes, H, angio_element->_elem->GaussPoints());
-			
-			// get the vectors of the principal directions and sort in descending order
-			std::vector<pair<double, int>> v;
-			mat3d ax;
-			ax.setCol(0, vec3d(SPD_int.xx(), SPD_int.xy(), SPD_int.xz()));
-			ax.setCol(1, vec3d(SPD_int.xy(), SPD_int.yy(), SPD_int.yz()));
-			ax.setCol(2, vec3d(SPD_int.xz(), SPD_int.yz(), SPD_int.zz()));
-			v.push_back(pair<double, int>(ax.col(0).norm(), 0));
-			v.push_back(pair<double, int>(ax.col(1).norm(), 1));
-			v.push_back(pair<double, int>(ax.col(2).norm(), 2));
-			sort(v.begin(), v.end(), sortinrev);
-
-			// store the indices
-			int i = v[0].second;
-			int j = v[1].second;
-			int k = v[2].second;
-
-			vec3d axis_0 = ax.col(i); axis_0.unit();
-			vec3d axis_1 = ax.col(j); axis_1.unit();
-			vec3d axis_2 = ax.col(k); axis_2.unit();
-			double r0 = (ax.col(i).norm());
-			double r1 = (ax.col(j).norm());
-			double r2 = (ax.col(k).norm());
-
-			// calculate the fractional anisotropy
-			double angioFA_int = sqrt(0.5)*(sqrt(pow(r0 - r1, 2) + pow(r1 - r2, 2) + pow(r2 - r0, 2)) / (sqrt(pow(r0, 2) + pow(r1, 2) + pow(r2, 2))));
-			str << angioFA_int;
 		}
 	}
 	return true;

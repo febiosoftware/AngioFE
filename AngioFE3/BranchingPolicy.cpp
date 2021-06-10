@@ -15,7 +15,7 @@ void BranchPolicy::AddBranchTip(AngioElement * angio_element, vec3d local_pos, v
 	branch->face = angio_element;
 	branch->SetLocalPosition(local_pos, mesh);
 	branch->initial_fragment_id = vessel_id;
-	branch->direction = GetBranchDirection(local_pos, parent_direction,angio_element,mesh);
+	branch->direction = GetBranchDirection(local_pos, parent_direction, angio_element, mesh);
 	branch->use_direction = true;
 	branch->is_branch = true;
 
@@ -46,27 +46,31 @@ vec3d BranchPolicy::GetBranchDirection(vec3d local_pos, vec3d parent_direction, 
 	std::vector<quatd> nodal_data;
 	for (int i = 0; i< angio_element->_elem->GaussPoints(); i++)
 	{
-		//Ask Steve about this
 		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
 		FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
 		vec3d axis(1, 0, 0);
+
+		//Ask Steve about this
 		//get the FE domain
 		FEDomain* Dom = dynamic_cast<FEDomain*>(angio_element->_elem->GetMeshPartition());
 		//
 		FEElementSet* elset = mesh->FindElementSet(Dom->GetName());
 		int local_index = elset->GetLocalIndex(*angio_element->_elem);
 
-		FEMaterial* Mat_a = Dom->GetMaterial()->ExtractProperty<FEElasticMaterial>();
+		FEAngioMaterial* Mat_ang = Dom->GetMaterial()->ExtractProperty<FEAngioMaterial>();
+		FEMaterial * Mat_a = Mat_ang->GetMatrixMaterial();
 		// assumes that materials mat_axis is already mapped which we'll need to do somewhere else.
-		FEParam* matax = Mat_a->FindParameter("mat_axis");
+		/*FEParam* matax = Mat_a->FindParameter("mat_axis");
 		FEParamMat3d& p = matax->value<FEParamMat3d>();
 		FEMappedValueMat3d* val = dynamic_cast<FEMappedValueMat3d*>(p.valuator());
-		FEDomainMap* map = dynamic_cast<FEDomainMap*>(val->dataMap());
-		mat3d m_Q = map->valueMat3d(emp);
+		FEDomainMap* map = dynamic_cast<FEDomainMap*>(val->dataMap());*/
+		mat3d m_Q = Mat_a->GetLocalCS(*mp);
+
 		axis = emp->m_F * m_Q * axis;
 		gauss_data.push_back({ axis });
-		//axis = emp->m_F * emp->m_Q * axis;
-		//gauss_data.push_back({ axis });
+
+		/*axis = emp->m_F * emp->m_Q * axis;
+		gauss_data.push_back({ axis });*/
 	}
 
 	quatd rv = interpolation_prop->Interpolate(angio_element->_elem, gauss_data, local_pos, mesh);
@@ -332,11 +336,12 @@ void DelayedBranchingPolicyEFD::AddBranches(AngioElement * angio_elem, int buffe
 	DelayBranchInfo * dbi = dynamic_cast<DelayBranchInfo*>(angio_elem->branch_info);
 	//calculate where and when the branches shoud occur
 	// check if all segments were processed and return if so.
+	// if there's no new segments to process return
 	if (angio_elem->processed_recent_segments == angio_elem->recent_segments.size())
 	{
 		return;
 	}
-	//get points of interest
+	//get points of interest. These are the segment endpoints
 	std::set<double> poi;
 	// for each processed segment in the element get the recent segments and get time for the front and back
 	for (int i = angio_elem->processed_recent_segments; i < angio_elem->recent_segments.size(); i++)
@@ -345,7 +350,7 @@ void DelayedBranchingPolicyEFD::AddBranches(AngioElement * angio_elem, int buffe
 		poi.insert(seg->front->time);
 		poi.insert(seg->back->time);
 	}
-	//order the points of interst
+	//order the points of interest (segments) by time
 	std::vector<double> ordered_poi;
 	ordered_poi.reserve(poi.size());
 	for (auto iter = poi.begin(); iter != poi.end(); ++iter)
@@ -353,23 +358,26 @@ void DelayedBranchingPolicyEFD::AddBranches(AngioElement * angio_elem, int buffe
 		ordered_poi.push_back(*iter);
 	}
 	//may do nothing due to using set
+	// sort by the initial time?
 	std::sort(ordered_poi.begin(), ordered_poi.end());
 
 	//construct branch points
 	std::list<BranchPoint> bps;
-	// for each poi in order create the branch point
+	// for each poi (segment) create a branchpoint
 	for (int i = 0; i < ordered_poi.size() - 1; i++)
 	{
 		BranchPoint bpt(ordered_poi[i], ordered_poi[i + 1]);
 		bps.push_back(bpt);
 	}
-	//add segments to all branch points that contain them
+	//if the branch belongs to a given segment (checks by comparing each branch start/end time to those of the segments. Seems slow/roundabout and assumes uniqueness)
 	for (int i = angio_elem->processed_recent_segments; i < angio_elem->recent_segments.size(); i++)
 	{
 		Segment * seg = angio_elem->recent_segments[i];
+		// compare each segment to all branch points
 		for (auto iter = bps.begin(); iter != bps.end(); ++iter)
 		{
-			// if the branch is supposed to occur after this segment starts but before it finishes then assign the branch to the segment.
+			// determine if and which segment the branch belongs to
+			// assign the segments to the branch if they match. Compares start/end times of segments and points of interest
 			if (seg->front->time >= iter->_end_time && seg->back->time <= iter->_start_time)
 			{
 				iter->current_segments.push_back(seg);
@@ -405,13 +413,14 @@ void DelayedBranchingPolicyEFD::AddBranches(AngioElement * angio_elem, int buffe
 	for (auto iter = bps.begin(); iter != bps.end(); ++iter)
 	{
 		double length = 0.0;
-		// for each segment along the branch point calculate the length
+		// for each segment to process
 		for (int i = 0; i < iter->current_segments.size(); i++)
 		{
 			Segment * seg = iter->current_segments[i];
-			// Get the length of the segment in this element. Unclear if this means it only considers element length as opposed to the total length.
+			// Get the length of the segment in this element. 
 			length += feangio->InElementLength(angio_elem->_elem, seg->back->GetLocalPosition(), seg->front->GetLocalPosition());
 		}
+		// assign the length of the segment
 		iter->length = length;
 		// appears to be a way to discretize a vessel in an element into multiple smaller segments to improve curvature. Right now the default discretization length is 1 so this is doing nothing. 
 		iter->discrete_sections = int(floor(length / discretization_length));
@@ -420,7 +429,7 @@ void DelayedBranchingPolicyEFD::AddBranches(AngioElement * angio_elem, int buffe
 	assert(dynamic_cast<DelayBranchInfo*>(angio_elem->branch_info));
 	double & remaining_l2b = dynamic_cast<DelayBranchInfo*>(angio_elem->branch_info)->length_to_branch;
 
-	//process all of the branch points, creates the futre points at which branches will occur
+	//process all of the branch points, creates the future points at which branches will occur
 #ifndef NDEBUG
 	if (bps.size()>25 || angio_elem->recent_segments.size() > 100)
 	{
@@ -431,9 +440,7 @@ void DelayedBranchingPolicyEFD::AddBranches(AngioElement * angio_elem, int buffe
 	while (bps.size())
 	{
 		BranchPoint & cur = bps.front();
-		// what is processed. Not sure what this is comparing here
-		// cur.processed is the processed length for the branch while cur.length is the remaining length in the element?
-		//std::cout << "cur.processed is " << cur.processed << " cur.length is " << cur.length << endl;
+		// if there's still stuff to process
 		if (cur.processed < cur.length)
 		{
 			// remaining_length is the difference in the current length and the processed length
@@ -452,7 +459,8 @@ void DelayedBranchingPolicyEFD::AddBranches(AngioElement * angio_elem, int buffe
 				// assign the position of the branch back tip
 				vec3d tip_pos = seg->NatcAtTime(start_time);
 				//add a tip at the appropriate location
-				//AddBranchTip(angio_elem, tip_pos, seg->Direction(mesh),start_time, seg->GetInitialFragmentID(), buffer_index);
+				// This next line was commented out? Get an access violation error with it.
+				//AddBranchTip(angio_elem, tip_pos, seg->Direction(mesh),start_time, seg->GetInitialFragmentID(), buffer_index, mesh);
 				double time_to_wait = t2e->NextValue(angio_elem->_rengine);
 				// assign the time that the branch will emerge.
 				time_to_wait = start_time + time_to_wait;

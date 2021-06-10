@@ -159,11 +159,6 @@ double SegmentVelocityFAModifier::ApplyModifiers(double prev, vec3d natural_coor
 		// get the angio point
 		FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
 		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
-		//std::cout << angio_mp->angioSPD.xx() << ", " << angio_mp->angioSPD.yy() << ", " << angio_mp->angioSPD.zz() << ", " << angio_mp->angioSPD.xy() << ", " << angio_mp->angioSPD.yz() << ", " << angio_mp->angioSPD.xz() << endl;
-		// Get the SPD
-		//angio_mp->nhit = 1;
-		//angio_mp->UpdateSPD();
-		//std::cout << angio_mp->angioSPD.xx() << ", " << angio_mp->angioSPD.yy() << ", " << angio_mp->angioSPD.zz() << ", " << angio_mp->angioSPD.xy() << ", " << angio_mp->angioSPD.yz() << ", " << angio_mp->angioSPD.xz() << endl;
 		SPDs_gausspts.push_back(angio_mp->angioSPD);
 	}
 	
@@ -204,13 +199,22 @@ double SegmentVelocityFAModifier::ApplyModifiers(double prev, vec3d natural_coor
 
 	// calculate the fractional anisotropy
 	double angioFA_int = sqrt(0.5)*(sqrt(pow(r0 - r1, 2) + pow(r1 - r2, 2) + pow(r2 - r0, 2)) / (sqrt(pow(r0, 2) + pow(r1, 2) + pow(r2, 2))));
-	if(angioFA_int > 0.5)
+	
+	std::vector<double> density_at_integration_points;
+
+	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
 	{
-		scale = 2;
+		FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
+		FEElasticMaterialPoint* elastic_mp = gauss_point->ExtractData<FEElasticMaterialPoint>();
+
+		density_at_integration_points.push_back(angio_mp->ref_ecm_density);
 	}
-	else {
-		scale = 1;
-	}
+
+	double density_at_point = interpolation_prop->Interpolate(angio_element->_elem, density_at_integration_points, natural_coords, mesh);
+	double density_scale = m_density_scale_factor.x + m_density_scale_factor.y * exp(-m_density_scale_factor.z * density_at_point);
+	double dens_point = std::min(std::max(0.5, density_at_point), 1.0);
+	scale = 1.0 + (-0.25*density_at_point+1.75)*(density_scale * (1.0 / (1.0 + exp((-1.0 * angioFA_int + 0.47) / 0.005))));
 	return prev*scale;
 }
 
@@ -226,7 +230,7 @@ void SegmentVelocityFAModifier::UpdateScale()
 
 BEGIN_FECORE_CLASS(SegmentVelocityFAModifier, SegmentGrowthVelocity)
 ADD_PARAMETER(scale, "scale");
-ADD_PARAMETER(threshold, "threshold");
+ADD_PARAMETER(m_density_scale_factor, "density_scale_factor");
 END_FECORE_CLASS();
 
 double SigmoidSegmentVelocity::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh)

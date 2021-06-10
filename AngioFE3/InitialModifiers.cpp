@@ -53,13 +53,13 @@ void FiberRandomizer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh,
 // take a given angio element and give it a randomized discrete fiber direction based on user input spd
 void DiscreteFiberEFDRandomizer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
-	efd_axes_a.unit();
+	/*efd_axes_a.unit();
 	efd_axes_b.unit();
-	efd_axes_c.unit();
+	efd_axes_c.unit();*/
 	mat3d elem_dir;
-	elem_dir.setCol(0, efd_axes_a*efd_spd.x);
-	elem_dir.setCol(1, efd_axes_b*efd_spd.y);
-	elem_dir.setCol(2, efd_axes_c*efd_spd.z);
+	elem_dir.setCol(0, vec3d(spd(0,0), spd(1,0), spd(2,0)));
+	elem_dir.setCol(1, vec3d(spd(0,1), spd(1,1), spd(2,1)));
+	elem_dir.setCol(1, vec3d(spd(0,2), spd(1,2), spd(2,2)));
 
 	std::vector<pair<double, int>> v;
 	v.push_back(pair<double, int>(elem_dir.col(0).norm(), 0));
@@ -123,10 +123,7 @@ void DiscreteFiberEFDRandomizer::ApplyModifier(AngioElement * angio_element, FEM
 }
 
 BEGIN_FECORE_CLASS(DiscreteFiberEFDRandomizer, InitialModifier)
-ADD_PARAMETER(efd_spd, "efd_spd");
-ADD_PARAMETER(efd_axes_a, "efd_axes_a");
-ADD_PARAMETER(efd_axes_b, "efd_axes_b");
-ADD_PARAMETER(efd_axes_c, "efd_axes_c");
+ADD_PARAMETER(spd, "spd");
 END_FECORE_CLASS();
 
 // take a given angio element and give it a randomized discrete fiber direction based on user input spd
