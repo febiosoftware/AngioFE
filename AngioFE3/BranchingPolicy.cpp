@@ -3,7 +3,7 @@
 #include "Segment.h"
 #include "FEAngio.h"
 #include <iostream>
-#include "FEBioMech\FEElasticMaterialPoint.h"
+#include <FEBioMech\FEElasticMaterialPoint.h>
 #include "FECore/FEDomainMap.h"
 #include <FECore/mathalg.h>
 
