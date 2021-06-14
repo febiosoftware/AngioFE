@@ -4,8 +4,6 @@
 #include "angio3d.h"
 #include <iostream>
 
-PerElementVI::PerElementVI(FEModel *pfem) : FEVariableInterpolation(pfem) {}
-
 double PerElementVI::Interpolate(FESolidElement *se, std::vector<double> & values_at_gauss_points, vec3d local_pos, FEMesh* mesh)
 {
 	double ao[FESolidElement::MAX_NODES];
