@@ -21,11 +21,12 @@ public:
 };
 
 //! discontinuous interp[olation of values at the gauss points
+// issue
 class PerElementVI : public FEVariableInterpolation
 {
 public:
 	//! constructor
-	explicit PerElementVI(FEModel * pfem) : FEVariableInterpolation(pfem) {}
+	explicit PerElementVI(FEModel * pfem) : FEVariableInterpolation(pfem){}
 	//! interpolate values on a per element basis
 	double Interpolate(FESolidElement *se, std::vector<double> & values_at_gauss_points, vec3d local_pos, FEMesh* mesh) override;
 	//! interpolate values on a per element basis
@@ -33,6 +34,7 @@ public:
 };
 
 // FEMixMethod, class for interpolating the contribution of two vectors.
+// issue
 class FEMixMethod : public FEMaterial {
 public:
 	// constructor
