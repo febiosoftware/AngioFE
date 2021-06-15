@@ -19,7 +19,7 @@ public:
 	virtual quatd Interpolate(FESolidElement *se, std::vector<quatd> & values_at_gauss_points, vec3d local_pos, FEMesh* mesh) = 0;
 };
 
-//! discontinuous interp[olation of values at the gauss points
+//! discontinuous interpolation of values at the gauss points
 // issue
 class PerElementVI : public FEVariableInterpolation {
 public:
