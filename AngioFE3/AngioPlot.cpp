@@ -394,7 +394,7 @@ bool FEPlotAngioECMDensity::Save(FEDomain& d, FEDataStream& str)
 			}
 	}
 		return true;
-}
+};
 
 //-----------------------------------------------------------------------------
 bool FEPlotAngioRepulseVal::Save(FEDomain& d, FEDataStream& str)
@@ -425,7 +425,7 @@ bool FEPlotAngioRepulseVal::Save(FEDomain& d, FEDataStream& str)
 		}
 	}
 	return true;
-}
+};
 
 bool FEPlotangioSPD::Save(FEDomain& d, FEDataStream& str)
 {
@@ -450,7 +450,7 @@ bool FEPlotangioSPD::Save(FEDomain& d, FEDataStream& str)
 		}
 	}
 	return true;
-}
+};
 
 bool FEPlotAngioFractionalAnisotropy::Save(FEDomain& d, FEDataStream& str)
 {
@@ -468,7 +468,7 @@ bool FEPlotAngioFractionalAnisotropy::Save(FEDomain& d, FEDataStream& str)
 		}
 	}
 	return true;
-}
+};
 
 bool FEPlotMatangioSPD::Save(FEDomain& d, FEDataStream& str)
 {
@@ -504,7 +504,7 @@ bool FEPlotMatangioSPD::Save(FEDomain& d, FEDataStream& str)
 		}
 	}
 	return true;
-}
+};
 
 bool FEPlotMatAngioFractionalAnisotropy::Save(FEDomain& d, FEDataStream& str)
 {
@@ -579,7 +579,7 @@ bool FEPlotMatAngioFractionalAnisotropy::Save(FEDomain& d, FEDataStream& str)
 		}
 	}
 	return true;
-}
+};
 
 bool FEPlotEFDFiberDirection::Save(FEDomain& d, FEDataStream& str)
 {
@@ -621,7 +621,7 @@ bool FEPlotEFDFiberDirection::Save(FEDomain& d, FEDataStream& str)
 		}
 	}
 	return true;
-}
+};
 
 bool FEPlotPrimaryVesselDirection::Save(FEDomain& d, FEDataStream& str)
 {
@@ -642,7 +642,7 @@ bool FEPlotPrimaryVesselDirection::Save(FEDomain& d, FEDataStream& str)
 		}
 	}
 	return true;
-}
+};
 
 //stopgap plot implementation
 
@@ -678,4 +678,4 @@ int GetLocalSoluteID(FEMaterial* pm, int nsol)
 			if (pmm->GetSolute(i)->GetSoluteID() == nsol) { nsid = i; break; }
 	}
 	return nsid;
-}
+};
