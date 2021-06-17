@@ -336,7 +336,8 @@ void FEAngio::GetActiveTipsInRadius(AngioElement* angio_element, double radius, 
 		visited.insert(cur);
 		std::vector<vec3d> cur_element_bounds;
 		pangio->ExtremaInElement(cur->_elem, cur_element_bounds);
-		double cdist = FEAngio::MinDistance(element_bounds, cur_element_bounds); std::cout << cdist << endl;
+		double cdist = FEAngio::MinDistance(element_bounds, cur_element_bounds); 
+		//std::cout << cdist << endl;
 		if (cdist <= radius)
 		{
 			for(auto iter = cur->active_tips[buffer].begin(); iter != cur->active_tips[buffer].end(); ++iter)
