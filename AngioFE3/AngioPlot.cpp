@@ -53,7 +53,7 @@ bool FEPlotAngioStress::Save(FEDomain& d, FEDataStream& str)
 		str << s;
 	}
 	return true;
-}
+};
 
 //-----------------------------------------------------------------------------
 bool FEPlotMatrixStress::Save(FEDomain& d, FEDataStream& str)
@@ -82,7 +82,7 @@ bool FEPlotMatrixStress::Save(FEDomain& d, FEDataStream& str)
 		str << s;
 	}
 	return true;
-}
+};
 
 //-----------------------------------------------------------------------------
 bool FEPlotVesselStress::Save(FEDomain& d, FEDataStream& str)
@@ -113,7 +113,7 @@ bool FEPlotVesselStress::Save(FEDomain& d, FEDataStream& str)
 		str << s;
 	}
 	return true;
-}
+};
 
 //-----------------------------------------------------------------------------
 bool FEPlotVesselWeight::Save(FEDomain& d, FEDataStream& str)
@@ -139,7 +139,7 @@ bool FEPlotVesselWeight::Save(FEDomain& d, FEDataStream& str)
 		str << s;
 	}
 	return true;
-}
+};
 
 //-----------------------------------------------------------------------------
 bool FEPlotMatrixWeight::Save(FEDomain& d, FEDataStream& str)
@@ -165,7 +165,7 @@ bool FEPlotMatrixWeight::Save(FEDomain& d, FEDataStream& str)
 		str << s;
 	}
 	return true;
-}
+};
 
 //-----------------------------------------------------------------------------
 bool FEPlotMatrixTangent::Save(FEDomain& d, FEDataStream& str)
@@ -194,7 +194,7 @@ bool FEPlotMatrixTangent::Save(FEDomain& d, FEDataStream& str)
 		str << s;
 	}
 	return true;
-}
+};
 
 //-----------------------------------------------------------------------------
 bool FEPlotMatrixViscoStress::Save(FEDomain& d, FEDataStream& str)
@@ -224,7 +224,7 @@ bool FEPlotMatrixViscoStress::Save(FEDomain& d, FEDataStream& str)
 		str << s;
 	}
 	return true;
-}
+};
 
 //-----------------------------------------------------------------------------
 bool FEPlotMatrixElasticStress::Save(FEDomain& d, FEDataStream& str)
@@ -254,7 +254,7 @@ bool FEPlotMatrixElasticStress::Save(FEDomain& d, FEDataStream& str)
 		str << s;
 	}
 	return true;
-}
+};
 
 //-----------------------------------------------------------------------------
 bool FEPlotMatrixElastic_m_Q::Save(FEDomain& d, FEDataStream& str)
@@ -295,7 +295,7 @@ bool FEPlotMatrixElastic_m_Q::Save(FEDomain& d, FEDataStream& str)
 		str << s;
 	}
 	return true;
-}
+};
 
 bool FEPlotBranches::Save(FEDomain& d, FEDataStream& str)
 {
