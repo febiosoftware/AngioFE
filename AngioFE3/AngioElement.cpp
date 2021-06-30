@@ -108,8 +108,10 @@ double AngioElement::GetEllipseAngle(const double a, const double b, const doubl
 		std::bind(std::divides<double>(), std::placeholders::_1, lc_t.at(n - 1)));
 	// construct uniform distribution
 	std::uniform_real_distribution<double> ud = std::uniform_real_distribution<double>(0.0, 1.0);
+	// Random engine used to sample from distributions based on the seed.
+	angiofe_random_engine & random_engine = this->_angio_mat->m_pangio->rengine;
 	// get a random number
-	double rn = ud(_rengine);
+	double rn = ud(random_engine);
 	// find the rc_t value closest to the random number and get the position
 	int fi = std::distance(lc_t.begin(), std::lower_bound(lc_t.begin(), lc_t.end(), rn));
 	return t.at(fi);
