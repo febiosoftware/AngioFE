@@ -48,11 +48,7 @@ protected:
 	//! parameter list
 	DECLARE_FECORE_CLASS();
 private:
-	mat3ds spd = mat3ds(1, 1, 1, 0, 0, 0);
-	/*vec3d efd_spd = vec3d(1, 1, 1);
-	vec3d efd_axes_a = vec3d(1, 0, 0);
-	vec3d efd_axes_b = vec3d(0, 1, 0);
-	vec3d efd_axes_c = vec3d(0, 0, 1);*/
+	mat3ds m_SPD;
 };
 
 class DiscreteFiberEFDMatRandomizer : public InitialModifier
