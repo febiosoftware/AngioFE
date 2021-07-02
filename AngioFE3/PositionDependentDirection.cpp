@@ -406,13 +406,15 @@ vec3d FiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d lo
 		FEAngioMaterial* Mat_ang = Dom->GetMaterial()->ExtractProperty<FEAngioMaterial>();
 		FEMaterial * Mat_a = Mat_ang->GetMatrixMaterial();
 		// assumes that materials mat_axis is already mapped which we'll need to do somewhere else.
-		/*FEParam* matax = Mat_a->FindParameter("mat_axis");
+		FEParam* matax = Mat_a->FindParameter("mat_axis");
 		FEParamMat3d& p = matax->value<FEParamMat3d>();
 		FEMappedValueMat3d* val = dynamic_cast<FEMappedValueMat3d*>(p.valuator());
-		FEDomainMap* map = dynamic_cast<FEDomainMap*>(val->dataMap());*/
-		mat3d m_Q = Mat_a->GetLocalCS(*mp);
+		FEDomainMap* map = dynamic_cast<FEDomainMap*>(val->dataMap());
+		//mat3d m_Q = Mat_a->GetLocalCS(*mp);
 
-		axis = emp->m_F * m_Q * axis;
+		//mat3d m_Q = map->valueMat3d(emp);
+
+		//axis = emp->m_F * m_Q * axis;
 		gauss_data.push_back({ axis });
 
 		/*axis = emp->m_F * emp->m_Q * axis;

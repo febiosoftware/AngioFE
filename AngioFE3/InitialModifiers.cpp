@@ -53,9 +53,17 @@ void FiberRandomizer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh,
 // take a given angio element and give it a randomized discrete fiber direction based on user input spd
 void DiscreteFiberEFDRandomizer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
-	/*efd_axes_a.unit();
-	efd_axes_b.unit();
-	efd_axes_c.unit();*/
+		//get the FE domain
+	FEDomain* Dom = dynamic_cast<FEDomain*>(angio_element->_elem->GetMeshPartition());
+	FEElementSet* elset = mesh->FindElementSet(Dom->GetName());
+	int local_index = elset->GetLocalIndex(*angio_element->_elem);
+	FEMaterial* Mat_a = Dom->GetMaterial()->ExtractProperty<FEElasticMaterial>();
+	// assumes that materials mat_axis is already mapped which we'll need to do somewhere else.
+	FEParam* matax = Mat_a->FindParameter("mat_axis");
+	FEParamMat3d& p = matax->value<FEParamMat3d>();
+	FEMappedValueMat3d* val = dynamic_cast<FEMappedValueMat3d*>(p.valuator());
+	FEDomainMap* map = dynamic_cast<FEDomainMap*>(val->dataMap());
+	
 	mat3d elem_dir;
 	elem_dir.setCol(0, vec3d(m_SPD.xx(), m_SPD.xy(), m_SPD.xz()));
 	elem_dir.setCol(1, vec3d(m_SPD.xy(), m_SPD.yy(), m_SPD.yz()));
@@ -77,16 +85,11 @@ void DiscreteFiberEFDRandomizer::ApplyModifier(AngioElement * angio_element, FEM
 	vec3d axis_2 = elem_dir.col(u3); axis_2.unit();
 	double r0 = (elem_dir.col(u1).norm());
 	double r1 = (elem_dir.col(u2).norm());
-	double r2 = (elem_dir.col(u3).norm());
+	double r2 = (elem_dir.col(u3).norm());	
 
 	// for each integration point in the element
 	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
 	{
-		// get the material point of the integration point
-		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
-		// get the angio material point
-		FEAngioMaterialPoint * angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
-
 		double theta_12 = angio_element->GetEllipseAngle(r0, r1,0,2*PI,360);
 		double theta_13 = angio_element->GetEllipseAngle(r0, r2,0,2*PI,360);
 		// rotate the primary direction by theta_12 about the normal between them
@@ -94,19 +97,11 @@ void DiscreteFiberEFDRandomizer::ApplyModifier(AngioElement * angio_element, FEM
 		mat3d R12 = mix3d_t_r(axis_0, axis_1, theta_12);
 		//angio_pt->angio_fd = mix3d_t(axis, axis_2, theta_13); angio_pt->angio_fd.unit();
 		mat3d R13 = mix3d_t_r(axis, axis_2, theta_13);
-
-		//get the FE domain
-		FEDomain* Dom = dynamic_cast<FEDomain*>(angio_element->_elem->GetMeshPartition());
-		//
-		FEElementSet* elset = mesh->FindElementSet(Dom->GetName());
-		int local_index = elset->GetLocalIndex(*angio_element->_elem);
-		FEMaterial* Mat_a = Dom->GetMaterial()->ExtractProperty<FEElasticMaterial>();
-		// assumes that materials mat_axis is already mapped which we'll need to do somewhere else.
-		FEParam* matax = Mat_a->FindParameter("mat_axis");
-		FEParamMat3d& p = matax->value<FEParamMat3d>();
-		FEMappedValueMat3d* val = dynamic_cast<FEMappedValueMat3d*>(p.valuator());
-		FEDomainMap* map = dynamic_cast<FEDomainMap*>(val->dataMap());
-
+		
+		// get the material point of the integration point
+		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
+		// get the angio material point
+		FEAngioMaterialPoint * angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
 		FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
 		// get local domain index of element
 		mat3d temp_mat;
