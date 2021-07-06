@@ -140,7 +140,7 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotSegmentLength, FEPLOTDATA_ID, "segment_length");
 	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotRefSegmentLength, FEPLOTDATA_ID, "reference_frame_segment_length");
 	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotPrimaryVesselDirection, FEPLOTDATA_ID, "primary_segment_direction");
-	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotEFDFiberDirection, FEPLOTDATA_ID, "efd_fiber_direction");
+	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotAngioFiberDirection, FEPLOTDATA_ID, "angio fiber direction");
 
 	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotMatrixElastic_m_Q, FEPLOTDATA_ID, "matrix elastic mQ");
 

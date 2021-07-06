@@ -192,16 +192,16 @@ public:
 };
 
 //! plot the primary direction that vessels grow per element
-class FEPlotEFDFiberDirection : public FEPlotDomainData
+class FEPlotAngioFiberDirection : public FEPlotDomainData
 {
 public:
 	//! constructor
-	explicit FEPlotEFDFiberDirection(FEModel* pfem) : FEPlotDomainData(pfem, PLT_VEC3F, FMT_ITEM) {}
+	explicit FEPlotAngioFiberDirection(FEModel* pfem) : FEPlotDomainData(pfem, PLT_VEC3F, FMT_ITEM) {}
 	//! plot the primary direction that vessels grow per element
 	bool Save(FEDomain& d, FEDataStream& str)  override;
 private:
-	//maps element id to segment direction in the reference configuration
-	std::unordered_map<int, vec3d> efd_fiber_dir;
+	////maps element id to segment direction in the reference configuration
+	//std::unordered_map<int, vec3d> angio_fiber_dirs;
 };
 
 

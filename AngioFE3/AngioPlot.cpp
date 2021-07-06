@@ -581,7 +581,7 @@ bool FEPlotMatAngioFractionalAnisotropy::Save(FEDomain& d, FEDataStream& str)
 	return true;
 };
 
-bool FEPlotEFDFiberDirection::Save(FEDomain& d, FEDataStream& str)
+bool FEPlotAngioFiberDirection::Save(FEDomain& d, FEDataStream& str)
 {
 	FEMesh * mesh = pfeangio->GetMesh();
 	for (int i = 0; i < d.Elements(); i++)
@@ -593,28 +593,15 @@ bool FEPlotEFDFiberDirection::Save(FEDomain& d, FEDataStream& str)
 			AngioElement * angio_element = pfeangio->se_to_angio_element.at(se);
 			vec3d primary_dir;
 			std::vector<quatd> gauss_data;
-			std::vector<quatd> nodal_data;
 
 			for (int i = 0; i< angio_element->_elem->GaussPoints(); i++)
 			{
 				FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
 				FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
+				FEAngioMaterialPoint * angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
 				vec3d axis(1, 0, 0);
-
-				//Ask Steve about this
-				//get the FE domain
-				FEDomain* Dom = dynamic_cast<FEDomain*>(angio_element->_elem->GetMeshPartition());
-				//
-				FEElementSet* elset = mesh->FindElementSet(Dom->GetName());
-				int local_index = elset->GetLocalIndex(*angio_element->_elem);
-
-				FEAngioMaterial* Mat_ang = Dom->GetMaterial()->ExtractProperty<FEAngioMaterial>();
-				FEMaterial * Mat_a = Mat_ang->GetMatrixMaterial();
-				mat3d m_Q = Mat_a->GetLocalCS(*mp);
-
-				axis = emp->m_F * m_Q * axis;
+				axis = emp->m_F * angio_pt->angio_fiber_dir;
 				primary_dir += axis;
-				//gauss_data.push_back({ axis });
 			}
 			primary_dir = primary_dir / 8; primary_dir.unit();
 			str << primary_dir;

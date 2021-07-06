@@ -387,44 +387,20 @@ void FiberPDD::Update(FEMesh * mesh, FEAngio* angio)
 vec3d FiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio)
 {
 	std::vector<quatd> gauss_data;
-	std::vector<quatd> nodal_data;
 	//FEElasticMaterial* pmm = dynamic_cast<FEElasticMaterial*> (angio_element->_mat->GetElasticMaterial);
 	//std::cout << "material is " << angio_element->_angio_mat->GetMatrixMaterial()->GetElasticMaterial()->FindProperty("m_Base") << endl;
 	for (int i = 0; i< angio_element->_elem->GaussPoints(); i++)
 	{
 		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
 		FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
-		vec3d axis(1, 0, 0);
-
-		//Ask Steve about this
-		//get the FE domain
-		FEDomain* Dom = dynamic_cast<FEDomain*>(angio_element->_elem->GetMeshPartition());
-		//
-		FEElementSet* elset = mesh->FindElementSet(Dom->GetName());
-		int local_index = elset->GetLocalIndex(*angio_element->_elem);
-
-		FEAngioMaterial* Mat_ang = Dom->GetMaterial()->ExtractProperty<FEAngioMaterial>();
-		FEMaterial * Mat_a = Mat_ang->GetMatrixMaterial();
-		// assumes that materials mat_axis is already mapped which we'll need to do somewhere else.
-		FEParam* matax = Mat_a->FindParameter("mat_axis");
-		FEParamMat3d& p = matax->value<FEParamMat3d>();
-		FEMappedValueMat3d* val = dynamic_cast<FEMappedValueMat3d*>(p.valuator());
-		FEDomainMap* map = dynamic_cast<FEDomainMap*>(val->dataMap());
-		//mat3d m_Q = Mat_a->GetLocalCS(*mp);
-
-		//mat3d m_Q = map->valueMat3d(emp);
-
-		//axis = emp->m_F * m_Q * axis;
+		FEAngioMaterialPoint * angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+		vec3d axis = emp->m_F*angio_pt->angio_fiber_dir;
 		gauss_data.push_back({ axis });
-
-		/*axis = emp->m_F * emp->m_Q * axis;
-		gauss_data.push_back({ axis });*/
 	}
 
 	quatd rv = interpolation_prop->Interpolate(angio_element->_elem, gauss_data, local_pos, mesh);
 	vec3d fiber_direction = rv.GetVector();
 	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_direction, contribution);
-	// return mix(prev, fiber_direction, contribution);
 }
 
 void FractionalAnisotropyPDD::Update(FEMesh * mesh, FEAngio* angio)

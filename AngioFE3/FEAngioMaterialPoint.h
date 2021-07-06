@@ -62,6 +62,7 @@ public:
 	mat3ds angioSPD;
 	//! Angio fractional anisotropy
 	double angioFA;
+	vec3d angio_fiber_dir = vec3d(1, 0, 0);
 
 	//! parameter list
 	//DECLARE_FECORE_CLASS();

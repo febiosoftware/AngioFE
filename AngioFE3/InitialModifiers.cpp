@@ -20,20 +20,6 @@ void InitialModifierManager::ApplyModifier(AngioElement * angio_element, FEMesh 
 // take a given angio element and give it a randomized discrete fiber direction
 void FiberRandomizer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
-	//get the FE domain
-	FEDomain* Dom = dynamic_cast<FEDomain*>(angio_element->_elem->GetMeshPartition());
-	//
-	FEElementSet* elset = mesh->FindElementSet(Dom->GetName());
-	int local_index = elset->GetLocalIndex(*angio_element->_elem);
-	
-	FEMaterial* Mat_a = Dom->GetMaterial()->ExtractProperty<FEElasticMaterial>();
-	// assumes that materials mat_axis is already mapped which we'll need to do somewhere else.
-	FEParam* matax = Mat_a->FindParameter("mat_axis");
-	FEParamMat3d& p = matax->value<FEParamMat3d>();
-	FEMappedValueMat3d* val = dynamic_cast<FEMappedValueMat3d*>(p.valuator());
-	FEDomainMap* map = dynamic_cast<FEDomainMap*>(val->dataMap());
-
-
 	// for each integration point in the element
 	for(int i=0; i < angio_element->_elem->GaussPoints();i++)
 	{
@@ -46,24 +32,13 @@ void FiberRandomizer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh,
 		// multiply the elastic material point's global orientation by a random matrix
 		mat3d RandMat = feangio->unifromRandomRotationMatrix(angio_element->_rengine);
 		// get local domain index of element
-		map->setValue(local_index, i, RandMat);
+		angio_pt->angio_fiber_dir = RandMat*angio_pt->angio_fiber_dir;
 	}
 }
 
 // take a given angio element and give it a randomized discrete fiber direction based on user input spd
 void DiscreteFiberEFDRandomizer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
-{
-		//get the FE domain
-	FEDomain* Dom = dynamic_cast<FEDomain*>(angio_element->_elem->GetMeshPartition());
-	FEElementSet* elset = mesh->FindElementSet(Dom->GetName());
-	int local_index = elset->GetLocalIndex(*angio_element->_elem);
-	FEMaterial* Mat_a = Dom->GetMaterial()->ExtractProperty<FEElasticMaterial>();
-	// assumes that materials mat_axis is already mapped which we'll need to do somewhere else.
-	FEParam* matax = Mat_a->FindParameter("mat_axis");
-	FEParamMat3d& p = matax->value<FEParamMat3d>();
-	FEMappedValueMat3d* val = dynamic_cast<FEMappedValueMat3d*>(p.valuator());
-	FEDomainMap* map = dynamic_cast<FEDomainMap*>(val->dataMap());
-	
+{	
 	mat3d elem_dir;
 	elem_dir.setCol(0, vec3d(m_SPD.xx(), m_SPD.xy(), m_SPD.xz()));
 	elem_dir.setCol(1, vec3d(m_SPD.xy(), m_SPD.yy(), m_SPD.yz()));
@@ -103,18 +78,10 @@ void DiscreteFiberEFDRandomizer::ApplyModifier(AngioElement * angio_element, FEM
 		// get the angio material point
 		FEAngioMaterialPoint * angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
 		FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
-		// get local domain index of element
-		mat3d temp_mat;
-		temp_mat.setCol(0, axis_0); temp_mat.setCol(1, axis_1); temp_mat.setCol(2, axis_2);
-		temp_mat = R13*R12*temp_mat;
-		map->setValue(local_index, i, temp_mat);
-
-		//FEElasticMaterialPoint * mat_emp = angio_pt->matPt->ExtractData<FEElasticMaterialPoint>();
-		//mat_emp->m_Q = emp->m_Q;
-		//// create a vessel material point and copy the elastic material point to it
-		//FEElasticMaterialPoint * ves_emp = angio_pt->vessPt->ExtractData<FEElasticMaterialPoint>();
-		//ves_emp->m_Q = emp->m_Q;
+		//Rotate by the sampled direction
+		angio_pt->angio_fiber_dir = R13*R12*vec3d(1, 0, 0);
 	}
+	// needs to be averaged between integration points for this element
 }
 
 BEGIN_FECORE_CLASS(DiscreteFiberEFDRandomizer, InitialModifier)
@@ -159,28 +126,8 @@ void DiscreteFiberEFDMatRandomizer::ApplyModifier(AngioElement * angio_element, 
 		// rotate the primary direction by theta_12 about the normal between them
 		vec3d axis = mix3d_t(axis_0, axis_1, theta_12); axis.unit();
 		mat3d R12 = mix3d_t_r(axis_0, axis_1, theta_12);
-		//angio_pt->angio_fd = mix3d_t(axis, axis_2, theta_13); angio_pt->angio_fd.unit();
 		mat3d R13 = mix3d_t_r(axis, axis_2, theta_13);
-
-		//get the FE domain
-		FEDomain* Dom = dynamic_cast<FEDomain*>(angio_element->_elem->GetMeshPartition());
-		//
-		FEElementSet* elset = mesh->FindElementSet(Dom->GetName());
-		int local_index = elset->GetLocalIndex(*angio_element->_elem);
-		FEMaterial* Mat_a = Dom->GetMaterial()->ExtractProperty<FEElasticMaterial>();
-		// assumes that materials mat_axis is already mapped which we'll need to do somewhere else.
-		FEParam* matax = Mat_a->FindParameter("mat_axis");
-		FEParamMat3d& p = matax->value<FEParamMat3d>();
-		FEMappedValueMat3d* val = dynamic_cast<FEMappedValueMat3d*>(p.valuator());
-		FEDomainMap* map = dynamic_cast<FEDomainMap*>(val->dataMap());
-
-		FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
-		// get local domain index of element
-		mat3d temp_mat;
-		temp_mat.setCol(0, axis_0); temp_mat.setCol(1, axis_1); temp_mat.setCol(2, axis_2);
-		temp_mat = R13*R12*temp_mat;
-		//std::cout << "temp_mat" << endl << temp_mat.col(0).x << ", " << temp_mat.col(1).x << ", " << temp_mat.col(2).x << endl << temp_mat.col(0).y << ", " << temp_mat.col(1).y << ", " << temp_mat.col(2).y << endl << temp_mat.col(0).z << ", " << temp_mat.col(1).z << ", " << temp_mat.col(2).z << endl;
-		map->setValue(local_index, i, temp_mat);
+		angio_pt->angio_fiber_dir = R13*R12*vec3d(1, 0, 0);
 	}
 }
 
