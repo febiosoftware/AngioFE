@@ -544,4 +544,5 @@ vec3d FractionalAnisotropyMatPointPDD::ApplyModifiers(vec3d prev, AngioElement* 
 
 BEGIN_FECORE_CLASS(FractionalAnisotropyMatPointPDD, PositionDependentDirection)
 ADD_PARAMETER(alpha_override, "alpha_override");
+ADD_PARAMETER(efd_alpha, "efd_alpha");
 END_FECORE_CLASS();
