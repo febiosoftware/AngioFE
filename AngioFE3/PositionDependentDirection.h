@@ -91,7 +91,7 @@ public:
 	DECLARE_FECORE_CLASS();
 private:
 	bool alpha_override = true;// replace alpha with the override
-	double contribution = 1.0;
+	double efd_alpha = 1.0;
 };
 
 class LaGrangePStrainPDD : public PositionDependentDirection

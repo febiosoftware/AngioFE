@@ -538,8 +538,8 @@ vec3d FractionalAnisotropyMatPointPDD::ApplyModifiers(vec3d prev, AngioElement* 
 	//alpha = std::min(angioFA_int, 0.75);
 	//alpha = std::min((contribution*(((0.64 - 0.36) / (0.64 - 0))*angioFA_int + 0.36)), 0.64);
 	//alpha = 1.0;
-	alpha = contribution;
-	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_dir, alpha);
+	alpha = efd_alpha;
+	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_dir, efd_alpha);
 }
 
 BEGIN_FECORE_CLASS(FractionalAnisotropyMatPointPDD, PositionDependentDirection)
