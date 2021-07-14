@@ -6,7 +6,6 @@
 #include <FECore/FENormalProjection.h>
 #include "FEAngio.h"
 #include "FEProbabilityDistribution.h"
-#include "FiberManager.h"
 #include "FEAngioMaterialPoint.h"
 #include <FEBioMix/FEBiphasic.h>
 #include "CommonAngioProperites.h"
@@ -152,6 +151,7 @@ private:
 	FESolidMaterial* matrix_material = nullptr;
 	PositionDependentDirectionManager* pdd_manager = nullptr;
 	PreviousSegmentContributionManager* psc_manager = nullptr;
+	ProtoPDDManager* proto_pdd_manager = nullptr;
 	TipSpecies* tip_species = nullptr;
 	ContributionMixManager* cm_manager = nullptr;
 //	SegmentGrowthVelocityManager> velocity_manager;

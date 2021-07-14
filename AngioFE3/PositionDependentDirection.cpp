@@ -34,11 +34,6 @@ void PositionDependentDirectionManager::Update(FEMesh * mesh, FEAngio* angio)
 	mat3ds eye;
 }
 
-/*bool sortinrev(const pair<double, int> &a, const pair<double, int> &b)
-{
-	return (a.first > b.first);
-}*/
-
 BEGIN_FECORE_CLASS(LaGrangePStrainPDD, PositionDependentDirection)
 ADD_PARAMETER(beta, "beta");
 END_FECORE_CLASS();
@@ -543,6 +538,360 @@ vec3d FractionalAnisotropyMatPointPDD::ApplyModifiers(vec3d prev, AngioElement* 
 }
 
 BEGIN_FECORE_CLASS(FractionalAnisotropyMatPointPDD, PositionDependentDirection)
+ADD_PARAMETER(alpha_override, "alpha_override");
+ADD_PARAMETER(efd_alpha, "efd_alpha");
+END_FECORE_CLASS();
+
+
+
+vec3d ProtoPDDManager::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int buffer, bool& continue_growth, vec3d& tip_dir, double& alpha, FEMesh* mesh, FEAngio* pangio)
+{
+	for (int i = 0; i < proto_pdd_modifiers.size(); i++)
+	{
+		prev = proto_pdd_modifiers[i]->ApplyModifiers(prev, angio_element, local_pos, initial_fragment_id, buffer, alpha, continue_growth, tip_dir, mesh, pangio);
+	}
+	return prev;
+}
+
+void ProtoPDDManager::Update(FEMesh * mesh, FEAngio* angio)
+{
+	for (int i = 0; i < proto_pdd_modifiers.size(); i++)
+	{
+		proto_pdd_modifiers[i]->Update(mesh, angio);
+	}
+	mat3ds eye;
+}
+
+
+
+BEGIN_FECORE_CLASS(ProtoRepulsePDD, PositionDependentDirection)
+ADD_PARAMETER(threshold, "threshold");
+ADD_PARAMETER(alpha_override, "alpha_override");
+ADD_PARAMETER(grad_threshold, "grad_threshold");
+END_FECORE_CLASS();
+
+vec3d ProtoRepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio)
+{
+	std::vector<double> repulse_at_integration_points;
+
+	// find which angio elements have repulse values
+	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
+	{
+		FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
+		FEElasticMaterialPoint* elastic_mp = gauss_point->ExtractData<FEElasticMaterialPoint>();
+
+		// Get the replse value and scale it by any deformation
+		repulse_at_integration_points.push_back(angio_mp->repulse_value * (1.0 / elastic_mp->m_J));
+	}
+	// if the threshold method should be used
+	if (grad_threshold)
+	{
+		// get the gradient for the element from the repulse value at the integration points from the current position
+		vec3d grad = pangio->gradient(angio_element->_elem, repulse_at_integration_points, local_pos);
+		// get the magnitude and compare to the threshold
+		double gradnorm = grad.norm();
+		//std::cout << "gradnorm is " << gradnorm << endl;
+		if (gradnorm > threshold)
+		{
+			grad = -grad;
+			if (alpha_override)
+			{
+				alpha = contribution;
+			}
+			// use the negative of the gradient of the repulse values to tell vessels which direction to grow away from
+			vec3d new_dir = angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, alpha);
+			if (prev* grad < 0) { new_dir = -new_dir; }
+			return new_dir;
+			//return angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, contribution);
+			//return mix(prev,grad, contribution);
+		}
+	}
+	// if the gradient method is not being used
+	else
+	{
+		double nodal_repulse[FESolidElement::MAX_NODES];
+		double H[FESolidElement::MAX_NODES];
+		// project the repulse value from integration points to the nodes
+		angio_element->_elem->project_to_nodes(&repulse_at_integration_points[0], nodal_repulse);
+		double val = 0;
+		// determine shape function value for the local position
+		angio_element->_elem->shape_fnc(H, local_pos.x, local_pos.y, local_pos.z);
+		// for each node in an angio element determine the contributions from the shape functions
+		for (int i = 0; i < angio_element->_elem->Nodes(); i++)
+		{
+			val += H[i] * nodal_repulse[i];
+		}
+		//SL: moving this into the loop below so it is only calculated when necessary 
+		// vec3d grad = pangio->gradient(angio_element->_elem, repulse_at_integration_points, local_pos);
+		// if the value from the shape functions is greater than the threshold then the vessel will be repulsed
+		if (val > threshold)
+		{
+			// determine the gradient in each angio element of the repulse value at a given local position
+			vec3d grad = pangio->gradient(angio_element->_elem, repulse_at_integration_points, local_pos);
+			// new direction will be in the opposite of the other direction.
+			grad = -grad;
+			// if alpha_override is set to 1 then set alpha to 1. Seems like an unneccessary step
+			if (alpha_override)
+			{
+				alpha = contribution;
+			}
+			// new vector direction is mix of previous and deflected direction.
+			vec3d new_dir = angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, 1);
+			// if previous direction dotted with grad is -ve i.e. the angle between them is greater than 90 degrees. not sure if this makes sense. 
+			// if (prev* grad < 0) { new_dir = -new_dir; }
+			return new_dir;
+			//return angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, contribution);
+			//return mix(prev, grad, contribution);
+		}
+	}
+	return prev;
+
+}
+
+//used in the anastamosis modifier
+double ProtoAnastamosisPDD::distance2(FESolidElement * se, vec3d local_pos, Tip * tip, FEMesh* mesh)
+{
+	vec3d pos;
+	double H[FESolidElement::MAX_NODES];
+	se->shape_fnc(H, local_pos.x, local_pos.y, local_pos.z);
+	for (int i = 0; i < se->Nodes(); i++)
+	{
+		pos += (mesh->Node(se->m_node[i]).m_rt * H[i]);
+	}
+	return (tip->GetPosition(mesh) - pos).norm2();
+}
+
+vec3d ProtoAnastamosisPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio)
+{
+	vec3d tip_pos;
+	double H[FESolidElement::MAX_NODES];
+	angio_element->_elem->shape_fnc(H, local_pos.x, local_pos.y, local_pos.z);
+	for (int i = 0; i < angio_element->_elem->Nodes(); i++)
+	{
+		tip_pos += (mesh->Node(angio_element->_elem->m_node[i]).m_rt * H[i]);
+	}
+	Tip* best_tip = FuseWith(angio_element, pangio, mesh, tip_pos, tip_dir, initial_fragment_id, anastamosis_radius);
+	if (best_tip)
+	{
+		vec3d dir = (best_tip->GetPosition(mesh) - tip_pos);
+		double len = dir.unit();
+		if (alpha_override)
+		{
+			alpha = contribution;
+		}
+		if (len < fuse_radius && fuse_angle  > dir * tip_dir)
+		{
+			angio_element->anastamoses++;
+			continue_growth = false;
+		}
+		vec3d new_dir = angio_element->_angio_mat->mix_method->ApplyMix(prev, dir, contribution);
+		if (prev* dir< 0) { new_dir = -new_dir; }
+		return new_dir;
+		//return angio_element->_angio_mat->mix_method->ApplyMix(prev, dir, contribution);
+		//return mix(prev, dir, contribution);
+	}
+	return prev;
+}
+
+Tip* ProtoAnastamosisPDD::FuseWith(class AngioElement* angio_element, FEAngio* pangio, class FEMesh* mesh, class vec3d tip_pos, class vec3d tip_dir, int exclude, double radius)
+{
+	double best_possible_distance;
+	Tip * best = BestInElement(angio_element, pangio, mesh, tip_pos, tip_dir, exclude, best_possible_distance);
+	double best_distance = std::numeric_limits<double>::max();
+	if (best)
+	{
+		best_distance = best_possible_distance;
+	}
+
+	std::unordered_set<AngioElement *> visited;
+	std::set<AngioElement *> next;
+	std::vector<vec3d> element_bounds;
+	visited.reserve(1000);
+	pangio->ExtremaInElement(angio_element->_elem, element_bounds);
+
+
+
+	for (int i = 0; i < angio_element->adjacency_list.size(); i++)
+	{
+		next.insert(angio_element->adjacency_list[i]);
+	}
+	visited.insert(angio_element);
+	while (next.size())
+	{
+		AngioElement * cur = *next.begin();
+		next.erase(next.begin());
+		visited.insert(cur);
+		std::vector<vec3d> cur_element_bounds;
+		pangio->ExtremaInElement(cur->_elem, cur_element_bounds);
+		double cdist = FEAngio::MinDistance(element_bounds, cur_element_bounds);
+		if (cdist <= radius && cdist <= best_distance)
+		{
+			Tip * pos_best = BestInElement(cur, pangio, mesh, tip_pos, tip_dir, exclude, best_possible_distance);
+			if (pos_best && best_possible_distance < best_distance)
+			{
+				best = pos_best;
+				best_distance = best_possible_distance;
+			}
+
+
+			for (int i = 0; i < cur->adjacency_list.size(); i++)
+			{
+				if (!visited.count(cur->adjacency_list[i]))
+				{
+					next.insert(cur->adjacency_list[i]);
+				}
+			}
+		}
+		//otherwise let uneeded elements die
+	}
+	return best;
+}
+
+bool ProtoAnastamosisPDD::ValidTip(Tip* tip, vec3d tip_dir, FEMesh* mesh)
+{
+	return fuse_angle > tip->GetDirection(mesh) * tip_dir;
+}
+
+Tip * ProtoAnastamosisPDD::BestInElement(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh, vec3d tip_origin, vec3d tip_dir, int exclude, double& best_distance)
+{
+	best_distance = std::numeric_limits<double>::max();
+	int best_index = -1;
+	for (int i = 0; i < angio_element->grown_segments.size(); i++)
+	{
+		Tip * tip = angio_element->grown_segments[i]->front;
+		if (tip->initial_fragment_id != exclude)
+		{
+			vec3d pos = tip->GetPosition(mesh);
+			double dist = (tip_origin - pos).norm2();
+			if (dist < best_distance)
+			{
+				best_distance = dist;
+				best_index = i;
+			}
+		}
+	}
+	if (best_index != -1)
+	{
+		best_distance = sqrt(best_distance);
+		return angio_element->grown_segments[best_index]->front;
+	}
+	return nullptr;
+}
+
+
+BEGIN_FECORE_CLASS(ProtoAnastamosisPDD, PositionDependentDirection)
+ADD_PARAMETER(anastamosis_radius, "anastamosis_radius");
+ADD_PARAMETER(contribution, "contribution");
+ADD_PARAMETER(fuse_radius, "fuse_radius");
+ADD_PARAMETER(fuse_angle, "fuse_angle");
+END_FECORE_CLASS();
+
+void ProtoFiberPDD::Update(FEMesh * mesh, FEAngio* angio)
+{
+
+}
+
+vec3d ProtoFiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio)
+{
+	std::vector<quatd> gauss_data;
+	//FEElasticMaterial* pmm = dynamic_cast<FEElasticMaterial*> (angio_element->_mat->GetElasticMaterial);
+	//std::cout << "material is " << angio_element->_angio_mat->GetMatrixMaterial()->GetElasticMaterial()->FindProperty("m_Base") << endl;
+	for (int i = 0; i< angio_element->_elem->GaussPoints(); i++)
+	{
+		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
+		FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
+		FEAngioMaterialPoint * angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+		vec3d axis = emp->m_F*angio_pt->angio_fiber_dir;
+		gauss_data.push_back({ axis });
+	}
+
+	quatd rv = interpolation_prop->Interpolate(angio_element->_elem, gauss_data, local_pos, mesh);
+	vec3d fiber_direction = rv.GetVector();
+	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_direction, contribution);
+}
+
+void ProtoFractionalAnisotropyPDD::Update(FEMesh * mesh, FEAngio* angio)
+{
+
+}
+
+vec3d ProtoFractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio)
+{
+	// vector containing the SPD for each gauss point in the element
+	std::vector<mat3ds> SPDs_gausspts;
+
+	// get each gauss point's SPD
+	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
+	{
+		// get the angio point
+		FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
+		//std::cout << angio_mp->angioSPD.xx() << ", " << angio_mp->angioSPD.yy() << ", " << angio_mp->angioSPD.zz() << ", " << angio_mp->angioSPD.xy() << ", " << angio_mp->angioSPD.yz() << ", " << angio_mp->angioSPD.xz() << endl;
+		// Get the SPD
+		//angio_mp->nhit = 1;
+		angio_mp->UpdateSPD();
+		//std::cout << angio_mp->angioSPD.xx() << ", " << angio_mp->angioSPD.yy() << ", " << angio_mp->angioSPD.zz() << ", " << angio_mp->angioSPD.xy() << ", " << angio_mp->angioSPD.yz() << ", " << angio_mp->angioSPD.xz() << endl;
+		SPDs_gausspts.push_back(angio_mp->angioSPD);
+	}
+	// array containing the SPD for each node in the element
+	mat3ds SPDs_nodes[FESolidElement::MAX_NODES];
+	// array for the shape function values
+	double H[FESolidElement::MAX_NODES];
+	// project the spds from integration points to the nodes
+	angio_element->_elem->project_to_nodes(&SPDs_gausspts[0], SPDs_nodes);
+	// determine shape function value for the local position
+	angio_element->_elem->shape_fnc(H, local_pos.x, local_pos.y, local_pos.z);
+	//angio_element->_elem->shape_fnc(H, 0, 0, 0);
+	// Get the interpolated SPD from the shape function-weighted Average Structure Tensor
+	mat3ds SPD_int = weightedAverageStructureTensor(SPDs_nodes, H, angio_element->_elem->Nodes());
+	// get the vectors of the principal directions and sort in descending order
+	std::vector<pair<double, int>> v;
+	mat3d ax;
+	ax.setCol(0, vec3d(SPD_int.xx(), SPD_int.xy(), SPD_int.xz()));
+	ax.setCol(1, vec3d(SPD_int.xy(), SPD_int.yy(), SPD_int.yz()));
+	ax.setCol(2, vec3d(SPD_int.xz(), SPD_int.yz(), SPD_int.zz()));
+	v.push_back(pair<double, int>(ax.col(0).norm(), 0));
+	v.push_back(pair<double, int>(ax.col(1).norm(), 1));
+	v.push_back(pair<double, int>(ax.col(2).norm(), 2));
+	sort(v.begin(), v.end(), sortinrev);
+
+	// store the indices
+	int i = v[0].second;
+	int j = v[1].second;
+	int k = v[2].second;
+
+	vec3d axis_0 = ax.col(i); axis_0.unit();
+	vec3d axis_1 = ax.col(j); axis_1.unit();
+	vec3d axis_2 = ax.col(k); axis_2.unit();
+	double r0 = (ax.col(i).norm());
+	double r1 = (ax.col(j).norm());
+	double r2 = (ax.col(k).norm());
+	double theta_12 = angio_element->GetEllipseAngle(r0, r1, -PI / 2, PI, 180);
+	double theta_13 = angio_element->GetEllipseAngle(r0, r2, -PI / 2, PI, 180);
+
+	// rotate the primary direction by theta_12 about the normal between them
+	vec3d axis = mix3d_t(axis_0, axis_1, theta_12); axis.unit();
+	vec3d fiber_dir = mix3d_t(axis, axis_2, theta_13); fiber_dir.unit();
+	// determine the fiber directon contribution from the fractional anisotropy
+	/*if (alpha_override)
+	{
+	alpha = contribution;
+	}*/
+	//double FA_cont = std::min(angio_element->angioFA, 0.36);
+	//std::cout << "contribution is " << contribution << endl;
+
+	// calculate the fractional anisotropy
+	//double angioFA_int = sqrt(0.5)*(sqrt(pow(r0 - r1, 2) + pow(r1 - r2, 2) + pow(r2 - r0, 2)) / (sqrt(pow(r0, 2) + pow(r1, 2) + pow(r2, 2))));
+	//double angioFA_int = 1.0 - (r1 / r0);
+	//alpha = std::min(angioFA_int, 0.75);
+	//alpha = std::min((contribution*(((0.64 - 0.36) / (0.64 - 0))*angioFA_int + 0.36)), 0.64);
+	//alpha = 1.0;
+	alpha = efd_alpha;
+	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_dir, efd_alpha);
+}
+
+BEGIN_FECORE_CLASS(ProtoFractionalAnisotropyPDD, PositionDependentDirection)
 ADD_PARAMETER(alpha_override, "alpha_override");
 ADD_PARAMETER(efd_alpha, "efd_alpha");
 END_FECORE_CLASS();

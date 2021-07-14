@@ -186,10 +186,6 @@ void EFDMatPointFiberInitializer::ApplyModifier(AngioElement * angio_element, FE
 
 BEGIN_FECORE_CLASS(EFDMatPointFiberInitializer, InitialModifier)
 ADD_PARAMETER(m_SPD, "spd");
-//ADD_PARAMETER(initial_axes_a, "initial_axes_a");
-//ADD_PARAMETER(initial_axes_b, "initial_axes_b");
-//ADD_PARAMETER(initial_axes_c, "initial_axes_c");
-//ADD_PARAMETER(initial_spd, "initial_spd");
 END_FECORE_CLASS();
 
 void DensityInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)

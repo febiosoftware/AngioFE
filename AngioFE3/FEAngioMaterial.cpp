@@ -37,7 +37,8 @@ FEAngioMaterial::FEAngioMaterial(FEModel* pfem) : FEElasticMaterial(pfem)
 	AddClassProperty(this, &nodedata_interpolation_manager, "nodedata_interpolation_manager", FEProperty::Optional);
 	AddClassProperty(this, &branch_policy, "branch_policy", FEProperty::Optional);
 	AddClassProperty(this, &proto_branch_policy, "proto_branch_policy", FEProperty::Optional);
-		AddClassProperty(this, &tip_species_manager, "tip_species_manager", FEProperty::Optional);
+	AddClassProperty(this, &tip_species_manager, "tip_species_manager", FEProperty::Optional);
+	AddClassProperty(this, &proto_pdd_manager, "proto_pdd_manager");
 }
 
 FEAngioMaterial::~FEAngioMaterial()
@@ -606,7 +607,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 	assert(active_tip);
 	// get the mesh, set the min segment length, and set the next buffer (change to write buffer from read).
 	auto mesh = m_pangio->GetMesh();
-	const double min_segm_len = 0.1;
+	const double min_segm_len = 1;
 	int next_buffer_index = (buffer_index + 1) % 2;
 	// calculate the change in time
 	double dt = end_time - active_tip->time;
@@ -652,9 +653,13 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 
 	// get the growth direction
 	// determine the alpha (mix value)
+	double alpha = cm_manager->ApplyModifiers(dt, active_tip->angio_element, active_tip->GetLocalPosition(), mesh);
 	vec3d psc_dir = psc_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip->angio_element, active_tip->GetLocalPosition(), active_tip->GetDirection(mesh), mesh);
+	vec3d proto_pdd_dir = proto_pdd_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip->angio_element, active_tip->GetLocalPosition(), active_tip->initial_fragment_id, buffer_index, continue_growth, psc_dir, alpha, mesh, m_pangio);
+	//alpha = 0.4;
+	
 	// assign the global direction from the persistence component
-	vec3d global_dir = psc_dir;
+	vec3d global_dir = mix_method->ApplyMix(psc_dir, proto_pdd_dir, alpha);
 	global_dir.unit();
 
 	// get the new position in global coordinates

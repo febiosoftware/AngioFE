@@ -1312,7 +1312,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		// start the growth timer
 		grow_timer.start();
 		// grow segments
-		ProtoGrowSegments(min_scale_factor, bounds_tolerance, min_angle, growth_substeps);
+		ProtoGrowSegments(min_scale_factor, bounds_tolerance, min_angle, 10.0);
 		grow_timer.stop();
 
 		CalculateSegmentLengths(mesh);

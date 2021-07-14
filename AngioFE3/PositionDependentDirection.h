@@ -202,3 +202,108 @@ private:
 	double fuse_angle = 0.25;
 	bool alpha_override = true;//! Replace the alpha to have this take over
 };
+
+
+
+//! Contain the collection of Position Dependent Direction modifiers
+class ProtoPDDManager : public FEMaterial
+{
+public:
+	//! constructor
+	explicit ProtoPDDManager(FEModel* pfem) : FEMaterial(pfem) { AddClassProperty(this, &proto_pdd_modifiers, "proto_pdd_modifier", FEProperty::Required); }
+	virtual ~ProtoPDDManager() {}
+	//! return the direction given by all direction modifiers
+	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int buffer, bool& continue_growth, vec3d& tip_dir, double& alpha, FEMesh* mesh, FEAngio* pangio);
+	//! may be used to get values from loadcurves that modify the behavior as a whole
+	void Update(FEMesh * mesh, FEAngio* angio);
+private:
+	std::vector<PositionDependentDirection*>	proto_pdd_modifiers;	//!< pointers to elastic materials
+};
+
+//! Implements a position dependent modifier that modifies growth direction based on fiber direction
+class ProtoFiberPDD : public PositionDependentDirection
+{
+public:
+	//! constructor
+	explicit ProtoFiberPDD(FEModel* pfem) : PositionDependentDirection(pfem) {
+		AddClassProperty(this, &interpolation_prop, "interpolation_prop");
+	}
+	virtual ~ProtoFiberPDD() {}
+	//! return the direction given by the fibers at this location
+	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
+	//! may be used to get values from loadcurves that modify the behavior as a whole
+	void Update(FEMesh * mesh, FEAngio* angio) override;
+private:
+	FEVariableInterpolation* interpolation_prop = nullptr;
+};
+
+//! Implements a position dependent modifier that modifies growth direction based on fiber direction
+class ProtoFractionalAnisotropyPDD : public PositionDependentDirection
+{
+public:
+	//! constructor
+	explicit ProtoFractionalAnisotropyPDD(FEModel* pfem) : PositionDependentDirection(pfem) {
+		AddClassProperty(this, &interpolation_prop, "interpolation_prop");
+	}
+	virtual ~ProtoFractionalAnisotropyPDD() {}
+	//! return the direction given by the fibers at this location
+	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
+	//! may be used to get values from loadcurves that modify the behavior as a whole
+	void Update(FEMesh * mesh, FEAngio* angio) override;
+	DECLARE_FECORE_CLASS();
+private:
+	FEVariableInterpolation* interpolation_prop = nullptr;
+	bool alpha_override = true;// replace alpha with the override
+	double efd_alpha = 0.4;
+};
+
+//! The replacement for the bouncy boundary condition
+class ProtoRepulsePDD : public PositionDependentDirection
+{
+public:
+	//! constructor
+	explicit ProtoRepulsePDD(FEModel* pfem) : PositionDependentDirection(pfem) {
+		AddClassProperty(this, &interpolation_prop, "interpolation_prop");
+	}
+	virtual ~ProtoRepulsePDD() {}
+	//! return the direction given by the repulse component
+	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
+	//! may be used to get values from loadcurves that modify the behavior as a whole
+	void Update(FEMesh * mesh, FEAngio* angio) override {}
+	//! parameter list
+	DECLARE_FECORE_CLASS();
+private:
+	double threshold = 1;//vessels will deflect if above threshold
+	bool alpha_override = true;//replace the alpha to have this take over
+	bool grad_threshold = false;//use a gradient to detect areas where repulsion should occur.
+	FEVariableInterpolation* interpolation_prop = nullptr;
+};
+
+//! Implements anastamosis as a position dependent direction growth modifier
+class ProtoAnastamosisPDD : public PositionDependentDirection
+{
+public:
+	//! constructor
+	explicit ProtoAnastamosisPDD(FEModel* pfem) : PositionDependentDirection(pfem) { }
+	virtual ~ProtoAnastamosisPDD() {}
+	//! return the direction given by the anastamosis modifier
+	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
+	//! may be used to get values from loadcurves that modify the behavior as a whole
+	void Update(FEMesh * mesh, FEAngio* angio) override {}
+	//! returns the tip that the position should fuse with
+	Tip * FuseWith(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh, vec3d tip_pos, vec3d tip_dir, int exclude, double radius);
+	//! return whether or not a tip can be fused with
+	bool ValidTip(Tip* tip, vec3d tip_dir, FEMesh * mesh);
+	//! returns the best tip within an element
+	Tip * BestInElement(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh, vec3d tip_origin, vec3d tip_dir, int exclude, double& best_distance);
+	//! return the distance squared between a tip and a local position
+	double distance2(FESolidElement * se, vec3d local_pos, Tip * tip, FEMesh* mesh);
+protected:
+	//! parameter list
+	DECLARE_FECORE_CLASS();
+private:
+	double anastamosis_radius = 100;//! Radius at which the tip starts to grow towards another tip
+	double fuse_radius = 30;
+	double fuse_angle = 0.25;
+	bool alpha_override = true;//! Replace the alpha to have this take over
+};
