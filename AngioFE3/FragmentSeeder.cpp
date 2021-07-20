@@ -2,6 +2,8 @@
 #include "FragmentSeeder.h"
 #include "FEAngioMaterial.h"
 #include "angio3d.h"
+#include "FEProbabilityDistribution.h"
+#include <iostream>
 
 // Variable used to ensure that all initial Tips that are part of the same fragment
 // share an ID so that they do not anastamose with each other.
@@ -9,7 +11,7 @@ int FragmentSeeder::initial_fragment_id_counter = 0;
 
 FragmentSeeder::FragmentSeeder(FEModel * model) : FEMaterial(model)
 {
-
+	AddClassProperty(this, &initial_segment_length, "initial_segment_length");
 }
 
 vec3d FragmentSeeder::GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(FEMesh* mesh, AngioElement* angio_element, angiofe_random_engine random_engine)
@@ -74,7 +76,6 @@ vec3d FragmentSeeder::GetRandomVectorPositionWithinNaturalCoordinateBoundsByElem
 
 BEGIN_FECORE_CLASS(FragmentSeeder, FEMaterial)
 	ADD_PARAMETER(number_fragments, "number_fragments");
-	ADD_PARAMETER(initial_vessel_length, "initial_vessel_length");
 END_FECORE_CLASS();
 
 ByElementFragmentSeeder::ByElementFragmentSeeder(FEModel * model) : FragmentSeeder(model)
@@ -103,7 +104,6 @@ bool ByElementFragmentSeeder::SeedFragments(std::vector<AngioElement *> &angio_e
 		r0->use_direction = true;
 		r0->direction = angio_mat->m_pangio->uniformRandomDirection(r0->angio_element->_rengine);
 		r0->face = r0->angio_element;
-
 		// Finally add this to the AngioElement.
 		r0->angio_element->next_tips.at(r0->angio_element).push_back(r0);
 
@@ -119,7 +119,7 @@ bool ByElementFragmentSeeder::SeedFragments(std::vector<AngioElement *> &angio_e
 
 ByElementFragmentSeederBiDirectional::ByElementFragmentSeederBiDirectional(FEModel * model) : FragmentSeeder(model)
 {
-
+	//AddClassProperty(this, &initial_segment_length, "initial_segment_length");
 }
 
 bool ByElementFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElement *> &angio_elements, FEMesh* mesh, FEAngioMaterial* angio_mat, int buffer_index)
@@ -143,11 +143,13 @@ bool ByElementFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElemen
 		r0->use_direction = true;
 		r0->direction = angio_mat->m_pangio->uniformRandomDirection(r0->angio_element->_rengine);
 		r0->face = r0->angio_element;
+		r0->SetProtoGrowthLength(initial_segment_length);
+		//r0->proto_growth_velocity = initial_segment_length->NextValue(r0->angio_element->_rengine);
 		FEModel* fem = GetFEModel();
 		r0->InitSBM(mesh);
 		// Finally add this to the AngioElement.
 		r0->angio_element->next_tips.at(r0->angio_element).push_back(r0);
-
+		//std::cout << r0->proto_growth_velocity << std::endl;
 		// Now add an oppositely directed tip.
 		Tip * r1 = new Tip();
 		r1->angio_element = r0->angio_element;
@@ -155,7 +157,9 @@ bool ByElementFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElemen
 		r1->time = r0->time;
 		r1->growth_velocity = r0->growth_velocity;
 		r1->SetLocalPosition(r0->GetLocalPosition(), mesh);
-		
+		r1->SetProtoGrowthLength(r0);
+		//r1->proto_growth_length = r0->proto_growth_length;
+		//std::cout << r1->proto_growth_length << endl;
 		//deparent the new tip
 		r1->initial_fragment_id = initial_fragment_id_counter;
 		r1->use_direction = true;
@@ -163,17 +167,6 @@ bool ByElementFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElemen
 		r1->InitSBM(mesh);
 		r1->angio_element->next_tips.at(r1->angio_element).push_back(r1);
 		initial_fragment_id_counter++;
-
-		/*Tip * r1 = new Tip(r0, mesh);
-		r0->initial_fragment_id = initial_fragment_id_counter++;
-		r1->use_direction = true;
-		r1->direction = -r0->direction;
-		r1->angio_element->next_tips.at(r1->angio_element).push_back(r1);
-		r1->InitSBM(mesh);
-		*/
-		// Just shove it in growth may not be complete
-		//r0->angio_element->_angio_mat->GrowthInElement(0, r0, 1, -1, initial_vessel_length, true);
-
 	}
 	return true;
 }

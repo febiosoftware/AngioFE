@@ -4,6 +4,7 @@
 #include <FECore/FEMaterial.h>
 #include <FECore/FESolidDomain.h>
 #include "AngioElement.h"
+#include "FEProbabilityDistribution.h"
 
 //! Base class for all fragment seeders
 class FragmentSeeder : public FEMaterial
@@ -14,6 +15,9 @@ public:
 	//! constructor for class
 	explicit FragmentSeeder(FEModel * model);
 	virtual ~FragmentSeeder() {}
+	bool Init() override {
+		return initial_segment_length->Init();
+	}
 	//! Get a random set of valid natural coordinates
 	vec3d GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(FEMesh* mesh, AngioElement* angio_element, angiofe_random_engine random_engine);
 protected:
@@ -22,8 +26,9 @@ protected:
 	//! used to initialize fragment ids
 	static int initial_fragment_id_counter;
 	//! initial vessel length
-	double initial_vessel_length = 20.0;
 	//! parameter list
+	//! Probability Distribution
+	FEProbabilityDistribution* initial_segment_length = nullptr;
 	DECLARE_FECORE_CLASS();
 };
 

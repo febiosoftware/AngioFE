@@ -17,7 +17,7 @@
 
 //-----------------------------------------------------------------------------
 BEGIN_FECORE_CLASS(FEAngioMaterial, FEElasticMaterial)
-ADD_PARAMETER(initial_segment_velocity, "initial_segment_velocity");
+//ADD_PARAMETER(initial_segment_velocity, "initial_segment_velocity");
 ADD_PARAMETER(vessel_radius, "vessel_radius");
 END_FECORE_CLASS();
 
@@ -204,10 +204,10 @@ double FEAngioMaterial::GetSegmentVelocity(AngioElement * angio_element, vec3d l
 	return velocity_manager->ApplyModifiers(vel_init, local_pos, angio_element, mesh);
 }
 
-double FEAngioMaterial::GetInitialVelocity() const
-{
-	return initial_segment_velocity;
-}
+//double FEAngioMaterial::GetInitialVelocity(AngioElement* angio_elem) const
+//{
+//	return 0;
+//}
 
 double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem, FEMesh* mesh)
 {
@@ -612,7 +612,9 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 	// calculate the change in time
 	double dt = end_time - active_tip->time;
 	// determine the length the segment grows.
-	double grow_vel = angio_element->_angio_mat->GetInitialVelocity();
+	//double grow_vel = 250.0;
+	double grow_vel = active_tip->GetProtoGrowthLength();
+	//double grow_vel = angio_element->_angio_mat->GetInitialVelocity(angio_element);
 	if (grow_vel < 0)
 	{
 		return;
@@ -708,6 +710,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		//growth velocity must be zero to work with grown segments stress policy. Otherwise it would be grow_vel. TODO: Maybe make it use different methods based on the policy?
 		//next->growth_velocity = grow_vel;
 		next->growth_velocity = 0;
+		next->SetProtoGrowthLength(active_tip);
 		// copy the parent fragment id from the original tip.
 		next->initial_fragment_id = active_tip->initial_fragment_id;
 		// ensure that if the element is a tet that it does not exceed the element boundaries. This should already have been done in ScaleFactor calculation.
@@ -763,6 +766,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		next->initial_fragment_id = active_tip->initial_fragment_id;
 		//growth velocity must be zero to work with grown segments stress policy
 		next->growth_velocity = 0;
+		next->SetProtoGrowthLength(active_tip);
 
 		seg->back = active_tip;
 		seg->front = next;

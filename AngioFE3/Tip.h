@@ -2,6 +2,7 @@
 #include <FECore/vec3d.h>
 #include "AngioElement.h"
 #include <FEBioMix/FESBMPointSource.h>
+#include "FEProbabilityDistribution.h"
 
 class Segment;
 class FEAngio;
@@ -23,7 +24,7 @@ public:
 	//! Time at which the tip occurs
 	double time = 0.0;
 	//! Velocity at which the tip grew
-	double growth_velocity = 0.0;
+	double growth_velocity;
 	//! The element where growth originated from
 	AngioElement* face = nullptr;
 	//! Segment that contains this this tip. May be nullptr for no parent segment 
@@ -50,8 +51,12 @@ public:
 	std::unordered_map<int, FESBMPointSource*> Species;
 	void InitSBM(FEMesh* mesh);
 	void UpdateSBM(FEMesh * mesh);
-
+	void SetProtoGrowthLength(FEProbabilityDistribution* dist);
+	void SetProtoGrowthLength(Tip* tip);
+	double GetProtoGrowthLength();
 private:
 	vec3d local_pos;
+	//! Proto growth velocity
+	double proto_growth_length;
 };
 

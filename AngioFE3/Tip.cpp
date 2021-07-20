@@ -4,6 +4,7 @@
 #include <algorithm>
 #include "FEAngio.h"
 #include "TipSpecies.h"
+#include "FEProbabilityDistribution.h"
 
 vec3d Tip::GetDirection(FEMesh* mesh) const
 {
@@ -94,6 +95,7 @@ Tip::Tip(Tip * other, FEMesh * mesh)
 	face = other->face;
 	time = other->time;
 	growth_velocity = other->growth_velocity;
+	SetProtoGrowthLength(other);
 	local_pos = other->local_pos;
 	// deparent the new tip
 	initial_fragment_id = other->initial_fragment_id;
@@ -170,4 +172,18 @@ void Tip::UpdateSBM(FEMesh* mesh)
 		Species[it]->SetPosition(GetPosition(mesh));
 		Species[it]->Update();
 	}
+}
+
+void Tip::SetProtoGrowthLength(FEProbabilityDistribution* dist) 
+{
+	proto_growth_length = 0.5*dist->NextValue(angio_element->_rengine);
+}
+
+void Tip::SetProtoGrowthLength(Tip* tip)
+{
+	proto_growth_length = tip->GetProtoGrowthLength();
+}
+
+double Tip::GetProtoGrowthLength() {
+	return proto_growth_length;
 }

@@ -192,21 +192,23 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 		// Is it valid for this to run more than once? only 
 		if (time_info.currentTime >= next_time)
 		{
-			#pragma omp parallel for shared(min_dt)
-			// for each angio element
-			for (int i = 0; i < angio_element_count; ++i)
-			{
-				// get min dt for all element
-				double temp_dt = angio_elements[i]->_angio_mat->GetMin_dt(angio_elements[i], mesh);
-				// only one thread can perform this at a time
-				#pragma omp critical
-				{
-					// set min_dt to the lower of min_dt and temp_dt
-					min_dt = std::min(min_dt, temp_dt);
-				}
-			}
+			//#pragma omp parallel for shared(min_dt)
+			//// for each angio element
+			//for (int i = 0; i < angio_element_count; ++i)
+			//{
+			//	// get min dt for all element
+			//	double temp_dt = angio_elements[i]->_angio_mat->GetMin_dt(angio_elements[i], mesh);
+			//	// only one thread can perform this at a time
+			//	#pragma omp critical
+			//	{
+			//		// set min_dt to the lower of min_dt and temp_dt
+			//		min_dt = std::min(min_dt, temp_dt);
+			//	}
+			//}
 
-			//min_dt = 0;
+			////min_dt = 0;
+
+			min_dt = 1.0 / growth_substeps;
 
 			// update current time
 			double ctime = next_time + min_dt;
@@ -254,7 +256,7 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 		if (time_info.currentTime >= next_time)
 		{
 			next_time += min_dt;
-			printf("\nproto angio dt chosen is: %lg next angio time\n", min_dt);
+			//printf("\nproto angio dt chosen is: %lg next angio time\n", min_dt);
 			#pragma omp parallel for schedule(dynamic, 16)
 			for (int j = 0; j <angio_element_count; j++)
 			{
@@ -1312,7 +1314,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		// start the growth timer
 		grow_timer.start();
 		// grow segments
-		ProtoGrowSegments(min_scale_factor, bounds_tolerance, min_angle, 10.0);
+		ProtoGrowSegments(min_scale_factor, bounds_tolerance, min_angle, 20.0);
 		grow_timer.stop();
 
 		CalculateSegmentLengths(mesh);

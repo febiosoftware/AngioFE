@@ -115,7 +115,7 @@ public:
 	double GetSegmentVelocity(AngioElement * angio_element, vec3d local_pos, FEMesh* mesh);
 
 	//! returns the inital segment velocity
-	double GetInitialVelocity() const;
+	//double GetInitialVelocity(AngioElement * angio_element) const;
 
 	//! Calculate spdtial elasticity tangent
 	tens4ds Tangent(FEMaterialPoint& mp) override;
@@ -144,8 +144,8 @@ public:
 	TipSpeciesManager* tip_species_manager = nullptr;
 private:
 	DECLARE_FECORE_CLASS();
+	//double initial_segment_velocity = 7.5;
 
-	double initial_segment_velocity = 7.5;
 	double dt_safety_multiplier = 1.0;
 
 	FESolidMaterial* matrix_material = nullptr;
