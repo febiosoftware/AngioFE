@@ -255,6 +255,7 @@ private:
 	FEVariableInterpolation* interpolation_prop = nullptr;
 	bool alpha_override = true;// replace alpha with the override
 	double efd_alpha = 0.4;
+	mat3ds proto_efd = mat3ds(1, 1, 1, 0, 0, 0);
 };
 
 //! The replacement for the bouncy boundary condition

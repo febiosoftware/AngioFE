@@ -820,37 +820,12 @@ vec3d ProtoFractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* ang
 {
 	// vector containing the SPD for each gauss point in the element
 	std::vector<mat3ds> SPDs_gausspts;
-
-	// get each gauss point's SPD
-	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
-	{
-		// get the angio point
-		FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
-		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
-		//std::cout << angio_mp->angioSPD.xx() << ", " << angio_mp->angioSPD.yy() << ", " << angio_mp->angioSPD.zz() << ", " << angio_mp->angioSPD.xy() << ", " << angio_mp->angioSPD.yz() << ", " << angio_mp->angioSPD.xz() << endl;
-		// Get the SPD
-		//angio_mp->nhit = 1;
-		angio_mp->UpdateSPD();
-		//std::cout << angio_mp->angioSPD.xx() << ", " << angio_mp->angioSPD.yy() << ", " << angio_mp->angioSPD.zz() << ", " << angio_mp->angioSPD.xy() << ", " << angio_mp->angioSPD.yz() << ", " << angio_mp->angioSPD.xz() << endl;
-		SPDs_gausspts.push_back(angio_mp->angioSPD);
-	}
-	// array containing the SPD for each node in the element
-	mat3ds SPDs_nodes[FESolidElement::MAX_NODES];
-	// array for the shape function values
-	double H[FESolidElement::MAX_NODES];
-	// project the spds from integration points to the nodes
-	angio_element->_elem->project_to_nodes(&SPDs_gausspts[0], SPDs_nodes);
-	// determine shape function value for the local position
-	angio_element->_elem->shape_fnc(H, local_pos.x, local_pos.y, local_pos.z);
-	//angio_element->_elem->shape_fnc(H, 0, 0, 0);
-	// Get the interpolated SPD from the shape function-weighted Average Structure Tensor
-	mat3ds SPD_int = weightedAverageStructureTensor(SPDs_nodes, H, angio_element->_elem->Nodes());
 	// get the vectors of the principal directions and sort in descending order
 	std::vector<pair<double, int>> v;
 	mat3d ax;
-	ax.setCol(0, vec3d(SPD_int.xx(), SPD_int.xy(), SPD_int.xz()));
-	ax.setCol(1, vec3d(SPD_int.xy(), SPD_int.yy(), SPD_int.yz()));
-	ax.setCol(2, vec3d(SPD_int.xz(), SPD_int.yz(), SPD_int.zz()));
+	ax.setCol(0, vec3d(proto_efd.xx(), proto_efd.xy(), proto_efd.xz()));
+	ax.setCol(1, vec3d(proto_efd.xy(), proto_efd.yy(), proto_efd.yz()));
+	ax.setCol(2, vec3d(proto_efd.xz(), proto_efd.yz(), proto_efd.zz()));
 	v.push_back(pair<double, int>(ax.col(0).norm(), 0));
 	v.push_back(pair<double, int>(ax.col(1).norm(), 1));
 	v.push_back(pair<double, int>(ax.col(2).norm(), 2));
@@ -894,4 +869,5 @@ vec3d ProtoFractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* ang
 BEGIN_FECORE_CLASS(ProtoFractionalAnisotropyPDD, PositionDependentDirection)
 ADD_PARAMETER(alpha_override, "alpha_override");
 ADD_PARAMETER(efd_alpha, "efd_alpha");
+ADD_PARAMETER(proto_efd, "proto_efd");
 END_FECORE_CLASS();
