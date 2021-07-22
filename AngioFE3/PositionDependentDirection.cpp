@@ -811,6 +811,11 @@ vec3d ProtoFiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec
 	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_direction, proto_fiber_alpha);
 }
 
+BEGIN_FECORE_CLASS(ProtoFiberPDD, PositionDependentDirection)
+ADD_PARAMETER(proto_fiber_alpha, "proto_fiber_alpha");
+END_FECORE_CLASS();
+
+
 void ProtoFractionalAnisotropyPDD::Update(FEMesh * mesh, FEAngio* angio)
 {
 

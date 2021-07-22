@@ -233,9 +233,10 @@ public:
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio) override;
+	DECLARE_FECORE_CLASS();
 private:
-	double proto_fiber_alpha = 0.6;
 	FEVariableInterpolation* interpolation_prop = nullptr;
+	double proto_fiber_alpha = 0.6;
 };
 
 //! Implements a position dependent modifier that modifies growth direction based on fiber direction
