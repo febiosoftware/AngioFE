@@ -808,7 +808,7 @@ vec3d ProtoFiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec
 
 	quatd rv = interpolation_prop->Interpolate(angio_element->_elem, gauss_data, local_pos, mesh);
 	vec3d fiber_direction = rv.GetVector();
-	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_direction, contribution);
+	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_direction, proto_fiber_alpha);
 }
 
 void ProtoFractionalAnisotropyPDD::Update(FEMesh * mesh, FEAngio* angio)

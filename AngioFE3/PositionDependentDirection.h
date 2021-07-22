@@ -234,6 +234,7 @@ public:
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio) override;
 private:
+	double proto_fiber_alpha = 0.6;
 	FEVariableInterpolation* interpolation_prop = nullptr;
 };
 
