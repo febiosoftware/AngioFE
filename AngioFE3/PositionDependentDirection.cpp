@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <FECore/mathalg.h>
 #include <FECore/FEDomainMap.h>
+#include "FEProbabilityDistribution.h"
 
 BEGIN_FECORE_CLASS(PositionDependentDirection, FEMaterial)
 ADD_PARAMETER(contribution, "contribution");
@@ -431,9 +432,15 @@ vec3d FractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* angio_el
 	double r0 = (ax.col(i).norm());
 	double r1 = (ax.col(j).norm());
 	double r2 = (ax.col(k).norm());
+	FEEllipticalDistribution E0(this->GetFEModel());
+	FEEllipticalDistribution E1(this->GetFEModel());
+	E0.a = r0; E0.b = r1; E0.Init();
+	E1.a = r0; E1.b = r2; E1.Init();
+	double theta_12 = E0.NextValue(angio_element->_rengine);
+	double theta_13 = E1.NextValue(angio_element->_rengine);
 
-	double theta_12 = angio_element->GetEllipseAngle(r0, r1,-PI/2,PI,180);
-	double theta_13 = angio_element->GetEllipseAngle(r0, r2,-PI/2,PI,180);
+	/*double theta_12 = angio_element->GetEllipseAngle(r0, r1,-PI/2,PI,180);
+	double theta_13 = angio_element->GetEllipseAngle(r0, r2,-PI/2,PI,180);*/
 
 	// rotate the primary direction by theta_12 about the normal between them
 	vec3d axis = mix3d_t(axis_0, axis_1, theta_12); axis.unit();
@@ -513,8 +520,14 @@ vec3d FractionalAnisotropyMatPointPDD::ApplyModifiers(vec3d prev, AngioElement* 
 	double r0 = (ax.col(i).norm());
 	double r1 = (ax.col(j).norm());
 	double r2 = (ax.col(k).norm());
-	double theta_12 = angio_element->GetEllipseAngle(r0, r1, -PI / 2, PI, 180);
-	double theta_13 = angio_element->GetEllipseAngle(r0, r2, -PI / 2, PI, 180);
+	FEEllipticalDistribution E0(this->GetFEModel());
+	FEEllipticalDistribution E1(this->GetFEModel());
+	E0.a = r0; E0.b = r1; E0.Init();
+	E1.a = r0; E1.b = r2; E1.Init();
+	double theta_12 = E0.NextValue(angio_element->_rengine);
+	double theta_13 = E1.NextValue(angio_element->_rengine);
+	/*double theta_12 = angio_element->GetEllipseAngle(r0, r1, -PI / 2, PI, 180);
+	double theta_13 = angio_element->GetEllipseAngle(r0, r2, -PI / 2, PI, 180);*/
 
 	// rotate the primary direction by theta_12 about the normal between them
 	vec3d axis = mix3d_t(axis_0, axis_1, theta_12); axis.unit();
@@ -847,8 +860,14 @@ vec3d ProtoFractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* ang
 	double r0 = (ax.col(i).norm());
 	double r1 = (ax.col(j).norm());
 	double r2 = (ax.col(k).norm());
-	double theta_12 = angio_element->GetEllipseAngle(r0, r1, -PI / 2, PI, 180);
-	double theta_13 = angio_element->GetEllipseAngle(r0, r2, -PI / 2, PI, 180);
+	FEEllipticalDistribution E0(this->GetFEModel());
+	FEEllipticalDistribution E1(this->GetFEModel());
+	E0.a = r0; E0.b = r1; E0.Init();
+	E1.a = r0; E1.b = r2; E1.Init();
+	double theta_12 = E0.NextValue(angio_element->_rengine);
+	double theta_13 = E1.NextValue(angio_element->_rengine);
+	/*double theta_12 = angio_element->GetEllipseAngle(r0, r1, -PI / 2, PI, 180);
+	double theta_13 = angio_element->GetEllipseAngle(r0, r2, -PI / 2, PI, 180);*/
 
 	// rotate the primary direction by theta_12 about the normal between them
 	vec3d axis = mix3d_t(axis_0, axis_1, theta_12); axis.unit();

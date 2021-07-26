@@ -1,6 +1,11 @@
 #pragma once
 #include "StdAfx.h"
 #include <FECore/FEMaterial.h>
+#include <numeric>
+
+#include "FECore/FEModel.h"
+#include "FECore/FELoadCurve.h"
+#include <FECore/FECoreBase.h>
 
 #ifndef PI
 #define PI 3.14159265358979
@@ -261,6 +266,55 @@ public:
 	void TimeStepUpdate(double current_time) override;
 private:
 	double value = 1.0;
+
+	DECLARE_FECORE_CLASS();
+};
+
+//! get random numbers from an elliptical distribution
+class FEEllipticalDistribution : public FEProbabilityDistribution
+{
+public:
+	//! constructor
+	explicit FEEllipticalDistribution(FEModel* pfem) : FEProbabilityDistribution(pfem) {}
+
+	//! generates the next value in the given sequence which fits a given distribution
+	//! this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
+	//! nan will be returned if the distribution fails to find a suitable number
+	double NextValue(angiofe_random_engine & re) override;
+
+	//! performs initialization
+	bool Init() override;
+
+	//! updates the distribution to a given time
+	void TimeStepUpdate(double current_time) override;
+
+	double a = 1.0;
+	double b = 1.0;
+
+private:
+
+
+	// construct uniform distribution
+	std::uniform_real_distribution<double> ud = std::uniform_real_distribution<double>(0.0, 1.0);
+
+	//std::gamma_distribution<double> gd;
+
+	double prev_alpha = a;
+	double prev_beta = b;
+	double p_i = -PI / 2;
+	double p_f = PI / 2;
+	const int n = 180;
+
+	// theta
+	std::vector<double> t;
+	// radius
+	std::vector<double> r_t;
+	// radius cumulative sum
+	std::vector<double> rc_t;
+	// area vector
+	std::vector<double> l_t;
+	// cumulative area vector
+	std::vector<double> lc_t;
 
 	DECLARE_FECORE_CLASS();
 };

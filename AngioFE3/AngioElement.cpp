@@ -71,62 +71,62 @@ double AngioElement::GetLengthAtTime(FEMesh* mesh, double time) const
 //	return t.at(fi);
 //}
 
-double AngioElement::GetEllipseAngle(const double a, const double b, const double dist_min, const double dist_max, const int n)
-{
-	// initialize vals
-	double p_i = dist_min;
-	double p_f = dist_max;
-	double div = (PI / 180)*((n + 1) / n);
+//double AngioElement::GetEllipseAngle(const double a, const double b, const double dist_min, const double dist_max, const int n)
+//{
+//	// initialize vals
+//	double p_i = dist_min;
+//	double p_f = dist_max;
+//	double div = (PI / 180)*((n + 1) / n);
+//
+//	// theta
+//	std::vector<double> t(n);
+//	// radius
+//	std::vector<double> r_t(n);
+//	// radius cumulative sum
+//	std::vector<double> rc_t(n);
+//	// area vector
+//	std::vector<double> l_t(n);
+//	// cumulative area vector
+//	std::vector<double> lc_t(n);
+//
+//	t.at(0) = dist_min;
+//	l_t.at(0) = 0;
+//	r_t.at(0) = (a*b) / sqrt(pow(b*cos(t.at(0)), 2) + pow(a*sin(t.at(0)), 2));
+//	for (int i = 1; i < n; i++)
+//	{
+//		// assign the angle
+//		t.at(i) = (p_i + i*div);
+//		// get the radius
+//		r_t.at(i) = (a*b) / sqrt(pow(b*cos(t.at(i)), 2) + pow(a*sin(t.at(i)), 2));
+//		// get the length
+//		l_t.at(i) = sqrt(pow(r_t.at(i),2.0) + pow(r_t.at(i - 1.0), 2.0) - 2.0 * r_t.at(i)*r_t.at(i - 1.0)*cos(div));
+//	}
+//	// get the cumulative sum
+//	std::partial_sum(l_t.begin(), l_t.end(), lc_t.begin());
+//	// divide cumulative sum by sum
+//	std::transform(lc_t.begin(), lc_t.end(), lc_t.begin(),
+//		std::bind(std::divides<double>(), std::placeholders::_1, lc_t.at(n - 1)));
+//	// construct uniform distribution
+//	std::uniform_real_distribution<double> ud = std::uniform_real_distribution<double>(0.0, 1.0);
+//	// Random engine used to sample from distributions based on the seed.
+//	angiofe_random_engine & random_engine = this->_angio_mat->m_pangio->rengine;
+//	// get a random number
+//	double rn = ud(random_engine);
+//	// find the rc_t value closest to the random number and get the position
+//	int fi = std::distance(lc_t.begin(), std::lower_bound(lc_t.begin(), lc_t.end(), rn));
+//	return t.at(fi);
+//}
 
-	// theta
-	std::vector<double> t(n);
-	// radius
-	std::vector<double> r_t(n);
-	// radius cumulative sum
-	std::vector<double> rc_t(n);
-	// area vector
-	std::vector<double> l_t(n);
-	// cumulative area vector
-	std::vector<double> lc_t(n);
-
-	t.at(0) = dist_min;
-	l_t.at(0) = 0;
-	r_t.at(0) = (a*b) / sqrt(pow(b*cos(t.at(0)), 2) + pow(a*sin(t.at(0)), 2));
-	for (int i = 1; i < n; i++)
-	{
-		// assign the angle
-		t.at(i) = (p_i + i*div);
-		// get the radius
-		r_t.at(i) = (a*b) / sqrt(pow(b*cos(t.at(i)), 2) + pow(a*sin(t.at(i)), 2));
-		// get the length
-		l_t.at(i) = sqrt(pow(r_t.at(i),2.0) + pow(r_t.at(i - 1.0), 2.0) - 2.0 * r_t.at(i)*r_t.at(i - 1.0)*cos(div));
-	}
-	// get the cumulative sum
-	std::partial_sum(l_t.begin(), l_t.end(), lc_t.begin());
-	// divide cumulative sum by sum
-	std::transform(lc_t.begin(), lc_t.end(), lc_t.begin(),
-		std::bind(std::divides<double>(), std::placeholders::_1, lc_t.at(n - 1)));
-	// construct uniform distribution
-	std::uniform_real_distribution<double> ud = std::uniform_real_distribution<double>(0.0, 1.0);
-	// Random engine used to sample from distributions based on the seed.
-	angiofe_random_engine & random_engine = this->_angio_mat->m_pangio->rengine;
-	// get a random number
-	double rn = ud(random_engine);
-	// find the rc_t value closest to the random number and get the position
-	int fi = std::distance(lc_t.begin(), std::lower_bound(lc_t.begin(), lc_t.end(), rn));
-	return t.at(fi);
-}
-
-double AngioElement::GetEllipseAngleAteshian(const double a, const double b, const double dist_min, const double dist_max, const int n)
-{
-	// initialize vals
-	double ratio = b / a;
-	double p_i = dist_min;
-	double p_f = dist_max;
-	double t = ratio*(dist_max - dist_min) + p_i;
-	//std::cout << "ratio " << ratio << ", t " << t << endl;
-	return t;
-}
+//double AngioElement::GetEllipseAngleAteshian(const double a, const double b, const double dist_min, const double dist_max, const int n)
+//{
+//	// initialize vals
+//	double ratio = b / a;
+//	double p_i = dist_min;
+//	double p_f = dist_max;
+//	double t = ratio*(dist_max - dist_min) + p_i;
+//	//std::cout << "ratio " << ratio << ", t " << t << endl;
+//	return t;
+//}
 
 /*double AngioElement::GetEllipseAngle2(const double a, const double b)
 {

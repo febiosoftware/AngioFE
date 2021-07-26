@@ -253,7 +253,7 @@ ADD_PARAMETER(b, "b");
 END_FECORE_CLASS();
 
 
-//implemenations of FENormalDistribution
+//implemenations of FEGammaDistribution
 double FEGammaDistribution::NextValue(angiofe_random_engine & re)
 {
 	for (int i = 0; i < max_retries; i++)
@@ -307,4 +307,68 @@ bool FEFixedDistribution::Init()
 
 BEGIN_FECORE_CLASS(FEFixedDistribution, FEProbabilityDistribution)
 ADD_PARAMETER(value, "value");
+END_FECORE_CLASS();
+
+//implemenations of FEGammaDistribution
+double FEEllipticalDistribution::NextValue(angiofe_random_engine & re)
+{
+	// get a random number
+	double rn = ud(re);
+	// find the rc_t value closest to the random number and get the position
+	int fi = std::distance(lc_t.begin(), std::lower_bound(lc_t.begin(), lc_t.end(), rn));
+	double val = t.at(fi);
+	return val;
+}
+
+bool FEEllipticalDistribution::Init()
+{
+	double div = (PI / 180)*((n + 1) / n);
+	// theta
+	t.resize(n);
+	// radius
+	r_t.resize(n);
+	// radius cumulative sum
+	rc_t.resize(n);
+	// area vector
+	l_t.resize(n);
+	// cumulative area vector
+	lc_t.resize(n);
+
+	t.at(0) = p_i;
+	l_t.at(0) = 0;
+	r_t.at(0) = (a*b) / sqrt(pow(b*cos(t.at(0)), 2) + pow(a*sin(t.at(0)), 2));
+	for (int i = 1; i < n; i++)
+	{
+		// assign the angle
+		t.at(i) = (p_i + i*div);
+		// get the radius
+		r_t.at(i) = (a*b) / sqrt(pow(b*cos(t.at(i)), 2) + pow(a*sin(t.at(i)), 2));
+		// get the length
+		l_t.at(i) = sqrt(pow(r_t.at(i), 2.0) + pow(r_t.at(i - 1.0), 2.0) - 2.0 * r_t.at(i)*r_t.at(i - 1.0)*cos(div));
+	}
+	// get the cumulative sum
+	std::partial_sum(l_t.begin(), l_t.end(), lc_t.begin());
+	// divide cumulative sum by sum
+	std::transform(lc_t.begin(), lc_t.end(), lc_t.begin(),
+		std::bind(std::divides<double>(), std::placeholders::_1, lc_t.at(n - 1)));
+
+
+	//gd = std::gamma_distribution<double>(a, b);
+	//if load curves are used they must use step interpolation
+	SetLoadCurveToStep("a");
+	SetLoadCurveToStep("b");
+
+	return true;
+}
+
+void FEEllipticalDistribution::TimeStepUpdate(double current_time)
+{
+
+}
+
+
+
+BEGIN_FECORE_CLASS(FEEllipticalDistribution, FEProbabilityDistribution)
+ADD_PARAMETER(a, "a");
+ADD_PARAMETER(b, "b");
 END_FECORE_CLASS();

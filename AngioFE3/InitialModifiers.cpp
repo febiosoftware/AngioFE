@@ -61,12 +61,18 @@ void DiscreteFiberEFDRandomizer::ApplyModifier(AngioElement * angio_element, FEM
 	double r0 = (elem_dir.col(u1).norm());
 	double r1 = (elem_dir.col(u2).norm());
 	double r2 = (elem_dir.col(u3).norm());	
+	FEEllipticalDistribution E0(this->GetFEModel());
+	FEEllipticalDistribution E1(this->GetFEModel());
+	E0.a = r0; E0.b = r1; E0.Init();
+	E1.a = r0; E1.b = r2; E1.Init();
 
 	// for each integration point in the element
 	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
 	{
-		double theta_12 = angio_element->GetEllipseAngle(r0, r1,0,2*PI,360);
-		double theta_13 = angio_element->GetEllipseAngle(r0, r2,0,2*PI,360);
+		double theta_12 = E0.NextValue(angio_element->_rengine);
+		double theta_13 = E1.NextValue(angio_element->_rengine);
+		//double theta_12 = angio_element->GetEllipseAngle(r0, r1,0,2*PI,360);
+		//double theta_13 = angio_element->GetEllipseAngle(r0, r2,0,2*PI,360);
 		// rotate the primary direction by theta_12 about the normal between them
 		vec3d axis = mix3d_t(axis_0, axis_1, theta_12); axis.unit();
 		mat3d R12 = mix3d_t_r(axis_0, axis_1, theta_12);
@@ -112,6 +118,10 @@ void DiscreteFiberEFDMatRandomizer::ApplyModifier(AngioElement * angio_element, 
 	double r0 = (ax.col(i).norm());
 	double r1 = (ax.col(j).norm());
 	double r2 = (ax.col(k).norm());
+	FEEllipticalDistribution E0(this->GetFEModel());
+	FEEllipticalDistribution E1(this->GetFEModel());
+	E0.a = r0; E0.b = r1; E0.Init();
+	E1.a = r0; E1.b = r2; E1.Init();
 
 	// for each integration point in the element
 	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
@@ -120,9 +130,10 @@ void DiscreteFiberEFDMatRandomizer::ApplyModifier(AngioElement * angio_element, 
 		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
 		// get the angio material point
 		FEAngioMaterialPoint * angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
-
-		double theta_12 = angio_element->GetEllipseAngle(r0, r1, 0, 2*PI, 360);
-		double theta_13 = angio_element->GetEllipseAngle(r0, r2, 0, 2*PI, 360);
+		double theta_12 = E0.NextValue(angio_element->_rengine);
+		double theta_13 = E1.NextValue(angio_element->_rengine);
+		//double theta_12 = angio_element->GetEllipseAngle(r0, r1, 0, 2*PI, 360);
+		//double theta_13 = angio_element->GetEllipseAngle(r0, r2, 0, 2*PI, 360);
 		// rotate the primary direction by theta_12 about the normal between them
 		vec3d axis = mix3d_t(axis_0, axis_1, theta_12); axis.unit();
 		mat3d R12 = mix3d_t_r(axis_0, axis_1, theta_12);
