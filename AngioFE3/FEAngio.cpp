@@ -142,7 +142,7 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, dou
 				for (int j = 0; j <angio_element_count; j++)
 				{
 					// Grow segments
-					angio_elements.at(j)->_angio_mat->GrowSegments(angio_elements.at(j), ctime, buffer_index, min_scale_factor,bounds_tolerance, min_angle);
+					angio_elements.at(j)->_angio_mat->GrowSegments(angio_elements.at(j), ctime, buffer_index, min_scale_factor,bounds_tolerance, min_angle, min_segment_length);
 				}
 
 				#pragma omp parallel for schedule(dynamic, 16)
@@ -236,7 +236,7 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 					for (int j = 0; j <angio_element_count; j++)
 					{
 						// grow the segments
-						angio_elements.at(j)->_angio_mat->ProtoGrowSegments(angio_elements.at(j), ctime, buffer_index, min_scale_factor, bounds_tolerance, min_angle);
+						angio_elements.at(j)->_angio_mat->ProtoGrowSegments(angio_elements.at(j), ctime, buffer_index, min_scale_factor, bounds_tolerance, min_angle, min_segment_length);
 					}
 
 					#pragma omp parallel for schedule(dynamic, 32)
@@ -1245,6 +1245,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		min_angle = m_fem->GetGlobalConstant("min_angle"); min_angle = cos(((PI/180)*min_angle));
 		max_angio_dt = m_fem->GetGlobalConstant("max_angio_dt"); if (max_angio_dt == 0) { max_angio_dt = 0.25; }
 		min_angio_dt = m_fem->GetGlobalConstant("min_angio_dt"); 
+		min_segment_length = m_fem->GetGlobalConstant("min_segment_length");
 		growth_substeps = int (m_fem->GetGlobalConstant("growth_substeps"));
 		size_t angio_element_count = angio_elements.size();
 		FEMesh * mesh = GetMesh();
