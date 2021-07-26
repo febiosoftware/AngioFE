@@ -71,8 +71,6 @@ void DiscreteFiberEFDRandomizer::ApplyModifier(AngioElement * angio_element, FEM
 	{
 		double theta_12 = E0.NextValue(angio_element->_rengine);
 		double theta_13 = E1.NextValue(angio_element->_rengine);
-		//double theta_12 = angio_element->GetEllipseAngle(r0, r1,0,2*PI,360);
-		//double theta_13 = angio_element->GetEllipseAngle(r0, r2,0,2*PI,360);
 		// rotate the primary direction by theta_12 about the normal between them
 		vec3d axis = mix3d_t(axis_0, axis_1, theta_12); axis.unit();
 		mat3d R12 = mix3d_t_r(axis_0, axis_1, theta_12);
@@ -132,8 +130,6 @@ void DiscreteFiberEFDMatRandomizer::ApplyModifier(AngioElement * angio_element, 
 		FEAngioMaterialPoint * angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
 		double theta_12 = E0.NextValue(angio_element->_rengine);
 		double theta_13 = E1.NextValue(angio_element->_rengine);
-		//double theta_12 = angio_element->GetEllipseAngle(r0, r1, 0, 2*PI, 360);
-		//double theta_13 = angio_element->GetEllipseAngle(r0, r2, 0, 2*PI, 360);
 		// rotate the primary direction by theta_12 about the normal between them
 		vec3d axis = mix3d_t(axis_0, axis_1, theta_12); axis.unit();
 		mat3d R12 = mix3d_t_r(axis_0, axis_1, theta_12);

@@ -139,9 +139,7 @@ vec3d BranchPolicy::GetBranchDirectionEFD(vec3d local_pos, vec3d parent_directio
 	E1.a = r0; E1.b = r2; E1.Init();
 	double theta_12 = E0.NextValue(angio_element->_rengine);
 	double theta_13 = E1.NextValue(angio_element->_rengine);
-	/*double theta_12 = angio_element->GetEllipseAngle(r0, r1, -PI / 2, PI, 180);
-	double theta_13 = angio_element->GetEllipseAngle(r0, r2, -PI / 2, PI, 180);*/
-
+	
 	// rotate the primary direction by theta_12 about the normal between them
 	vec3d axis = mix3d_t(axis_0, axis_1, theta_12); axis.unit();
 	vec3d fiber_direction = mix3d_t(axis, axis_2, theta_13); fiber_direction.unit();

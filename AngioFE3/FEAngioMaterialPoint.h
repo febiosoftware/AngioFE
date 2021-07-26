@@ -19,12 +19,7 @@ public:
 	void UpdateAngioFractionalAnisotropy();
 	//! Update the angioSPD based on deformation/rotation
 	void UpdateSPD();
-	//! Construct the elliptical distribution between 2 orthogonal SPD and sample it
-	double GetEllipseAngle(const double a, const double b, const double dist_min, const double dist_max, const int n, AngioElement* angio_elem);
-	//double GetEllipseAngle2(const double a, const double b);
-	//! Use Gerard's suggested approach for getting an ellipse angle
-	double GetEllipseAngleAteshian(const double a, const double b, const double dist_min, const double dist_max, const int n, AngioElement* angio_elem);
-
+	
 	//! copy material point data (for running restarts) todo Is this still used?
 	FEMaterialPoint* Copy() override;
 
