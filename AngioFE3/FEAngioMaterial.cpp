@@ -350,7 +350,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	assert(active_tip);
 	// get the mesh, set the min segment length, and set the next buffer (change to write buffer from read).
 	auto mesh = m_pangio->GetMesh();
-	const double min_segm_len = 0.1;
+	const double min_segm_len = 5.0;
 	int next_buffer_index = (buffer_index + 1) % 2;
 	// calculate the change in time
 	double dt = end_time - active_tip->time;
@@ -607,7 +607,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 	assert(active_tip);
 	// get the mesh, set the min segment length, and set the next buffer (change to write buffer from read).
 	auto mesh = m_pangio->GetMesh();
-	const double min_segm_len = 1;
+	const double min_segm_len = 5.0;
 	int next_buffer_index = (buffer_index + 1) % 2;
 	// calculate the change in time
 	double dt = end_time - active_tip->time;

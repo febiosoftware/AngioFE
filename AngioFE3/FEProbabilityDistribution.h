@@ -88,6 +88,7 @@ private:
 };
 
 //! get random numbers from a exponential distribution
+//! http://www.cplusplus.com/reference/random/exponential_distribution/
 class FEExponentialDistribution : public FEProbabilityDistribution
 {
 public:
@@ -118,6 +119,7 @@ private:
 };
 
 //! get random numbers from a cauchy distribution
+//! https://www.cplusplus.com/reference/random/cauchy_distribution/
 class FECauchyDistribution : public FEProbabilityDistribution
 {
 public:
@@ -148,6 +150,7 @@ private:
 };
 
 //! get random numbers from a chisquared distribution
+//! https://www.cplusplus.com/reference/random/chi_squared_distribution/
 class FEChiSquaredDistribution : public FEProbabilityDistribution
 {
 public:
@@ -178,6 +181,7 @@ private:
 };
 
 //! get random numbers from a weibull distribution
+//! https://www.cplusplus.com/reference/random/weibull_distribution/
 class FEWeibullDistribution : public FEProbabilityDistribution
 {
 public:
@@ -208,6 +212,7 @@ private:
 };
 
 //! get random numbers from a gamma distribution
+//! http://www.cplusplus.com/reference/random/gamma_distribution/
 class FEGammaDistribution : public FEProbabilityDistribution
 {
 public:
