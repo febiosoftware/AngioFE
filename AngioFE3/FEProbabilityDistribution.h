@@ -318,3 +318,32 @@ private:
 
 	DECLARE_FECORE_CLASS();
 };
+
+//! return a given value. Can be used to set data to a load curve as well?
+class FEPrescribedDistribution : public FEProbabilityDistribution
+{
+public:
+	//! constructor
+	explicit FEPrescribedDistribution(FEModel* pfem) : FEProbabilityDistribution(pfem) {}
+
+	//! generates the next value in the given sequence which fits a given distribution
+	//! this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
+	//! nan will be returned if the distribution fails to find a suitable number
+	double NextValue(angiofe_random_engine & re) override;
+
+	//! performs initialization
+	bool Init() override;
+
+	//! updates the distribution to a given time
+	void TimeStepUpdate(double current_time) override;
+private:
+	double distribution = 1.0;
+	// construct uniform distribution
+	std::uniform_real_distribution<double> ud = std::uniform_real_distribution<double>(0.0, 1.0);
+	std::vector<vec2d> prescribed_distribution;
+	int n = -1;
+	std::vector<double> pdf; 
+	std::vector<double> cdf; 
+	std::vector<double> bins; 
+	DECLARE_FECORE_CLASS();
+};

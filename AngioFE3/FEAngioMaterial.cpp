@@ -53,9 +53,11 @@ bool FEAngioMaterial::Init()
 
 	if(!matrix_material->Init()) return false;
 
+	if (FEElasticMaterial::Init() == false) return false;
+
 	if(!common_properties->vessel_material->Init()) return false;
 
-	if (FEElasticMaterial::Init() == false) return false;
+	
 	if(proto_branch_policy && branch_policy)
 	{
 		if(proto_branch_policy->GetSuperClassID() != branch_policy->GetSuperClassID())

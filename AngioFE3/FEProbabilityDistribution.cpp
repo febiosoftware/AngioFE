@@ -4,6 +4,7 @@
 #include <FECore/FELoadCurve.h>
 #include <numeric>
 #include <FECore/FECoreBase.h>
+#include <iostream>
 
 //implemenations of FENormalDistribution
 double FENormalDistribution::NextValue(angiofe_random_engine & re)
@@ -351,12 +352,8 @@ bool FEEllipticalDistribution::Init()
 	// divide cumulative sum by sum
 	std::transform(lc_t.begin(), lc_t.end(), lc_t.begin(),
 		std::bind(std::divides<double>(), std::placeholders::_1, lc_t.at(n - 1)));
-
-
-	//gd = std::gamma_distribution<double>(a, b);
-	//if load curves are used they must use step interpolation
-	SetLoadCurveToStep("a");
-	SetLoadCurveToStep("b");
+	//SetLoadCurveToStep("a");
+	//SetLoadCurveToStep("b");
 
 	return true;
 }
@@ -372,3 +369,56 @@ BEGIN_FECORE_CLASS(FEEllipticalDistribution, FEProbabilityDistribution)
 ADD_PARAMETER(a, "a");
 ADD_PARAMETER(b, "b");
 END_FECORE_CLASS();
+
+//implemenations of FENormalDistribution
+double FEPrescribedDistribution::NextValue(angiofe_random_engine & re)
+{
+	// get a random number
+	double rn = ud(re);
+	// find the rc_t value closest to the random number and get the position
+	int fi = std::distance(cdf.begin(), std::lower_bound(cdf.begin(), cdf.end(), rn));
+	std::cout << "sampled value is " << bins.at(fi) << endl;
+	return bins.at(fi);
+}
+
+void FEPrescribedDistribution::TimeStepUpdate(double current_time)
+{
+
+}
+
+// gets the load curve, solves the cdf
+bool FEPrescribedDistribution::Init()
+{
+	FEParam * m = FindParameter(ParamString("distribution"));
+	assert(m);
+
+	FEModel * model = GetFEModel();
+	FELoadCurve* mlc = dynamic_cast<FELoadCurve*>(model->GetLoadController(m));
+	prescribed_distribution = mlc->GetFunction().m_points;
+
+	//Create the cdf
+	n = prescribed_distribution.size();
+	bins.resize(n);
+	pdf.resize(n);
+	cdf; cdf.resize(n);
+	double prior_val = 0.0;
+	for (int i = 0; i < cdf.size(); i++)
+	{
+		bins.at(i) = prescribed_distribution.at(i).x();
+		pdf.at(i) = prescribed_distribution.at(i).y();
+		cdf.at(i) =  prescribed_distribution.at(i).y() + prior_val;
+		prior_val = cdf.at(i);
+	}
+	// get the cumulative sum
+	std::partial_sum(pdf.begin(), pdf.end(), cdf.begin());
+	// divide cumulative sum by sum
+	std::transform(cdf.begin(), cdf.end(), cdf.begin(),
+		std::bind(std::divides<double>(), std::placeholders::_1, cdf.at(n - 1)));
+	return true;
+}
+
+
+BEGIN_FECORE_CLASS(FEPrescribedDistribution, FEProbabilityDistribution)
+ADD_PARAMETER(distribution, "distribution");
+END_FECORE_CLASS();
+
