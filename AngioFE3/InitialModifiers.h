@@ -42,20 +42,6 @@ class DiscreteFiberEFDRandomizer : public InitialModifier
 public:
 	//! constructor
 	explicit DiscreteFiberEFDRandomizer(FEModel * pfem) : InitialModifier(pfem) {}
-	//! apply random fibers to all elements
-	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
-protected:
-	//! parameter list
-	DECLARE_FECORE_CLASS();
-private:
-	mat3ds m_SPD;
-};
-
-class DiscreteFiberEFDMatRandomizer : public InitialModifier
-{
-public:
-	//! constructor
-	explicit DiscreteFiberEFDMatRandomizer(FEModel * pfem) : InitialModifier(pfem) {}
 	//! apply Isotropic EFD to each model
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
 protected:
@@ -70,20 +56,6 @@ class EFDFiberInitializer : public InitialModifier
 public:
 	//! constructor
 	explicit EFDFiberInitializer(FEModel * pfem) : InitialModifier(pfem) {}
-	//! apply Isotropic EFD to each mdoel
-	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
-protected:
-	//! parameter list
-	DECLARE_FECORE_CLASS();
-private:
-	mat3ds m_SPDa;
-};
-
-class EFDMatPointFiberInitializer : public InitialModifier
-{
-public:
-	//! constructor
-	explicit EFDMatPointFiberInitializer(FEModel * pfem) : InitialModifier(pfem) {}
 	//! apply Isotropic EFD to each mdoel
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
 protected:

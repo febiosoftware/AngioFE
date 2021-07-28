@@ -63,27 +63,8 @@ class FractionalAnisotropyPDD : public PositionDependentDirection
 {
 public:
 	//! constructor
-	explicit FractionalAnisotropyPDD(FEModel* pfem) : PositionDependentDirection(pfem) {
-		AddClassProperty(this, &interpolation_prop, "interpolation_prop");
-	}
+	explicit FractionalAnisotropyPDD(FEModel* pfem) : PositionDependentDirection(pfem) {}
 	virtual ~FractionalAnisotropyPDD() {}
-	//! return the direction given by the fibers at this location
-	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
-	//! may be used to get values from loadcurves that modify the behavior as a whole
-	void Update(FEMesh * mesh, FEAngio* angio) override;
-	DECLARE_FECORE_CLASS();
-private:
-	FEVariableInterpolation* interpolation_prop = nullptr;
-	bool alpha_override = true;// replace alpha with the override
-};
-
-//! Implements a position dependent modifier that modifies growth direction based on fiber direction
-class FractionalAnisotropyMatPointPDD : public PositionDependentDirection
-{
-public:
-	//! constructor
-	explicit FractionalAnisotropyMatPointPDD(FEModel* pfem) : PositionDependentDirection(pfem) {}
-	virtual ~FractionalAnisotropyMatPointPDD() {}
 	//! return the direction given by the fibers at this location
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
 	//! may be used to get values from loadcurves that modify the behavior as a whole

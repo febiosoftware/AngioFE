@@ -427,50 +427,7 @@ bool FEPlotAngioRepulseVal::Save(FEDomain& d, FEDataStream& str)
 	return true;
 };
 
-bool FEPlotangioSPD::Save(FEDomain& d, FEDataStream& str)
-{
-	//Check if the domain has an angio component i.e. make sure this is not a rigid body
-	FEAngioMaterial* pmat = pfeangio->GetAngioComponent(d.GetMaterial());
-	if (pmat != nullptr)
-	{
-		// for each element
-		for (int i = 0; i < d.Elements(); i++)
-		{
-			FEElement & elem = d.ElementRef(i);
-			FESolidElement *se = dynamic_cast<FESolidElement*>(&elem);
-			if (se) {
-				// get the pointer to the angio element
-				AngioElement* angio_element = pfeangio->se_to_angio_element.at(se);
-
-				// store the transformed spd
-				// should go somewhere else...
-				angio_element->UpdateSPD();
-				str << angio_element->angioSPD;
-			}
-		}
-	}
-	return true;
-};
-
-bool FEPlotAngioFractionalAnisotropy::Save(FEDomain& d, FEDataStream& str)
-{
-	for (int i=0; i < d.Elements(); i++)
-	{
-		FEElement & elem = d.ElementRef(i);
-		FESolidElement *se = dynamic_cast<FESolidElement*>(&elem);
-		if (se) {
-			// get pointer to the angio element
-			AngioElement* angio_element = pfeangio->se_to_angio_element.at(se);
-			// store the fractional anisotropy.
-			// should go somewhere else...
-			angio_element->UpdateAngioFractionalAnisotropy();
-			str << angio_element->angioFA;
-		}
-	}
-	return true;
-};
-
-bool FEPlotMatangioSPD::Save(FEDomain& d, FEDataStream& str)
+bool FEPlotAngioSPD::Save(FEDomain& d, FEDataStream& str)
 {
 	for (int i = 0; i < d.Elements(); i++)
 	{
@@ -506,7 +463,7 @@ bool FEPlotMatangioSPD::Save(FEDomain& d, FEDataStream& str)
 	return true;
 };
 
-bool FEPlotMatAngioFractionalAnisotropy::Save(FEDomain& d, FEDataStream& str)
+bool FEPlotAngioFractionalAnisotropy::Save(FEDomain& d, FEDataStream& str)
 {
 	FEAngioMaterial* pmat = pfeangio->GetAngioComponent(d.GetMaterial());
 	if (pmat == nullptr) return false;
