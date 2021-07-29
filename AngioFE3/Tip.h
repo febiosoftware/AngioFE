@@ -47,7 +47,7 @@ public:
 	void PrintTipInfo(FEMesh *mesh) const;
 	//! Prints information about the tip to the console
 	void PrintTipInfo(FEMesh *mesh, std::string title) const;
-	//FESBMPointSource* TipSBM = nullptr;
+	FESBMPointSource* TipSBM = nullptr;
 	std::unordered_map<int, FESBMPointSource*> Species;
 	void InitSBM(FEMesh* mesh);
 	void UpdateSBM(FEMesh * mesh);

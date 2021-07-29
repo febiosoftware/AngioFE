@@ -459,7 +459,8 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 
 		// Update SBM boundary condition if necessary.
 		//
-		//next->TipSBM->UpdatePos(natc_to_global * real_natc);
+		//commented out because redundant. This is handled in the SetLocalPosition function
+		//next->TipSBM->SetPosition(natc_to_global * real_natc);
 		//
 
 		// assign the new tip as the parent of the segment.
