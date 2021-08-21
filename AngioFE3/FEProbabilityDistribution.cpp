@@ -6,6 +6,46 @@
 #include <FECore/FECoreBase.h>
 #include <iostream>
 
+BEGIN_FECORE_CLASS(FEProbabilityDistribution, FEMaterial)
+ADD_PARAMETER(max_retries, "max_retries");
+END_FECORE_CLASS();
+
+void FEProbabilityDistribution::SetLoadCurveToStep(const char * param)
+{
+	//if load curves are used they must use step interpolation
+	FEParam * m = FindParameter(ParamString(param));
+	assert(m);
+
+	FEModel * model = GetFEModel();
+	FELoadCurve* mlc = dynamic_cast<FELoadCurve*>(model->GetLoadController(m));
+	assert(mlc);
+	if (mlc)
+	{
+		mlc->SetInterpolation(FEPointFunction::STEP);
+	}
+}
+
+bool FEProbabilityDistribution::ChangeInParam(const char * param, double time, double & prev, double & new_p)
+{
+	FEParam * m = FindParameter(ParamString(param));
+	assert(m);
+
+	FEModel * model = GetFEModel();
+	FELoadCurve* mlc = dynamic_cast<FELoadCurve*>(model->GetLoadController(m));
+	assert(mlc);
+	if (mlc)
+	{
+		new_p = mlc->GetValue(time);
+		if (new_p != prev)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+
+
 //implemenations of FENormalDistribution
 double FENormalDistribution::NextValue(angiofe_random_engine & re)
 {
@@ -16,6 +56,11 @@ double FENormalDistribution::NextValue(angiofe_random_engine & re)
 			return val;
 	}
 	return std::numeric_limits<double>::quiet_NaN();
+}
+
+vec3d FENormalDistribution::NextVec(angiofe_random_engine & re)
+{
+	return vec3d(1, 0, 0);
 }
 
 bool FENormalDistribution::Init()
@@ -48,6 +93,11 @@ double FEUniformDistribution::NextValue(angiofe_random_engine & re)
 	return std::numeric_limits<double>::quiet_NaN();
 }
 
+vec3d FEUniformDistribution::NextVec(angiofe_random_engine & re)
+{
+	return vec3d(1, 0, 0);
+}
+
 
 bool FEUniformDistribution::Init()
 {
@@ -78,43 +128,7 @@ ADD_PARAMETER(time_clamped, "time_clamped");
 END_FECORE_CLASS();
 
 
-BEGIN_FECORE_CLASS(FEProbabilityDistribution, FEMaterial)
-ADD_PARAMETER(max_retries, "max_retries");
-END_FECORE_CLASS();
 
-void FEProbabilityDistribution::SetLoadCurveToStep(const char * param)
-{
-	//if load curves are used they must use step interpolation
-	FEParam * m = FindParameter(ParamString(param));
-	assert(m);
-	
-	FEModel * model = GetFEModel();
-	FELoadCurve* mlc = dynamic_cast<FELoadCurve*>(model->GetLoadController(m));
-	assert(mlc);
-	if (mlc)
-	{
-		mlc->SetInterpolation(FEPointFunction::STEP);
-	}
-}
-
-bool FEProbabilityDistribution::ChangeInParam(const char * param, double time, double & prev, double & new_p)
-{
-	FEParam * m = FindParameter(ParamString(param));
-	assert(m);
-
-	FEModel * model = GetFEModel();
-	FELoadCurve* mlc = dynamic_cast<FELoadCurve*>(model->GetLoadController(m));
-	assert(mlc);
-	if (mlc)
-	{
-		new_p = mlc->GetValue(time);
-		if (new_p != prev)
-		{
-			return true;
-		}
-	}
-	return false;
-}
 
 
 
@@ -129,6 +143,11 @@ double FEExponentialDistribution::NextValue(angiofe_random_engine & re)
 			return mult*val;
 	}
 	return std::numeric_limits<double>::quiet_NaN();
+}
+
+vec3d FEExponentialDistribution::NextVec(angiofe_random_engine & re)
+{
+	return vec3d(1, 0, 0);
 }
 
 bool FEExponentialDistribution::Init()
@@ -163,6 +182,11 @@ double FECauchyDistribution::NextValue(angiofe_random_engine & re)
 	return std::numeric_limits<double>::quiet_NaN();
 }
 
+vec3d FECauchyDistribution::NextVec(angiofe_random_engine & re)
+{
+	return vec3d(1, 0, 0);
+}
+
 bool FECauchyDistribution::Init()
 {
 	cd = std::cauchy_distribution<double>(a, b);
@@ -195,6 +219,11 @@ double FEChiSquaredDistribution::NextValue(angiofe_random_engine & re)
 			return mult*val;
 	}
 	return std::numeric_limits<double>::quiet_NaN();
+}
+
+vec3d FEChiSquaredDistribution::NextVec(angiofe_random_engine & re)
+{
+	return vec3d(1, 0, 0);
 }
 
 bool FEChiSquaredDistribution::Init()
@@ -232,6 +261,11 @@ double FEWeibullDistribution::NextValue(angiofe_random_engine & re)
 	return std::numeric_limits<double>::quiet_NaN();
 }
 
+vec3d FEWeibullDistribution::NextVec(angiofe_random_engine & re)
+{
+	return vec3d(1, 0, 0);
+}
+
 bool FEWeibullDistribution::Init()
 {
 	wd = std::weibull_distribution<double>(a, b);
@@ -266,6 +300,11 @@ double FEGammaDistribution::NextValue(angiofe_random_engine & re)
 	return std::numeric_limits<double>::quiet_NaN();
 }
 
+vec3d FEGammaDistribution::NextVec(angiofe_random_engine & re)
+{
+	return vec3d(1, 0, 0);
+}
+
 bool FEGammaDistribution::Init()
 {
 	gd = std::gamma_distribution<double>(alpha, beta);
@@ -294,6 +333,11 @@ double FEFixedDistribution::NextValue(angiofe_random_engine & re)
 	return value;
 }
 
+vec3d FEFixedDistribution::NextVec(angiofe_random_engine & re)
+{
+	return vec3d(1, 0, 0);
+}
+
 void FEFixedDistribution::TimeStepUpdate(double current_time)
 {
 	
@@ -311,50 +355,39 @@ ADD_PARAMETER(value, "value");
 END_FECORE_CLASS();
 
 //implemenations of FEGammaDistribution
+vec3d FEEllipticalDistribution::NextVec(angiofe_random_engine & re)
+{
+	bool found = false;
+	while(!found)
+	//for (int i = 0; i < max_retries; i++)
+	{
+		std::uniform_real_distribution<double> rd = std::uniform_real_distribution<double> (-1,1);
+		vec3d rv;
+		rv.x = d[0]*rd(re);
+		rv.y = d[1]*rd(re);
+		rv.z = d[2]*rd(re);
+		double check = (rv.x*rv.x) / (d[0] * d[0]) + (rv.y*rv.y) / (d[1] * d[1]) + (rv.z*rv.z) / (d[2] * d[2]);
+		if (check < 1) {
+			rv = R*rv;
+			rv = rv.normalized();
+			found = true;
+			return rv;
+		}
+	}	
+}
+
 double FEEllipticalDistribution::NextValue(angiofe_random_engine & re)
 {
-	// get a random number
-	double rn = ud(re);
-	// find the rc_t value closest to the random number and get the position
-	int fi = std::distance(lc_t.begin(), std::lower_bound(lc_t.begin(), lc_t.end(), rn));
-	double val = t.at(fi);
-	return val;
+	return 0;
 }
 
 bool FEEllipticalDistribution::Init()
 {
-	double div = (PI / 180)*((n + 1) / n);
-	// theta
-	t.resize(n);
-	// radius
-	r_t.resize(n);
-	// radius cumulative sum
-	rc_t.resize(n);
-	// area vector
-	l_t.resize(n);
-	// cumulative area vector
-	lc_t.resize(n);
-
-	t.at(0) = p_i;
-	l_t.at(0) = 0;
-	r_t.at(0) = (a*b) / sqrt(pow(b*cos(t.at(0)), 2) + pow(a*sin(t.at(0)), 2));
-	for (int i = 1; i < n; i++)
-	{
-		// assign the angle
-		t.at(i) = (p_i + i*div);
-		// get the radius
-		r_t.at(i) = (a*b) / sqrt(pow(b*cos(t.at(i)), 2) + pow(a*sin(t.at(i)), 2));
-		// get the length
-		l_t.at(i) = sqrt(pow(r_t.at(i), 2.0) + pow(r_t.at(i - 1.0), 2.0) - 2.0 * r_t.at(i)*r_t.at(i - 1.0)*cos(div));
-	}
-	// get the cumulative sum
-	std::partial_sum(l_t.begin(), l_t.end(), lc_t.begin());
-	// divide cumulative sum by sum
-	std::transform(lc_t.begin(), lc_t.end(), lc_t.begin(),
-		std::bind(std::divides<double>(), std::placeholders::_1, lc_t.at(n - 1)));
-	//SetLoadCurveToStep("a");
-	//SetLoadCurveToStep("b");
-
+	spd.eigen(d, v);
+	mat3d spd2 = spd;
+	mat3ds U;
+	mat3d rotv = mat3d(v[0], v[1], v[2]);
+	rotv.right_polar(R, U);
 	return true;
 }
 
@@ -363,11 +396,7 @@ void FEEllipticalDistribution::TimeStepUpdate(double current_time)
 
 }
 
-
-
 BEGIN_FECORE_CLASS(FEEllipticalDistribution, FEProbabilityDistribution)
-ADD_PARAMETER(a, "a");
-ADD_PARAMETER(b, "b");
 END_FECORE_CLASS();
 
 //implemenations of FENormalDistribution
@@ -377,8 +406,12 @@ double FEPrescribedDistribution::NextValue(angiofe_random_engine & re)
 	double rn = ud(re);
 	// find the rc_t value closest to the random number and get the position
 	int fi = std::distance(cdf.begin(), std::lower_bound(cdf.begin(), cdf.end(), rn));
-	std::cout << "sampled value is " << bins.at(fi) << endl;
 	return bins.at(fi);
+}
+
+vec3d FEPrescribedDistribution::NextVec(angiofe_random_engine & re)
+{
+	return vec3d(1,0,0);
 }
 
 void FEPrescribedDistribution::TimeStepUpdate(double current_time)

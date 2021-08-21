@@ -142,7 +142,7 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, dou
 				for (int j = 0; j <angio_element_count; j++)
 				{
 					// Grow segments
-					angio_elements.at(j)->_angio_mat->GrowSegments(angio_elements.at(j), ctime, buffer_index, min_scale_factor,bounds_tolerance, min_angle, min_segment_length);
+					angio_elements.at(j)->_angio_mat->GrowSegments(angio_elements.at(j), ctime, buffer_index, min_scale_factor,bounds_tolerance, min_angle);
 				}
 
 				#pragma omp parallel for schedule(dynamic, 16)
@@ -192,23 +192,21 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 		// Is it valid for this to run more than once? only 
 		if (time_info.currentTime >= next_time)
 		{
-			//#pragma omp parallel for shared(min_dt)
-			//// for each angio element
-			//for (int i = 0; i < angio_element_count; ++i)
-			//{
-			//	// get min dt for all element
-			//	double temp_dt = angio_elements[i]->_angio_mat->GetMin_dt(angio_elements[i], mesh);
-			//	// only one thread can perform this at a time
-			//	#pragma omp critical
-			//	{
-			//		// set min_dt to the lower of min_dt and temp_dt
-			//		min_dt = std::min(min_dt, temp_dt);
-			//	}
-			//}
+			#pragma omp parallel for shared(min_dt)
+			// for each angio element
+			for (int i = 0; i < angio_element_count; ++i)
+			{
+				// get min dt for all element
+				double temp_dt = angio_elements[i]->_angio_mat->GetMin_dt(angio_elements[i], mesh);
+				// only one thread can perform this at a time
+				#pragma omp critical
+				{
+					// set min_dt to the lower of min_dt and temp_dt
+					min_dt = std::min(min_dt, temp_dt);
+				}
+			}
 
-			////min_dt = 0;
-
-			min_dt = 1.0 / growth_substeps;
+			//min_dt = 0;
 
 			// update current time
 			double ctime = next_time + min_dt;
@@ -236,7 +234,7 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 					for (int j = 0; j <angio_element_count; j++)
 					{
 						// grow the segments
-						angio_elements.at(j)->_angio_mat->ProtoGrowSegments(angio_elements.at(j), ctime, buffer_index, min_scale_factor, bounds_tolerance, min_angle, min_segment_length);
+						angio_elements.at(j)->_angio_mat->ProtoGrowSegments(angio_elements.at(j), ctime, buffer_index, min_scale_factor, bounds_tolerance, min_angle);
 					}
 
 					#pragma omp parallel for schedule(dynamic, 32)
@@ -1245,7 +1243,6 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		min_angle = m_fem->GetGlobalConstant("min_angle"); min_angle = cos(((PI/180)*min_angle));
 		max_angio_dt = m_fem->GetGlobalConstant("max_angio_dt"); if (max_angio_dt == 0) { max_angio_dt = 0.25; }
 		min_angio_dt = m_fem->GetGlobalConstant("min_angio_dt"); 
-		min_segment_length = m_fem->GetGlobalConstant("min_segment_length");
 		growth_substeps = int (m_fem->GetGlobalConstant("growth_substeps"));
 		size_t angio_element_count = angio_elements.size();
 		FEMesh * mesh = GetMesh();
@@ -1261,23 +1258,16 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 			{
 				FEElementSet* elset = mesh->FindElementSet(test_dom.GetName());
 				FEDomainMap* map = new FEDomainMap(FE_MAT3D, FMT_MATPOINTS);
-				//FEDomainMap* densmap = new FEDomainMap(FE_DOUBLE, FMT_MATPOINTS);
 				map->Create(elset);
 				map->fillValue(mat3d::identity());
-				//densmap->Create(elset);
 				FEParam* matax = test_angmat->FindParameter("mat_axis");
 				// create parameter
-				//FEParam* ref_ecm_density = test_angmat->FindParameter("initial_density");
 				FEParamMat3d& p = matax->value<FEParamMat3d>();
-				//FEParamDouble& dens = ref_ecm_density->value<FEParamDouble>();
 				// create evaluator
 				FEMappedValueMat3d* val = fecore_alloc(FEMappedValueMat3d, GetFEModel());
 				val->setDataMap(map);
-				//FEMappedValue* densval = fecore_alloc(FEMappedValue, GetFEModel());
-				//densval->setDataMap(densmap);
 				//set the valuator to the model parameter
 				p.setValuator(val);
-				//dens.setValuator(densval);
 			}
 		}
 #pragma omp parallel for schedule(dynamic, 16)
@@ -1315,7 +1305,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		// start the growth timer
 		grow_timer.start();
 		// grow segments
-		ProtoGrowSegments(min_scale_factor, bounds_tolerance, min_angle, 20.0);
+		ProtoGrowSegments(min_scale_factor, bounds_tolerance, min_angle, growth_substeps*8);
 		grow_timer.stop();
 
 		CalculateSegmentLengths(mesh);

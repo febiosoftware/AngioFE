@@ -5,8 +5,6 @@
 #include <iostream>
 #include "angio3d.h"
 #include "FECore/FEDomainMap.h"
-//#include <FEBioMech/FEEllipsoidalFiberDistribution.h>
-//#include <FEBioMech/FEFiberDensityDistribution.h>
 
 void InitialModifierManager::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
@@ -39,32 +37,6 @@ void FiberRandomizer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh,
 // take a given angio element and give it a randomized discrete fiber direction based on user input spd
 void DiscreteFiberEFDRandomizer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
-	std::vector<pair<double, int>> v;
-	mat3d ax;
-	ax.setCol(0, vec3d(m_SPD.xx(), m_SPD.xy(), m_SPD.xz()));
-	ax.setCol(1, vec3d(m_SPD.xy(), m_SPD.yy(), m_SPD.yz()));
-	ax.setCol(2, vec3d(m_SPD.xz(), m_SPD.yz(), m_SPD.zz()));
-	v.push_back(pair<double, int>(ax.col(0).norm(), 0));
-	v.push_back(pair<double, int>(ax.col(1).norm(), 1));
-	v.push_back(pair<double, int>(ax.col(2).norm(), 2));
-	sort(v.begin(), v.end(), sortinrev);
-
-	// store the indices
-	int i = v[0].second;
-	int j = v[1].second;
-	int k = v[2].second;
-
-	vec3d axis_0 = ax.col(i); axis_0.unit();
-	vec3d axis_1 = ax.col(j); axis_1.unit();
-	vec3d axis_2 = ax.col(k); axis_2.unit();
-	double r0 = (ax.col(i).norm());
-	double r1 = (ax.col(j).norm());
-	double r2 = (ax.col(k).norm());
-	FEEllipticalDistribution E0(this->GetFEModel());
-	FEEllipticalDistribution E1(this->GetFEModel());
-	E0.a = r0; E0.b = r1; E0.Init();
-	E1.a = r0; E1.b = r2; E1.Init();
-
 	// for each integration point in the element
 	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
 	{
@@ -72,13 +44,11 @@ void DiscreteFiberEFDRandomizer::ApplyModifier(AngioElement * angio_element, FEM
 		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
 		// get the angio material point
 		FEAngioMaterialPoint * angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
-		double theta_12 = E0.NextValue(angio_element->_rengine);
-		double theta_13 = E1.NextValue(angio_element->_rengine);
-		// rotate the primary direction by theta_12 about the normal between them
-		vec3d axis = mix3d_t(axis_0, axis_1, theta_12); axis.unit();
-		mat3d R12 = mix3d_t_r(axis_0, axis_1, theta_12);
-		mat3d R13 = mix3d_t_r(axis, axis_2, theta_13);
-		angio_pt->angio_fiber_dir = R13*R12*vec3d(1, 0, 0);
+		angio_pt->initial_angioSPD = m_SPD;
+		FEEllipticalDistribution E(this->GetFEModel());
+		E.spd = angio_pt->initial_angioSPD;
+		E.Init();
+		angio_pt->angio_fiber_dir = E.NextVec(angio_element->_rengine);
 	}
 }
 
@@ -95,9 +65,7 @@ void EFDFiberInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * m
 		FEAngioMaterialPoint * angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
 		angio_pt->initial_angioSPD = m_SPD;
 		angio_pt->angioSPD = m_SPD;
-		//std::cout << angio_pt->angioSPD.xx() << ", " << angio_pt->angioSPD.yy() << ", " << angio_pt->angioSPD.zz() << ", " << angio_pt->angioSPD.xy() << ", " << angio_pt->angioSPD.xz() << ", " << angio_pt->angioSPD.yz() << endl;
 		angio_pt->UpdateAngioFractionalAnisotropy();
-		//std::cout << angio_pt->angioSPD.xx() << ", " << angio_pt->angioSPD.yy() << ", " << angio_pt->angioSPD.zz() << ", " << angio_pt->angioSPD.xy() << ", " << angio_pt->angioSPD.xz() << ", " << angio_pt->angioSPD.yz() << endl;
 	}
 }
 
@@ -113,7 +81,6 @@ void DensityInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * me
 		FEAngioMaterialPoint *angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
 
 		angio_pt->ref_ecm_density = initial_density;
-
 	}
 }
 

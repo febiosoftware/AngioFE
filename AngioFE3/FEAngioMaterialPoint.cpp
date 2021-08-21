@@ -37,17 +37,6 @@ void FEAngioMaterialPoint::Update(const FETimeInfo& timeInfo)
 }
 
 //-----------------------------------------------------------------------------
-// define the material parameters
-//BEGIN_FECORE_CLASS(FEAngioMaterialPoint, FEMaterialPoint)
-//ADD_PARAMETER(ref_ecm_density, "ref_ecm_density");
-//END_FECORE_CLASS();
-
-
-
-
-
-
-//-----------------------------------------------------------------------------
 //! copy material point data (for running restarts) \todo Is this still used?
 FEMaterialPoint* FEAngioMaterialPoint::Copy()
 {

@@ -51,14 +51,7 @@ struct EigComp {
 // TODO: Determine contribution and direction based on ratio of each direction's magnitude.
 vec3d LaGrangePStrainPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) 
 {
-	// for each integration point
-	//std::vector<double> FirstPSMag;
-	//std::vector<double> SecondPSMag;
-	//std::vector<double> ThirdPSMag;
-	//std::vector<vec3d> FirstPSDir;
-	//std::vector<vec3d> SecondPSDir;
 	mat3ds E;
-	//vec3d MagVecs[3];
 
 	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++) {
 		FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
@@ -415,11 +408,8 @@ vec3d FractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* angio_el
 		// get the angio point
 		FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
 		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
-		//std::cout << angio_mp->angioSPD.xx() << ", " << angio_mp->angioSPD.yy() << ", " << angio_mp->angioSPD.zz() << ", " << angio_mp->angioSPD.xy() << ", " << angio_mp->angioSPD.yz() << ", " << angio_mp->angioSPD.xz() << endl;
 		// Get the SPD
-		//angio_mp->nhit = 1;
 		angio_mp->UpdateSPD();
-		//std::cout << angio_mp->angioSPD.xx() << ", " << angio_mp->angioSPD.yy() << ", " << angio_mp->angioSPD.zz() << ", " << angio_mp->angioSPD.xy() << ", " << angio_mp->angioSPD.yz() << ", " << angio_mp->angioSPD.xz() << endl;
 		SPDs_gausspts.push_back(angio_mp->angioSPD);
 	}
 	// array containing the SPD for each node in the element
@@ -433,62 +423,22 @@ vec3d FractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* angio_el
 	//angio_element->_elem->shape_fnc(H, 0, 0, 0);
 	// Get the interpolated SPD from the shape function-weighted Average Structure Tensor
 	mat3ds SPD_int = weightedAverageStructureTensor(SPDs_nodes, H, angio_element->_elem->Nodes());
-	// get the vectors of the principal directions and sort in descending order
-	std::vector<pair<double, int>> v;
-	mat3d ax;
-	ax.setCol(0, vec3d(SPD_int.xx(), SPD_int.xy(), SPD_int.xz()));
-	ax.setCol(1, vec3d(SPD_int.xy(), SPD_int.yy(), SPD_int.yz()));
-	ax.setCol(2, vec3d(SPD_int.xz(), SPD_int.yz(), SPD_int.zz()));
-	v.push_back(pair<double, int>(ax.col(0).norm(), 0));
-	v.push_back(pair<double, int>(ax.col(1).norm(), 1));
-	v.push_back(pair<double, int>(ax.col(2).norm(), 2));
-	sort(v.begin(), v.end(), sortinrev);
-
-	// store the indices
-	int i = v[0].second;
-	int j = v[1].second;
-	int k = v[2].second;
-
-	vec3d axis_0 = ax.col(i); axis_0.unit();
-	vec3d axis_1 = ax.col(j); axis_1.unit();
-	vec3d axis_2 = ax.col(k); axis_2.unit();
-	double r0 = (ax.col(i).norm());
-	double r1 = (ax.col(j).norm());
-	double r2 = (ax.col(k).norm());
-	FEEllipticalDistribution E0(this->GetFEModel());
-	FEEllipticalDistribution E1(this->GetFEModel());
-	E0.a = r0; E0.b = r1; E0.Init();
-	E1.a = r0; E1.b = r2; E1.Init();
-	double theta_12 = E0.NextValue(angio_element->_rengine);
-	double theta_13 = E1.NextValue(angio_element->_rengine);
-	
-	// rotate the primary direction by theta_12 about the normal between them
-	vec3d axis = mix3d_t(axis_0, axis_1, theta_12); axis.unit();
-	vec3d fiber_dir = mix3d_t(axis, axis_2, theta_13); fiber_dir.unit();
-	// determine the fiber directon contribution from the fractional anisotropy
-	/*if (alpha_override)
+	FEEllipticalDistribution E(this->GetFEModel());
+	E.spd = SPD_int;
+	E.Init();
+	vec3d fiber_dir = E.NextVec(angio_element->_rengine);
+	if (fiber_dir*tip_dir < 0)
 	{
-	alpha = contribution;
-	}*/
-	//double FA_cont = std::min(angio_element->angioFA, 0.36);
-	//std::cout << "contribution is " << contribution << endl;
-	
-	// calculate the fractional anisotropy
-	//double angioFA_int = sqrt(0.5)*(sqrt(pow(r0 - r1, 2) + pow(r1 - r2, 2) + pow(r2 - r0, 2)) / (sqrt(pow(r0, 2) + pow(r1, 2) + pow(r2, 2))));
-	//double angioFA_int = 1.0 - (r1 / r0);
-	//alpha = std::min(angioFA_int, 0.75);
-	//alpha = std::min((contribution*(((0.64 - 0.36) / (0.64 - 0))*angioFA_int + 0.36)), 0.64);
-	//alpha = 1.0;
+		fiber_dir = -fiber_dir;
+	}
 	alpha = efd_alpha;
-	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_dir, efd_alpha);
+	return angio_element->_angio_mat->mix_method->ApplyMix(tip_dir, fiber_dir, efd_alpha);
 }
 
 BEGIN_FECORE_CLASS(FractionalAnisotropyPDD, PositionDependentDirection)
 ADD_PARAMETER(alpha_override, "alpha_override");
 ADD_PARAMETER(efd_alpha, "efd_alpha");
 END_FECORE_CLASS();
-
-
 
 vec3d ProtoPDDManager::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int buffer, bool& continue_growth, vec3d& tip_dir, double& alpha, FEMesh* mesh, FEAngio* pangio)
 {
@@ -748,7 +698,7 @@ vec3d ProtoFiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec
 		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
 		FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
 		FEAngioMaterialPoint * angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
-		vec3d axis = emp->m_F*angio_pt->angio_fiber_dir;
+		vec3d axis = angio_pt->angio_fiber_dir;
 		gauss_data.push_back({ axis });
 	}
 
@@ -771,54 +721,41 @@ vec3d ProtoFractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* ang
 {
 	// vector containing the SPD for each gauss point in the element
 	std::vector<mat3ds> SPDs_gausspts;
-	// get the vectors of the principal directions and sort in descending order
-	std::vector<pair<double, int>> v;
-	mat3d ax;
-	ax.setCol(0, vec3d(proto_efd.xx(), proto_efd.xy(), proto_efd.xz()));
-	ax.setCol(1, vec3d(proto_efd.xy(), proto_efd.yy(), proto_efd.yz()));
-	ax.setCol(2, vec3d(proto_efd.xz(), proto_efd.yz(), proto_efd.zz()));
-	v.push_back(pair<double, int>(ax.col(0).norm(), 0));
-	v.push_back(pair<double, int>(ax.col(1).norm(), 1));
-	v.push_back(pair<double, int>(ax.col(2).norm(), 2));
-	sort(v.begin(), v.end(), sortinrev);
 
-	// store the indices
-	int i = v[0].second;
-	int j = v[1].second;
-	int k = v[2].second;
-
-	vec3d axis_0 = ax.col(i); axis_0.unit();
-	vec3d axis_1 = ax.col(j); axis_1.unit();
-	vec3d axis_2 = ax.col(k); axis_2.unit();
-	double r0 = (ax.col(i).norm());
-	double r1 = (ax.col(j).norm());
-	double r2 = (ax.col(k).norm());
-	FEEllipticalDistribution E0(this->GetFEModel());
-	FEEllipticalDistribution E1(this->GetFEModel());
-	E0.a = r0; E0.b = r1; E0.Init();
-	E1.a = r0; E1.b = r2; E1.Init();
-	double theta_12 = E0.NextValue(angio_element->_rengine);
-	double theta_13 = E1.NextValue(angio_element->_rengine);
-	
-	// rotate the primary direction by theta_12 about the normal between them
-	vec3d axis = mix3d_t(axis_0, axis_1, theta_12); axis.unit();
-	vec3d fiber_dir = mix3d_t(axis, axis_2, theta_13); fiber_dir.unit();
-	// determine the fiber directon contribution from the fractional anisotropy
-	/*if (alpha_override)
+	// get each gauss point's SPD
+	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
 	{
-	alpha = contribution;
-	}*/
-	//double FA_cont = std::min(angio_element->angioFA, 0.36);
-	//std::cout << "contribution is " << contribution << endl;
-
-	// calculate the fractional anisotropy
-	//double angioFA_int = sqrt(0.5)*(sqrt(pow(r0 - r1, 2) + pow(r1 - r2, 2) + pow(r2 - r0, 2)) / (sqrt(pow(r0, 2) + pow(r1, 2) + pow(r2, 2))));
-	//double angioFA_int = 1.0 - (r1 / r0);
-	//alpha = std::min(angioFA_int, 0.75);
-	//alpha = std::min((contribution*(((0.64 - 0.36) / (0.64 - 0))*angioFA_int + 0.36)), 0.64);
-	//alpha = 1.0;
+		// get the angio point
+		FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
+		// Get the SPD
+		//angio_mp->nhit = 1;
+		angio_mp->UpdateSPD();
+		//std::cout << angio_mp->angioSPD.xx() << ", " << angio_mp->angioSPD.yy() << ", " << angio_mp->angioSPD.zz() << ", " << angio_mp->angioSPD.xy() << ", " << angio_mp->angioSPD.yz() << ", " << angio_mp->angioSPD.xz() << endl;
+		SPDs_gausspts.push_back(angio_mp->angioSPD);
+	}
+	// array containing the SPD for each node in the element
+	mat3ds SPDs_nodes[FESolidElement::MAX_NODES];
+	// array for the shape function values
+	double H[FESolidElement::MAX_NODES];
+	// project the spds from integration points to the nodes
+	angio_element->_elem->project_to_nodes(&SPDs_gausspts[0], SPDs_nodes);
+	// determine shape function value for the local position
+	angio_element->_elem->shape_fnc(H, local_pos.x, local_pos.y, local_pos.z);
+	//angio_element->_elem->shape_fnc(H, 0, 0, 0);
+	// Get the interpolated SPD from the shape function-weighted Average Structure Tensor
+	mat3ds SPD_int = weightedAverageStructureTensor(SPDs_nodes, H, angio_element->_elem->Nodes());
+	FEEllipticalDistribution E(this->GetFEModel());
+	E.spd = SPD_int;
+	E.Init();
+	vec3d fiber_dir = E.NextVec(angio_element->_rengine);
+	if (fiber_dir*tip_dir < 0)
+	{
+		fiber_dir = -fiber_dir;
+	}
+	//std::cout << "fiber_dir is " << fiber_dir.x << ", " << fiber_dir.y << ", " << fiber_dir.z << endl;
 	alpha = efd_alpha;
-	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_dir, efd_alpha);
+	return angio_element->_angio_mat->mix_method->ApplyMix(tip_dir, fiber_dir, efd_alpha);
 }
 
 BEGIN_FECORE_CLASS(ProtoFractionalAnisotropyPDD, PositionDependentDirection)

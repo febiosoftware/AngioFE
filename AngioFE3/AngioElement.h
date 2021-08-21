@@ -1,3 +1,10 @@
+///////////////////////////////////////////////////////////////////////
+// AngioElement.h
+// Used for operations based at the elemental level. Includes growth 
+// handling. This class mirrors FESolidElements (but does not inherit 
+// from FESolidElement).
+///////////////////////////////////////////////////////////////////////
+
 #pragma once
 #include <FECore/FESolidElement.h>
 #include <random>
@@ -6,16 +13,12 @@
 #include <FECore/FESurface.h>
 #include <unordered_set>
 
-
-
 class FEAngioMaterial;
 class Segment;
 class Tip;
 class BranchInfo;
-
-
  
-//! Contains the data that is needed by the plugin on a per element basis. This class mirrors FESolidElements but does not inhertit from FESolidElement. If this inherited from FESolidElement a large number of custom domain classes would need to be created.
+// Base class
 class AngioElement
 {
 public:
@@ -23,14 +26,14 @@ public:
 	//! constructor
 	AngioElement(FESolidElement * elem, FEAngioMaterial * angio_mat, FEMaterial * mat, FEMesh * mesh) : _elem(elem), _angio_mat(angio_mat), _mat(mat)
 	{
-		//active_tips[0][this]
+
 	};
 
 	//! get the length of the segments within the element at a given time
 	double GetLengthAtTime(FEMesh* mesh, double time) const;
-	//! get the angio fractional anisotropy
+	//! Update the angio fractional anisotropy
 	void UpdateAngioFractionalAnisotropy();
-	//! Update the angioSPD based on deformation/rotation
+	//! Update the angioSPD based on deformation
 	void UpdateSPD();
 
 	//! pointer to element  
@@ -53,8 +56,7 @@ public:
 	std::vector<Segment *> recent_segments;
 	//! count to make sure all recent segments are handled correctly
 	int processed_recent_segments = 0;
-	//this might be further optimized to a constant lookup table given the element type that is doing the looking up ... its possible to do this at compile time
-	//this should reduce this to a jump based on the element type
+	// MP4: This might be further optimized to a constant lookup table given the element type that is doing the looking up ... its possible to do this at compile time this should reduce this to a jump based on the element type
 	//! map of tips to the element which they should try to grow into on the next growth substep
 	std::unordered_map<AngioElement*, std::vector<Tip *>> active_tips[2];
 	//! map of tips to the element which they should try to grow into on the next growth step
@@ -75,7 +77,7 @@ public:
 	int anastamoses = 0;
 	//! initial orientation of spd
 	mat3ds initial_angioSPD;
-	//! updated angioSPD
+	//! Updated angioSPD
 	mat3ds angioSPD;
 	//! Angio fractional anisotropy
 	double angioFA;

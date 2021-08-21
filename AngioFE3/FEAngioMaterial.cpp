@@ -276,7 +276,7 @@ double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem, FEMesh* mesh)
 	return (min_side_length_so_far * 0.5 * dt_safety_multiplier) / max_grow_velocity;
 }
 
-void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle, double min_segment_length)
+void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle)
 {
 	assert(angio_elem);
 
@@ -294,7 +294,7 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, i
 			{
 				assert(tips.at(j)->angio_element == angio_elem);
 				// call GrowthInElement providing the end time of the step, the active tip, the source index of the adjacent element, the buffer index, and other 3 things.
-				GrowthInElement(end_time, tips.at(j), i, buffer_index, min_scale_factor,bounds_tolerance, min_angle, min_segment_length);
+				GrowthInElement(end_time, tips.at(j), i, buffer_index, min_scale_factor,bounds_tolerance, min_angle);
 			}
 			
 		}
@@ -309,11 +309,11 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, i
 	{
 		assert(tips[j]->angio_element == angio_elem);
 		// call GrowthInElement providing the end time, the active tip, -1 to indicate the tip originated within this element, the buffer index, etc.
-		GrowthInElement(end_time, tips[j], -1, buffer_index, min_scale_factor,bounds_tolerance, min_angle, min_segment_length);
+		GrowthInElement(end_time, tips[j], -1, buffer_index, min_scale_factor,bounds_tolerance, min_angle);
 	}
 }
 
-void FEAngioMaterial::ProtoGrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle, double min_segment_length)
+void FEAngioMaterial::ProtoGrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle)
 {
 	assert(angio_elem);
 	for (int i = 0; i < angio_elem->adjacency_list.size(); i++)
@@ -326,7 +326,7 @@ void FEAngioMaterial::ProtoGrowSegments(AngioElement * angio_elem, double end_ti
 			for (int j = 0; j < tips.size(); j++)
 			{
 				assert(tips.at(j)->angio_element == angio_elem);
-				ProtoGrowthInElement(end_time, tips.at(j), i, buffer_index, min_scale_factor, bounds_tolerance, min_angle, min_segment_length);
+				ProtoGrowthInElement(end_time, tips.at(j), i, buffer_index, min_scale_factor, bounds_tolerance, min_angle);
 			}
 		}
 	}
@@ -337,12 +337,12 @@ void FEAngioMaterial::ProtoGrowSegments(AngioElement * angio_elem, double end_ti
 	for (int j = 0; j < tips.size(); j++)
 	{
 		assert(tips[j]->angio_element == angio_elem);
-		ProtoGrowthInElement(end_time, tips[j], -1, buffer_index, min_scale_factor, bounds_tolerance,min_angle, min_segment_length);
+		ProtoGrowthInElement(end_time, tips[j], -1, buffer_index, min_scale_factor, bounds_tolerance,min_angle);
 	}
 }
 
 //Grow a provided active tip based on the dt, originating element, etc.
-void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle, double min_segment_length)
+void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle)
 {
 	////////// Initialization //////////
 
@@ -352,7 +352,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	assert(active_tip);
 	// get the mesh, set the min segment length, and set the next buffer (change to write buffer from read).
 	auto mesh = m_pangio->GetMesh();
-	const double min_segm_len = min_segment_length;
+	const double min_segm_len = 5;
 	
 	int next_buffer_index = (buffer_index + 1) % 2;
 	// calculate the change in time
@@ -601,7 +601,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	}
 }
 
-void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle, double min_segment_length)
+void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle)
 {
 	////////// Initialization //////////
 
@@ -611,7 +611,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 	assert(active_tip);
 	// get the mesh, set the min segment length, and set the next buffer (change to write buffer from read).
 	auto mesh = m_pangio->GetMesh();
-	const double min_segm_len = min_segment_length;
+	const double min_segm_len = 5;
 	int next_buffer_index = (buffer_index + 1) % 2;
 	// calculate the change in time
 	double dt = end_time - active_tip->time;

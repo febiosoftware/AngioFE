@@ -155,7 +155,6 @@ void LoadCurveVelAngioStressPolicy::AngioStress(AngioElement* angio_element, FEA
 			angio_mp->m_as += dyad(r)*p;
 		}
 	}
-
 }
 
 
@@ -202,7 +201,6 @@ void LoadCurveAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngi
 			angio_mp->m_as += dyad(r)*p;
 		}
 	}
-
 }
 
 BEGIN_FECORE_CLASS(LoadCurveAngioStressPolicy, AngioStressPolicy)

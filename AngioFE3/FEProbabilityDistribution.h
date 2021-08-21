@@ -21,6 +21,9 @@ public:
 	//! generates the next value in the given sequence which fits a given distribution
 	virtual double NextValue(angiofe_random_engine & re) = 0;
 
+	//! generates the next value in the given sequence which fits a given distribution
+	virtual vec3d NextVec(angiofe_random_engine & re) = 0;
+
 	//! updates the distribution to a given time
 	virtual void TimeStepUpdate(double current_time) = 0;
 	
@@ -49,6 +52,8 @@ public:
 	//! nan will be returned if the distribution fails to find a suitable number
 	double NextValue(angiofe_random_engine & re) override;
 
+	vec3d NextVec(angiofe_random_engine & re) override;
+
 	//! performs initialization
 	bool Init() override;
 
@@ -74,6 +79,8 @@ public:
 	//! this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
 	//! nan will be returned if the distribution fails to find a suitable number
 	double NextValue(angiofe_random_engine & re) override;
+
+	vec3d NextVec(angiofe_random_engine & re) override;
 
 	//! performs initialization
 	bool Init() override;
@@ -104,6 +111,8 @@ public:
 	//! this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
 	//! nan will be returned if the distribution fails to find a suitable number
 	double NextValue(angiofe_random_engine & re) override;
+
+	vec3d NextVec(angiofe_random_engine & re) override;
 
 	//! performs initialization
 	bool Init() override;
@@ -136,6 +145,8 @@ public:
 	//! nan will be returned if the distribution fails to find a suitable number
 	double NextValue(angiofe_random_engine & re) override;
 
+	vec3d NextVec(angiofe_random_engine & re) override;
+
 	//! performs initialization
 	bool Init() override;
 
@@ -166,6 +177,8 @@ public:
 	//! this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
 	//! nan will be returned if the distribution fails to find a suitable number
 	double NextValue(angiofe_random_engine & re) override;
+
+	vec3d NextVec(angiofe_random_engine & re) override;
 
 	//! performs initialization
 	bool Init() override;
@@ -198,6 +211,8 @@ public:
 	//! nan will be returned if the distribution fails to find a suitable number
 	double NextValue(angiofe_random_engine & re) override;
 
+	vec3d NextVec(angiofe_random_engine & re) override;
+
 	//! performs initialization
 	bool Init() override;
 
@@ -229,6 +244,8 @@ public:
 	//! nan will be returned if the distribution fails to find a suitable number
 	double NextValue(angiofe_random_engine & re) override;
 
+	vec3d NextVec(angiofe_random_engine & re) override;
+
 	//! performs initialization
 	bool Init() override;
 
@@ -258,6 +275,8 @@ public:
 	//! this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
 	//! nan will be returned if the distribution fails to find a suitable number
 	double NextValue(angiofe_random_engine & re) override;
+
+	vec3d NextVec(angiofe_random_engine & re) override;
 	
 	//! performs initialization
 	bool Init() override;
@@ -280,6 +299,9 @@ public:
 	//! generates the next value in the given sequence which fits a given distribution
 	//! this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
 	//! nan will be returned if the distribution fails to find a suitable number
+	
+	vec3d NextVec(angiofe_random_engine & re) override;
+
 	double NextValue(angiofe_random_engine & re) override;
 
 	//! performs initialization
@@ -288,34 +310,16 @@ public:
 	//! updates the distribution to a given time
 	void TimeStepUpdate(double current_time) override;
 
-	double a = 1.0;
-	double b = 1.0;
+	mat3ds spd = mat3ds();
 
 private:
-
-
-	// construct uniform distribution
-	std::uniform_real_distribution<double> ud = std::uniform_real_distribution<double>(0.0, 1.0);
-
-	//std::gamma_distribution<double> gd;
-
-	double prev_alpha = a;
-	double prev_beta = b;
-	double p_i = -PI / 2;
-	double p_f = PI / 2;
-	const int n = 180;
-
-	// theta
-	std::vector<double> t;
-	// radius
-	std::vector<double> r_t;
-	// radius cumulative sum
-	std::vector<double> rc_t;
-	// area vector
-	std::vector<double> l_t;
-	// cumulative area vector
-	std::vector<double> lc_t;
-
+	vec3d rv;
+	vec3d rd;
+	mat3d R;
+	double w;
+	double d[3];
+	vec3d v[3];
+	//std::uniform_real_distribution<double> rd;
 	DECLARE_FECORE_CLASS();
 };
 
@@ -330,6 +334,8 @@ public:
 	//! this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
 	//! nan will be returned if the distribution fails to find a suitable number
 	double NextValue(angiofe_random_engine & re) override;
+
+	vec3d NextVec(angiofe_random_engine & re) override;
 
 	//! performs initialization
 	bool Init() override;

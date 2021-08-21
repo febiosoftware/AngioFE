@@ -49,16 +49,16 @@ public:
 	double GetMin_dt(AngioElement* angio_elem, FEMesh* mesh);
 
 	//! vascular growth that occurs before time =0
-	void ProtoGrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle, double min_segment_length);
+	void ProtoGrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle);
 	
 	//! vascular growth that occurs after time =0
-	void GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle, double min_segment_length);
+	void GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle);
 
 	//! performs vascular growth within an element
-	void GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle, double min_segment_length);
+	void GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle);
 
 	//! performs vascular growth within an element before time = 0
-	void ProtoGrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle, double min_segment_length);
+	void ProtoGrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle);
 
 	//! returns the index of the element in which the tip will grow next, this resolves when a tip can grow in multiple elements
 	int SelectNextTip(std::vector<AngioElement*> & possible_locations, std::vector<vec3d> & possible_local_coordinates, Tip* tip, double dt, int buffer, FEMesh* mesh, double min_scale_factor, double min_angle);
@@ -144,7 +144,7 @@ public:
 	TipSpeciesManager* tip_species_manager = nullptr;
 private:
 	DECLARE_FECORE_CLASS();
-	//double initial_segment_velocity = 7.5;
+	double initial_segment_velocity = 7.5;
 
 	double dt_safety_multiplier = 1.0;
 
@@ -154,7 +154,6 @@ private:
 	ProtoPDDManager* proto_pdd_manager = nullptr;
 	TipSpecies* tip_species = nullptr;
 	ContributionMixManager* cm_manager = nullptr;
-//	SegmentGrowthVelocityManager> velocity_manager;
 	CommonAngioProperties* common_properties = nullptr;
 	
 };
