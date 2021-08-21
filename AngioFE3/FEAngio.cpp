@@ -206,6 +206,8 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 				}
 			}
 
+			min_dt = 1.0 / (growth_substeps*3.0);
+
 			//min_dt = 0;
 
 			// update current time
@@ -226,7 +228,8 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 			//worse performace than separate declarations
 			//#pragma omp parallel
 			{
-				int n = 3;
+				int n = growth_substeps;
+				//				int n = 3;
 				for (int i = 0; i <n; i++)
 				{
 					#pragma omp parallel for schedule(dynamic, 32)
@@ -1305,7 +1308,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		// start the growth timer
 		grow_timer.start();
 		// grow segments
-		ProtoGrowSegments(min_scale_factor, bounds_tolerance, min_angle, growth_substeps*8);
+		ProtoGrowSegments(min_scale_factor, bounds_tolerance, min_angle, growth_substeps);
 		grow_timer.stop();
 
 		CalculateSegmentLengths(mesh);

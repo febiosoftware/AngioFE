@@ -729,9 +729,7 @@ vec3d ProtoFractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* ang
 		FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
 		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
 		// Get the SPD
-		//angio_mp->nhit = 1;
 		angio_mp->UpdateSPD();
-		//std::cout << angio_mp->angioSPD.xx() << ", " << angio_mp->angioSPD.yy() << ", " << angio_mp->angioSPD.zz() << ", " << angio_mp->angioSPD.xy() << ", " << angio_mp->angioSPD.yz() << ", " << angio_mp->angioSPD.xz() << endl;
 		SPDs_gausspts.push_back(angio_mp->angioSPD);
 	}
 	// array containing the SPD for each node in the element
@@ -742,7 +740,6 @@ vec3d ProtoFractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* ang
 	angio_element->_elem->project_to_nodes(&SPDs_gausspts[0], SPDs_nodes);
 	// determine shape function value for the local position
 	angio_element->_elem->shape_fnc(H, local_pos.x, local_pos.y, local_pos.z);
-	//angio_element->_elem->shape_fnc(H, 0, 0, 0);
 	// Get the interpolated SPD from the shape function-weighted Average Structure Tensor
 	mat3ds SPD_int = weightedAverageStructureTensor(SPDs_nodes, H, angio_element->_elem->Nodes());
 	FEEllipticalDistribution E(this->GetFEModel());
@@ -753,7 +750,6 @@ vec3d ProtoFractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* ang
 	{
 		fiber_dir = -fiber_dir;
 	}
-	//std::cout << "fiber_dir is " << fiber_dir.x << ", " << fiber_dir.y << ", " << fiber_dir.z << endl;
 	alpha = efd_alpha;
 	return angio_element->_angio_mat->mix_method->ApplyMix(tip_dir, fiber_dir, efd_alpha);
 }
