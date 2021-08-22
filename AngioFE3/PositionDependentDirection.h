@@ -217,7 +217,7 @@ public:
 	DECLARE_FECORE_CLASS();
 private:
 	FEVariableInterpolation* interpolation_prop = nullptr;
-	double proto_fiber_alpha = 0.6;
+	double proto_alpha = 0.4;
 };
 
 //! Implements a position dependent modifier that modifies growth direction based on fiber direction
@@ -237,7 +237,7 @@ public:
 private:
 	FEVariableInterpolation* interpolation_prop = nullptr;
 	bool alpha_override = true;// replace alpha with the override
-	double efd_alpha = 0.4;
+	double proto_alpha = 0.4;
 	mat3ds proto_efd = mat3ds(1, 1, 1, 0, 0, 0);
 };
 
