@@ -237,7 +237,7 @@ public:
 private:
 	FEVariableInterpolation* interpolation_prop = nullptr;
 	bool alpha_override = true;// replace alpha with the override
-	double proto_alpha = 0.4;
+	double proto_alpha = 0.33;
 	mat3ds proto_efd = mat3ds(1, 1, 1, 0, 0, 0);
 };
 
