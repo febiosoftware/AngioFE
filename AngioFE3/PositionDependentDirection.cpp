@@ -756,6 +756,6 @@ vec3d ProtoFractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* ang
 
 BEGIN_FECORE_CLASS(ProtoFractionalAnisotropyPDD, PositionDependentDirection)
 ADD_PARAMETER(alpha_override, "alpha_override");
-ADD_PARAMETER(proto_alpha, "efd_alpha");
+ADD_PARAMETER(proto_alpha, "proto_alpha");
 ADD_PARAMETER(proto_efd, "proto_efd");
 END_FECORE_CLASS();
