@@ -692,7 +692,6 @@ vec3d ProtoFiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec
 {
 	std::vector<quatd> gauss_data;
 	//FEElasticMaterial* pmm = dynamic_cast<FEElasticMaterial*> (angio_element->_mat->GetElasticMaterial);
-	//std::cout << "material is " << angio_element->_angio_mat->GetMatrixMaterial()->GetElasticMaterial()->FindProperty("m_Base") << endl;
 	for (int i = 0; i< angio_element->_elem->GaussPoints(); i++)
 	{
 		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
@@ -719,31 +718,8 @@ void ProtoFractionalAnisotropyPDD::Update(FEMesh * mesh, FEAngio* angio)
 
 vec3d ProtoFractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio)
 {
-	// vector containing the SPD for each gauss point in the element
-	std::vector<mat3ds> SPDs_gausspts;
-
-	// get each gauss point's SPD
-	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
-	{
-		// get the angio point
-		FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
-		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
-		// Get the SPD
-		angio_mp->UpdateSPD();
-		SPDs_gausspts.push_back(angio_mp->angioSPD);
-	}
-	// array containing the SPD for each node in the element
-	mat3ds SPDs_nodes[FESolidElement::MAX_NODES];
-	// array for the shape function values
-	double H[FESolidElement::MAX_NODES];
-	// project the spds from integration points to the nodes
-	angio_element->_elem->project_to_nodes(&SPDs_gausspts[0], SPDs_nodes);
-	// determine shape function value for the local position
-	angio_element->_elem->shape_fnc(H, local_pos.x, local_pos.y, local_pos.z);
-	// Get the interpolated SPD from the shape function-weighted Average Structure Tensor
-	mat3ds SPD_int = weightedAverageStructureTensor(SPDs_nodes, H, angio_element->_elem->Nodes());
 	FEEllipticalDistribution E(this->GetFEModel());
-	E.spd = SPD_int;
+	E.spd = proto_efd;
 	E.Init();
 	vec3d fiber_dir = E.NextVec(angio_element->_rengine);
 	if (fiber_dir*tip_dir < 0)
