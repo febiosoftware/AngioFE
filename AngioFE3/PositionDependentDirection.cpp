@@ -389,7 +389,8 @@ vec3d FiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d lo
 
 	quatd rv = interpolation_prop->Interpolate(angio_element->_elem, gauss_data, local_pos, mesh);
 	vec3d fiber_direction = rv.GetVector();
-	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_direction, contribution);
+	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_direction, alpha);
+	//return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_direction, contribution);
 }
 
 void FractionalAnisotropyPDD::Update(FEMesh * mesh, FEAngio* angio)
@@ -431,8 +432,9 @@ vec3d FractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* angio_el
 	{
 		fiber_dir = -fiber_dir;
 	}
-	alpha = efd_alpha;
-	return angio_element->_angio_mat->mix_method->ApplyMix(tip_dir, fiber_dir, efd_alpha);
+	// alpha = efd_alpha;
+	// return angio_element->_angio_mat->mix_method->ApplyMix(tip_dir, fiber_dir, efd_alpha);
+	return angio_element->_angio_mat->mix_method->ApplyMix(tip_dir, fiber_dir, alpha);
 }
 
 BEGIN_FECORE_CLASS(FractionalAnisotropyPDD, PositionDependentDirection)
@@ -703,7 +705,8 @@ vec3d ProtoFiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec
 
 	quatd rv = interpolation_prop->Interpolate(angio_element->_elem, gauss_data, local_pos, mesh);
 	vec3d fiber_direction = rv.GetVector();
-	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_direction, proto_alpha);
+	//return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_direction, proto_alpha);
+	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_direction, alpha);
 }
 
 BEGIN_FECORE_CLASS(ProtoFiberPDD, PositionDependentDirection)
@@ -726,8 +729,9 @@ vec3d ProtoFractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* ang
 	{
 		fiber_dir = -fiber_dir;
 	}
-	alpha = proto_alpha;
-	return angio_element->_angio_mat->mix_method->ApplyMix(tip_dir, fiber_dir, proto_alpha);
+	//alpha = proto_alpha;
+	return angio_element->_angio_mat->mix_method->ApplyMix(tip_dir, fiber_dir, alpha);
+	//return angio_element->_angio_mat->mix_method->ApplyMix(tip_dir, fiber_dir, proto_alpha);
 }
 
 BEGIN_FECORE_CLASS(ProtoFractionalAnisotropyPDD, PositionDependentDirection)
