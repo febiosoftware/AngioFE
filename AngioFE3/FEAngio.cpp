@@ -84,7 +84,6 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, dou
 {
 	// get the current time
 	FETimeInfo time_info = m_fem->GetTime();
-	//double fe_ctime = time_info.currentTime;
 	// get the current FE step
 	FEAnalysis * cs = m_fem->GetCurrentStep();
 	auto   mesh = GetMesh();
@@ -267,7 +266,7 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 		}
 	}
 	//this may be a bit conservative for a first step but should produce good results
-	//ApplydtToTimestepper(min_dt);
+	ApplydtToTimestepper(min_dt);
 	//do the output, this will output all of the segments
 	fileout->bulk_save_vessel_state(*this);
 }
@@ -396,7 +395,6 @@ void FEAngio::GetGrownTipsInRadius(AngioElement* angio_element, double radius, F
 				tips.push_back((*iter)->front);
 				tips.push_back((*iter)->back);
 			}
-
 
 			for (int i = 0; i < cur->face_adjacency_list.size(); i++)
 			{
@@ -801,7 +799,6 @@ void FEAngio::FillInAdjacencyInfo(FEMesh * mesh,FEElemElemList * eel, AngioEleme
 			}
 		}
 	}
-
 }
 
 void FEAngio::FillInFaces(FEMesh * mesh, AngioElement * angio_element)
@@ -977,7 +974,6 @@ mat3d FEAngio::unifromRandomRotationMatrix(angiofe_random_engine & rengine)
 	double beta = zto2pi(rengine);
 	double gamma = zto2pi(rengine);
 
-
 	double c_alpha = cos(alpha);
 	double c_beta = cos(beta);
 	double c_gamma = cos(gamma);
@@ -1118,10 +1114,6 @@ static void solve_3x3(double A[3][3], double b[3], double x[3])
 #endif
 }
 
-
-
-
-
 FEAngioMaterial * FEAngio::GetAngioComponent(FEMaterial * mat)
 {
 	// try to cast an angio material
@@ -1143,14 +1135,6 @@ FEAngioMaterial * FEAngio::GetAngioComponent(FEMaterial * mat)
 		if(mmat)
 			angm = dynamic_cast<FEAngioMaterial*>(mmat->GetSolid());
 	}
-	/* //Biphasic Material doesn't have a get solid function 
-	 * //this fucntion should be moved to an interface in febio
-	if (!angm)
-	{
-		FEBiphasic * mmat = dynamic_cast<FEBiphasic*>(mat);
-		angm = dynamic_cast<FEAngioMaterialBase*>(mmat->GetSolid());
-	}
-	*/
 	return angm;
 }
 
@@ -1374,8 +1358,6 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 			angio_elements[i]->_angio_mat->angio_stress_policy->AngioStress(angio_elements[i], this,mesh);
 		}
 		update_angio_stress_timer.stop();
-
-		
 	}
 	else if (nwhen == CB_MAJOR_ITERS)
 	{
@@ -1389,7 +1371,6 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 			// Print the status of angio3d to the user    
 			fileout->printStatus(*this, fem.GetTime().currentTime);
 		}
-		
 	}
 	else if (nwhen == CB_SOLVED)
 	{
@@ -1401,7 +1382,6 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		//force any destructors to be called that need it
 		delete fileout;
 		fileout = nullptr;
-			
 	}
 	return true;
 }
@@ -1486,13 +1466,6 @@ bool FEAngio::ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d
 		{
 			auto double_it = std::min_element(possible_values.begin(), possible_values.end());
 			sf = *double_it;
-
-			/* This should be fine to remove since it is contained in the following lines: SL
-			if(sf < min_sf)
-			{
-				return false;
-			}
-			*/
 
 			// if the scale factor is under the min scale factor remove it from the possible locations
 			while (sf < min_sf)
@@ -1705,7 +1678,6 @@ void FEAngio::SetupNodesToElement(int min_element_id)
 			}
 		}
 	}
-	
 }
 
 bool FEAngio::ProjectToElement(FESolidElement& el, const vec3d& p, FEMesh* mesh, double r[3])

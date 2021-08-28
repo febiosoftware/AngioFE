@@ -10,7 +10,6 @@
 #include "FEAngioMaterial.h"
 #include <unordered_set>
 
-
 using namespace std;
 
 //-----------------------------------------------------------------------------
@@ -356,4 +355,3 @@ std::vector <int> Fileout::getTipCount_pm(FEAngio& angio)
 	}
 	return count;
 }
-

@@ -107,14 +107,7 @@ bool ByElementFragmentSeeder::SeedFragments(std::vector<AngioElement *> &angio_e
 		// Finally add this to the AngioElement.
 		r0->SetProtoGrowthLength(initial_segment_length);
 		r0->angio_element->next_tips.at(r0->angio_element).push_back(r0);
-
-		//just shove it in growth may not be compelte
-		//r0->angio_element->_angio_mat->GrowthInElement(0, r0, 1, -1, initial_vessel_length, true);
-
 	}
-
-	// angio_mat->m_pangio->GrowSegments();
-
 	return true;
 }
 

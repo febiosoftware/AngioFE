@@ -112,18 +112,12 @@ double SegmentVelocity3PModifier::ApplyModifiers(double prev, vec3d natural_coor
 		FEElasticMaterialPoint* elastic_mp = gauss_point->ExtractData<FEElasticMaterialPoint>();
 		E += elastic_mp->Strain();
 	}
-
 	E = E / (angio_element->_elem->GaussPoints());
 	// get eigenvalues and eigenvectors
 	double d[3]; vec3d r[3];
 	E.eigen(d, r);
-	// Create vector of pairs of eigenvalues and eigenvectors
-	//std::vector<std::pair<double, vec3d>> v = { { d[0],r[0] },{ d[1],r[1] },{ d[2],r[2] } };
 	// Sort based on absolute value of eigenvalues
 	double c_strain = std::min(d[0], std::min(d[1], d[2]));
-	//std::sort(v.begin(), v.end(), EigComp());
-	//double 3P_s = v[2].first;
-	//double c_strain = v[2].first;
 	if (c_strain < threshold) { 
 		return scale * prev; 
 	}
@@ -171,34 +165,18 @@ double SegmentVelocityFAModifier::ApplyModifiers(double prev, vec3d natural_coor
 	angio_element->_elem->project_to_nodes(&SPDs_gausspts[0], SPDs_nodes);
 	// determine shape function value for the local position
 	angio_element->_elem->shape_fnc(H, natural_coords.x, natural_coords.y, natural_coords.z);
-	//angio_element->_elem->shape_fnc(H, 0, 0, 0);
 	// Get the interpolated SPD from the shape function-weighted Average Structure Tensor
 	mat3ds SPD_int = weightedAverageStructureTensor(SPDs_nodes, H, angio_element->_elem->Nodes());
 	// get the vectors of the principal directions and sort in descending order
-	std::vector<pair<double, int>> v;
-	mat3d ax;
-	ax.setCol(0, vec3d(SPD_int.xx(), SPD_int.xy(), SPD_int.xz()));
-	ax.setCol(1, vec3d(SPD_int.xy(), SPD_int.yy(), SPD_int.yz()));
-	ax.setCol(2, vec3d(SPD_int.xz(), SPD_int.yz(), SPD_int.zz()));
-	v.push_back(pair<double, int>(ax.col(0).norm(), 0));
-	v.push_back(pair<double, int>(ax.col(1).norm(), 1));
-	v.push_back(pair<double, int>(ax.col(2).norm(), 2));
-	sort(v.begin(), v.end(), sortinrev);
-
-	// store the indices
-	int i = v[0].second;
-	int j = v[1].second;
-	int k = v[2].second;
-
-	vec3d axis_0 = ax.col(i); axis_0.unit();
-	vec3d axis_1 = ax.col(j); axis_1.unit();
-	vec3d axis_2 = ax.col(k); axis_2.unit();
-	double r0 = (ax.col(i).norm());
-	double r1 = (ax.col(j).norm());
-	double r2 = (ax.col(k).norm());
-
-	// calculate the fractional anisotropy
-	double angioFA_int = sqrt(0.5)*(sqrt(pow(r0 - r1, 2) + pow(r1 - r2, 2) + pow(r2 - r0, 2)) / (sqrt(pow(r0, 2) + pow(r1, 2) + pow(r2, 2))));
+	// the FA can be calculated as std/rms of the ODF. We can assume each direction is one sample and perform the calculation on the eigenvalues.
+	double d[3]; vec3d v[3];
+	SPD_int.eigen2(d, v);
+	double sum = d[0] + d[1] + d[2];
+	double mean = sum / 3.0;
+	double sq_sum = (d[0] - mean) * (d[0] - mean) + (d[1] - mean) * (d[1] - mean) + (d[2] - mean) * (d[2] - mean);
+	double stdev = sqrt(sq_sum / 2.0);
+	double rms = sqrt((d[0] * d[0] + d[1] * d[1] + d[2] * d[2]) / 3.0);
+	double angioFA_int = stdev / rms;
 	
 	std::vector<double> density_at_integration_points;
 
@@ -246,8 +224,6 @@ bool SigmoidSegmentVelocity::Init()
 void SigmoidSegmentVelocity::UpdateScale()
 {
 	double time = GetFEModel()->GetTime().currentTime;
-	//double shift = GetFEModel()->GetGlobalConstant("max_angio_dt");
-	//c = c - shift;
 	// account for shift in curve due to the initial min angio dt
 	double e_val = -((time - c) / b);
 	// derivative of the sigmoid equation
@@ -290,7 +266,6 @@ double SegmentGrowthVelocityManager::ApplyModifiers(double prev, vec3d natural_c
 {
 	for (int i = 0; i < seg_vel_modifiers.size(); i++)
 	{
-		//seg_vel_modifiers[i]->UpdateScale();
 		prev = seg_vel_modifiers[i]->ApplyModifiers(prev, natural_coords, angio_elem, mesh);
 	}
 	return prev;

@@ -25,10 +25,9 @@ protected:
 	int number_fragments = 0;
 	//! used to initialize fragment ids
 	static int initial_fragment_id_counter;
-	//! initial vessel length
-	//! parameter list
 	//! Probability Distribution
 	FEProbabilityDistribution* initial_segment_length = nullptr;
+
 	DECLARE_FECORE_CLASS();
 };
 

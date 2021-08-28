@@ -41,27 +41,19 @@ public:
 	//! the weight of the matrix material
 	double matrix_weight;
 
-	//! previous deformation gradient
-	mat3d Fp = mat3d(1, 0, 0, 0, 1, 0, 0, 0, 1);
-	mat3d Fi = mat3d(1, 0, 0, 0, 1, 0, 0, 0, 1);
-	bool nhit = 0;
-
 	//! pointer to material point of the vessel
 	FEMaterialPoint* vessPt = nullptr;
 	//! pointer to matrix material point
 	FEMaterialPoint* matPt = nullptr;
 
-	//! initial orientation of spd
+	//! initial orientation of efd/spd
 	mat3ds initial_angioSPD;
 	//! updated angioSPD
 	mat3ds angioSPD;
 	//! Angio fractional anisotropy
 	double angioFA;
+	//! Angio fiber direction
 	vec3d angio_fiber_dir = vec3d(1, 0, 0);
-
-	//! parameter list
-	//DECLARE_FECORE_CLASS();
-	// only works with classes that derive from FECoreBase
 
 public:
 	//! return the angio material point from a material point if it exists, return nullptr otherwise

@@ -31,10 +31,6 @@ public:
 
 	//! get the length of the segments within the element at a given time
 	double GetLengthAtTime(FEMesh* mesh, double time) const;
-	//! Update the angio fractional anisotropy
-	void UpdateAngioFractionalAnisotropy();
-	//! Update the angioSPD based on deformation
-	void UpdateSPD();
 
 	//! pointer to element  
 	FESolidElement * _elem = nullptr;
@@ -75,10 +71,4 @@ public:
 	double refernce_frame_segment_length = 0.0;
 	//! number of anastamoses that have occured
 	int anastamoses = 0;
-	//! initial orientation of spd
-	mat3ds initial_angioSPD;
-	//! Updated angioSPD
-	mat3ds angioSPD;
-	//! Angio fractional anisotropy
-	double angioFA;
 };

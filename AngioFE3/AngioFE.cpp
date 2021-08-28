@@ -82,6 +82,8 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS_EXPLICIT(GompertzSegmentVelocity, FEMATERIAL_ID, "gompertz_segment_velocity");
 
 	// PSC Classes
+	REGISTER_FECORE_CLASS_EXPLICIT(ProtoPreviousSegmentContributionManager, FEMATERIAL_ID, "proto_previous_segment_contribution_manager");
+	REGISTER_FECORE_CLASS_EXPLICIT(ProtoPreviousSegmentPSC, FEMATERIAL_ID, "proto_previous_segment_psc");
 	REGISTER_FECORE_CLASS_EXPLICIT(PreviousSegmentContributionManager, FEMATERIAL_ID, "previous_segment_contribution_manager");
 	REGISTER_FECORE_CLASS_EXPLICIT(PreviousSegmentPSC, FEMATERIAL_ID, "previous_segment_psc");
 
@@ -96,14 +98,16 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS_EXPLICIT(ConcentrationGradientPDD, FEMATERIAL_ID, "concentration_gradient_pdd");
 
 	// ProtoPDD Classes
-	REGISTER_FECORE_CLASS_EXPLICIT(ProtoPDDManager, FEMATERIAL_ID, "proto_pdd_manager");
+	REGISTER_FECORE_CLASS_EXPLICIT(ProtoPositionDependentDirectionManager, FEMATERIAL_ID, "proto_position_dependent_direction_manager");
 	REGISTER_FECORE_CLASS_EXPLICIT(ProtoFiberPDD, FEMATERIAL_ID, "proto_fiber_pdd");
 	REGISTER_FECORE_CLASS_EXPLICIT(ProtoFractionalAnisotropyPDD, FEMATERIAL_ID, "proto_fractional_anisotropy_pdd");
 	REGISTER_FECORE_CLASS_EXPLICIT(ProtoAnastamosisPDD, FEMATERIAL_ID, "proto_anastamosis_pdd");
 	REGISTER_FECORE_CLASS_EXPLICIT(ProtoRepulsePDD, FEMATERIAL_ID, "proto_repulse_pdd");
 
 	// ContributionMix Classes
+	REGISTER_FECORE_CLASS_EXPLICIT(ProtoContributionMixManager, FEMATERIAL_ID, "proto_contribution_mix_manager");
 	REGISTER_FECORE_CLASS_EXPLICIT(ContributionMixManager, FEMATERIAL_ID, "contribution_mix_manager");
+	REGISTER_FECORE_CLASS_EXPLICIT(ProtoPSCPDDContributionMix, FEMATERIAL_ID, "proto_psc_pdd_contribution_mix");
 	REGISTER_FECORE_CLASS_EXPLICIT(PSCPDDContributionMix, FEMATERIAL_ID, "psc_pdd_contribution_mix");
 
 	// Species Manager Classes

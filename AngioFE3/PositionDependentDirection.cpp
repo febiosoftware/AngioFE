@@ -48,7 +48,7 @@ struct EigComp {
 
 
 // PDD that determines the principal strain of least magnitude and mixes it with the previous direction
-// TODO: Determine contribution and direction based on ratio of each direction's magnitude.
+// TODO: Determine contribution and direction based on ratio of each direction's magnitude. This can probably be adapted from the fractional anisotropy pdd.
 vec3d LaGrangePStrainPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) 
 {
 	mat3ds E;
@@ -64,12 +64,13 @@ vec3d LaGrangePStrainPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element
 	// get eigenvalues and eigenvectors
 	double d[3]; vec3d r[3];
 	E.eigen(d,r);
+	double c_strain = std::min(d[0], std::min(d[1], d[2]));
 	// Create vector of pairs of eigenvalues and eigenvectors
 	std::vector<std::pair<double, vec3d>> v = { {d[0],r[0]}, {d[1],r[1]}, {d[2],r[2]} };
 	// Sort based on absolute value of eigenvalues
 	std::sort(v.begin(), v.end(), EigComp());
 	// multiply magnitudes by directions and then determine the scaling based on this value
-	//MagVecs[0] = v[0].second*v[0].first; MagVecs[1] = v[1].second*v[1].first; MagVecs[2] = v[2].second*v[2].first;
+	// can probably replace this with the method used for the fractional anisotropy PDD.
 	vec3d least_strain = v[2].second;
 	least_strain.unit();
 	return angio_element->_angio_mat->mix_method->ApplyMixAxis(prev, least_strain, beta);
@@ -107,7 +108,6 @@ vec3d ECMDensityGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_elem
 		vec3d new_dir = angio_element->_angio_mat->mix_method->ApplyMix(prev, perpendicularToGradient, contribution);
 		if (prev* perpendicularToGradient < 0) { new_dir = -new_dir; }
 		return new_dir;
-		//return mix3d(prev, perpendicularToGradient, contribution);
 	}
 	return prev;
 }
@@ -151,8 +151,6 @@ vec3d RepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d 
 			vec3d new_dir = angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, alpha);
 			if (prev* grad < 0) { new_dir = -new_dir; }
 			return new_dir;
-			//return angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, contribution);
-			//return mix(prev,grad, contribution);
 		}	
 	}
 	// if the gradient method is not being used
@@ -170,7 +168,6 @@ vec3d RepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d 
 		{
 			val += H[i] * nodal_repulse[i];
 		}
-		//SL: moving this into the loop below so it is only calculated when necessary 
 		// vec3d grad = pangio->gradient(angio_element->_elem, repulse_at_integration_points, local_pos);
 		// if the value from the shape functions is greater than the threshold then the vessel will be repulsed
 		if(val > threshold)
@@ -194,7 +191,6 @@ vec3d RepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d 
 		}
 	}
 	return prev;
-	
 }
 
 BEGIN_FECORE_CLASS(ConcentrationGradientPDD, PositionDependentDirection)
@@ -224,8 +220,6 @@ vec3d ConcentrationGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_e
 		vec3d new_dir = angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, contribution);
 		if (prev* grad< 0) { new_dir = -new_dir; }
 		return new_dir;
-		//return angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, contribution);
-		//return mix(prev, grad, contribution);
 	}
 	return prev;
 }
@@ -269,8 +263,6 @@ vec3d AnastamosisPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, ve
 		vec3d new_dir = angio_element->_angio_mat->mix_method->ApplyMix(prev, dir, contribution);
 		if (prev* dir< 0) { new_dir = -new_dir; }
 		return new_dir;
-		//return angio_element->_angio_mat->mix_method->ApplyMix(prev, dir, contribution);
-		//return mix(prev, dir, contribution);
 	}
 	return prev;
 }
@@ -290,8 +282,6 @@ Tip* AnastamosisPDD::FuseWith(class AngioElement* angio_element, FEAngio* pangio
 	std::vector<vec3d> element_bounds;
 	visited.reserve(1000);
 	pangio->ExtremaInElement(angio_element->_elem, element_bounds);
-
-
 
 	for (int i = 0; i < angio_element->adjacency_list.size(); i++)
 	{
@@ -376,8 +366,6 @@ void FiberPDD::Update(FEMesh * mesh, FEAngio* angio)
 vec3d FiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio)
 {
 	std::vector<quatd> gauss_data;
-	//FEElasticMaterial* pmm = dynamic_cast<FEElasticMaterial*> (angio_element->_mat->GetElasticMaterial);
-	//std::cout << "material is " << angio_element->_angio_mat->GetMatrixMaterial()->GetElasticMaterial()->FindProperty("m_Base") << endl;
 	for (int i = 0; i< angio_element->_elem->GaussPoints(); i++)
 	{
 		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
@@ -390,7 +378,6 @@ vec3d FiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d lo
 	quatd rv = interpolation_prop->Interpolate(angio_element->_elem, gauss_data, local_pos, mesh);
 	vec3d fiber_direction = rv.GetVector();
 	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_direction, alpha);
-	//return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_direction, contribution);
 }
 
 void FractionalAnisotropyPDD::Update(FEMesh * mesh, FEAngio* angio)
@@ -421,7 +408,6 @@ vec3d FractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* angio_el
 	angio_element->_elem->project_to_nodes(&SPDs_gausspts[0], SPDs_nodes);
 	// determine shape function value for the local position
 	angio_element->_elem->shape_fnc(H, local_pos.x, local_pos.y, local_pos.z);
-	//angio_element->_elem->shape_fnc(H, 0, 0, 0);
 	// Get the interpolated SPD from the shape function-weighted Average Structure Tensor
 	mat3ds SPD_int = weightedAverageStructureTensor(SPDs_nodes, H, angio_element->_elem->Nodes());
 	FEEllipticalDistribution E(this->GetFEModel());
@@ -432,8 +418,6 @@ vec3d FractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* angio_el
 	{
 		fiber_dir = -fiber_dir;
 	}
-	// alpha = efd_alpha;
-	// return angio_element->_angio_mat->mix_method->ApplyMix(tip_dir, fiber_dir, efd_alpha);
 	return angio_element->_angio_mat->mix_method->ApplyMix(tip_dir, fiber_dir, alpha);
 }
 
@@ -442,7 +426,11 @@ ADD_PARAMETER(alpha_override, "alpha_override");
 ADD_PARAMETER(efd_alpha, "efd_alpha");
 END_FECORE_CLASS();
 
-vec3d ProtoPDDManager::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int buffer, bool& continue_growth, vec3d& tip_dir, double& alpha, FEMesh* mesh, FEAngio* pangio)
+BEGIN_FECORE_CLASS(ProtoPositionDependentDirection, FEMaterial)
+ADD_PARAMETER(proto_contribution, "proto_contribution");
+END_FECORE_CLASS();
+
+vec3d ProtoPositionDependentDirectionManager::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int buffer, bool& continue_growth, vec3d& tip_dir, double& alpha, FEMesh* mesh, FEAngio* pangio)
 {
 	for (int i = 0; i < proto_pdd_modifiers.size(); i++)
 	{
@@ -451,7 +439,7 @@ vec3d ProtoPDDManager::ApplyModifiers(vec3d prev, AngioElement* angio_element, v
 	return prev;
 }
 
-void ProtoPDDManager::Update(FEMesh * mesh, FEAngio* angio)
+void ProtoPositionDependentDirectionManager::Update(FEMesh * mesh, FEAngio* angio)
 {
 	for (int i = 0; i < proto_pdd_modifiers.size(); i++)
 	{
@@ -460,9 +448,7 @@ void ProtoPDDManager::Update(FEMesh * mesh, FEAngio* angio)
 	mat3ds eye;
 }
 
-
-
-BEGIN_FECORE_CLASS(ProtoRepulsePDD, PositionDependentDirection)
+BEGIN_FECORE_CLASS(ProtoRepulsePDD, ProtoPositionDependentDirection)
 ADD_PARAMETER(threshold, "threshold");
 ADD_PARAMETER(alpha_override, "alpha_override");
 ADD_PARAMETER(grad_threshold, "grad_threshold");
@@ -495,14 +481,12 @@ vec3d ProtoRepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, v
 			grad = -grad;
 			if (alpha_override)
 			{
-				alpha = contribution;
+				alpha = proto_contribution;
 			}
 			// use the negative of the gradient of the repulse values to tell vessels which direction to grow away from
 			vec3d new_dir = angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, alpha);
 			if (prev* grad < 0) { new_dir = -new_dir; }
 			return new_dir;
-			//return angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, contribution);
-			//return mix(prev,grad, contribution);
 		}
 	}
 	// if the gradient method is not being used
@@ -520,8 +504,6 @@ vec3d ProtoRepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, v
 		{
 			val += H[i] * nodal_repulse[i];
 		}
-		//SL: moving this into the loop below so it is only calculated when necessary 
-		// vec3d grad = pangio->gradient(angio_element->_elem, repulse_at_integration_points, local_pos);
 		// if the value from the shape functions is greater than the threshold then the vessel will be repulsed
 		if (val > threshold)
 		{
@@ -532,15 +514,13 @@ vec3d ProtoRepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, v
 			// if alpha_override is set to 1 then set alpha to 1. Seems like an unneccessary step
 			if (alpha_override)
 			{
-				alpha = contribution;
+				alpha = proto_contribution;
 			}
 			// new vector direction is mix of previous and deflected direction.
 			vec3d new_dir = angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, 1);
 			// if previous direction dotted with grad is -ve i.e. the angle between them is greater than 90 degrees. not sure if this makes sense. 
 			// if (prev* grad < 0) { new_dir = -new_dir; }
 			return new_dir;
-			//return angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, contribution);
-			//return mix(prev, grad, contribution);
 		}
 	}
 	return prev;
@@ -576,18 +556,16 @@ vec3d ProtoAnastamosisPDD::ApplyModifiers(vec3d prev, AngioElement* angio_elemen
 		double len = dir.unit();
 		if (alpha_override)
 		{
-			alpha = contribution;
+			alpha = proto_contribution;
 		}
 		if (len < fuse_radius && fuse_angle  > dir * tip_dir)
 		{
 			angio_element->anastamoses++;
 			continue_growth = false;
 		}
-		vec3d new_dir = angio_element->_angio_mat->mix_method->ApplyMix(prev, dir, contribution);
+		vec3d new_dir = angio_element->_angio_mat->mix_method->ApplyMix(prev, dir, proto_contribution);
 		if (prev* dir< 0) { new_dir = -new_dir; }
 		return new_dir;
-		//return angio_element->_angio_mat->mix_method->ApplyMix(prev, dir, contribution);
-		//return mix(prev, dir, contribution);
 	}
 	return prev;
 }
@@ -607,8 +585,6 @@ Tip* ProtoAnastamosisPDD::FuseWith(class AngioElement* angio_element, FEAngio* p
 	std::vector<vec3d> element_bounds;
 	visited.reserve(1000);
 	pangio->ExtremaInElement(angio_element->_elem, element_bounds);
-
-
 
 	for (int i = 0; i < angio_element->adjacency_list.size(); i++)
 	{
@@ -678,9 +654,9 @@ Tip * ProtoAnastamosisPDD::BestInElement(AngioElement* angio_element, FEAngio* p
 }
 
 
-BEGIN_FECORE_CLASS(ProtoAnastamosisPDD, PositionDependentDirection)
+BEGIN_FECORE_CLASS(ProtoAnastamosisPDD, ProtoPositionDependentDirection)
 ADD_PARAMETER(anastamosis_radius, "anastamosis_radius");
-ADD_PARAMETER(contribution, "contribution");
+ADD_PARAMETER(proto_contribution, "proto_contribution");
 ADD_PARAMETER(fuse_radius, "fuse_radius");
 ADD_PARAMETER(fuse_angle, "fuse_angle");
 END_FECORE_CLASS();
@@ -693,7 +669,6 @@ void ProtoFiberPDD::Update(FEMesh * mesh, FEAngio* angio)
 vec3d ProtoFiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio)
 {
 	std::vector<quatd> gauss_data;
-	//FEElasticMaterial* pmm = dynamic_cast<FEElasticMaterial*> (angio_element->_mat->GetElasticMaterial);
 	for (int i = 0; i< angio_element->_elem->GaussPoints(); i++)
 	{
 		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
@@ -705,12 +680,10 @@ vec3d ProtoFiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec
 
 	quatd rv = interpolation_prop->Interpolate(angio_element->_elem, gauss_data, local_pos, mesh);
 	vec3d fiber_direction = rv.GetVector();
-	//return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_direction, proto_alpha);
 	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_direction, alpha);
 }
 
-BEGIN_FECORE_CLASS(ProtoFiberPDD, PositionDependentDirection)
-ADD_PARAMETER(proto_alpha, "proto_alpha");
+BEGIN_FECORE_CLASS(ProtoFiberPDD, ProtoPositionDependentDirection)
 END_FECORE_CLASS();
 
 
@@ -729,13 +702,10 @@ vec3d ProtoFractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* ang
 	{
 		fiber_dir = -fiber_dir;
 	}
-	//alpha = proto_alpha;
 	return angio_element->_angio_mat->mix_method->ApplyMix(tip_dir, fiber_dir, alpha);
-	//return angio_element->_angio_mat->mix_method->ApplyMix(tip_dir, fiber_dir, proto_alpha);
 }
 
-BEGIN_FECORE_CLASS(ProtoFractionalAnisotropyPDD, PositionDependentDirection)
+BEGIN_FECORE_CLASS(ProtoFractionalAnisotropyPDD, ProtoPositionDependentDirection)
 ADD_PARAMETER(alpha_override, "alpha_override");
-ADD_PARAMETER(proto_alpha, "proto_alpha");
 ADD_PARAMETER(proto_efd, "proto_efd");
 END_FECORE_CLASS();

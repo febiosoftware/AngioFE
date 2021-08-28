@@ -94,8 +94,7 @@ void SigmoidAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio*
 			// make a dyad times the pressure
 			angio_mp->m_as += dyad(r)*p;
 		}
-	}
-	
+	}	
 }
 
 BEGIN_FECORE_CLASS(SigmoidAngioStressPolicy, AngioStressPolicy)
@@ -247,7 +246,6 @@ void LoadCurveDenAngioStressPolicy::AngioStress(AngioElement* angio_element, FEA
 			angio_mp->m_as += dyad(r)*p;
 		}
 	}
-
 }
 
 BEGIN_FECORE_CLASS(LoadCurveDenAngioStressPolicy, AngioStressPolicy)
@@ -294,7 +292,6 @@ void LoadCurveRefDenAngioStressPolicy::AngioStress(AngioElement* angio_element, 
 			angio_mp->m_as += dyad(r)*p;
 		}
 	}
-
 }
 
 BEGIN_FECORE_CLASS(LoadCurveRefDenAngioStressPolicy, AngioStressPolicy)
@@ -311,6 +308,7 @@ bool GrownSegmentsAngioStressPolicy::Init()
 
 void GrownSegmentsAngioStressPolicy::UpdateScale()
 {
+
 }
 
 void GrownSegmentsAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
@@ -333,13 +331,10 @@ void GrownSegmentsAngioStressPolicy::AngioStress(AngioElement* angio_element, FE
 			vec3d r = y - x;
 			double l = r.unit();
 			double theta = acos(tip->GetDirection(mesh) * r);//same for GetDirection
-
-															 //sprout s mag replaced with giving correct coeficients for scale
 			double p = sprout_mag * pow(cos(theta / 2), fan_exponential)* exp(-l / sprout_range);
 			angio_mp->m_as += dyad(r)*p;
 		}
 	}
-
 }
 
 
@@ -358,6 +353,7 @@ bool GrownSegmentsVelAngioStressPolicy::Init()
 
 void GrownSegmentsVelAngioStressPolicy::UpdateScale()
 {
+
 }
 
 void GrownSegmentsVelAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
@@ -380,13 +376,10 @@ void GrownSegmentsVelAngioStressPolicy::AngioStress(AngioElement* angio_element,
 			vec3d r = y - x;
 			double l = r.unit();
 			double theta = acos(tip->GetDirection(mesh) * r);//same for GetDirection
-
-															 //sprout s mag replaced with giving correct coeficients for scale
 			double p = tip->growth_velocity *sprout_mag * pow(cos(theta / 2), fan_exponential)* exp(-l / sprout_range);
 			angio_mp->m_as += dyad(r)*p;
 		}
 	}
-
 }
 
 

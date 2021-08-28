@@ -28,8 +28,11 @@ FEAngioMaterial::FEAngioMaterial(FEModel* pfem) : FEElasticMaterial(pfem)
 	AddClassProperty(this, &matrix_material, "matrix");
 	AddClassProperty(this, &angio_stress_policy, "angio_stress_policy");
 
+	AddClassProperty(this, &proto_pdd_manager, "proto_pdd_manager");
 	AddClassProperty(this, &pdd_manager, "pdd_manager");
+	AddClassProperty(this, &proto_psc_manager, "proto_psc_manager");
 	AddClassProperty(this, &psc_manager, "psc_manager");
+	AddClassProperty(this, &proto_cm_manager, "proto_cm_manager");
 	AddClassProperty(this, &cm_manager, "cm_manager");
 	AddClassProperty(this, &mix_method, "mix_method");
 	AddClassProperty(this, &velocity_manager, "velocity_manager");
@@ -38,7 +41,7 @@ FEAngioMaterial::FEAngioMaterial(FEModel* pfem) : FEElasticMaterial(pfem)
 	AddClassProperty(this, &branch_policy, "branch_policy", FEProperty::Optional);
 	AddClassProperty(this, &proto_branch_policy, "proto_branch_policy", FEProperty::Optional);
 	AddClassProperty(this, &tip_species_manager, "tip_species_manager", FEProperty::Optional);
-	AddClassProperty(this, &proto_pdd_manager, "proto_pdd_manager");
+	
 }
 
 FEAngioMaterial::~FEAngioMaterial()
@@ -107,10 +110,9 @@ mat3ds FEAngioMaterial::AngioStress(FEAngioMaterialPoint& angioPt)
 
 double FEAngioMaterial::FindDensityScale(FEAngioMaterialPoint * mp)
 {
+	//!SL check this.
 	return 1.0;
 }
-
-
 
 mat3ds FEAngioMaterial::Stress(FEMaterialPoint& mp)
 {
@@ -126,10 +128,10 @@ mat3ds FEAngioMaterial::Stress(FEMaterialPoint& mp)
 		FEElasticMaterialPoint& vessel_elastic = *angioPt->vessPt->ExtractData<FEElasticMaterialPoint>();
 		FEElasticMaterialPoint& matrix_elastic = *angioPt->matPt->ExtractData<FEElasticMaterialPoint>();
 
-		vessel_elastic.m_rt = elastic_pt.m_rt;//spdtial position
-		vessel_elastic.m_r0 = elastic_pt.m_r0;//material position
-		vessel_elastic.m_F = elastic_pt.m_F;//deformation gradient
-		vessel_elastic.m_J = elastic_pt.m_J;//determinate
+		vessel_elastic.m_rt = elastic_pt.m_rt; //spatial position
+		vessel_elastic.m_r0 = elastic_pt.m_r0; //material position
+		vessel_elastic.m_F = elastic_pt.m_F; //deformation gradient
+		vessel_elastic.m_J = elastic_pt.m_J; //determinant
 		
 		matrix_elastic.m_rt = elastic_pt.m_rt;
 		matrix_elastic.m_r0 = elastic_pt.m_r0;
@@ -205,11 +207,6 @@ double FEAngioMaterial::GetSegmentVelocity(AngioElement * angio_element, vec3d l
 	double const vel_init = 1;
 	return velocity_manager->ApplyModifiers(vel_init, local_pos, angio_element, mesh);
 }
-
-//double FEAngioMaterial::GetInitialVelocity(AngioElement* angio_elem) const
-//{
-//	return 0;
-//}
 
 double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem, FEMesh* mesh)
 {
@@ -406,9 +403,6 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	// determine contributions from local stimuli
 	vec3d pdd_dir = pdd_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip->angio_element, active_tip->GetLocalPosition() , active_tip->initial_fragment_id , buffer_index , continue_growth, psc_dir, alpha, mesh, m_pangio);
 		alpha = std::max(0.0,std::min(1.0, alpha));
-	//continue_growth *= bool(psc_dir.norm())
-		//std::cout << "norm is " << psc_dir.norm() << endl;
-		//std::cout << "norm bool is " << bool(psc_dir.norm()) << endl;
 	if(!continue_growth)
 	{
 		return;
@@ -456,13 +450,6 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		next->angio_element = angio_element;
 		// assign the new position to the new tip.
 		next->SetLocalPosition(real_natc, mesh);
-
-		// Update SBM boundary condition if necessary.
-		//
-		//commented out because redundant. This is handled in the SetLocalPosition function
-		//next->TipSBM->SetPosition(natc_to_global * real_natc);
-		//
-
 		// assign the new tip as the parent of the segment.
 		next->parent = seg;
 		// assign the current element as location where growth began.
@@ -537,11 +524,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 
 			std::vector<AngioElement*> possible_locations;
 			std::vector<vec3d> possible_local_coordinates;
-			// check to see if the element is a hex how many exposed faces there are. 0 -> 26, 1 -> 17, 2 -> 11, 3 -> 7
-			/*if (angio_element->adjacency_list.size() != 26) {
-				std::cout << "exposed, size is " << angio_element->adjacency_list.size() << endl;
-			}*/
-			for (int i = 0; i < angio_element->adjacency_list.size(); i++) // TODO: HERE
+			for (int i = 0; i < angio_element->adjacency_list.size(); i++)
 			{
 				AngioElement * ang_elem = angio_element->adjacency_list[i];
 				if (ang_elem)
@@ -616,7 +599,6 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 	// calculate the change in time
 	double dt = end_time - active_tip->time;
 	// determine the length the segment grows.
-	//double grow_vel = 250.0;
 	double grow_vel = active_tip->GetProtoGrowthLength();
 	//double grow_vel = angio_element->_angio_mat->GetInitialVelocity(angio_element);
 	if (grow_vel < 0)
@@ -659,13 +641,12 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 
 	// get the growth direction
 	// determine the alpha (mix value)
-	double alpha = cm_manager->ApplyModifiers(dt, active_tip->angio_element, active_tip->GetLocalPosition(), mesh);
-	vec3d psc_dir = psc_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip->angio_element, active_tip->GetLocalPosition(), active_tip->GetDirection(mesh), mesh);
-	vec3d proto_pdd_dir = proto_pdd_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip->angio_element, active_tip->GetLocalPosition(), active_tip->initial_fragment_id, buffer_index, continue_growth, psc_dir, alpha, mesh, m_pangio);
-	//alpha = 0.4;
+	double alpha = proto_cm_manager->ApplyModifiers(dt, active_tip->angio_element, active_tip->GetLocalPosition(), mesh);
+	vec3d proto_psc_dir = proto_psc_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip->angio_element, active_tip->GetLocalPosition(), active_tip->GetDirection(mesh), mesh);
+	vec3d proto_pdd_dir = proto_pdd_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip->angio_element, active_tip->GetLocalPosition(), active_tip->initial_fragment_id, buffer_index, continue_growth, proto_psc_dir, alpha, mesh, m_pangio);
 	
 	// assign the global direction from the persistence component
-	vec3d global_dir = mix_method->ApplyMix(psc_dir, proto_pdd_dir, alpha);
+	vec3d global_dir = mix_method->ApplyMix(proto_psc_dir, proto_pdd_dir, alpha);
 	global_dir.unit();
 
 	// get the new position in global coordinates
@@ -711,8 +692,8 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		// assign the current element as location where growth began.
 		next->face = angio_element;
 		// assign the velocity that the tip grew at
+		//SL!
 		//growth velocity must be zero to work with grown segments stress policy. Otherwise it would be grow_vel. TODO: Maybe make it use different methods based on the policy?
-		//next->growth_velocity = grow_vel;
 		next->growth_velocity = 0;
 		next->SetProtoGrowthLength(active_tip);
 		// copy the parent fragment id from the original tip.
@@ -785,11 +766,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 
 		std::vector<AngioElement*> possible_locations;
 		std::vector<vec3d> possible_local_coordinates;
-		// check to see if the element is a hex how many exposed faces there are. 0 -> 26, 1 -> 17, 2 -> 11, 3 -> 7
-		/*if (angio_element->adjacency_list.size() != 26) {
-		std::cout << "exposed, size is " << angio_element->adjacency_list.size() << endl;
-		}*/
-		for (int i = 0; i < angio_element->adjacency_list.size(); i++) // TODO: HERE
+		for (int i = 0; i < angio_element->adjacency_list.size(); i++) // TODO: HERE //!SL
 		{
 			AngioElement * ang_elem = angio_element->adjacency_list[i];
 			if (ang_elem)
@@ -811,7 +788,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		if (possible_locations.size())
 		{
 			//need some way to choose the correct element to continue the tip in
-			int index = SelectNextTip(possible_locations, possible_local_coordinates, next, dt, buffer_index , mesh, min_scale_factor, min_angle);
+			int index = ProtoSelectNextTip(possible_locations, possible_local_coordinates, next, dt, buffer_index , mesh, min_scale_factor, min_angle);
 			if (index != -1)
 			{
 				Tip * adj = new Tip(next, mesh);
@@ -859,7 +836,6 @@ int FEAngioMaterial::SelectNextTip(std::vector<AngioElement*> & possible_locatio
 			return i;
 		}
 		vec3d global_dir = mix_method->ApplyMix(psc_dir, pdd_dir, (alpha));
-		//vec3d global_dir = mix(psc_dir, pdd_dir, (alpha));
 		global_dir.unit();
 		vec3d possible_dir = possible_locations[i]->_angio_mat->pdd_manager->ApplyModifiers({ 1,0,0 }, possible_locations[i], possible_local_coordinates[i], tip->initial_fragment_id, buffer, continue_growth, psc_dir, alpha, mesh, m_pangio);
 		double Gr[FESolidElement::MAX_NODES];
@@ -904,9 +880,71 @@ int FEAngioMaterial::SelectNextTip(std::vector<AngioElement*> & possible_locatio
 			index = i;
 		}
 	}
+	return index;
+}
 
-	
-
+int FEAngioMaterial::ProtoSelectNextTip(std::vector<AngioElement*> & possible_locations, std::vector<vec3d> & possible_local_coordinates, Tip* tip, double dt, int buffer, FEMesh* mesh, double min_scale_factor, double min_angle)
+{
+	assert(possible_locations.size() == possible_local_coordinates.size());
+	if (possible_locations.size() == 1)
+		return 0;
+	auto dir = tip->GetDirection(mesh);
+	std::vector<double> angles;
+	bool continue_growth = true;
+	for (int i = 0; i < possible_locations.size(); i++)
+	{
+		double alpha = proto_cm_manager->ApplyModifiers(dt, possible_locations[i], possible_local_coordinates[i], mesh);
+		vec3d proto_psc_dir = proto_psc_manager->ApplyModifiers(vec3d(1, 0, 0), possible_locations[i], possible_local_coordinates[i], tip->GetDirection(mesh), mesh);
+		vec3d proto_pdd_dir = proto_pdd_manager->ApplyModifiers(vec3d(1, 0, 0), possible_locations[i], possible_local_coordinates[i], tip->initial_fragment_id, buffer, continue_growth, proto_psc_dir, alpha, mesh, m_pangio);
+		if (!continue_growth)
+		{
+			return i;
+		}
+		vec3d global_dir = mix_method->ApplyMix(proto_psc_dir, proto_pdd_dir, (alpha));
+		global_dir.unit();
+		vec3d possible_dir = possible_locations[i]->_angio_mat->proto_pdd_manager->ApplyModifiers({ 1,0,0 }, possible_locations[i], possible_local_coordinates[i], tip->initial_fragment_id, buffer, continue_growth, proto_psc_dir, alpha, mesh, m_pangio);
+		double Gr[FESolidElement::MAX_NODES];
+		double Gs[FESolidElement::MAX_NODES];
+		double Gt[FESolidElement::MAX_NODES];
+		vec3d local_pos = possible_local_coordinates[i];
+		possible_locations[i]->_elem->shape_deriv(Gr, Gs, Gt, local_pos.x, local_pos.y, local_pos.z);
+		vec3d er, es, et; // Basis vectors of the natural coordinates
+		for (int j = 0; j < possible_locations[i]->_elem->Nodes(); j++)
+		{
+			er += mesh->Node(possible_locations[i]->_elem->m_node[j]).m_rt* Gr[j];
+		}
+		for (int j = 0; j < possible_locations[i]->_elem->Nodes(); j++)
+		{
+			es += mesh->Node(possible_locations[i]->_elem->m_node[j]).m_rt* Gs[j];
+		}
+		for (int j = 0; j < possible_locations[i]->_elem->Nodes(); j++)
+		{
+			et += mesh->Node(possible_locations[i]->_elem->m_node[j]).m_rt* Gt[j];
+		}
+		mat3d natc_to_global(er, es, et);
+		mat3d global_to_natc = natc_to_global.inverse();
+		vec3d nat_dir = global_to_natc * possible_dir;
+		double factor;
+		bool proj_success = m_pangio->ScaleFactorToProjectToNaturalCoordinates(possible_locations[i]->_elem, nat_dir, local_pos, factor, min_scale_factor);
+		if (proj_success && factor > min_scale_factor && possible_dir*dir >= min_angle)
+		{
+			angles.push_back(factor);
+		}
+		else
+		{
+			angles.push_back(-1);
+		}
+	}
+	double min = -1;
+	int index = -1;
+	for (int i = 0; i < angles.size(); i++)
+	{
+		if (angles[i] > min)
+		{
+			min = angles[i];
+			index = i;
+		}
+	}
 	return index;
 }
 
@@ -950,7 +988,6 @@ void FEAngioMaterial::Cleanup(AngioElement* angio_elem, double end_time, int buf
 	}
 	angio_elem->recent_segments.clear();
 	angio_elem->processed_recent_segments = 0;
-
 }
 
 void FEAngioMaterial::PrepBuffers(AngioElement* angio_elem, double end_time, int buffer_index)

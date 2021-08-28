@@ -37,6 +37,7 @@ protected:
 	//! returns whether a parameter has changed over time
 	bool ChangeInParam(const char * param, double time, double & prev, double & new_p);
 private:
+
 	DECLARE_FECORE_CLASS();
 };
 
@@ -65,6 +66,7 @@ private:
 	double stddev = 1.0;//distribution's standard deviation
 
 	std::normal_distribution<double> nd;
+
 	DECLARE_FECORE_CLASS();
 };
 
@@ -94,7 +96,6 @@ private:
 
 	std::uniform_real_distribution<double> rd;
 	bool time_clamped = true;
-
 
 	DECLARE_FECORE_CLASS();
 };
@@ -161,7 +162,6 @@ private:
 	double prev_a = a;
 	double prev_b = b;
 
-
 	DECLARE_FECORE_CLASS();
 };
 
@@ -194,7 +194,6 @@ private:
 	double prev_dof = dof;
 	double prev_mult = mult;
 	
-
 	DECLARE_FECORE_CLASS();
 };
 
@@ -314,12 +313,10 @@ public:
 
 private:
 	vec3d rv;
-	vec3d rd;
-	mat3d R;
-	double w;
+	mat3d Q = mat3d(1,0,0,0,1,0,0,0,1);
 	double d[3];
 	vec3d v[3];
-	//std::uniform_real_distribution<double> rd;
+
 	DECLARE_FECORE_CLASS();
 };
 
@@ -351,5 +348,6 @@ private:
 	std::vector<double> pdf; 
 	std::vector<double> cdf; 
 	std::vector<double> bins; 
+
 	DECLARE_FECORE_CLASS();
 };

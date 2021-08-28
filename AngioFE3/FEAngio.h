@@ -9,13 +9,11 @@
 #include "AngioElement.h"
 #include <random>
 
-
 class FEElemElemList;
 //-----------------------------------------------------------------------------
 class FEModel;
 class FEAngioMaterial;
 class FEAngioMaterialBase;
-
 
 //! The FEAngio class contains all the functionality of the growth model.
 class FEAngio
@@ -180,8 +178,6 @@ private:
 
 	//! returns whether or not the natural coordinates are valid
 	static bool IsInBounds(FESolidElement* se, double r[3], double eps= 0.000001);
-
-
 	
 	//! fill in the adjacency information for an angio element
 	void FillInFaces(FEMesh * mesh, AngioElement * angio_element);
@@ -202,7 +198,6 @@ public:	// parameters read directly from file
 	//! Seed number for the random number generator
 	unsigned int	m_irseed;			
   
-
 	std::vector<FEAngioMaterial*>	m_pmat;	//!< the angio-material pointer
 	std::vector<int>                m_pmat_ids;//!< the material id's
 
@@ -235,14 +230,12 @@ private:
 
 	std::vector<AngioElement *> angio_elements;//the dense list of angio elements
 	std::unordered_map<FESolidElement*,std::pair<AngioElement *,int>> se_to_angio_elem;//the int is the index which is used in neighbor lookups
-	std::vector<AngioElement *> angio_elements_with_holes;//the possibly spdrse list of elements .. used to serialize data
+	std::vector<AngioElement *> angio_elements_with_holes;//the possibly sparse list of elements .. used to serialize data
 	
 	std::vector<FEAngioMaterial*> angio_materials;
 	int buffer_index = 0;
 
-	
 	double next_time = -1;
-
 
 	const double eps = 0.001;
 

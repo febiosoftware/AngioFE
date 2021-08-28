@@ -14,7 +14,6 @@ public:
 	CommonAngioProperties(FEModel * pfem);
 	~CommonAngioProperties(){}
 
-	//FEPropertyT<GrowDirectionModifiers> gdms;
 	//! fragment seeder
 	FragmentSeeder* fseeder = nullptr;
 	//! vessel material

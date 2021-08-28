@@ -26,6 +26,7 @@ protected:
 	//! 0 use shape functions to interpolate to gauss points, 1 average all nodes in element and set that value at all gauss points
 	int interpolation_mode = 0;
 	//! parameter list
+
 	DECLARE_FECORE_CLASS();
 };
 

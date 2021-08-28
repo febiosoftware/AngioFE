@@ -49,7 +49,6 @@ bool FEPlotAngioStress::Save(FEDomain& d, FEDataStream& str)
 		}
 		// average sum of gauss point stress
 		s /= static_cast<double>(nint);
-
 		str << s;
 	}
 	return true;
@@ -78,7 +77,6 @@ bool FEPlotMatrixStress::Save(FEDomain& d, FEDataStream& str)
 			s += sj;
 		}
 		s /= static_cast<double>(nint);
-
 		str << s;
 	}
 	return true;
@@ -109,7 +107,6 @@ bool FEPlotVesselStress::Save(FEDomain& d, FEDataStream& str)
 			s += sj;
 		}
 		s /= static_cast<double>(nint);
-
 		str << s;
 	}
 	return true;
@@ -135,7 +132,6 @@ bool FEPlotVesselWeight::Save(FEDomain& d, FEDataStream& str)
 			s += angioPt->vessel_weight;
 		}
 		s /= static_cast<double>(nint);
-
 		str << s;
 	}
 	return true;
@@ -161,7 +157,6 @@ bool FEPlotMatrixWeight::Save(FEDomain& d, FEDataStream& str)
 			s += angioPt->matrix_weight;
 		}
 		s /= static_cast<double>(nint);
-
 		str << s;
 	}
 	return true;
@@ -190,7 +185,6 @@ bool FEPlotMatrixTangent::Save(FEDomain& d, FEDataStream& str)
 			s += sj;
 		}
 		s /= static_cast<double>(nint);
-
 		str << s;
 	}
 	return true;
@@ -220,7 +214,6 @@ bool FEPlotMatrixViscoStress::Save(FEDomain& d, FEDataStream& str)
 			s += sj;
 		}
 		s /= static_cast<double>(nint);
-
 		str << s;
 	}
 	return true;
@@ -250,7 +243,6 @@ bool FEPlotMatrixElasticStress::Save(FEDomain& d, FEDataStream& str)
 			s += sj;
 		}
 		s /= static_cast<double>(nint);
-
 		str << s;
 	}
 	return true;
@@ -286,12 +278,9 @@ bool FEPlotMatrixElastic_m_Q::Save(FEDomain& d, FEDataStream& str)
 			FEMappedValueMat3d* val = dynamic_cast<FEMappedValueMat3d*>(p.valuator());
 			FEDomainMap* map = dynamic_cast<FEDomainMap*>(val->dataMap());
 			mat3d sj = map->valueMat3d(emp);
-
-			//mat3d sj = emp->m_Q;
 			s += sj;
 		}
 		s /= static_cast<double>(nint);
-
 		str << s;
 	}
 	return true;
@@ -313,7 +302,6 @@ bool FEPlotBranches::Save(FEDomain& d, FEDataStream& str)
 			str << static_cast<double>(angio_element->branch_count);
 		}
 	}
-	
 	return true;
 };
 
@@ -329,7 +317,6 @@ bool FEPlotAnastamoses::Save(FEDomain& d, FEDataStream& str)
 			str << static_cast<double>(angio_element->anastamoses);
 		}
 	}
-
 	return true;
 };
 
@@ -345,7 +332,6 @@ bool FEPlotSegmentLength::Save(FEDomain& d, FEDataStream& str)
 			str << angio_element->global_segment_length;
 		}
 	}
-
 	return true;
 };
 
@@ -361,7 +347,6 @@ bool FEPlotRefSegmentLength::Save(FEDomain& d, FEDataStream& str)
 			str << angio_element->refernce_frame_segment_length;
 		}
 	}
-
 	return true;
 };
 
@@ -390,7 +375,6 @@ bool FEPlotAngioECMDensity::Save(FEDomain& d, FEDataStream& str)
 						den /= angio_element->_elem->GaussPoints();
 						str << den;
 					}
-
 			}
 	}
 		return true;
@@ -421,7 +405,6 @@ bool FEPlotAngioRepulseVal::Save(FEDomain& d, FEDataStream& str)
 				repulse_val /= angio_element->_elem->GaussPoints();
 				str << repulse_val;
 			}
-
 		}
 	}
 	return true;
@@ -449,7 +432,6 @@ bool FEPlotAngioSPD::Save(FEDomain& d, FEDataStream& str)
 				angio_mp->UpdateSPD();
 				mat3ds temp_SPD = angio_mp->angioSPD;
 				SPDs_gausspts[i] = temp_SPD*(3.0/temp_SPD.tr());
-				// TODO: calculate all distances from mp to nodes then normalize. Currently assumes equidistance
 				H[i] = 1.0 / angio_element->_elem->GaussPoints();
 			}
 			// array containing the SPD for each node in the element
@@ -473,7 +455,6 @@ bool FEPlotAngioFractionalAnisotropy::Save(FEDomain& d, FEDataStream& str)
 
 	for (int i = 0; i < NE; i++)
 	{
-		//FESolidElement& el = dom.Element(i);
 		FEElement & elem = d.ElementRef(i);
 		FESolidElement *se = dynamic_cast<FESolidElement*>(&elem);
 		if (se) {
@@ -502,34 +483,17 @@ bool FEPlotAngioFractionalAnisotropy::Save(FEDomain& d, FEDataStream& str)
 				// project the spds from integration points to the nodes
 				angio_element->_elem->project_to_nodes(&SPDs_gausspts[0], SPDs_nodes);
 				// Get the interpolated SPD from the shape function-weighted Average Structure Tensor
-				//mat3ds SPD_int = weightedAverageStructureTensor(SPDs_gausspts, H, angio_element->_elem->GaussPoints());
 				mat3ds SPD_int = weightedAverageStructureTensor(SPDs_nodes, H, angio_element->_elem->GaussPoints());
 
 				// get the vectors of the principal directions and sort in descending order
-				std::vector<pair<double, int>> v;
-				mat3d ax;
-				ax.setCol(0, vec3d(SPD_int.xx(), SPD_int.xy(), SPD_int.xz()));
-				ax.setCol(1, vec3d(SPD_int.xy(), SPD_int.yy(), SPD_int.yz()));
-				ax.setCol(2, vec3d(SPD_int.xz(), SPD_int.yz(), SPD_int.zz()));
-				v.push_back(pair<double, int>(ax.col(0).norm(), 0));
-				v.push_back(pair<double, int>(ax.col(1).norm(), 1));
-				v.push_back(pair<double, int>(ax.col(2).norm(), 2));
-				sort(v.begin(), v.end(), sortinrev);
-
-				// store the indices
-				int i = v[0].second;
-				int j = v[1].second;
-				int k = v[2].second;
-
-				vec3d axis_0 = ax.col(i); axis_0.unit();
-				vec3d axis_1 = ax.col(j); axis_1.unit();
-				vec3d axis_2 = ax.col(k); axis_2.unit();
-				double r0 = (ax.col(i).norm());
-				double r1 = (ax.col(j).norm());
-				double r2 = (ax.col(k).norm());
-
-				// calculate the fractional anisotropy
-				double angioFA_int = sqrt(0.5)*(sqrt(pow(r0 - r1, 2) + pow(r1 - r2, 2) + pow(r2 - r0, 2)) / (sqrt(pow(r0, 2) + pow(r1, 2) + pow(r2, 2))));
+				double d[3]; vec3d v[3];
+				SPD_int.eigen2(d, v);
+				double sum = d[0] + d[1] + d[2];
+				double mean = sum / 3.0;
+				double sq_sum = (d[0] - mean) * (d[0] - mean) + (d[1] - mean) * (d[1] - mean) + (d[2] - mean) * (d[2] - mean);
+				double stdev = sqrt(sq_sum / 2.0);
+				double rms = sqrt((d[0] * d[0] + d[1] * d[1] + d[2] * d[2]) / 3.0);
+				double angioFA_int = stdev / rms;
 				str << angioFA_int;
 			}
 			

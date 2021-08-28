@@ -23,7 +23,6 @@ public:
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio);
 private:
 	std::vector<InitialModifier*>	initial_modifiers;	//!< pointers to initial modifiers
-	//InitialModifier* initial_modifiers;
 };
 
 //! sets fibers to a random orientation
@@ -46,6 +45,7 @@ public:
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
 protected:
 	//! parameter list
+
 	DECLARE_FECORE_CLASS();
 private:
 	mat3ds m_SPD;
@@ -60,6 +60,7 @@ public:
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
 protected:
 	//! parameter list
+
 	DECLARE_FECORE_CLASS();
 private:
 	mat3ds m_SPD;
@@ -75,6 +76,7 @@ public:
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
 protected:
 	//! parameter list
+
 	DECLARE_FECORE_CLASS();
 private:
 	double initial_density = 3.0;
@@ -89,6 +91,7 @@ public:
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
 protected:
 	//! parameter list
+
 	DECLARE_FECORE_CLASS();
 private:
 	double initial_repulse_value = 0.0;

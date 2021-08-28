@@ -79,10 +79,8 @@ FEAngioMaterialPoint* FEAngioMaterialPoint::FindAngioMaterialPoint(FEMaterialPoi
 				}
 			}
 		}
-
 		pt = pt->Next();
 	}
-
 	return nullptr;
 }
 
@@ -92,16 +90,13 @@ void FEAngioMaterialPoint::UpdateAngioFractionalAnisotropy()
 	std::vector<pair<double, int>> v;
 	double d[3]; vec3d r[3];
 	angioSPD.eigen2(d, r);
-	v.push_back(pair<double, int>(d[0], 0));
-	v.push_back(pair<double, int>(d[1], 1));
-	v.push_back(pair<double, int>(d[2], 2));
-	sort(v.begin(), v.end(), sortinrev);
-	// determine the "eigenvalues"
-	double a = v[0].first;
-	double b = v[1].first;
-	double c = v[2].first;
-	// calculate the fractional anisotropy
-	angioFA = sqrt(0.5)*(sqrt(pow(a - b, 2) + pow(b - c, 2) + pow(c - a, 2)) / (sqrt(pow(a, 2) + pow(b, 2) + pow(c, 2))));
+	// the FA can be calculated as std/rms of the ODF. We can assume each direction is one sample and perform the calculation on the eigenvalues.
+	double sum = d[0]+d[1]+d[2];
+	double mean = sum / 3.0;
+	double sq_sum = (d[0] - mean) * (d[0] - mean) + (d[1] - mean) * (d[1] - mean) + (d[2] - mean) * (d[2] - mean);
+	double stdev = sqrt(sq_sum / 2.0);
+	double rms = sqrt((d[0] * d[0] + d[1] * d[1] + d[2] * d[2]) / 3.0);
+	angioFA = stdev/rms;
 }
 
 void FEAngioMaterialPoint::UpdateSPD()
@@ -124,7 +119,7 @@ void FEAngioMaterialPoint::UpdateSPD()
 	mat3dd d = mat3dd(b[0], b[1], b[2]);
 	// Assemble the matrix containing the rotated directions
 	mat3d q; q.setCol(0, R*N[0]); q.setCol(1, R*N[1]); q.setCol(2, R*N[2]);
-	// Construct the SPD from the eigen components
+	// Construct the SPD from the eigen components. The transpose can be used because it is an orthogonal matrix.
 	mat3d p = q*d*q.transpose();
 	// input to SPD
 	angioSPD = mat3ds(p[0][0], p[1][1], p[2][2], p[0][1], p[1][2], p[0][2]);

@@ -21,7 +21,6 @@ public:
 	bool Save(FEDomain& d, FEDataStream& str) override;
 };
 
-
 //! plot the visco component of the matrix material
 class FEPlotMatrixViscoStress : public FEPlotDomainData
 {
@@ -31,7 +30,6 @@ public:
 	//! plot matrix visco elastic stress
 	bool Save(FEDomain& d, FEDataStream& str) override;
 };
-
 
 //! Plot the elastic component of the matrix material
 class FEPlotMatrixElasticStress : public FEPlotDomainData
@@ -52,7 +50,6 @@ public:
 	//! plot matrix material orientation
 	bool Save(FEDomain& d, FEDataStream& str) override;
 };
-
 
 //! plot the stress of the vessel material
 class FEPlotVesselStress : public FEPlotDomainData
@@ -93,7 +90,6 @@ public:
 	//! plot matrix tangent
 	bool Save(FEDomain& d, FEDataStream& str) override;
 };
-
 
 //! plot the branches per element
 class FEPlotBranches : public FEPlotDomainData
@@ -185,7 +181,6 @@ private:
 	////maps element id to segment direction in the reference configuration
 	//std::unordered_map<int, vec3d> angio_fiber_dirs;
 };
-
 
 //! plot the primary direction that vessels grow per element
 class FEPlotPrimaryVesselDirection : public FEPlotDomainData

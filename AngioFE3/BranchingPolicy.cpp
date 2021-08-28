@@ -60,17 +60,10 @@ vec3d BranchPolicy::GetBranchDirection(vec3d local_pos, vec3d parent_direction, 
 		FEAngioMaterial* Mat_ang = Dom->GetMaterial()->ExtractProperty<FEAngioMaterial>();
 		FEMaterial * Mat_a = Mat_ang->GetMatrixMaterial();
 		// assumes that materials mat_axis is already mapped which we'll need to do somewhere else.
-		/*FEParam* matax = Mat_a->FindParameter("mat_axis");
-		FEParamMat3d& p = matax->value<FEParamMat3d>();
-		FEMappedValueMat3d* val = dynamic_cast<FEMappedValueMat3d*>(p.valuator());
-		FEDomainMap* map = dynamic_cast<FEDomainMap*>(val->dataMap());*/
 		mat3d m_Q = Mat_a->GetLocalCS(*mp);
 
 		axis = emp->m_F * m_Q * axis;
 		gauss_data.push_back({ axis });
-
-		/*axis = emp->m_F * emp->m_Q * axis;
-		gauss_data.push_back({ axis });*/
 	}
 
 	quatd rv = interpolation_prop->Interpolate(angio_element->_elem, gauss_data, local_pos, mesh);
@@ -109,40 +102,6 @@ vec3d BranchPolicy::GetBranchDirectionEFD(vec3d local_pos, vec3d parent_directio
 	// Get the interpolated SPD from the shape function-weighted Average Structure Tensor
 	mat3ds SPD_int = weightedAverageStructureTensor(SPDs_gausspts, H, angio_element->_elem->GaussPoints());
 	SPD_int = (3.0 / SPD_int.tr())*SPD_int;
-
-	/// Get the sampled fiber direction ///
-
-	//std::vector<pair<double, int>> v;
-	//mat3d ax;
-	//ax.setCol(0, vec3d(SPD_int.xx(), SPD_int.xy(), SPD_int.xz()));
-	//ax.setCol(1, vec3d(SPD_int.xy(), SPD_int.yy(), SPD_int.yz()));
-	//ax.setCol(2, vec3d(SPD_int.xz(), SPD_int.yz(), SPD_int.zz()));
-	//v.push_back(pair<double, int>(ax.col(0).norm(), 0));
-	//v.push_back(pair<double, int>(ax.col(1).norm(), 1));
-	//v.push_back(pair<double, int>(ax.col(2).norm(), 2));
-	//sort(v.begin(), v.end(), sortinrev);
-
-	//// store the indices
-	//int i = v[0].second;
-	//int j = v[1].second;
-	//int k = v[2].second;
-
-	//vec3d axis_0 = ax.col(i); axis_0.unit();
-	//vec3d axis_1 = ax.col(j); axis_1.unit();
-	//vec3d axis_2 = ax.col(k); axis_2.unit();
-	//double r0 = (ax.col(i).norm());
-	//double r1 = (ax.col(j).norm());
-	//double r2 = (ax.col(k).norm());
-	//FEEllipticalDistribution E0(this->GetFEModel());
-	//FEEllipticalDistribution E1(this->GetFEModel());
-	//E0.a = r0; E0.b = r1; E0.Init();
-	//E1.a = r0; E1.b = r2; E1.Init();
-	//double theta_12 = E0.NextValue(angio_element->_rengine);
-	//double theta_13 = E1.NextValue(angio_element->_rengine);
-	//
-	//// rotate the primary direction by theta_12 about the normal between them
-	//vec3d axis = mix3d_t(axis_0, axis_1, theta_12); axis.unit();
-	//vec3d fiber_direction = mix3d_t(axis, axis_2, theta_13); fiber_direction.unit();
 
 	FEEllipticalDistribution E(this->GetFEModel());
 	E.spd = SPD_int;
@@ -209,7 +168,6 @@ void DelayedBranchingPolicy::AddBranches(AngioElement * angio_elem, int buffer_i
 			}
 		}
 	}
-
 
 	//verify the container with the branch points has been constructed correctly
 #ifndef NDEBUG
@@ -306,7 +264,6 @@ void DelayedBranchingPolicy::AddBranches(AngioElement * angio_elem, int buffer_i
 					remaining_l2b = l2b->NextValue(angio_elem->_rengine);
 				}
 				cur.processed += min_scale_factor;
-				
 			}
 			else
 			{
@@ -490,7 +447,6 @@ void DelayedBranchingPolicyEFD::AddBranches(AngioElement * angio_elem, int buffe
 					remaining_l2b = l2b->NextValue(angio_elem->_rengine);
 				}
 				cur.processed += min_scale_factor;
-
 			}
 			else
 			{

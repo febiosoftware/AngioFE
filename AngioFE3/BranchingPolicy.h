@@ -104,36 +104,6 @@ private:
 	FEVariableInterpolation* interpolation_prop = nullptr;
 };
 
-////! A Branch Policy determines where and when branches occur
-//class BranchPolicyEFD :public FEMaterial
-//{
-//public:
-//	//! constructor for class
-//	BranchPolicyEFD(FEModel* pfem) : FEMaterial(pfem) {
-//		AddClassProperty(this, &azimuth_angle, "azimuth_angle");
-//		AddClassProperty(this, &zenith_angle, "zenith_angle");
-//		AddClassProperty(this, &interpolation_prop, "interpolation_prop");
-//	}
-//	virtual ~BranchPolicyEFD() {};
-//	//! adds the branches for a given element
-//	virtual void AddBranches(AngioElement * angio_elem, int buffer_index, double end_time, double final_time, double min_scale_factor, FEMesh* mesh, FEAngio* feangio) = 0;
-//	//! setup any data structures that are needed on a per element basis
-//	virtual void SetupBranchInfo(AngioElement * angio_elem) = 0;
-//	//! performs initialization
-//	bool Init() override { return azimuth_angle->Init() && zenith_angle->Init(); }
-//	//! Updates the branch policy to the given time step
-//	virtual void TimeStepUpdate(double current_time) { azimuth_angle->TimeStepUpdate(current_time); zenith_angle->TimeStepUpdate(current_time); }
-//	//! Adds a branch tip at the given natural coordinates
-//	void AddBranchTip(AngioElement * angio_element, vec3d local_pos, vec3d parent_direction, double start_time, int vessel_id, int buffer_index, FEMesh* mesh);
-//	//! Return the direction of a branch
-//	vec3d GetBranchDirection(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element, FEMesh* mesh);
-//private:
-//	//angles are in radians
-//	AzimuthAngle* azimuth_angle = nullptr;
-//	ZenithAngle* zenith_angle = nullptr;
-//	FEVariableInterpolation* interpolation_prop = nullptr;
-//};
-
 //! The data needed for a future branch
 class FutureBranch
 {

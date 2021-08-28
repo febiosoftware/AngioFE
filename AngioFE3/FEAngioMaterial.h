@@ -63,6 +63,9 @@ public:
 	//! returns the index of the element in which the tip will grow next, this resolves when a tip can grow in multiple elements
 	int SelectNextTip(std::vector<AngioElement*> & possible_locations, std::vector<vec3d> & possible_local_coordinates, Tip* tip, double dt, int buffer, FEMesh* mesh, double min_scale_factor, double min_angle);
 
+	//! returns the index of the element in which the tip will grow next, this resolves when a tip can grow in multiple elements
+	int ProtoSelectNextTip(std::vector<AngioElement*> & possible_locations, std::vector<vec3d> & possible_local_coordinates, Tip* tip, double dt, int buffer, FEMesh* mesh, double min_scale_factor, double min_angle);
+
 	//should be const and threadsafe
 	//! sets buffers to the correct state and perfom branching as needed, run after each growth substep
 	void PostGrowthUpdate(AngioElement* angio_elem, double end_time, double final_time, double min_scale_factor, int buffer_index, FEMesh* mesh, FEAngio* feangio);
@@ -117,7 +120,7 @@ public:
 	//! returns the inital segment velocity
 	//double GetInitialVelocity(AngioElement * angio_element) const;
 
-	//! Calculate spdtial elasticity tangent
+	//! Calculate spatial elasticity tangent
 	tens4ds Tangent(FEMaterialPoint& mp) override;
 
 	//! create material point data for this material
@@ -149,10 +152,12 @@ private:
 	double dt_safety_multiplier = 1.0;
 
 	FESolidMaterial* matrix_material = nullptr;
-	PositionDependentDirectionManager* pdd_manager = nullptr;
+	ProtoPreviousSegmentContributionManager* proto_psc_manager = nullptr;
 	PreviousSegmentContributionManager* psc_manager = nullptr;
-	ProtoPDDManager* proto_pdd_manager = nullptr;
+	ProtoPositionDependentDirectionManager* proto_pdd_manager = nullptr;
+	PositionDependentDirectionManager* pdd_manager = nullptr;
 	TipSpecies* tip_species = nullptr;
+	ProtoContributionMixManager* proto_cm_manager = nullptr;
 	ContributionMixManager* cm_manager = nullptr;
 	CommonAngioProperties* common_properties = nullptr;
 	
