@@ -12,6 +12,7 @@
 #include "AngioElement.h"
 #include "Segment.h"
 #include "Tip.h"
+#include "FECell.h"
 #include "VariableInterpolation.h"
 
 
@@ -445,11 +446,15 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		//add the segment and add the new tip to the current angio element
 		Tip * next = new Tip(active_tip, mesh);
 		Segment * seg = new Segment();
+		next->TipCell = active_tip->TipCell;
+		//active_tip->TipCell = nullptr;
 		next->time = end_time;
 		// the new tip is assigned to the current element.
 		next->angio_element = angio_element;
-		// assign the new position to the new tip.
+		next->TipCell->angio_element = angio_element;
+		// assign the new position to the new tip and tip cell.
 		next->SetLocalPosition(real_natc, mesh);
+		next->TipCell->SetLocalPosition(real_natc, mesh);
 		// assign the new tip as the parent of the segment.
 		next->parent = seg;
 		// assign the current element as location where growth began.
@@ -495,17 +500,21 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 			// create a tip on the element face
 			Tip * next = new Tip();
 			Segment * seg = new Segment();
+			next->TipCell = active_tip->TipCell;
+			//active_tip->TipCell = nullptr;
 			// the tip will appear at the time it takes to reach the face.
 			next->time = tip_time_start;
+			next->TipCell->time = tip_time_start;
 			// assign the tip to this element.
 			next->angio_element = angio_element;
+			next->TipCell->angio_element = angio_element;
 			// update species.
 			next->Species = active_tip->Species;
 			active_tip->Species.clear();
 
-			//still need to update the local position of the tip. 
+			//still need to update the local position of the tip and tip cell. 
 			next->SetLocalPosition(local_pos + (nat_dir * possible_grow_length), mesh);
-
+			next->TipCell->SetLocalPosition(local_pos + (nat_dir * possible_grow_length), mesh);
 			next->parent = seg;
 			next->face = angio_element;
 			next->initial_fragment_id = active_tip->initial_fragment_id;
@@ -550,9 +559,13 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 				if (index != -1)
 				{
 					Tip * adj = new Tip(next, mesh);
+					adj->TipCell = next->TipCell;
+					//next->TipCell = nullptr;
 					adj->angio_element = possible_locations[index];
+					adj->TipCell->angio_element = possible_locations[index];
 					adj->face = angio_element;
 					adj->SetLocalPosition(possible_local_coordinates[index], mesh);
+					adj->TipCell->SetLocalPosition(possible_local_coordinates[index], mesh);
 					adj->use_direction = true;
 					adj->growth_velocity = grow_vel;
 					angio_element->active_tips[next_buffer_index].at(possible_locations[index]).push_back(adj);
@@ -681,12 +694,16 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		vec3d real_natc = local_pos + (nat_dir * (factor * (grow_len / possible_grow_length)));
 		//add the segment and add the new tip to the current angio element
 		Tip * next = new Tip(active_tip, mesh);
+		next->TipCell = active_tip->TipCell;
+		//active_tip->TipCell = nullptr;
 		Segment * seg = new Segment();
 		next->time = end_time;
 		// the new tip is assigned to the current element.
 		next->angio_element = angio_element;
+		next->TipCell->angio_element = angio_element;
 		// assign the new position to the new tip.
 		next->SetLocalPosition(real_natc, mesh);
+		next->TipCell->SetLocalPosition(real_natc, mesh);
 		// assign the new tip as the parent of the segment.
 		next->parent = seg;
 		// assign the current element as location where growth began.
@@ -733,19 +750,23 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		//next is just the end of the segment not the begining of the next segment
 	
 		// create a tip on the element face
-		Tip * next = new Tip();
+		Tip * next = new Tip(active_tip, mesh);
+		next->TipCell = active_tip->TipCell;
+		//active_tip->TipCell = nullptr;
 		Segment * seg = new Segment();
 		// the tip will appear at the time it takes to reach the face.
 		next->time = tip_time_start;
+		next->TipCell->time = tip_time_start;
 		// assign the tip to this element.
 		next->angio_element = angio_element;
+		next->TipCell->angio_element = angio_element;
 		// update species.
 		next->Species = active_tip->Species;
 		active_tip->Species.clear();
 
 		//still need to update the local position of the tip
 		next->SetLocalPosition(local_pos + (nat_dir * possible_grow_length), mesh);
-
+		next->TipCell->SetLocalPosition(local_pos + (nat_dir * possible_grow_length), mesh);
 		next->parent = seg;
 		next->face = angio_element;
 		next->initial_fragment_id = active_tip->initial_fragment_id;
@@ -792,9 +813,13 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 			if (index != -1)
 			{
 				Tip * adj = new Tip(next, mesh);
+				adj->TipCell = next->TipCell;
+				//next->TipCell = nullptr;
 				adj->angio_element = possible_locations[index];
+				adj->TipCell->angio_element = possible_locations[index];
 				adj->face = angio_element;
 				adj->SetLocalPosition(possible_local_coordinates[index], mesh);
+				adj->TipCell->SetLocalPosition(possible_local_coordinates[index], mesh);
 				adj->use_direction = true;
 				//growth velocity must be zero to work with grown segments stress policy
 				adj->growth_velocity = 0;

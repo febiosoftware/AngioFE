@@ -10,11 +10,16 @@
 void BranchPolicy::AddBranchTip(AngioElement * angio_element, vec3d local_pos, vec3d parent_direction, double start_time, int vessel_id, int buffer_index, FEMesh* mesh)
 {
 	Tip * branch = new Tip();
+	branch->TipCell = new FECell();
 	branch->time = start_time;
+	branch->TipCell->time = start_time;
 	branch->angio_element = angio_element;
+	branch->TipCell->angio_element = angio_element;
 	branch->face = angio_element;
 	branch->SetLocalPosition(local_pos, mesh);
 	branch->initial_fragment_id = vessel_id;
+	// create a completely new cell id
+	branch->TipCell->initial_cell_id = angio_element->_angio_mat->GetCommonAngioProperties()->fseeder->IncrementCellCounter();
 	branch->direction = GetBranchDirection(local_pos, parent_direction, angio_element, mesh);
 	branch->use_direction = true;
 	branch->is_branch = true;
@@ -26,11 +31,16 @@ void BranchPolicy::AddBranchTip(AngioElement * angio_element, vec3d local_pos, v
 void BranchPolicy::AddBranchTipEFD(AngioElement * angio_element, vec3d local_pos, vec3d parent_direction, double start_time, int vessel_id, int buffer_index, FEMesh* mesh)
 {
 	Tip * branch = new Tip();
+	branch->TipCell = new FECell();
 	branch->time = start_time;
+	branch->TipCell->time = start_time;
 	branch->angio_element = angio_element;
+	branch->TipCell->angio_element = angio_element;
 	branch->face = angio_element;
 	branch->SetLocalPosition(local_pos, mesh);
 	branch->initial_fragment_id = vessel_id;
+	// create a completely new cell id
+	branch->TipCell->initial_cell_id = angio_element->_angio_mat->GetCommonAngioProperties()->fseeder->IncrementCellCounter();
 	branch->direction = GetBranchDirectionEFD(local_pos, parent_direction, angio_element, mesh);
 	branch->use_direction = true;
 	branch->is_branch = true;

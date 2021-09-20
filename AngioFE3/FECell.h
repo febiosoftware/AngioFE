@@ -3,6 +3,7 @@
 #include "AngioElement.h"
 #include <FEBioMix/FESBMPointSource.h>
 #include "FEProbabilityDistribution.h"
+#include "Tip.h"
 
 class Segment;
 class FEAngio;
@@ -21,6 +22,8 @@ public:
 	vec3d GetLocalPosition() const;
 	//! The element that contains the local_pos coordinates
 	AngioElement * angio_element = nullptr;
+	//! Time at which the cell occurs
+	double time = 0.0;
 	//! Will be initialized to values greater than or equal to zero, unique values per vessel
 	int initial_cell_id = -1;
 	//! Return the global position of the tip
@@ -41,4 +44,5 @@ public:
 	void UpdateSBM(FEMesh * mesh);
 private:
 	vec3d local_pos;
+	friend class Tip;
 };

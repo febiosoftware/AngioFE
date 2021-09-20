@@ -78,10 +78,12 @@ FECell::FECell(FECell * other, FEMesh * mesh)
 	local_pos = other->local_pos;
 	// deparent the new tip
 	initial_cell_id = other->initial_cell_id;
+	time = other->time;
 	FEModel* fem = angio_element->_mat->GetFEModel();
-	// inherit species in the new tip and remove them in the parent.
 	Species = other->Species;
-	other->Species.clear();
+	// inherit species in the new tip and remove them in the parent.
+	//Species = other->Species;
+	//other->Species.clear();
 }
 
 void FECell::SetLocalPosition(vec3d pos, FEMesh* mesh)

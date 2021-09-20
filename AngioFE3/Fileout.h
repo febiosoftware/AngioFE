@@ -27,6 +27,8 @@ public:
 	void save_vessel_state(FEAngio& angio);
 	//! saves all segments not just recent ones, should only be used in initialization
 	void bulk_save_vessel_state(FEAngio& angio);
+	//! saves all cells not just recent ones, should only be used in initialization
+	void save_initial_cells_txt(FEAngio& angio);
 	//! save the active tips
 	void save_active_tips(FEAngio& angio) const;
 	//! save the timeline of branch points
@@ -36,6 +38,8 @@ public:
 	void save_feangio_stats(FEAngio& angio);
 	//! save the final vascular network as a csv
 	static void save_final_vessel_csv(FEAngio & angio);
+	//! save the cell positions as a txt
+	static void save_final_cells_txt(FEAngio & angio);
 
 private:
 	int getBranchCount(FEAngio& angio);
@@ -52,10 +56,7 @@ private:
 	std::vector <int> getTipCount_pm(FEAngio& angio);
 	std::ofstream logstream;
 
-	FILE*	m_stream4 = nullptr;	// active tips
 	FILE*  vessel_state_stream = nullptr;
 	FILE*  feangio_state_stream = nullptr;
-#ifndef NDEBUG
-	std::ofstream vessel_csv_stream;
-#endif
+	FILE*  cell_state_stream = nullptr;
 };

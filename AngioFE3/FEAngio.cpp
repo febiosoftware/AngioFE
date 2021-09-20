@@ -160,6 +160,7 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, dou
 
 	//do the output
 	fileout->save_vessel_state(*this);
+	fileout->save_final_cells_txt(*this);
 
 
 	//do the cleanup if needed
@@ -269,6 +270,7 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 	ApplydtToTimestepper(min_dt);
 	//do the output, this will output all of the segments
 	fileout->bulk_save_vessel_state(*this);
+	fileout->save_initial_cells_txt(*this);
 }
 
 // takes a given element then first counts the tips in that element then adds all adjacent elements to an inspection list and keep adding tips and adjacent elements until

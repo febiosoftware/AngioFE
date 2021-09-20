@@ -19,10 +19,6 @@ Fileout::Fileout(FEAngio& angio)
 	//write the headers
 	logstream << "Time,Material,Segments,Total Length,Vessels,Branches,Anastamoses,Active Tips" << endl;
 
-#ifndef NDEBUG
-	vessel_csv_stream.open("vessels.csv");
-	vessel_csv_stream << "x0,y0,z0,x1,y1,z1,time " << endl;
-#endif
 	// write the line file
 	vessel_state_stream = fopen("out_vess_state.ang2" , "wb");//check the parameters consider setting the compression level
 	// initialize version and line numbers
@@ -54,12 +50,10 @@ Fileout::Fileout(FEAngio& angio)
 		fwrite(&c_bitmask, sizeof(unsigned int), 1, vessel_state_stream);
 	}
 
-	m_stream4 = fopen("out_active_tips.csv", "wt");		// active tips
-	fprintf(m_stream4, "%-5s,%-12s,%-12s,%-12s\n", "State", "X", "Y", "Z");
-
 	feangio_state_stream = fopen("angio_stats.csv", "wt");
 	fprintf(feangio_state_stream, "%-64s,%-64s,%-64s,%-64s\n",
 		"Timestep", "Growth Process","Branch Policy Update", "Update Stress");
+	cell_state_stream = fopen("final_cells.txt", "wt"); // cells
 }
 
 //-----------------------------------------------------------------------------
@@ -67,6 +61,7 @@ Fileout::~Fileout()
 {
     logstream.close();
 	fclose(vessel_state_stream);
+	fclose(cell_state_stream);
 	fclose(feangio_state_stream);
 }
 
@@ -136,9 +131,6 @@ void Fileout::save_vessel_state(FEAngio& angio)
 			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
 
 			r1 = angio.ReferenceCoordinates(front_tip);
-#ifndef NDEBUG
-			vessel_csv_stream << r0.x << "," << r0.y << "," << r0.z << "," << r1.x << "," << r1.y << "," << r1.z << "," << rtime << std::endl;
-#endif
 		}
 	}
 	assert(crc_segcount == new_seg_count);
@@ -186,9 +178,6 @@ void Fileout::bulk_save_vessel_state(FEAngio& angio)
 			fwrite(&cur, sizeof(float), 1, vessel_state_stream);
 
 			r1 = angio.ReferenceCoordinates(front_tip);
-#ifndef NDEBUG
-			vessel_csv_stream << r0.x << "," << r0.y << "," << r0.z << "," << r1.x << "," << r1.y << "," << r1.z << "," << rtime << std::endl;
-#endif
 		}
 	}
 	assert(crc_segcount == new_seg_count);
@@ -223,6 +212,60 @@ void Fileout::save_final_vessel_csv(FEAngio & angio)
 		}
 
 	}
+	fclose(final_vessel_file);
+
+}
+
+void Fileout::save_final_cells_txt(FEAngio & angio)
+{
+	FILE * final_cell_file = fopen("final_cells.txt", "at");
+	assert(final_cell_file);
+	//fprintf(final_cell_file, "x0,y0,z0,x1,y1,z1,start time\n");
+	FEMesh * mesh = angio.GetMesh(); 
+	for (int i = 0; i < angio.angio_elements.size(); i++)
+	//SL! Need to use current step number instead. IDK where that is. Either that or switch to absolute time
+	{
+		AngioElement * angio_elem = angio.angio_elements[i];
+		for (int j =0; j < angio_elem->final_active_tips.size(); j++){
+			auto cell = angio_elem->final_active_tips[j]->TipCell;
+			//if (cell->active) {
+				vec3d p = cell->GetPosition(mesh);
+				auto ti = angio.GetFEModel()->GetTime();
+				int time = std::max(0.0, ti.currentTime*2);
+				/*FEAnalysis* pp = angio.GetFEModel()->GetCurrentStep();
+				int time2 = pp->m_ntimesteps;*/
+				fprintf(final_cell_file, "%d %d %-12.7f %-12.7f %-12.7f\n", time+1, cell->initial_cell_id, p.x, p.y, p.z);
+				//fprintf(final_cell_file, "%d %d %-12.7f %-12.7f %-12.7f\n", time2, cell->initial_cell_id, p.x, p.y, p.z);
+			//}
+		}
+
+	}
+	fclose(final_cell_file);
+
+}
+
+void Fileout::save_initial_cells_txt(FEAngio & angio)
+{
+	FILE * final_cell_file = fopen("final_cells.txt", "at");
+	assert(final_cell_file);
+	//fprintf(final_cell_file, "x0,y0,z0,x1,y1,z1,start time\n");
+	FEMesh * mesh = angio.GetMesh();
+	for (int i = 0; i < angio.angio_elements.size(); i++)
+		//SL! Need to use current step number instead. IDK where that is. Either that or switch to absolute time
+	{
+		AngioElement * angio_elem = angio.angio_elements[i];
+		for (int j = 0; j < angio_elem->final_active_tips.size(); j++) {
+			auto cell = angio_elem->final_active_tips[j]->TipCell;
+			//if (cell->active) {
+			vec3d p = cell->GetPosition(mesh);
+			//fprintf(final_cell_file, "%-12.7f,%d,%-12.7f,%-12.7f,%-12.7f\n", cell->time, cell->initial_cell_id, p.x, p.y, p.z);
+			//std::cout << time << ", " << cell->initial_cell_id << ", " << p.x << ", " << p.y << ", " << p.z << endl;
+			fprintf(final_cell_file, "%d %d %-12.7f %-12.7f %-12.7f\n", 0, cell->initial_cell_id, p.x, p.y, p.z);
+			//}
+		}
+
+	}
+	fclose(final_cell_file);
 
 }
 

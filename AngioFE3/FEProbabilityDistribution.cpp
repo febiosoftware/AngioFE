@@ -18,7 +18,7 @@ void FEProbabilityDistribution::SetLoadCurveToStep(const char * param)
 
 	FEModel * model = GetFEModel();
 	FELoadCurve* mlc = dynamic_cast<FELoadCurve*>(model->GetLoadController(m));
-	assert(mlc);
+	//assert(mlc);
 	if (mlc)
 	{
 		mlc->SetInterpolation(FEPointFunction::STEP);

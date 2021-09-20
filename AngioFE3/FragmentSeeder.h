@@ -20,11 +20,17 @@ public:
 	}
 	//! Get a random set of valid natural coordinates
 	vec3d GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(FEMesh* mesh, AngioElement* angio_element, angiofe_random_engine random_engine);
+	//! return an incremented cell id
+	int IncrementCellCounter();
 protected:
 	//! number of fragments to seed
 	int number_fragments = 0;
 	//! used to initialize fragment ids
 	static int initial_fragment_id_counter;
+	//! number of cells
+	int number_cells = 0;
+	//! used to initialize cell ids
+	static int initial_cell_id_counter;
 	//! Probability Distribution
 	FEProbabilityDistribution* initial_segment_length = nullptr;
 

@@ -5,6 +5,7 @@
 #include "FEAngio.h"
 #include "TipSpecies.h"
 #include "FEProbabilityDistribution.h"
+#include "FECell.h"
 
 vec3d Tip::GetDirection(FEMesh* mesh) const
 {
@@ -105,6 +106,8 @@ Tip::Tip(Tip * other, FEMesh * mesh)
 	// inherit species in the new tip and remove them in the parent.
 	Species = other->Species;
 	other->Species.clear();
+	// inherit the tip cell and remove it from the parent
+	//FECell TipCell(other->TipCell,mesh);
 }
 
 void Tip::SetLocalPosition(vec3d pos, FEMesh* mesh)
@@ -125,18 +128,48 @@ void Tip::SetLocalPosition(vec3d pos, FEMesh* mesh)
 	local_pos.y = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound_s(angio_element->_elem->Type()), local_pos.y), FEAngio::NaturalCoordinatesLowerBound_s(angio_element->_elem->Type()));
 	local_pos.z = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound_t(angio_element->_elem->Type()), local_pos.z), FEAngio::NaturalCoordinatesLowerBound_t(angio_element->_elem->Type()));
 	vec3d GlobalPos = GetPosition(mesh);
-	for (unsigned it = 0; it < Species.size(); it++)
-	{
-		if (Species[it] != nullptr) {
-			Species[it]->SetPosition(GlobalPos);
-			Species[it]->Update();
-		}
-	}
+	//this->UpdateFECell(mesh);
+	//for (unsigned it = 0; it < Species.size(); it++)
+	//{
+	//	if (Species[it] != nullptr) {
+	//		Species[it]->SetPosition(GlobalPos);
+	//		Species[it]->Update();
+	//	}
+	//}
 }
 
 vec3d Tip::GetLocalPosition() const
 {
 	return local_pos;
+}
+
+void Tip::InitFECell(FEMesh* mesh)
+{
+	FEModel* fem = angio_element->_mat->GetFEModel();
+	FEDomain* dom = &mesh->Domain(0);
+	FEMultiphasic* mat = dynamic_cast<FEMultiphasic*>(dom->GetMaterial());
+	TipCell->SetLocalPosition(GetLocalPosition(),mesh);
+	TipCell->angio_element = this->angio_element;
+	
+	//// assign the SBM properties for each property
+	//TipSpeciesManager* m_species = angio_element->_angio_mat->tip_species_manager;
+	//if (m_species) {
+	//	for (int i = 0; i < m_species->tip_species_prop.size(); i++)
+	//	{
+	//		// get the sbm id
+	//		int SBMID = m_species->tip_species_prop[i]->GetSBMID();
+	//		// get the production rate/concentration
+	//		double prod_rate = m_species->tip_species_prop[i]->GetPR();
+	//		// Create new source
+	//		Species[SBMID] = new FESBMPointSource(fem);
+	//		// update the id, rate, and position of the new species 
+	//		Species[SBMID]->SetSBM(SBMID, prod_rate);
+	//		Species[SBMID]->SetPosition(GetPosition(mesh));
+	//		// initialize and activate the bc
+	//		Species[SBMID]->Init();
+	//		Species[SBMID]->Activate();
+	//	}
+	//}
 }
 
 void Tip::InitSBM(FEMesh* mesh)
@@ -163,6 +196,20 @@ void Tip::InitSBM(FEMesh* mesh)
 			Species[SBMID]->Activate();
 		}
 	}
+}
+
+void Tip::UpdateFECell(FEMesh* mesh)
+{
+	//update the cell position
+	// probably want to change this so it updates the local position then updates all the species and such
+	//TipCell->local_pos = this->GetLocalPosition();
+	//for (unsigned it = 0; it < Species.size(); it++)
+	//{
+	//	if (Species[it] != nullptr) {
+	//		Species[it]->SetPosition(GlobalPos);
+	//		Species[it]->Update();
+	//	}
+	//}
 }
 
 void Tip::UpdateSBM(FEMesh* mesh)

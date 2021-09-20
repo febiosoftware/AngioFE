@@ -17,6 +17,7 @@ class FEAngioMaterial;
 class Segment;
 class Tip;
 class BranchInfo;
+class FECell;
  
 // Base class
 class AngioElement
@@ -61,6 +62,8 @@ public:
 	std::vector<Tip *> current_tips;
 	//! to be used in stress calculations
 	std::vector<Tip*> final_active_tips;
+	//! to be used for I/O and looking at just the tip cells
+	std::vector<FECell *> tip_cells;
 	//! pointer to any additional information for branching
 	BranchInfo * branch_info = nullptr;
 	//! count of branches
