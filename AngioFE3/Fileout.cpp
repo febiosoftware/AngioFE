@@ -9,6 +9,7 @@
 #include <FECore/FEModel.h>
 #include "FEAngioMaterial.h"
 #include <unordered_set>
+#include <FECore/FEAnalysis.h>
 
 using namespace std;
 
@@ -220,23 +221,16 @@ void Fileout::save_final_cells_txt(FEAngio & angio)
 {
 	FILE * final_cell_file = fopen("final_cells.txt", "at");
 	assert(final_cell_file);
-	//fprintf(final_cell_file, "x0,y0,z0,x1,y1,z1,start time\n");
 	FEMesh * mesh = angio.GetMesh(); 
 	for (int i = 0; i < angio.angio_elements.size(); i++)
-	//SL! Need to use current step number instead. IDK where that is. Either that or switch to absolute time
 	{
 		AngioElement * angio_elem = angio.angio_elements[i];
 		for (int j =0; j < angio_elem->final_active_tips.size(); j++){
 			auto cell = angio_elem->final_active_tips[j]->TipCell;
-			//if (cell->active) {
 				vec3d p = cell->GetPosition(mesh);
-				auto ti = angio.GetFEModel()->GetTime();
-				int time = std::max(0.0, ti.currentTime*2);
-				/*FEAnalysis* pp = angio.GetFEModel()->GetCurrentStep();
-				int time2 = pp->m_ntimesteps;*/
-				fprintf(final_cell_file, "%d %d %-12.7f %-12.7f %-12.7f\n", time+1, cell->initial_cell_id, p.x, p.y, p.z);
-				//fprintf(final_cell_file, "%d %d %-12.7f %-12.7f %-12.7f\n", time2, cell->initial_cell_id, p.x, p.y, p.z);
-			//}
+				int time = angio.GetFEModel()->GetCurrentStep()->m_ntimesteps;
+				//FESolutePointSource* rate = cell->Species.at(0);
+				fprintf(final_cell_file, "%d %d %-12.7f %-12.7f %-12.7f %-12.7f\n", time+1	, cell->initial_cell_id, p.x, p.y, p.z,cell->initial_cell_id);
 		}
 
 	}
@@ -248,20 +242,16 @@ void Fileout::save_initial_cells_txt(FEAngio & angio)
 {
 	FILE * final_cell_file = fopen("final_cells.txt", "at");
 	assert(final_cell_file);
-	//fprintf(final_cell_file, "x0,y0,z0,x1,y1,z1,start time\n");
 	FEMesh * mesh = angio.GetMesh();
 	for (int i = 0; i < angio.angio_elements.size(); i++)
-		//SL! Need to use current step number instead. IDK where that is. Either that or switch to absolute time
 	{
 		AngioElement * angio_elem = angio.angio_elements[i];
 		for (int j = 0; j < angio_elem->final_active_tips.size(); j++) {
 			auto cell = angio_elem->final_active_tips[j]->TipCell;
-			//if (cell->active) {
 			vec3d p = cell->GetPosition(mesh);
-			//fprintf(final_cell_file, "%-12.7f,%d,%-12.7f,%-12.7f,%-12.7f\n", cell->time, cell->initial_cell_id, p.x, p.y, p.z);
-			//std::cout << time << ", " << cell->initial_cell_id << ", " << p.x << ", " << p.y << ", " << p.z << endl;
-			fprintf(final_cell_file, "%d %d %-12.7f %-12.7f %-12.7f\n", 0, cell->initial_cell_id, p.x, p.y, p.z);
-			//}
+			double pval = cell->Species.at(0)->GetRate();
+			fprintf(final_cell_file, "%d %d %-12.7f %-12.7f %-12.7f %-12.7f\n", 0, cell->initial_cell_id, p.x, p.y, p.z, pval);
+			//fprintf(final_cell_file, "%d %d %-12.7f %-12.7f %-12.7f %-12.7f\n", 0, cell->initial_cell_id, p.x, p.y, p.z,double(cell->initial_cell_id));
 		}
 
 	}

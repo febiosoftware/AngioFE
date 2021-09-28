@@ -2,6 +2,7 @@
 #include <FECore/vec3d.h>
 #include "AngioElement.h"
 #include <FEBioMix/FESBMPointSource.h>
+#include <FEBioMix/FESolutePointSource.h>
 #include "FEProbabilityDistribution.h"
 #include "Tip.h"
 
@@ -35,13 +36,17 @@ public:
 	//! Prints information about the tip to the console
 	void PrintCellInfo(FEMesh *mesh, std::string title) const;
 	FESBMPointSource* FECellSBM = nullptr;
-	//! The SBM point source
-	std::unordered_map<int, FESBMPointSource*> Species;
-	//! The species point source
-	//std::unordered_map<int, double> Cell_Species;
-	//std::unordered_map<int, double> Membrane_Species;
-	void InitSBM(FEMesh* mesh);
-	void UpdateSBM(FEMesh * mesh);
+	FESolutePointSource* FECellSol = nullptr;
+	//! Cell Species
+	std::unordered_map<int, FESBMPointSource*> SBMs;
+	std::unordered_map<int, FESolutePointSource*> Solutes;
+	std::unordered_map<int, FESolutePointSource*> Species;
+	void InitSBMs(FEMesh* mesh);
+	void UpdateSBMs(FEMesh * mesh);
+	void InitSolutes(FEMesh* mesh);
+	void UpdateSolutes(FEMesh * mesh);
+	void InitSpecies(FEMesh* mesh);
+	void UpdateSpecies(FEMesh * mesh);
 private:
 	vec3d local_pos;
 	friend class Tip;

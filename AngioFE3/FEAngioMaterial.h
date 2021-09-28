@@ -17,7 +17,7 @@
 #include "AngioStressPolicy.h"
 #include "InitialModifiers.h"
 #include "NodeDataInterpolation.h"
-#include "TipSpecies.h"
+#include "CellSpecies.h"
 
 class AngioElement;
 
@@ -144,7 +144,9 @@ public:
 	double vessel_radius = 7.0;
 	FEMixMethod* mix_method = nullptr;
 	SegmentGrowthVelocityManager* velocity_manager = nullptr;
-	TipSpeciesManager* tip_species_manager = nullptr;
+	CellSBMManager* cell_SBM_manager = nullptr;
+	CellSoluteManager* cell_Sol_manager = nullptr;
+	CellSpeciesManager* cell_species_manager = nullptr;
 private:
 	DECLARE_FECORE_CLASS();
 	double initial_segment_velocity = 7.5;
@@ -156,9 +158,8 @@ private:
 	PreviousSegmentContributionManager* psc_manager = nullptr;
 	ProtoPositionDependentDirectionManager* proto_pdd_manager = nullptr;
 	PositionDependentDirectionManager* pdd_manager = nullptr;
-	TipSpecies* tip_species = nullptr;
+	CellSpecies* tip_species = nullptr;
 	ProtoContributionMixManager* proto_cm_manager = nullptr;
 	ContributionMixManager* cm_manager = nullptr;
 	CommonAngioProperties* common_properties = nullptr;
-	
 };

@@ -210,7 +210,7 @@ bool FEPlotMatrixViscoStress::Save(FEDomain& d, FEDataStream& str)
 			FEAngioMaterialPoint* angioPt = FEAngioMaterialPoint::FindAngioMaterialPoint(&mp);
 			FEViscoElasticMaterialPoint& matrix_visco_elastic = *angioPt->matPt->ExtractData<FEViscoElasticMaterialPoint>();
 			
-			mat3ds sj =  matrix_visco_elastic.m_se;
+			mat3ds sj =  matrix_visco_elastic.m_Se;
 			s += sj;
 		}
 		s /= static_cast<double>(nint);

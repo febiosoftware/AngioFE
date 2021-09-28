@@ -154,7 +154,9 @@ bool ByElementFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElemen
 		r0->face = r0->angio_element;
 		r0->SetProtoGrowthLength(initial_segment_length);
 		FEModel* fem = GetFEModel();
-		r0->InitSBM(mesh);
+		r0->TipCell->InitSBMs(mesh);
+		r0->TipCell->InitSolutes(mesh);
+		r0->TipCell->InitSpecies(mesh);
 		// Finally add this to the AngioElement.
 		r0->angio_element->next_tips.at(r0->angio_element).push_back(r0);
 		// Now add an oppositely directed tip.
@@ -173,7 +175,9 @@ bool ByElementFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElemen
 		r1->TipCell->initial_cell_id = initial_cell_id_counter++;
 		r1->use_direction = true;
 		r1->direction = -r0->direction; r1->direction.unit();
-		r1->InitSBM(mesh);
+		r1->TipCell->InitSBMs(mesh);
+		r1->TipCell->InitSolutes(mesh);
+		r1->TipCell->InitSpecies(mesh);
 		r1->angio_element->next_tips.at(r1->angio_element).push_back(r1);
 	}
 	return true;

@@ -111,8 +111,8 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS_EXPLICIT(PSCPDDContributionMix, FEMATERIAL_ID, "psc_pdd_contribution_mix");
 
 	// Species Manager Classes
-	REGISTER_FECORE_CLASS_EXPLICIT(TipSpeciesManager, FEMATERIAL_ID, "SBM_Manager");
-	REGISTER_FECORE_CLASS_EXPLICIT(TipSpecies, FEMATERIAL_ID, "SBM");
+	REGISTER_FECORE_CLASS_EXPLICIT(CellSpeciesManager, FEMATERIAL_ID, "species_manager");
+	REGISTER_FECORE_CLASS_EXPLICIT(CellSpecies, FEMATERIAL_ID, "Species");
 
 	// Mix Methods
 	REGISTER_FECORE_CLASS_EXPLICIT(LinInterp, FEMATERIAL_ID, "LinInterp");

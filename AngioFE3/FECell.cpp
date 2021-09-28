@@ -4,7 +4,7 @@
 #include <iostream>
 #include <algorithm>
 #include "FEAngio.h"
-#include "TipSpecies.h"
+#include "CellSpecies.h"
 #include "FEProbabilityDistribution.h"
 
 vec3d FECell::GetPosition(FEMesh * mesh) const
@@ -80,10 +80,9 @@ FECell::FECell(FECell * other, FEMesh * mesh)
 	initial_cell_id = other->initial_cell_id;
 	time = other->time;
 	FEModel* fem = angio_element->_mat->GetFEModel();
+	Solutes = other->Solutes;
+	SBMs = other->SBMs;
 	Species = other->Species;
-	// inherit species in the new tip and remove them in the parent.
-	//Species = other->Species;
-	//other->Species.clear();
 }
 
 void FECell::SetLocalPosition(vec3d pos, FEMesh* mesh)
@@ -104,6 +103,20 @@ void FECell::SetLocalPosition(vec3d pos, FEMesh* mesh)
 	local_pos.y = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound_s(angio_element->_elem->Type()), local_pos.y), FEAngio::NaturalCoordinatesLowerBound_s(angio_element->_elem->Type()));
 	local_pos.z = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound_t(angio_element->_elem->Type()), local_pos.z), FEAngio::NaturalCoordinatesLowerBound_t(angio_element->_elem->Type()));
 	vec3d GlobalPos = GetPosition(mesh);
+	for (unsigned it = 0; it < SBMs.size(); it++)
+	{
+		if (SBMs[it] != nullptr) {
+			SBMs[it]->SetPosition(GlobalPos);
+			SBMs[it]->Update();
+		}
+	}
+	for (unsigned it = 0; it < Solutes.size(); it++)
+	{
+		if (Solutes[it] != nullptr) {
+			Solutes[it]->SetPosition(GlobalPos);
+			Solutes[it]->Update();
+		}
+	}
 	for (unsigned it = 0; it < Species.size(); it++)
 	{
 		if (Species[it] != nullptr) {
@@ -118,33 +131,106 @@ vec3d FECell::GetLocalPosition() const
 	return local_pos;
 }
 
-void FECell::InitSBM(FEMesh* mesh)
+void FECell::InitSBMs(FEMesh* mesh)
 {
 	FEModel* fem = angio_element->_mat->GetFEModel();
 	FEDomain* dom = &mesh->Domain(0);
 	FEMultiphasic* mat = dynamic_cast<FEMultiphasic*>(dom->GetMaterial());
 	// assign the SBM properties for each property
-	TipSpeciesManager* m_species = angio_element->_angio_mat->tip_species_manager;
-	if (m_species) {
-		for (int i = 0; i < m_species->tip_species_prop.size(); i++)
+	CellSBMManager* m_SBMs = angio_element->_angio_mat->cell_SBM_manager;
+	if (m_SBMs) {
+		for (int i = 0; i < m_SBMs->cell_SBM_prop.size(); i++)
 		{
 			// get the sbm id
-			int SBMID = m_species->tip_species_prop[i]->GetID();
+			int SBMID = m_SBMs->cell_SBM_prop[i]->GetID();
 			// get the production rate/concentration
-			double prod_rate = m_species->tip_species_prop[i]->GetPR();
+			double prod_rate = m_SBMs->cell_SBM_prop[i]->GetPR();
 			// Create new source
-			Species[SBMID] = new FESBMPointSource(fem);
+			SBMs[SBMID] = new FESBMPointSource(fem);
 			// update the id, rate, and position of the new species 
-			Species[SBMID]->SetSBM(SBMID, prod_rate);
-			Species[SBMID]->SetPosition(GetPosition(mesh));
+			SBMs[SBMID]->SetSBMID(SBMID);
+			SBMs[SBMID]->SetValue(prod_rate);
+			SBMs[SBMID]->SetPosition(GetPosition(mesh));
 			// initialize and activate the bc
-			Species[SBMID]->Init();
-			Species[SBMID]->Activate();
+			SBMs[SBMID]->Init();
+			SBMs[SBMID]->Activate();
 		}
 	}
 }
 
-void FECell::UpdateSBM(FEMesh* mesh)
+void FECell::UpdateSBMs(FEMesh* mesh)
+{
+	for (unsigned it = 0; it < SBMs.size(); it++)
+	{
+		SBMs[it]->SetPosition(GetPosition(mesh));
+		SBMs[it]->Update();
+	}
+};
+
+void FECell::InitSolutes(FEMesh* mesh)
+{
+	FEModel* fem = angio_element->_mat->GetFEModel();
+	FEDomain* dom = &mesh->Domain(0);
+	FEMultiphasic* mat = dynamic_cast<FEMultiphasic*>(dom->GetMaterial());
+	// assign the SBM properties for each property
+	CellSoluteManager* m_sol = angio_element->_angio_mat->cell_Sol_manager;
+	if (m_sol) {
+		for (int i = 0; i < m_sol->cell_sol_prop.size(); i++)
+		{
+			// get the sbm id
+			int SolID = m_sol->cell_sol_prop[i]->GetID();
+			// get the production rate/concentration
+			double prod_rate = m_sol->cell_sol_prop[i]->GetPR();
+			// Create new source
+			Solutes[SolID] = new FESolutePointSource(fem);
+			// update the id, rate, and position of the new species 
+			Solutes[SolID]->SetSoluteID(SolID);
+			Solutes[SolID]->SetRate(prod_rate);
+			Solutes[SolID]->SetPosition(GetPosition(mesh));
+			// initialize and activate the bc
+			Solutes[SolID]->Init();
+			Solutes[SolID]->Activate();
+		}
+	}
+}
+
+void FECell::UpdateSolutes(FEMesh* mesh)
+{
+	for (unsigned it = 0; it < Solutes.size(); it++)
+	{
+		Solutes[it]->SetPosition(GetPosition(mesh));
+		Solutes[it]->Update();
+	}
+};
+
+void FECell::InitSpecies(FEMesh* mesh)
+{
+	FEModel* fem = angio_element->_mat->GetFEModel();
+	FEDomain* dom = &mesh->Domain(0);
+	FEMultiphasic* mat = dynamic_cast<FEMultiphasic*>(dom->GetMaterial());
+	// assign the SBM properties for each property
+	CellSpeciesManager* m_species = angio_element->_angio_mat->cell_species_manager;
+	if (m_species) {
+		for (int i = 0; i < m_species->cell_species_prop.size(); i++)
+		{
+			// get the sbm id
+			int SpeciesID = m_species->cell_species_prop[i]->GetSpeciesID()-1;
+			// get the production rate/concentration
+			double prod_rate = m_species->cell_species_prop[i]->GetPR();
+			// Create new source
+			Species[SpeciesID] = new FESolutePointSource(fem);
+			// update the id, rate, and position of the new species 
+			Species[SpeciesID]->SetSoluteID(SpeciesID);
+			Species[SpeciesID]->SetRate(prod_rate);
+			Species[SpeciesID]->SetPosition(GetPosition(mesh));
+			// initialize and activate the bc
+			Species[SpeciesID]->Init();
+			Species[SpeciesID]->Activate();
+		}
+	}
+}
+
+void FECell::UpdateSpecies(FEMesh* mesh)
 {
 	for (unsigned it = 0; it < Species.size(); it++)
 	{

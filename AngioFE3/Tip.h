@@ -52,9 +52,7 @@ public:
 	FESBMPointSource* TipSBM = nullptr;
 	std::unordered_map<int, FESBMPointSource*> Species;
 	void InitFECell(FEMesh* mesh);
-	void InitSBM(FEMesh* mesh);
 	void UpdateFECell(FEMesh* mesh);
-	void UpdateSBM(FEMesh * mesh);
 	void SetProtoGrowthLength(FEProbabilityDistribution* dist);
 	void SetProtoGrowthLength(Tip* tip);
 	double GetProtoGrowthLength();
