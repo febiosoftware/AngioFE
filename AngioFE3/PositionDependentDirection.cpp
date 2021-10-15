@@ -12,6 +12,7 @@
 #include <FECore/mathalg.h>
 #include <FECore/FEDomainMap.h>
 #include "FEProbabilityDistribution.h"
+#include <FEBioMix\FESolutesMaterialPoint.h>
 
 BEGIN_FECORE_CLASS(PositionDependentDirection, FEMaterial)
 ADD_PARAMETER(contribution, "contribution");
@@ -206,8 +207,10 @@ vec3d ConcentrationGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_e
 	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
 	{
 		FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
-
-		concentration_at_integration_points.push_back(pangio->GetConcentration(angio_element->_mat, gauss_point, sol_id));
+		//! SL: Previously used the pangio->GetConcentration function however this wasn't working. Currently jsut take the FESolutesMaterialPoint but that may not work for other material types...
+		FESolutesMaterialPoint* pt = (gauss_point->ExtractData<FESolutesMaterialPoint>());
+		concentration_at_integration_points.push_back(pt->m_ca[sol_id-1]);
+		//concentration_at_integration_points.push_back(pangio->GetConcentration(angio_element->_mat, gauss_point, sol_id));
 	}
 	vec3d grad = pangio->gradient(angio_element->_elem, concentration_at_integration_points, local_pos);
 	double gradnorm = grad.norm();
@@ -218,10 +221,47 @@ vec3d ConcentrationGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_e
 			alpha = contribution;
 		}
 		vec3d new_dir = angio_element->_angio_mat->mix_method->ApplyMix(prev, grad, contribution);
-		if (prev* grad< 0) { new_dir = -new_dir; }
 		return new_dir;
 	}
 	return prev;
+}
+
+BEGIN_FECORE_CLASS(FisherConcentrationGradientPDD, PositionDependentDirection)
+ADD_PARAMETER(threshold, "threshold");
+ADD_PARAMETER(alpha_override, "alpha_override");
+ADD_PARAMETER(sol_id, "sol_id");
+END_FECORE_CLASS();
+
+vec3d FisherConcentrationGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio)
+{
+	std::vector<double> concentration_at_integration_points;
+
+	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
+	{
+		FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
+		//! SL: Previously used the pangio->GetConcentration function however this wasn't working. Currently jsut take the FESolutesMaterialPoint but that may not work for other material types...
+		FESolutesMaterialPoint* pt = (gauss_point->ExtractData<FESolutesMaterialPoint>());
+		concentration_at_integration_points.push_back(pt->m_ca[sol_id - 1]);
+		//concentration_at_integration_points.push_back(pangio->GetConcentration(angio_element->_mat, gauss_point, sol_id));
+	}
+	vec3d grad = pangio->gradient(angio_element->_elem, concentration_at_integration_points, local_pos);
+	double gradnorm = grad.norm();
+	if (gradnorm > threshold)
+	{
+		if (alpha_override)
+		{
+			alpha = contribution;
+		}
+		FEFisherDistribution F(this->GetFEModel());
+		F.mu = grad;
+		F.k = 10;
+		F.Init();
+		vec3d conc_dir = F.NextVec(angio_element->_rengine);
+		return angio_element->_angio_mat->mix_method->ApplyMix(tip_dir, conc_dir, alpha);
+	}
+	else {
+		return prev;
+	}
 }
 
 //used in the anastamosis modifier

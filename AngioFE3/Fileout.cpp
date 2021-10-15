@@ -229,8 +229,16 @@ void Fileout::save_final_cells_txt(FEAngio & angio)
 			auto cell = angio_elem->final_active_tips[j]->TipCell;
 				vec3d p = cell->GetPosition(mesh);
 				int time = angio.GetFEModel()->GetCurrentStep()->m_ntimesteps;
-				//FESolutePointSource* rate = cell->Species.at(0);
-				fprintf(final_cell_file, "%d %d %-12.7f %-12.7f %-12.7f %-12.7f\n", time+1	, cell->initial_cell_id, p.x, p.y, p.z,cell->initial_cell_id);
+				fprintf(final_cell_file, "%d,%d,%-12.7f,%-12.7f,%-12.7f", time + 1, cell->initial_cell_id, p.x, p.y, p.z);
+				//! Print solute values
+				for (int isol = 0; isol < cell->Solutes.size(); isol++) {
+					fprintf(final_cell_file, ",%-12.7f", cell->Solutes[isol]->GetInt());
+				}
+				//! Print SBM values
+				for (int isbm = 0; isbm < cell->SBMs.size(); isbm++) {
+					fprintf(final_cell_file, ",%-12.7f", cell->SBMs[isbm]->GetInt());
+				}
+				fprintf(final_cell_file, "\n");
 		}
 
 	}
@@ -243,17 +251,37 @@ void Fileout::save_initial_cells_txt(FEAngio & angio)
 	FILE * final_cell_file = fopen("final_cells.txt", "at");
 	assert(final_cell_file);
 	FEMesh * mesh = angio.GetMesh();
-	for (int i = 0; i < angio.angio_elements.size(); i++)
-	{
+	fprintf(final_cell_file,"*timestep,cell id,X Pos,Y Pos,Z Pos");
+	CellSpeciesManager* m_species = angio.angio_elements[0]->_angio_mat->cell_species_manager;
+	if (m_species) {
+		for (int isol = 0; isol < m_species->cell_solute_prop.size(); isol++) {
+			int sol_id = m_species->cell_solute_prop[isol]->GetSoluteID();
+			fprintf(final_cell_file,",Sol %d",sol_id);
+		}
+		// assign the properties to each SBM. Initialize body loads and add to the SBMs container.
+		for (int isbm = 0; isbm < m_species->cell_SBM_prop.size(); isbm++)
+		{
+			int sbm_id = m_species->cell_SBM_prop[isbm]->GetSBMID();
+			fprintf(final_cell_file,",SBM %d",sbm_id);
+		}
+	}
+	fprintf(final_cell_file, "\n");
+	for (int i = 0; i < angio.angio_elements.size(); i++) {
 		AngioElement * angio_elem = angio.angio_elements[i];
 		for (int j = 0; j < angio_elem->final_active_tips.size(); j++) {
 			auto cell = angio_elem->final_active_tips[j]->TipCell;
 			vec3d p = cell->GetPosition(mesh);
-			double pval = cell->Species.at(0)->GetRate();
-			fprintf(final_cell_file, "%d %d %-12.7f %-12.7f %-12.7f %-12.7f\n", 0, cell->initial_cell_id, p.x, p.y, p.z, pval);
-			//fprintf(final_cell_file, "%d %d %-12.7f %-12.7f %-12.7f %-12.7f\n", 0, cell->initial_cell_id, p.x, p.y, p.z,double(cell->initial_cell_id));
+			fprintf(final_cell_file,"%d,%d,%-12.7f,%-12.7f,%-12.7f",0,cell->initial_cell_id,p.x,p.y,p.z);
+			//! Print solute values
+			for (int isol = 0; isol < cell->Solutes.size(); isol++) {
+				fprintf(final_cell_file,",%-12.7f",cell->Solutes[isol]->GetInt());
+			}
+			//! Print SBM values
+			for (int isbm = 0; isbm < cell->SBMs.size(); isbm++) {
+				fprintf(final_cell_file,",%-12.7f",cell->SBMs[isbm]->GetInt());
+			}
+			fprintf(final_cell_file,"\n");
 		}
-
 	}
 	fclose(final_cell_file);
 

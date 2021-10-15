@@ -144,6 +144,7 @@ bool ByElementFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElemen
 		int elem_index = edist(angio_mat->m_pangio->rengine);
 		r0->angio_element = angio_elements[elem_index];
 		r0->TipCell->angio_element = r0->angio_element;
+		r0->TipCell->ParentTip = r0;
 		vec3d local_pos = GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(mesh, r0->angio_element, r0->angio_element->_rengine);
 		r0->SetLocalPosition(local_pos, mesh);
 		r0->TipCell->SetLocalPosition(local_pos, mesh);
@@ -154,8 +155,6 @@ bool ByElementFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElemen
 		r0->face = r0->angio_element;
 		r0->SetProtoGrowthLength(initial_segment_length);
 		FEModel* fem = GetFEModel();
-		r0->TipCell->InitSBMs(mesh);
-		r0->TipCell->InitSolutes(mesh);
 		r0->TipCell->InitSpecies(mesh);
 		// Finally add this to the AngioElement.
 		r0->angio_element->next_tips.at(r0->angio_element).push_back(r0);
@@ -164,6 +163,7 @@ bool ByElementFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElemen
 		r1->TipCell = new FECell();
 		r1->angio_element = r0->angio_element;
 		r1->TipCell->angio_element = r1->angio_element;
+		r1->TipCell->ParentTip = r1;
 		r1->face = r0->face;
 		r1->time = r0->time;
 		r1->TipCell->time = r1->time;
@@ -175,8 +175,6 @@ bool ByElementFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElemen
 		r1->TipCell->initial_cell_id = initial_cell_id_counter++;
 		r1->use_direction = true;
 		r1->direction = -r0->direction; r1->direction.unit();
-		r1->TipCell->InitSBMs(mesh);
-		r1->TipCell->InitSolutes(mesh);
 		r1->TipCell->InitSpecies(mesh);
 		r1->angio_element->next_tips.at(r1->angio_element).push_back(r1);
 	}

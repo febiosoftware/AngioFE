@@ -155,6 +155,27 @@ private:
 	FEVariableInterpolation* interpolation_prop = nullptr;
 };
 
+//! Implements a chemical concentration based position direction modifier
+class FisherConcentrationGradientPDD : public PositionDependentDirection
+{
+public:
+	//! constructor
+	explicit FisherConcentrationGradientPDD(FEModel* pfem) : PositionDependentDirection(pfem) { }
+	virtual ~FisherConcentrationGradientPDD() {}
+	//! return the direction given by the concentration gradient
+	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
+	//! may be used to get values from loadcurves that modify the behavior as a whole
+	void Update(FEMesh * mesh, FEAngio* angio) override {}
+	//! parameter list
+	DECLARE_FECORE_CLASS();
+private:
+	//! SL: will need to rethink this default
+	double threshold = 0.00001;//vessels will deflect if above threshold
+	bool alpha_override = false;//replace the alpha to have this take over
+	int sol_id = 0;
+	FEVariableInterpolation* interpolation_prop = nullptr;
+};
+
 //! Implements anastamosis as a position dependent direction growth modifier
 class AnastamosisPDD : public PositionDependentDirection
 {

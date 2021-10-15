@@ -103,9 +103,6 @@ Tip::Tip(Tip * other, FEMesh * mesh)
 	direction = other->GetDirection(mesh);
 	direction.unit();
 	FEModel* fem = angio_element->_mat->GetFEModel();
-	// inherit species in the new tip and remove them in the parent.
-	Species = other->Species;
-	other->Species.clear();
 	// inherit the tip cell and remove it from the parent
 }
 
@@ -134,21 +131,12 @@ vec3d Tip::GetLocalPosition() const
 	return local_pos;
 }
 
-void Tip::InitFECell(FEMesh* mesh)
-{
-	FEModel* fem = angio_element->_mat->GetFEModel();
-	FEDomain* dom = &mesh->Domain(0);
-	FEMultiphasic* mat = dynamic_cast<FEMultiphasic*>(dom->GetMaterial());
-	TipCell->SetLocalPosition(GetLocalPosition(),mesh);
-	TipCell->angio_element = this->angio_element;
-}
-
 void Tip::SetProtoGrowthLength(FEProbabilityDistribution* dist) 
 {
 	proto_growth_length = 0.5*dist->NextValue(angio_element->_rengine);
 }
 
-void Tip::SetProtoGrowthLength(Tip* tip)
+void Tip::SetProtoGrowthLength(Tip* tip)	
 {
 	proto_growth_length = tip->GetProtoGrowthLength();
 }

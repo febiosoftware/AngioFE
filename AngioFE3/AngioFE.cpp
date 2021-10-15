@@ -28,6 +28,7 @@ FECORE_EXPORT  unsigned int GetSDKVersion()
 FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 {
 	FECoreKernel::SetInstance(&febio);
+	febio.SetActiveModule("solid");
 	REGISTER_FECORE_CLASS_EXPLICIT(AngioFETask, FETASK_ID, "angio");
 	REGISTER_FECORE_CLASS_EXPLICIT(FEAngioMaterial, FEMATERIAL_ID, "angio_mat");
 	REGISTER_FECORE_CLASS_EXPLICIT(CommonAngioProperties, FEMATERIAL_ID, "angio_properties");
@@ -42,6 +43,7 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS_EXPLICIT(FEGammaDistribution, FEMATERIAL_ID, "gamma_distribution");
 	REGISTER_FECORE_CLASS_EXPLICIT(FEFixedDistribution, FEMATERIAL_ID, "fixed_distribution");
 	REGISTER_FECORE_CLASS_EXPLICIT(FEEllipticalDistribution, FEMATERIAL_ID, "elliptical_distribution");
+	REGISTER_FECORE_CLASS_EXPLICIT(FEFisherDistribution, FEMATERIAL_ID, "fisher_distribution");
 	REGISTER_FECORE_CLASS_EXPLICIT(FEPrescribedDistribution, FEMATERIAL_ID, "prescribed_distribution");
 
 	// Stress Policy Classes
@@ -96,6 +98,7 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS_EXPLICIT(ECMDensityGradientPDD, FEMATERIAL_ID, "ecm_density_gradient_pdd");
 	REGISTER_FECORE_CLASS_EXPLICIT(RepulsePDD, FEMATERIAL_ID, "repulse_pdd");
 	REGISTER_FECORE_CLASS_EXPLICIT(ConcentrationGradientPDD, FEMATERIAL_ID, "concentration_gradient_pdd");
+	REGISTER_FECORE_CLASS_EXPLICIT(FisherConcentrationGradientPDD, FEMATERIAL_ID, "fisher_concentration_gradient_pdd");
 
 	// ProtoPDD Classes
 	REGISTER_FECORE_CLASS_EXPLICIT(ProtoPositionDependentDirectionManager, FEMATERIAL_ID, "proto_position_dependent_direction_manager");
@@ -112,7 +115,19 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 
 	// Species Manager Classes
 	REGISTER_FECORE_CLASS_EXPLICIT(CellSpeciesManager, FEMATERIAL_ID, "species_manager");
-	REGISTER_FECORE_CLASS_EXPLICIT(CellSpecies, FEMATERIAL_ID, "Species");
+	/*REGISTER_FECORE_CLASS_EXPLICIT(CellSBMManager, FEMATERIAL_ID, "SBM_manager");
+	REGISTER_FECORE_CLASS_EXPLICIT(CellSoluteManager, FEMATERIAL_ID, "Solute_manager");*/
+	REGISTER_FECORE_CLASS_EXPLICIT(CellSBM, FEMATERIAL_ID, "SBM");
+	REGISTER_FECORE_CLASS_EXPLICIT(CellSolute, FEMATERIAL_ID, "Solute");
+	REGISTER_FECORE_CLASS_EXPLICIT(CellReactionManager, FEMATERIAL_ID, "cell_reaction_manager");
+	REGISTER_FECORE_CLASS_EXPLICIT(FECellReaction, FEMATERIAL_ID, "cell_reaction");
+	REGISTER_FECORE_CLASS_EXPLICIT(FECellReactionRateConst, FEMATERIAL_ID, "constant reaction rate");
+	REGISTER_FECORE_CLASS_EXPLICIT(FECellMassActionForward, FEMATERIAL_ID, "mass-action-forward");
+	REGISTER_FECORE_CLASS_EXPLICIT(FECellMassActionForwardEffective, FEMATERIAL_ID, "mass-action-forward-effective");
+	REGISTER_FECORE_CLASS_EXPLICIT(FECellMassActionReversible, FEMATERIAL_ID, "mass-action-reversible");
+	REGISTER_FECORE_CLASS_EXPLICIT(FECellMassActionReversibleEffective, FEMATERIAL_ID, "mass-action-reversible-effective");
+	REGISTER_FECORE_CLASS_EXPLICIT(FECellMichaelisMenten, FEMATERIAL_ID, "michaelis-menten");
+
 
 	// Mix Methods
 	REGISTER_FECORE_CLASS_EXPLICIT(LinInterp, FEMATERIAL_ID, "LinInterp");

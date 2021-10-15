@@ -2,7 +2,7 @@
 #include "StdAfx.h"
 #include <FECore/FEMaterial.h>
 #include <numeric>
-
+#include<FEBioMech/geodesic.h>
 #include "FECore/FEModel.h"
 #include "FECore/FELoadCurve.h"
 #include <FECore/FECoreBase.h>
@@ -317,6 +317,42 @@ private:
 	double d[3];
 	vec3d v[3];
 
+	DECLARE_FECORE_CLASS();
+};
+
+//! get random numbers from an elliptical distribution
+class FEFisherDistribution : public FEProbabilityDistribution
+{
+public:
+	//! constructor
+	explicit FEFisherDistribution(FEModel* pfem) : FEProbabilityDistribution(pfem) {}
+
+	//! generates the next value in the given sequence which fits a given distribution
+	//! this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
+	//! nan will be returned if the distribution fails to find a suitable number
+
+	vec3d NextVec(angiofe_random_engine & re) override;
+
+	double NextValue(angiofe_random_engine & re) override;
+
+	//! performs initialization
+	bool Init() override;
+
+	//! updates the distribution to a given time
+	void TimeStepUpdate(double current_time) override;
+
+	vec3d mu;
+	double k;
+	static const int resolution = 320;
+	double theta[resolution];
+	double phi[resolution];
+	double area[resolution];
+	vec3d dir[resolution];
+private:
+	std::vector<double> ODF;
+	std::vector<double> cdf;
+	std::vector<double> bins;
+	std::uniform_real_distribution<double> ud = std::uniform_real_distribution<double>(-1.0, 1.0);
 	DECLARE_FECORE_CLASS();
 };
 

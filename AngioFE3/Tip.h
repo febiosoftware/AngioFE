@@ -49,10 +49,6 @@ public:
 	//! Prints information about the tip to the console
 	void PrintTipInfo(FEMesh *mesh, std::string title) const;
 	FECell * TipCell = nullptr;
-	FESBMPointSource* TipSBM = nullptr;
-	std::unordered_map<int, FESBMPointSource*> Species;
-	void InitFECell(FEMesh* mesh);
-	void UpdateFECell(FEMesh* mesh);
 	void SetProtoGrowthLength(FEProbabilityDistribution* dist);
 	void SetProtoGrowthLength(Tip* tip);
 	double GetProtoGrowthLength();

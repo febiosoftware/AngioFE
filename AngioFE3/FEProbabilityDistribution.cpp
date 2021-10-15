@@ -5,6 +5,7 @@
 #include <numeric>
 #include <FECore/FECoreBase.h>
 #include <iostream>
+#include <algorithm>
 
 BEGIN_FECORE_CLASS(FEProbabilityDistribution, FEMaterial)
 ADD_PARAMETER(max_retries, "max_retries");
@@ -371,6 +372,74 @@ void FEEllipticalDistribution::TimeStepUpdate(double current_time)
 }
 
 BEGIN_FECORE_CLASS(FEEllipticalDistribution, FEProbabilityDistribution)
+END_FECORE_CLASS();
+
+//implemenations of FEGammaDistribution
+vec3d FEFisherDistribution::NextVec(angiofe_random_engine & re)
+{
+	//cdf.resize(resolution);
+	ODF.resize(resolution);
+	//bins.resize(resolution);
+	double prior_val = 0.0;
+	// Create the cdf
+	for (int i = 0; i < resolution; i++) {
+		//bins.at(i) = i;
+		ODF.at(i) = AREAL[i]*(k / (2 * PI*(exp(k) - exp(-k))) * exp(k*(mu*dir[0])));
+		//cdf.at(i) = ODF.at(i) + prior_val;
+		//prior_val = cdf.at(i);
+	}
+	vec3d rand_pt;
+	double maxODF = *std::max_element(ODF.begin(), ODF.end());
+	bool found = false;
+	while (!found) {
+		rand_pt.x = ud(re)*maxODF;
+		rand_pt.y = ud(re)*maxODF;
+		rand_pt.z = ud(re)*maxODF;
+		std::vector<double> dist;
+		for (int i = 0; i < resolution; i++) {
+			dist.emplace_back(rand_pt*dir[i]);
+		}
+		//double rand_dir = *std::min_element(dist.begin(),dist.end());
+		int rand_pt_indx = std::min_element(dist.begin(), dist.end()) - dist.begin();
+		double check = ODF[rand_pt_indx];
+		//if (rand_pt.norm() <= check) {
+		//	return rand_pt.unit();
+		//}
+	}
+
+	// get the cumulative sum
+	std::partial_sum(ODF.begin(), ODF.end(), cdf.begin());
+	// divide cumulative sum by sum
+	std::transform(cdf.begin(), cdf.end(), cdf.begin(),
+		std::bind(std::divides<double>(), std::placeholders::_1, cdf.at(resolution - 1)));
+	double rn = ud(re);
+	// find the value closest to the random number and get the position
+	int fi = std::distance(cdf.begin(), std::lower_bound(cdf.begin(), cdf.end(), rn));
+	return dir[fi];
+
+}
+
+double FEFisherDistribution::NextValue(angiofe_random_engine & re)
+{
+	return 0;
+}
+
+bool FEFisherDistribution::Init()
+{
+	ODF.reserve(resolution);
+	for (int i = 0; i < resolution; i++) {
+		dir[i].x = cos(PHIL[i])*sin(THETAL[i]);	dir[i].y = sin(PHIL[i])*sin(THETAL[i]);	dir[i].z = cos(THETAL[i]);
+		ODF[i] = 1.0/resolution;
+	}
+	return true;
+}
+
+void FEFisherDistribution::TimeStepUpdate(double current_time)
+{
+
+}
+
+BEGIN_FECORE_CLASS(FEFisherDistribution, FEProbabilityDistribution)
 END_FECORE_CLASS();
 
 //implemenations of FENormalDistribution

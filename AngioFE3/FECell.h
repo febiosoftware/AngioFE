@@ -5,6 +5,7 @@
 #include <FEBioMix/FESolutePointSource.h>
 #include "FEProbabilityDistribution.h"
 #include "Tip.h"
+#include "CellSpecies.h"
 
 class Segment;
 class FEAngio;
@@ -35,18 +36,20 @@ public:
 	void PrintCellInfo(FEMesh *mesh) const;
 	//! Prints information about the tip to the console
 	void PrintCellInfo(FEMesh *mesh, std::string title) const;
-	FESBMPointSource* FECellSBM = nullptr;
-	FESolutePointSource* FECellSol = nullptr;
 	//! Cell Species
-	std::unordered_map<int, FESBMPointSource*> SBMs;
-	std::unordered_map<int, FESolutePointSource*> Solutes;
-	std::unordered_map<int, FESolutePointSource*> Species;
-	void InitSBMs(FEMesh* mesh);
-	void UpdateSBMs(FEMesh * mesh);
-	void InitSolutes(FEMesh* mesh);
-	void UpdateSolutes(FEMesh * mesh);
+	/*std::unordered_map<int, CellSBM*> SBMs;
+	std::unordered_map<int, CellSolute*> Solutes;*/
+	std::vector<CellSBM*> SBMs;
+	std::vector<CellSolute*> Solutes;
+	std::vector<FEChemicalReaction*> Reactions;
+	//std::unordered_map<int, FESolutePointSource*> Species;
 	void InitSpecies(FEMesh* mesh);
 	void UpdateSpecies(FEMesh * mesh);
+	//void InitReactions(FEMesh* mesh);
+	double GetReactionSupply(FEChemicalReaction* m_R);
+	Tip* ParentTip;
+	double eval_time = 0;
+	double cell_vol = 1000; // cell volume is 1000 um3 = 1 uL
 private:
 	vec3d local_pos;
 	friend class Tip;
