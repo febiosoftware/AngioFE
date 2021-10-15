@@ -122,7 +122,7 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS_EXPLICIT(CellReactionManager, FEMATERIAL_ID, "cell_reaction_manager");
 	REGISTER_FECORE_CLASS_EXPLICIT(FECellReaction, FEMATERIAL_ID, "cell_reaction");
 	REGISTER_FECORE_CLASS_EXPLICIT(FECellReactionRateConst, FEMATERIAL_ID, "constant reaction rate");
-	REGISTER_FECORE_CLASS_EXPLICIT(FECellMassActionForward, FEMATERIAL_ID, "mass-action-forward");
+	REGISTER_FECORE_CLASS_EXPLICIT(FECellMassActionForward, FEMATERIAL_ID, "cell mass-action-forward");
 	REGISTER_FECORE_CLASS_EXPLICIT(FECellMassActionForwardEffective, FEMATERIAL_ID, "mass-action-forward-effective");
 	REGISTER_FECORE_CLASS_EXPLICIT(FECellMassActionReversible, FEMATERIAL_ID, "mass-action-reversible");
 	REGISTER_FECORE_CLASS_EXPLICIT(FECellMassActionReversibleEffective, FEMATERIAL_ID, "mass-action-reversible-effective");
