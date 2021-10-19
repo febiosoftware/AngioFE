@@ -18,6 +18,8 @@ public:
 	FECell() {}
 	//! used to copy another tip
 	FECell(FECell * other, FEMesh * mesh);
+	//! Init
+	bool Init();
 	//! sets the local positions clamps the values to -1 to 1
 	void SetLocalPosition(vec3d pos, FEMesh * mesh);
 	//! returns the local position
@@ -37,16 +39,11 @@ public:
 	//! Prints information about the tip to the console
 	void PrintCellInfo(FEMesh *mesh, std::string title) const;
 	//! Cell Species
-	/*std::unordered_map<int, CellSBM*> SBMs;
-	std::unordered_map<int, CellSolute*> Solutes;*/
 	std::vector<CellSBM*> SBMs;
 	std::vector<CellSolute*> Solutes;
-	std::vector<FEChemicalReaction*> Reactions;
-	//std::unordered_map<int, FESolutePointSource*> Species;
+	std::vector<FECellChemicalReaction*> Reactions;
 	void InitSpecies(FEMesh* mesh);
 	void UpdateSpecies(FEMesh * mesh);
-	//void InitReactions(FEMesh* mesh);
-	double GetReactionSupply(FEChemicalReaction* m_R);
 	Tip* ParentTip;
 	double eval_time = 0;
 	double cell_vol = 1000; // cell volume is 1000 um3 = 1 uL

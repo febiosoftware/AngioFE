@@ -115,18 +115,18 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 
 	// Species Manager Classes
 	REGISTER_FECORE_CLASS_EXPLICIT(CellSpeciesManager, FEMATERIAL_ID, "species_manager");
-	/*REGISTER_FECORE_CLASS_EXPLICIT(CellSBMManager, FEMATERIAL_ID, "SBM_manager");
-	REGISTER_FECORE_CLASS_EXPLICIT(CellSoluteManager, FEMATERIAL_ID, "Solute_manager");*/
 	REGISTER_FECORE_CLASS_EXPLICIT(CellSBM, FEMATERIAL_ID, "SBM");
 	REGISTER_FECORE_CLASS_EXPLICIT(CellSolute, FEMATERIAL_ID, "Solute");
 	REGISTER_FECORE_CLASS_EXPLICIT(CellReactionManager, FEMATERIAL_ID, "cell_reaction_manager");
 	REGISTER_FECORE_CLASS_EXPLICIT(FECellReaction, FEMATERIAL_ID, "cell_reaction");
-	REGISTER_FECORE_CLASS_EXPLICIT(FECellReactionRateConst, FEMATERIAL_ID, "constant reaction rate");
+	REGISTER_FECORE_CLASS_EXPLICIT(FECellReactionRateConst, FEMATERIAL_ID, "cell constant reaction rate");
 	REGISTER_FECORE_CLASS_EXPLICIT(FECellMassActionForward, FEMATERIAL_ID, "cell mass-action-forward");
-	REGISTER_FECORE_CLASS_EXPLICIT(FECellMassActionForwardEffective, FEMATERIAL_ID, "mass-action-forward-effective");
-	REGISTER_FECORE_CLASS_EXPLICIT(FECellMassActionReversible, FEMATERIAL_ID, "mass-action-reversible");
-	REGISTER_FECORE_CLASS_EXPLICIT(FECellMassActionReversibleEffective, FEMATERIAL_ID, "mass-action-reversible-effective");
-	REGISTER_FECORE_CLASS_EXPLICIT(FECellMichaelisMenten, FEMATERIAL_ID, "michaelis-menten");
+	REGISTER_FECORE_CLASS_EXPLICIT(FECellMassActionForwardEffective, FEMATERIAL_ID, "cell mass-action-forward-effective");
+	REGISTER_FECORE_CLASS_EXPLICIT(FECellMassActionReversible, FEMATERIAL_ID, "cell mass-action-reversible");
+	REGISTER_FECORE_CLASS_EXPLICIT(FECellMassActionReversibleEffective, FEMATERIAL_ID, "cell mass-action-reversible-effective");
+	REGISTER_FECORE_CLASS_EXPLICIT(FECellMichaelisMenten, FEMATERIAL_ID, "cell michaelis-menten");
+	REGISTER_FECORE_CLASS_EXPLICIT(FECellInternalization, FEMATERIAL_ID, "cell internalization");
+	REGISTER_FECORE_CLASS_EXPLICIT(FECellSecretion, FEMATERIAL_ID, "cell secretion");
 
 
 	// Mix Methods

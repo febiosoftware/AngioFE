@@ -41,8 +41,6 @@ FEAngioMaterial::FEAngioMaterial(FEModel* pfem) : FEElasticMaterial(pfem)
 	AddClassProperty(this, &nodedata_interpolation_manager, "nodedata_interpolation_manager", FEProperty::Optional);
 	AddClassProperty(this, &branch_policy, "branch_policy", FEProperty::Optional);
 	AddClassProperty(this, &proto_branch_policy, "proto_branch_policy", FEProperty::Optional);
-	//AddClassProperty(this, &cell_SBM_manager, "cell_SBM_manager", FEProperty::Optional);
-	//AddClassProperty(this, &cell_Solute_manager, "cell_Solute_manager", FEProperty::Optional);
 	AddClassProperty(this, &cell_species_manager, "cell_species_manager", FEProperty::Optional);
 	AddClassProperty(this, &cell_reaction_manager, "cell_reaction_manager", FEProperty::Optional);
 }

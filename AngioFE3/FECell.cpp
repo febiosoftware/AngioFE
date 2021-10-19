@@ -7,6 +7,9 @@
 #include "CellSpecies.h"
 #include "FEProbabilityDistribution.h"
 #include <FEBioMix\FEMultiphasicStandard.h>
+#include <FEBioMix\FESolute.h>
+#include <FECore\log.h>
+#include <FECore\FEMaterial.h>
 
 vec3d FECell::GetPosition(FEMesh * mesh) const
 {
@@ -85,6 +88,10 @@ FECell::FECell(FECell * other, FEMesh * mesh)
 	SBMs = other->SBMs;
 }
 
+bool FECell::Init() {
+	return true;
+}
+
 void FECell::SetLocalPosition(vec3d pos, FEMesh* mesh)
 {
 	assert(angio_element);
@@ -113,27 +120,26 @@ vec3d FECell::GetLocalPosition() const
 void FECell::InitSpecies(FEMesh* mesh)
 {
 	FEModel* fem = angio_element->_mat->GetFEModel();
-	FEDomain* dom = &mesh->Domain(0);
-	FEMultiphasic* mat = dynamic_cast<FEMultiphasic*>(dom->GetMaterial());
 	CellSpeciesManager* m_species = angio_element->_angio_mat->cell_species_manager;
 	// assign the properties to each solute. Initialize body loads and add to the solutes container.
 	if (m_species) {
 		for (int i = 0; i < m_species->cell_solute_prop.size(); i++) {
 			CellSolute* cell_solute = new CellSolute(fem);
-			//CellSolute* cell_solute = m_species->cell_solute_prop[i];
-			//cell_solute = m_species->cell_solute_prop[i];
 			CellSolute* ref_solute = m_species->cell_solute_prop[i];
 			// get the sbm id
 			int SoluteID = ref_solute->GetSoluteID();
 			// get the production rate/concentration
-			double prod_rate = ref_solute->GetPR();
 			// Create new source
 			cell_solute->CellSolutePS = new FESolutePointSource(fem);
 			cell_solute->SetSoluteID(SoluteID);
 			// update the id, rate, and position of the new species 
 			cell_solute->CellSolutePS->SetSoluteID(SoluteID);
-			cell_solute->CellSolutePS->SetRate(prod_rate);
 			cell_solute->CellSolutePS->SetPosition(GetPosition(mesh));
+			FESoluteData* psd = cell_solute->FindSoluteData(SoluteID);
+			cell_solute->SetDensity(psd->m_rhoT);
+			cell_solute->SetMolarMass(psd->m_M);
+			cell_solute->SetCharge(psd->m_z);
+			
 			// initialize and activate the bc
 			if (cell_solute->CellSolutePS->Init()) {
 				mesh->GetFEModel()->AddBodyLoad(cell_solute->CellSolutePS);
@@ -145,17 +151,20 @@ void FECell::InitSpecies(FEMesh* mesh)
 		{
 			CellSBM* cell_sbm = new CellSBM(fem);
 			CellSBM* ref_sbm = m_species->cell_SBM_prop[i];
-			//CellSBM* cell_sbm = m_species->cell_SBM_prop[i];
 			// get the sbm id
 			int SBMID = ref_sbm->GetSBMID();
 			// get the production rate/concentration
-			double prod_rate = ref_sbm->GetPR();
 			// Create new source
 			cell_sbm->CellSBMPS = new FESBMPointSource(fem);
 			// update the id, rate, and position of the new species 
+			cell_sbm->SetSBMID(SBMID);
 			cell_sbm->CellSBMPS->SetSBMID(SBMID);
-			cell_sbm->CellSBMPS->SetValue(prod_rate);
 			cell_sbm->CellSBMPS->SetPosition(GetPosition(mesh));
+			
+			FESBMData* psd = cell_sbm->FindSBMData(SBMID);
+			cell_sbm->SetDensity(psd->m_rhoT);
+			cell_sbm->SetMolarMass(psd->m_M);
+			cell_sbm->SetCharge(psd->m_z);
 			// initialize and activate the bc
 			if (cell_sbm->CellSBMPS->Init()) {
 				mesh->GetFEModel()->AddBodyLoad(cell_sbm->CellSBMPS);
@@ -166,14 +175,14 @@ void FECell::InitSpecies(FEMesh* mesh)
 		// assign the properties to each solute. Initialize body loads and add to the solutes container.
 		if (m_reaction) {
 			for (int i = 0; i < m_reaction->cell_reaction.size(); i++) {
-				FECellReaction* m_R = m_reaction->cell_reaction[i];
 				FECellChemicalReaction* m_CR = m_reaction->cell_reaction[i];
-
-				//m_CR->m_pMP = mat;
-				////mat->AddChemicalReaction(m_CR);
-				//if (m_CR->Init()) {
-				//	Reactions.emplace_back(m_CR);
-				//}
+				/*FECellChemicalReaction* m_CR = m_reaction->cell_reaction[i];*/
+				m_CR->SetCell(this);
+				if (m_CR->m_pFwd) m_CR->m_pFwd->SetCell(this); 
+				if (m_CR->m_pRev) m_CR->m_pRev->SetCell(this); 
+				m_CR->Init();
+				
+				this->Reactions.emplace_back(m_CR);
 			}
 		}
 		FEMaterialPoint& mp = *angio_element->_elem->GetMaterialPoint(0);
@@ -189,6 +198,7 @@ void FECell::UpdateSpecies(FEMesh* mesh)
 		Solutes[isol]->CellSolutePS->SetPosition(GetPosition(mesh));
 		//! Call the Body Load update
 		Solutes[isol]->CellSolutePS->Update();
+		Solutes[isol]->CellSolutePS->SetRate(0);
 	}
 	for (int isbm = 0; isbm < SBMs.size(); isbm++)
 	{
@@ -196,13 +206,13 @@ void FECell::UpdateSpecies(FEMesh* mesh)
 		SBMs[isbm]->CellSBMPS->SetPosition(GetPosition(mesh));
 		//! Call the Body Load update
 		SBMs[isbm]->CellSBMPS->Update();
+		SBMs[isbm]->CellSBMPS->SetValue(0);
 	}
 
 	// update SBMs
 	double ctime = mesh->GetFEModel()->GetTime().currentTime;
 	double dt = ctime - eval_time;
 	eval_time = ctime;
-	//double dt = mesh->GetFEModel()->GetTime().timeIncrement;
 	int nsbm = this->SBMs.size();
 	int nsol = this->Solutes.size();
 	FEModel* fem = angio_element->_mat->GetFEModel();
@@ -220,8 +230,7 @@ void FECell::UpdateSpecies(FEMesh* mesh)
 			// combine the molar supplies from all the reactions
 			for (int k = 0; k < Reactions.size(); ++k) {
 				//! Get the reaction supply for each reaction that the solute is involved in
-				double zetahat = GetReactionSupply(Reactions[k]);
-				//std::cout << "zetahat is " << zetahat << endl;
+				double zetahat = Reactions[k]->ReactionSupply();
 				// Get the net stoichiometric ratio for each solute
 				double v = Reactions[k]->m_v[isol];
 				//Add the product of the stoichiometric ratio with the supply for the reaction
@@ -237,9 +246,10 @@ void FECell::UpdateSpecies(FEMesh* mesh)
 			int SolID = SBM->GetSBMID();
 			SBM->SetSBMhatp(SBM->GetSBMhat());
 			SBM->SetSBMhat(0.0);
+			SBM->c_flux = 0;
 			// combine the molar supplies from all the reactions
 			for (int k = 0; k < Reactions.size(); ++k) {
-				double zetahat = GetReactionSupply(Reactions[k]);
+				double zetahat = Reactions[k]->ReactionSupply();
 				//! Get the net stoichiometric ratio for each sbm
 				double v = Reactions[k]->m_v[nsol+isbm];
 				SBM->AddSBMhat(v*zetahat);
@@ -247,33 +257,8 @@ void FECell::UpdateSpecies(FEMesh* mesh)
 			// perform the time integration (midpoint rule)
 			double newc = SBM->GetInt() + (SBM->GetSBMhat() + SBM->GetSBMhatp()) / 2 * dt;
 			SBM->SetInt(std::max(newc, 0.0));
+			double p = SBM->GetPR();
+			SBM->SetPR(p + SBM->c_flux);
+			SBM->c_flux = 0;
 		}
 };
-
-double FECell::GetReactionSupply(FEChemicalReaction* m_R) {
-	//! Determine the reaction supply for the desired reaction
-	FEMaterialPoint& mp = *angio_element->_elem->GetMaterialPoint(0);
-	double kfwd = m_R->m_pFwd->ReactionRate(mp);
-	double zhat = kfwd;
-	// get the produduct of the reactants exponentiated by their reactant stoichiometric coefficient
-	//! Final form is zhat = kF*Pi_a(pow(c_a,v_a,R))
-	int nsol = Solutes.size();
-	for (int i = 0; i < nsol; ++i) {
-		int vR = m_R->m_vR[i];
-		if (vR > 0) {
-			double c = Solutes[i]->GetInt();
-			zhat *= pow(c, vR);
-		}
-	}
-	// add contribution of solid-bound molecules
-	int nsbm = SBMs.size();
-	for (int i = 0; i < nsbm; ++i) {
-		//! m_vR appends sbms to solutes
-		int vR = m_R->m_vR[nsol + i];
-		if (vR > 0) {
-			double c = SBMs[i]->GetInt();
-			zhat *= pow(c, vR);
-		}
-	}
-	return zhat;
-}

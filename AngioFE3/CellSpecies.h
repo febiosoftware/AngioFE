@@ -7,6 +7,10 @@
 #include <FEBioMix\FEChemicalReaction.h>
 #include <FEBioMix\FEReaction.h>
 #include <map>
+#include <FEBioMix\FESolute.h>
+
+//! Forward declaration
+class FECellChemicalReaction;
 
 //! (Incomplete) Prescribed dof to allow tips to deposit chemicals within a multiphasic material
 class CellSBM: public FEMaterial
@@ -16,9 +20,7 @@ public:
 	explicit CellSBM(FEModel* pfem) : FEMaterial(pfem) {}
 	virtual ~CellSBM() {}
 	int GetSBMID() { return SBM_ID; }
-	void SetSBMID(int i) { SBM_ID = i; }
-	double GetPR() { return SBM_prod_rate; }
-	void SetPR(double r) { SBM_prod_rate = r; }
+	void SetSBMID(int r) { SBM_ID = r; }
 	double GetInt() { return n_SBM; }
 	void SetInt(double r) { n_SBM = r; }
 	double GetSBMhat() { return SBMhat; }
@@ -28,17 +30,32 @@ public:
 	void AddSBMhat(double r) { SBMhat = SBMhat + r; }
 	void AddSBMhatp(double r) { SBMhatp = SBMhatp + r; }
 	FESBMPointSource* CellSBMPS;
+	double GetPR() { return CellSBMPS->GetValue(); }
+	void SetPR(double r) { CellSBMPS->SetValue(r); }
+	void AddPR(double r) { CellSBMPS->SetValue(CellSBMPS->GetValue() + r); }
+	double c_flux = 0;
+	double MolarMass() { return m_M; }
+	double Density() { return m_rhoT; }
+	int ChargeNumber() { return m_z; }
+	void SetMolarMass(double r) { m_M = r; }
+	void SetDensity(double r) { m_rhoT = r; }
+	void SetCharge(int r) { m_z = r; }
+	FESBMData* SBMData;
+	FESBMData* FindSBMData(int nid);
 	//! idealy changes how the concentrations are updated to be based on the location of tips
 	//void Update();
 protected:
 	DECLARE_FECORE_CLASS();
 private:
 	int SBM_ID = -1;
-	double SBM_prod_rate = -1.0;
+	double SBM_prod_rate = 0;
 	// initial number of moles
 	double n_SBM = 0;
 	double SBMhatp = 0;
 	double SBMhat = 0;
+	double m_M = 1;
+	double m_rhoT = 1;
+	int m_z = 0;
 };
 
 //! (Incomplete) Prescribed dof to allow tips to deposit chemicals within a multiphasic material
@@ -50,9 +67,11 @@ public:
 	virtual ~CellSolute() {}
 	int GetSoluteID() { return Solute_ID; }
 	void SetSoluteID(int i) { Solute_ID = i; }
-	double GetPR() { return Solute_prod_rate; }
-	void SetPR(double r) { Solute_prod_rate = r; }
 	FESolutePointSource* CellSolutePS = nullptr;
+	double GetPR() { return CellSolutePS->GetRate(); }
+	void SetPR(double r) { CellSolutePS->SetRate(r); }
+	void AddPR(double r) { CellSolutePS->SetRate(CellSolutePS->GetRate() + r); }
+	double c_flux = 0;
 	double GetInt() { return n_Solute; }
 	double GetSolhat() { return Solhat; }
 	double GetSolhatp() { return Solhatp; }
@@ -61,31 +80,55 @@ public:
 	void SetSolhatp(double r) { Solhatp = r; }
 	void AddSolhat(double r) { Solhat = Solhat + r; }
 	void AddSolhatp(double r) { Solhatp = Solhatp + r; }
-
+	void SetMolarMass(double r) { m_M = r; }
+	void SetDensity(double r) { m_rhoT = r; }
+	void SetCharge(int r) { m_z = r; }
+	double MolarMass() { return m_M; }
+	double Density() { return m_rhoT; }
+	int ChargeNumber() { return m_z; }
+	FESoluteData* SolData;
+	FESoluteData* FindSoluteData(int nid);
 	//! idealy changes how the concentrations are updated to be based on the location of tips
 	//void Update();
 protected:
 	DECLARE_FECORE_CLASS();
 private:
 	int Solute_ID = -1;
-	double Solute_prod_rate = -1.0;
+	double Solute_prod_rate = 0;
 	double n_Solute = 0;
 	double Solhat = 0;
 	double Solhatp = 0;
+	double m_M = 0;
+	double m_rhoT = 1;
+	int m_z = 1;
 };
 
 class CellSpeciesManager : public FEMaterial
 {
 public:
-	explicit CellSpeciesManager(FEModel* pfem) : FEMaterial(pfem) 
-	{/*	AddClassProperty(this, &cell_species_prop, "cell_species_prop", FEProperty::Optional); */
+	explicit CellSpeciesManager(FEModel* pfem) : FEMaterial(pfem)
+	{
 		AddClassProperty(this, &cell_solute_prop, "cell_solute_prop", FEProperty::Optional);
 		AddClassProperty(this, &cell_SBM_prop, "cell_SBM_prop", FEProperty::Optional);
 	}
 	virtual ~CellSpeciesManager() {}
-	/*std::vector<CellSpecies*>	cell_species_prop;*/
 	std::vector<CellSolute*> cell_solute_prop;
 	std::vector<CellSBM*> cell_SBM_prop;
+protected:
+private:
+};
+
+class CellReactionManager : public FEMaterial
+{
+public:
+	explicit CellReactionManager(FEModel* pfem) : FEMaterial(pfem)
+	{
+		AddClassProperty(this, &cell_reaction, "cell_reaction", FEProperty::Optional);
+	}
+	virtual ~CellReactionManager() {}
+	std::vector<FECellChemicalReaction*>	cell_reaction;
+public:
+	bool Init();
 protected:
 private:
 };
@@ -102,8 +145,11 @@ public:
 public:
 	//! set stoichiometric coefficients
 	void SetStoichiometricCoefficient(intmap& RP, int id, int v) { RP.insert(std::pair<int, int>(id, v)); }
+	//! set the cell
+	void SetCell(FECell* cell) { m_cell = cell; }
 public:
 	FECell* m_cell;	//!< pointer to the cell where reaction occurs
+	FEModel* m_pfem;
 };
 
 class FECellReactionRate : public FEMaterial
@@ -113,10 +159,13 @@ public:
 	FECellReactionRate(FEModel* pfem) : FEMaterial(pfem) {}
 
 	//! reaction rate 
-	virtual double ReactionRate(FECell* cell) = 0;
+	virtual double ReactionRate() = 0;
+
+	void SetCell(FECell* cell) { m_cell = cell; }
 
 public:
 	FECellReaction* m_pReact;	//!< pointer to parent reaction
+	FECell* m_cell;				//!< cell containing this
 
 };
 
@@ -127,10 +176,14 @@ public:
 	FECellReactionRateConst(FEModel* pfem) : FECellReactionRate(pfem) { m_k = 0; }
 
 	//! reaction rate at material point
-	double ReactionRate(FECell* cell) override { return m_k; }
+	double ReactionRate() override { return m_k; }
+
+	//! set the cell
+	void SetCell(FECell* cell) { m_cell = cell; }
 
 public:
 	double m_k;		//!< reaction rate
+	FECell* m_cell;				//!< cell containing this
 
 	DECLARE_FECORE_CLASS();
 
@@ -156,9 +209,12 @@ public:
 	//! set the reverse reaction rate
 	void SetReverseReactionRate(FECellReactionRate* prev) { m_pRev = prev; }
 
+	//! set the cell
+	void SetCell(FECell* cell) { m_cell = cell; }
+
 public:
 	//! molar supply at material point
-	virtual double ReactionSupply(FECell* cell) = 0;
+	virtual double ReactionSupply() = 0;
 
 public:
 	//! Serialization
@@ -167,6 +223,7 @@ public:
 public:
 	FECellReactionRate*    m_pFwd;        //!< pointer to forward reaction rate
 	FECellReactionRate*    m_pRev;        //!< pointer to reverse reaction rate
+	FECell* m_cell;				//!< cell containing this
 
 public:
 	intmap			m_solR;		//!< stoichiometric coefficients of solute reactants (input)
@@ -194,7 +251,12 @@ public:
 	FECellMassActionForward(FEModel* pfem) : FECellChemicalReaction(pfem) {}
 
 	//! molar supply
-	double ReactionSupply(FECell* cell);
+	double ReactionSupply();
+	//! set the cell
+	void SetCell(FECell* cell) { m_cell = cell; }
+
+public:
+	FECell* m_cell;				//!< cell containing this
 };
 
 class FECellMassActionForwardEffective : public FECellChemicalReaction
@@ -204,7 +266,13 @@ public:
 	FECellMassActionForwardEffective(FEModel* pfem) : FECellChemicalReaction(pfem) {}
 
 	//! molar supply
-	double ReactionSupply(FECell* cell);
+	double ReactionSupply();
+
+	//! set the cell
+	void SetCell(FECell* cell) { m_cell = cell; }
+
+public:
+	FECell* m_cell;				//!< cell containing this
 };
 
 class FECellMassActionReversible : public FECellChemicalReaction
@@ -214,13 +282,19 @@ public:
 	FECellMassActionReversible(FEModel* pfem) : FECellChemicalReaction(pfem) {}
 
 	//! molar supply
-	double ReactionSupply(FECell* cell);
+	double ReactionSupply();
 
 	//! molar supply of Fwd
-	double FwdReactionSupply(FECell* cell);
+	double FwdReactionSupply();
 
 	//! molar supply of Rev
-	double RevReactionSupply(FECell* cell);
+	double RevReactionSupply();
+
+	//! set the cell
+	void SetCell(FECell* cell) { m_cell = cell; }
+
+public:
+	FECell* m_cell;				//!< cell containing this
 };
 
 class FECellMassActionReversibleEffective : public FECellChemicalReaction
@@ -230,13 +304,19 @@ public:
 	FECellMassActionReversibleEffective(FEModel* pfem) : FECellChemicalReaction(pfem) {}
 
 	//! molar supply
-	double ReactionSupply(FECell* cell);
+	double ReactionSupply();
 
 	//! molar supply of Fwd
-	double FwdReactionSupply(FECell* cell);
+	double FwdReactionSupply();
 
 	//! molar supply of Rev
-	double RevReactionSupply(FECell* cell);
+	double RevReactionSupply();
+
+	//! set the cell
+	void SetCell(FECell* cell) { m_cell = cell; }
+
+public:
+	FECell* m_cell;				//!< cell containing this
 };
 
 class FECellMichaelisMenten : public FECellChemicalReaction
@@ -249,7 +329,10 @@ public:
 	bool Init() override;
 
 	//! molar supply
-	double ReactionSupply(FECell* cell) override;
+	double ReactionSupply() override;
+
+	//! set the cell
+	void SetCell(FECell* cell) { m_cell = cell; }
 
 public:
 	double	m_Km;			//!< concentration at which half-maximum rate occurs
@@ -257,46 +340,56 @@ public:
 	int		m_Pid;			//!< local id of product
 	bool	m_Rtype;		//!< flag for reactant type (solute = false, sbm = true)
 	double	m_c0;			//!< minimum reactant concentration to trigger reaction
+	FECell* m_cell;				//!< cell containing this
 
 							// declare parameter list
 	DECLARE_FECORE_CLASS();
 
 };
 
-class CellReactionManager : public FEMaterial
-{
-public:
-	explicit CellReactionManager(FEModel* pfem) : FEMaterial(pfem)
-	{
-		AddClassProperty(this, &cell_reaction, "cell_reaction", FEProperty::Optional);
-	}
-	virtual ~CellReactionManager() {}
-	std::vector<FECellChemicalReaction*>	cell_reaction;
-protected:
-private:
-};
-
 //class CellSBMManager : public FEMaterial
-//{
-//public:
-//	explicit CellSBMManager(FEModel* pfem) : FEMaterial(pfem) { AddClassProperty(this, &cell_SBM_prop, "cell_SBM_prop", FEProperty::Optional); }
-//	virtual ~CellSBMManager() {}
-//	std::vector<CellSBM*>	cell_SBM_prop;	
-//protected:
-//private:
-//};
-
-//class CellSoluteManager : public FEMaterial
-//{
-//public:
-//	explicit CellSoluteManager(FEModel* pfem) : FEMaterial(pfem) { AddClassProperty(this, &cell_solute_prop, "cell_solute_prop", FEProperty::Optional); }
-//	virtual ~CellSoluteManager() {}
-//	std::vector<CellSolute*>	cell_solute_prop;	//!< pointers to elastic materials
-//													//TipSpecies* tip_species_prop;
-//protected:
-//private:
-//};
 
 typedef std::map<int, int> intmap;
 typedef std::map<int, int>::iterator itrmap;
 
+class FECellInternalization: public FECellChemicalReaction
+{
+public:
+	//! constructor
+	FECellInternalization(FEModel* pfem) : FECellChemicalReaction(pfem) { m_Ki = 0; }
+
+	//! reaction rate at material point
+	double ReactionSupply();
+
+	//! set the cell
+	void SetCell(FECell* cell) { m_cell = cell; }
+
+public:
+	double m_Ki;					//!< reaction rate
+	FECell* m_cell;					//!< cell containing this
+	//FESolutesMaterialPoint* m_pMP;	//!< pointer to solutes material point for internalizing species from
+
+	DECLARE_FECORE_CLASS();
+
+};
+
+class FECellSecretion: public FECellChemicalReaction
+{
+public:
+	//! constructor
+	FECellSecretion(FEModel* pfem) : FECellChemicalReaction(pfem) { m_s = 0; }
+
+	//! reaction rate at material point
+	double ReactionSupply();
+
+	//! set the cell
+	void SetCell(FECell* cell) { m_cell = cell; }
+
+public:
+	double m_s;					//!< reaction rate
+	FECell* m_cell;					//!< cell containing this
+	//FESolutesMaterialPoint* m_pMP;	//!< pointer to solutes material point for internalizing species from
+
+	DECLARE_FECORE_CLASS();
+
+};

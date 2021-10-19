@@ -5,12 +5,6 @@
 #include <iostream>
 #include <FECore/log.h>
 
-//BEGIN_FECORE_CLASS(CellSpecies, FEMaterial)
-//ADD_PARAMETER(species_ID, "species_ID");
-//ADD_PARAMETER(prod_rate, "prod_rate");
-//ADD_PARAMETER(n_species, "n_species");
-//END_FECORE_CLASS();
-
 BEGIN_FECORE_CLASS(CellSBM, FEMaterial)
 ADD_PARAMETER(SBM_ID, "SBM_ID");
 ADD_PARAMETER(SBM_prod_rate, "SBM_prod_rate");
@@ -29,11 +23,16 @@ END_FECORE_CLASS();
 
 FECellReaction::FECellReaction(FEModel* pfem) : FEMaterial(pfem) 
 {
-	m_cell = 0;
+
 }
 
 //! SL: What should this do?
 bool FECellReaction::Init() {
+	return true;
+}
+
+bool CellReactionManager::Init() {
+
 	return true;
 }
 
@@ -48,12 +47,33 @@ ADD_PROPERTY(m_pRev, "reverse_rate", FEProperty::Optional);
 
 END_FECORE_CLASS();
 
+FESBMData* CellSBM::FindSBMData(int nid) {
+	FEModel& fem = *GetFEModel();
+	int N = GetFEModel()->GlobalDataItems();
+	for (int i = 0; i < N; ++i)
+	{
+		FESBMData* psd = dynamic_cast<FESBMData*>(fem.GetGlobalData(i));
+		if (psd && (psd->GetID() == nid)) return psd;
+	}
+	return 0;
+}
+
+FESoluteData* CellSolute::FindSoluteData(int nid) {
+	FEModel& fem = *GetFEModel();
+	int N = GetFEModel()->GlobalDataItems();
+	for (int i = 0; i < N; ++i)
+	{
+		FESoluteData* psd = dynamic_cast<FESoluteData*>(fem.GetGlobalData(i));
+		if (psd && (psd->GetID() == nid)) return psd;
+	}
+	return 0;
+}
+
 //-----------------------------------------------------------------------------
 FECellChemicalReaction::FECellChemicalReaction(FEModel* pfem) : FECellReaction(pfem)
 {
 	// additional initializations
 	m_Vovr = false;
-
 	m_pFwd = m_pRev = 0;
 }
 
@@ -62,6 +82,7 @@ bool FECellChemicalReaction::Init()
 {
 	// initialize base class
 	FECellReaction::Init();
+	
 
 	// set the parents for the reaction rates
 	if (m_pFwd) m_pFwd->m_pReact = this;
@@ -69,79 +90,73 @@ bool FECellChemicalReaction::Init()
 
 	// initialize the reaction coefficients
 	int isol, isbm, itot;
-
+	FEMesh* mesh = &this->GetFEModel()->GetMesh();
 	int nsol, nsbm, ntot;
-	//nsol = m_pMP->Solutes();
-	//nsbm = m_pMP->SBMs();
-	nsol = m_cell->Solutes.size();
-	nsbm = m_cell->SBMs.size();
-	ntot = nsol + nsbm;
+	if (m_cell) {
+		nsol = m_cell->Solutes.size();
+		nsbm = m_cell->SBMs.size();
+		ntot = nsol + nsbm;
 
 		// initialize the stoichiometric coefficients to zero
-	m_nsol = nsol;
-	m_vR.assign(ntot, 0);
-	m_vP.assign(ntot, 0);
-	m_v.assign(ntot, 0);
+		m_nsol = nsol;
+		m_vR.assign(ntot, 0);
+		m_vP.assign(ntot, 0);
+		m_v.assign(ntot, 0);
 
-	// cycle through all the solutes in the mixture and determine
-	// if they participate in this reaction
-	itrmap it;
-	intmap solR = m_solR;
-	intmap solP = m_solP;
-	for (isol = 0; isol<nsol; ++isol) {
-		int sid = isol;
-		/*sid = m_pMP->GetSolute(isol)->GetSoluteID() - 1;*/
-		sid = m_cell->Solutes[isol]->GetSoluteID() - 1;
-		it = solR.find(sid);
-		if (it != solR.end()) m_vR[isol] = it->second;
-		it = solP.find(sid);
-		if (it != solP.end()) m_vP[isol] = it->second;
+		// cycle through all the solutes in the mixture and determine
+		// if they participate in this reaction
+		itrmap it;
+		intmap solR = m_solR;
+		intmap solP = m_solP;
+		for (isol = 0; isol < nsol; ++isol) {
+			int sid = isol;
+			sid = m_cell->Solutes[isol]->GetSoluteID() - 1;
+			it = solR.find(sid);
+			if (it != solR.end()) m_vR[isol] = it->second;
+			it = solP.find(sid);
+			if (it != solP.end()) m_vP[isol] = it->second;
+		}
+
+		// cycle through all the solid-bound molecules in the mixture
+		// and determine if they participate in this reaction
+		intmap sbmR = m_sbmR;
+		intmap sbmP = m_sbmP;
+		for (isbm = 0; isbm < nsbm; ++isbm) {
+			int sid = isbm;
+			sid = m_cell->SBMs[isbm]->GetSBMID() - 1;
+			it = sbmR.find(sid);
+			if (it != sbmR.end()) m_vR[nsol + isbm] = it->second;
+			it = sbmP.find(sid);
+			if (it != sbmP.end()) m_vP[nsol + isbm] = it->second;
+		}
+
+		// evaluate the net stoichiometric coefficient
+		for (itot = 0; itot < ntot; ++itot) {
+			m_v[itot] = m_vP[itot] - m_vR[itot];
+		}
+
+		 //evaluate the weighted molar volume of reactants and products
+		if (!m_Vovr) {
+			m_Vbar = 0;
+			for (isol = 0; isol<nsol; ++isol){
+				m_Vbar += m_v[isol] * m_cell->Solutes[isol]->MolarMass() / m_cell->Solutes[isol]->Density();
+			}
+			for (isbm = 0; isbm<nsbm; ++isbm)
+				m_Vbar += m_v[nsol + isbm] * m_cell->SBMs[isbm]->MolarMass() / m_cell->SBMs[isbm]->Density();
+		}
+
+		 //check that the chemical reaction satisfies electroneutrality
+		int znet = 0;
+		for (isol = 0; isol<nsol; ++isol){
+				znet += m_v[isol] * m_cell->Solutes[isol]->ChargeNumber();
+		}
+		for (isbm = 0; isbm<nsbm; ++isbm)
+			znet += m_v[nsol + isbm] * m_cell->SBMs[isbm]->ChargeNumber();
+		if (znet != 0) {
+			feLogError("chemical reaction must satisfy electroneutrality");
+			return false;
+		}
 	}
-
-	// cycle through all the solid-bound molecules in the mixture
-	// and determine if they participate in this reaction
-	intmap sbmR = m_sbmR;
-	intmap sbmP = m_sbmP;
-	for (isbm = 0; isbm<nsbm; ++isbm) {
-		/*int sid = m_pMP->GetSBM(isbm)->GetSBMID() - 1;*/
-		int sid = m_cell->SBMs[isbm]->GetSBMID() - 1;
-		it = sbmR.find(sid);
-		if (it != sbmR.end()) m_vR[nsol + isbm] = it->second;
-		it = sbmP.find(sid);
-		if (it != sbmP.end()) m_vP[nsol + isbm] = it->second;
-	}
-
-	// evaluate the net stoichiometric coefficient
-	for (itot = 0; itot<ntot; ++itot) {
-		m_v[itot] = m_vP[itot] - m_vR[itot];
-	}
-
-	// evaluate the weighted molar volume of reactants and products
-	//if (!m_Vovr) {
-	//	m_Vbar = 0;
-	//	/*m_pMP = cell->angio_elem-*/
-	//	for (isol = 0; isol<nsol; ++isol){
-	//		m_Vbar += m_v[isol] * m_cell->Solutes[isol]->MolarMass() / cell->Solutes[isol]->Density();
-	//		/*m_Vbar += m_v[isol] * m_pMP->GetSolute(isol)->MolarMass() / m_pMP->GetSolute(isol)->Density();*/
-	//	}
-	//	for (isbm = 0; isbm<nsbm; ++isbm)
-	//		/*m_Vbar += m_v[nsol + isbm] * m_pMP->GetSBM(isbm)->MolarMass() / m_pMP->GetSBM(isbm)->Density();*/
-	//		m_Vbar += m_v[nsol + isbm] * m_cell->SBMs[isbm]->MolarMass() / cell->SBMs[isbm]->Density();
-	//}
-
-	// check that the chemical reaction satisfies electroneutrality
-	//int znet = 0;
-	//for (isol = 0; isol<nsol; ++isol){
-	//		/*znet += m_v[isol] * m_pMP->GetSolute(isol)->ChargeNumber();*/
-	//		znet += m_v[isol] * m_cell->Solutes[isol]->ChargeNumber();
-	//}
-	//for (isbm = 0; isbm<nsbm; ++isbm)
-	//	/*znet += m_v[nsol + isbm] * m_pMP->GetSBM(isbm)->ChargeNumber();*/
-	//	znet += m_v[nsol + isbm] * m_cell->SBMs[isbm]->ChargeNumber();
-	//if (znet != 0) {
-	//	feLogError("chemical reaction must satisfy electroneutrality");
-	//	return false;
-	//}
 
 	return true;
 }
@@ -256,34 +271,30 @@ void FECellChemicalReaction::Serialize(DumpStream& ar)
 	}
 }
 
-double FECellMassActionForward::ReactionSupply(FECell* cell)
+double FECellMassActionForward::ReactionSupply()
 {
 	// get reaction rate
-	double kF = m_pFwd->ReactionRate(cell);
-
+	double kF = m_pFwd->ReactionRate();
+	m_cell = m_pFwd->m_cell;
 	// evaluate the reaction molar supply
 	double zhat = kF;
 
 	// start with contribution from solutes
 
-	/*int nsol = (int)spt.m_ca.size();*/
-	int nsol = cell->Solutes.size();
+	int nsol = m_cell->Solutes.size();
 	for (int i = 0; i < nsol; ++i) {
 		int vR = m_vR[i];
 		if (vR > 0) {
-			/*double c = spt.m_ca[i];*/
-			double c = cell->Solutes[i]->GetInt();
+			double c = m_cell->Solutes[i]->GetInt();
 			zhat *= pow(c, vR);
 		}
 	}
 	// add contribution of solid-bound molecules
-	/*const int nsbm = (int)spt.m_sbmr.size();*/
-	const int nsbm = cell->SBMs.size();
+	const int nsbm = m_cell->SBMs.size();
 	for (int i = 0; i < nsbm; ++i) {
 		int vR = m_vR[nsol + i];
 		if (vR > 0) {
-			/*double c = m_pMP->SBMConcentration(pt, i);*/
-			double c = cell->SBMs[i]->GetInt();
+			double c = m_cell->SBMs[i]->GetInt();
 			zhat *= pow(c, vR);
 		}
 	}
@@ -291,36 +302,33 @@ double FECellMassActionForward::ReactionSupply(FECell* cell)
 	return zhat;
 }
 
-double FECellMassActionForwardEffective::ReactionSupply(FECell* cell)
+double FECellMassActionForwardEffective::ReactionSupply()
 {
 	// get reaction rate
-	double kF = m_pFwd->ReactionRate(cell);
+	double kF = m_pFwd->ReactionRate();
+	m_cell = m_pFwd->m_cell;
 
 	// evaluate the reaction molar supply
 	double zhat = kF;
 
 	// start with contribution from solutes
 	int nsol = 0;
-	/*nsol = (int)spt.m_c.size();*/
-	nsol = cell->Solutes.size();
+	nsol = m_cell->Solutes.size();
 	for (int i = 0; i<nsol; ++i) {
 		int vR = m_vR[i];
 		if (vR > 0) {
 			double c = 0;
-				/*c = spt.m_c[i];*/
-			c = cell->Solutes[i]->GetInt();
+			c = m_cell->Solutes[i]->GetInt();
 			zhat *= pow(c, vR);
 		}
 	}
 
 	// add contribution of solid-bound molecules
-	/*const int nsbm = (int)spt.m_sbmr.size();*/
-	const int nsbm = cell->SBMs.size();
+	const int nsbm = m_cell->SBMs.size();
 	for (int i = 0; i<nsbm; ++i) {
 		int vR = m_vR[nsol + i];
 		if (vR > 0) {
-			/*double c = m_pMP->SBMConcentration(pt, i);*/
-			double c = cell->SBMs[i]->GetInt();
+			double c = m_cell->SBMs[i]->GetInt();
 			zhat *= pow(c, vR);
 		}
 	}
@@ -328,37 +336,36 @@ double FECellMassActionForwardEffective::ReactionSupply(FECell* cell)
 	return zhat;
 }
 
-double FECellMassActionReversible::FwdReactionSupply(FECell* cell)
+double FECellMassActionReversible::FwdReactionSupply()
 {
 
 	// get forward reaction rate
-	double k = m_pFwd->ReactionRate(cell);
+	double k = m_pFwd->ReactionRate();
+	m_cell = m_pRev->m_cell;
 
 	// evaluate the reaction molar supply
 	double zhat = k;
 
 	int nsol = 0;
 
+	m_cell = m_pFwd->m_cell;
+
 	// start with contribution from solutes
-	/*nsol = (int)spt.m_ca.size();*/
-	nsol = cell->Solutes.size();
+	nsol = this->m_cell->Solutes.size();
 	for (int i = 0; i<nsol; ++i) {
 		int vR = m_vR[i];
 		if (vR > 0) {
-			/*double c = spt.m_ca[i];*/
-			double c = cell->Solutes[i]->GetInt();
+			double c = this->m_cell->Solutes[i]->GetInt();
 			zhat *= pow(c, vR);
 		}
 	}
 
 	// add contribution of solid-bound molecules
-	/*const int nsbm = (int)spt.m_sbmr.size();*/
-	const int nsbm = cell->SBMs.size();
+	const int nsbm = this->m_cell->SBMs.size();
 	for (int i = 0; i<nsbm; ++i) {
 		int vR = m_vR[nsol + i];
 		if (vR > 0) {
-			double c = cell->SBMs[i]->GetInt();
-			/*double c = m_pMP->SBMConcentration(pt, i);*/
+			double c = this->m_cell->SBMs[i]->GetInt();
 			zhat *= pow(c, vR);
 		}
 	}
@@ -366,35 +373,32 @@ double FECellMassActionReversible::FwdReactionSupply(FECell* cell)
 	return zhat;
 }
 
-double FECellMassActionReversible::RevReactionSupply(FECell* cell)
+double FECellMassActionReversible::RevReactionSupply()
 {
 
 	// get forward reaction rate
-	double k = m_pRev->ReactionRate(cell);
+	double k = m_pRev->ReactionRate();
+	m_cell = m_pRev->m_cell;
 
 	// evaluate the reaction molar supply
 	double zhat = k;
 
 	// start with contribution from solutes
 	int nsol = 0;
-	/*nsol = (int)spt.m_ca.size();*/
-	nsol = cell->Solutes.size();
+	nsol = m_cell->Solutes.size();
 	for (int i = 0; i<nsol; ++i) {
 		int vP = m_vP[i];
 		if (vP > 0) {
-			/*double c = spt.m_ca[i];*/
-			double c = cell->Solutes[i]->GetInt();
+			double c = m_cell->Solutes[i]->GetInt();
 			zhat *= pow(c, vP);
 		}
 	}
 	// add contribution of solid-bound molecules
-	/*const int nsbm = (int)spt.m_sbmr.size();*/
-	const int nsbm = cell->SBMs.size();
+	const int nsbm = m_cell->SBMs.size();
 	for (int i = 0; i<nsbm; ++i) {
 		int vP = m_vP[nsol + i];
 		if (vP > 0) {
-			/*double c = m_pMP->SBMConcentration(pt, i);*/
-			double c = cell->SBMs[i]->GetInt();
+			double c = m_cell->SBMs[i]->GetInt();
 			zhat *= pow(c, vP);
 		}
 	}
@@ -402,17 +406,18 @@ double FECellMassActionReversible::RevReactionSupply(FECell* cell)
 	return zhat;
 }
 
-double FECellMassActionReversible::ReactionSupply(FECell* cell)
+double FECellMassActionReversible::ReactionSupply()
 {
-	double zhatF = FwdReactionSupply(cell);
-	double zhatR = RevReactionSupply(cell);
+	double zhatF = FwdReactionSupply();
+	double zhatR = RevReactionSupply();
 	return zhatF - zhatR;
 }
 
-double FECellMassActionReversibleEffective::FwdReactionSupply(FECell* cell)
+double FECellMassActionReversibleEffective::FwdReactionSupply()
 {
 	// get forward reaction rate
-	double k = m_pFwd->ReactionRate(cell);
+	double k = m_pFwd->ReactionRate();
+	m_cell = m_pFwd->m_cell;
 
 	// evaluate the reaction molar supply
 	double zhat = k;
@@ -420,23 +425,21 @@ double FECellMassActionReversibleEffective::FwdReactionSupply(FECell* cell)
 	// start with contribution from solutes
 	int nsol = 0;
 		/*nsol = (int)spt.m_c.size();*/
-	nsol = cell->Solutes.size();
+	nsol = m_cell->Solutes.size();
 	for (int i = 0; i<nsol; ++i) {
 		int vR = m_vR[i];
 		if (vR > 0) {
-			double c = cell->Solutes[i]->GetInt();
+			double c = m_cell->Solutes[i]->GetInt();
 			zhat *= pow(c, vR);
 		}
 	}
 	// add contribution of solid-bound molecules
-		// add contribution of solid-bound molecules
-	/*const int nsbm = (int)spt.m_sbmr.size();*/
-	const int nsbm = cell->SBMs.size();
+	// add contribution of solid-bound molecules
+	const int nsbm = m_cell->SBMs.size();
 	for (int i = 0; i<nsbm; ++i) {
 		int vR = m_vR[nsol + i];
 		if (vR > 0) {
-			/*double c = m_pMP->SBMConcentration(pt, i);*/
-			double c = cell->SBMs[i]->GetInt();
+			double c = m_cell->SBMs[i]->GetInt();
 			zhat *= pow(c, vR);
 		}
 	}
@@ -446,24 +449,24 @@ double FECellMassActionReversibleEffective::FwdReactionSupply(FECell* cell)
 
 //-----------------------------------------------------------------------------
 //! molar supply at material point
-double FECellMassActionReversibleEffective::RevReactionSupply(FECell* cell)
+double FECellMassActionReversibleEffective::RevReactionSupply()
 {
 
 	// get forward reaction rate
-	double k = m_pRev->ReactionRate(cell);
+	double k = m_pRev->ReactionRate();
+	m_cell = m_pRev->m_cell;
 
 	// evaluate the reaction molar supply
 	double zhat = k;
 
 	// start with contribution from solutes
 	int nsol = 0;
-	nsol = cell->Solutes.size();
+	nsol = m_cell->Solutes.size();
 	/*nsol = (int)spt.m_c.size();*/
 	for (int i = 0; i<nsol; ++i) {
 		int vP = m_vP[i];
 		if (vP > 0) {
-			double c = cell->Solutes[i]->GetInt();
-			/*double c = spt.m_c[i];*/
+			double c = m_cell->Solutes[i]->GetInt();
 			zhat *= pow(c, vP);
 		}
 	}
@@ -472,12 +475,11 @@ double FECellMassActionReversibleEffective::RevReactionSupply(FECell* cell)
 		// add contribution of solid-bound molecules
 
 	/*const int nsbm = (int)spt.m_sbmr.size();*/
-	const int nsbm = cell->SBMs.size();
+	const int nsbm = m_cell->SBMs.size();
 	for (int i = 0; i<nsbm; ++i) {
 		int vP = m_vP[nsol + i];
 		if (vP > 0) {
-			double c = cell->SBMs[i]->GetInt();
-			/*double c = m_pMP->SBMConcentration(pt, i);*/
+			double c = m_cell->SBMs[i]->GetInt();
 			zhat *= pow(c, vP);
 		}
 	}
@@ -487,10 +489,10 @@ double FECellMassActionReversibleEffective::RevReactionSupply(FECell* cell)
 
 //-----------------------------------------------------------------------------
 //! molar supply at material point
-double FECellMassActionReversibleEffective::ReactionSupply(FECell* cell)
+double FECellMassActionReversibleEffective::ReactionSupply()
 {
-	double zhatF = FwdReactionSupply(cell);
-	double zhatR = RevReactionSupply(cell);
+	double zhatF = FwdReactionSupply();
+	double zhatR = RevReactionSupply();
 	return zhatF - zhatR;
 }
 
@@ -540,19 +542,18 @@ bool FECellMichaelisMenten::Init()
 }
 
 //! molar supply at material point
-double FECellMichaelisMenten::ReactionSupply(FECell* cell)
+double FECellMichaelisMenten::ReactionSupply()
 {
 
 	// get reaction rate
-	double Vmax = m_pFwd->ReactionRate(cell);
+	double Vmax = m_pFwd->ReactionRate();
+	m_cell = m_pFwd->m_cell;
 	double c = 0.0;
 	if (m_Rtype) {
-		c = cell->SBMs[m_Rid]->GetInt();
-		/*c = m_pMP->SBMConcentration(cell, m_Rid);*/
+		c = m_cell->SBMs[m_Rid]->GetInt();
 	}
 	else {
-		c = cell->SBMs[m_Rid]->GetInt();
-		/*c = spt.m_ca[m_Rid];*/
+		c = m_cell->Solutes[m_Rid]->GetInt();
 	}
 
 	double zhat = 0;
@@ -561,3 +562,77 @@ double FECellMichaelisMenten::ReactionSupply(FECell* cell)
 	return zhat;
 }
 
+double FECellInternalization::ReactionSupply()
+{
+	// get reaction rate
+	double m_Ki = m_pFwd->ReactionRate();
+	m_cell = m_pFwd->m_cell;
+	
+	//double zhat = m_Ki;
+	// start with contribution from solutes
+
+	int nsol = m_cell->Solutes.size();
+	for (int isol = 0; isol < nsol; ++isol) {
+		int vP = m_vP[isol];
+		if (vP > 0) {
+			// Cells take away from the matrix
+			m_cell->Solutes[isol]->AddPR(-1.0*m_Ki);
+			return m_Ki;
+		}
+	}
+	// add contribution of solid-bound molecules
+	const int nsbm = m_cell->SBMs.size();
+	for (int isbm = 0; isbm < nsbm; ++isbm) {
+		int vP = m_vP[nsol + isbm];
+		if (vP > 0) {
+			m_cell->SBMs[isbm]->AddPR(-1.0*m_Ki);
+
+			// Cells take away from the matrix
+			return m_Ki;
+		}
+	}
+	//! Add the species to the cell
+	//return zhat;
+}
+
+BEGIN_FECORE_CLASS(FECellInternalization, FECellChemicalReaction)
+ADD_PARAMETER(m_Ki, "Ki");
+END_FECORE_CLASS();
+
+double FECellSecretion::ReactionSupply()
+{
+	// get reaction rate
+	double m_s = m_pFwd->ReactionRate();
+	m_cell = m_pFwd->m_cell;
+
+	double zhat = m_s;
+	// start with contribution from solutes
+
+	int nsol = m_cell->Solutes.size();
+	for (int isol = 0; isol < nsol; ++isol) {
+		int vR = m_vR[isol];
+		if (vR > 0) {
+
+			double m_c = m_cell->Solutes[isol]->GetInt();
+			// Cells take away from the matrix
+			zhat *= pow(m_c, vR);
+			//double pr = m_cell->Solutes[isol]->GetPR();
+			//m_cell->Solutes[isol]->SetPR(pr+zhat);
+		}
+	}
+	// add contribution of solid-bound molecules
+	const int nsbm = m_cell->SBMs.size();
+	for (int isbm = 0; isbm < nsbm; ++isbm) {
+		int vR = m_vR[nsol + isbm];
+		if (vR > 0) {
+			double m_c = m_cell->SBMs[isbm]->GetInt();
+			zhat *= pow(m_c, vR);
+		}
+	}
+	//! Remove the species from the cell
+	return zhat;
+}
+
+BEGIN_FECORE_CLASS(FECellSecretion, FECellChemicalReaction)
+ADD_PARAMETER(m_s, "s");
+END_FECORE_CLASS();

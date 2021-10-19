@@ -1210,7 +1210,6 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		//currently the destructors are not called for classes created by FEBio this allows destructors to be called
 		fileout = new Fileout(*this);
 
-		
 		//do the seeding of the tips/segments
 		if (!SeedFragments())
 		{
