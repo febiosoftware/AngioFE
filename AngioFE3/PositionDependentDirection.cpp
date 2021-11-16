@@ -12,7 +12,7 @@
 #include <FECore/mathalg.h>
 #include <FECore/FEDomainMap.h>
 #include "FEProbabilityDistribution.h"
-#include <FEBioMix\FESolutesMaterialPoint.h>
+#include <FEBioMix/FESolutesMaterialPoint.h>
 
 BEGIN_FECORE_CLASS(PositionDependentDirection, FEMaterial)
 ADD_PARAMETER(contribution, "contribution");
