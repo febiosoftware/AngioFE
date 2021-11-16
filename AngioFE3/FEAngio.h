@@ -247,4 +247,5 @@ private:
 	double min_angio_dt = -1;
 	double min_segment_length = 5.0;
 	int auto_stepper_key = -1;
+	int bounce = 1;						// determines whether vessels bounce or grow along a wall. Bounce condition is a symmetry condition.
 };

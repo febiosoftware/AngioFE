@@ -206,7 +206,7 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 				}
 			}
 
-			min_dt = 1.0 / (growth_substeps*3.0);
+			min_dt = 1.0 / (growth_substeps*6.0);
 
 			//min_dt = 0;
 
@@ -1232,6 +1232,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		max_angio_dt = m_fem->GetGlobalConstant("max_angio_dt"); if (max_angio_dt == 0) { max_angio_dt = 0.25; }
 		min_angio_dt = m_fem->GetGlobalConstant("min_angio_dt"); 
 		growth_substeps = int (m_fem->GetGlobalConstant("growth_substeps"));
+		bounce = m_fem->GetGlobalConstant("bounce"); 
 		size_t angio_element_count = angio_elements.size();
 		FEMesh * mesh = GetMesh();
 		// Do angio material initialization for the mat_axis

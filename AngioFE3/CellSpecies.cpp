@@ -87,7 +87,6 @@ bool FECellChemicalReaction::Init()
 	// set the parents for the reaction rates
 	if (m_pFwd) m_pFwd->m_pReact = this;
 	if (m_pRev) m_pRev->m_pReact = this;
-
 	// initialize the reaction coefficients
 	int isol, isbm, itot;
 	FEMesh* mesh = &this->GetFEModel()->GetMesh();
@@ -214,6 +213,18 @@ bool FECellChemicalReaction::SetParameterAttribute(FEParam& p, const char* szatt
 	return false;
 }
 
+bool FECellReactionRate::Init() {
+	// Initialize base class
+	
+	return true;
+}
+
+bool FECellReactionRateConst::Init() {
+	// Initialize base class
+
+	return true;
+}
+
 //-----------------------------------------------------------------------------
 //! Data serialization
 void FECellChemicalReaction::Serialize(DumpStream& ar)
@@ -271,30 +282,36 @@ void FECellChemicalReaction::Serialize(DumpStream& ar)
 	}
 }
 
-double FECellMassActionForward::ReactionSupply()
+bool FECellMassActionForward::Init() {
+	// Initialize base class
+	if (FECellChemicalReaction::Init() == false) return false;
+	return true;
+}
+
+double FECellMassActionForward::ReactionSupply(FECell* cell)
 {
 	// get reaction rate
 	double kF = m_pFwd->ReactionRate();
-	m_cell = m_pFwd->m_cell;
+
 	// evaluate the reaction molar supply
 	double zhat = kF;
 
 	// start with contribution from solutes
 
-	int nsol = m_cell->Solutes.size();
+	int nsol = cell->Solutes.size();
 	for (int i = 0; i < nsol; ++i) {
 		int vR = m_vR[i];
 		if (vR > 0) {
-			double c = m_cell->Solutes[i]->GetInt();
+			double c = cell->Solutes[i]->GetInt();
 			zhat *= pow(c, vR);
 		}
 	}
 	// add contribution of solid-bound molecules
-	const int nsbm = m_cell->SBMs.size();
+	const int nsbm = cell->SBMs.size();
 	for (int i = 0; i < nsbm; ++i) {
 		int vR = m_vR[nsol + i];
 		if (vR > 0) {
-			double c = m_cell->SBMs[i]->GetInt();
+			double c = cell->SBMs[i]->GetInt();
 			zhat *= pow(c, vR);
 		}
 	}
@@ -302,33 +319,38 @@ double FECellMassActionForward::ReactionSupply()
 	return zhat;
 }
 
-double FECellMassActionForwardEffective::ReactionSupply()
+bool FECellMassActionForwardEffective::Init() {
+	// Initialize base class
+	if (FECellChemicalReaction::Init() == false) return false;
+	return true;
+}
+
+double FECellMassActionForwardEffective::ReactionSupply(FECell* cell)
 {
 	// get reaction rate
 	double kF = m_pFwd->ReactionRate();
-	m_cell = m_pFwd->m_cell;
 
 	// evaluate the reaction molar supply
 	double zhat = kF;
 
 	// start with contribution from solutes
 	int nsol = 0;
-	nsol = m_cell->Solutes.size();
+	nsol = cell->Solutes.size();
 	for (int i = 0; i<nsol; ++i) {
 		int vR = m_vR[i];
 		if (vR > 0) {
 			double c = 0;
-			c = m_cell->Solutes[i]->GetInt();
+			c = cell->Solutes[i]->GetInt();
 			zhat *= pow(c, vR);
 		}
 	}
 
 	// add contribution of solid-bound molecules
-	const int nsbm = m_cell->SBMs.size();
+	const int nsbm = cell->SBMs.size();
 	for (int i = 0; i<nsbm; ++i) {
 		int vR = m_vR[nsol + i];
 		if (vR > 0) {
-			double c = m_cell->SBMs[i]->GetInt();
+			double c = cell->SBMs[i]->GetInt();
 			zhat *= pow(c, vR);
 		}
 	}
@@ -336,36 +358,39 @@ double FECellMassActionForwardEffective::ReactionSupply()
 	return zhat;
 }
 
-double FECellMassActionReversible::FwdReactionSupply()
+bool FECellMassActionReversible::Init() {
+	// Initialize base class
+	if (FECellChemicalReaction::Init() == false) return false;
+	return true;
+}
+
+double FECellMassActionReversible::FwdReactionSupply(FECell* cell)
 {
 
 	// get forward reaction rate
 	double k = m_pFwd->ReactionRate();
-	m_cell = m_pRev->m_cell;
 
 	// evaluate the reaction molar supply
 	double zhat = k;
 
 	int nsol = 0;
 
-	m_cell = m_pFwd->m_cell;
-
 	// start with contribution from solutes
-	nsol = this->m_cell->Solutes.size();
+	nsol = cell->Solutes.size();
 	for (int i = 0; i<nsol; ++i) {
 		int vR = m_vR[i];
 		if (vR > 0) {
-			double c = this->m_cell->Solutes[i]->GetInt();
+			double c = cell->Solutes[i]->GetInt();
 			zhat *= pow(c, vR);
 		}
 	}
 
 	// add contribution of solid-bound molecules
-	const int nsbm = this->m_cell->SBMs.size();
+	const int nsbm = cell->SBMs.size();
 	for (int i = 0; i<nsbm; ++i) {
 		int vR = m_vR[nsol + i];
 		if (vR > 0) {
-			double c = this->m_cell->SBMs[i]->GetInt();
+			double c = cell->SBMs[i]->GetInt();
 			zhat *= pow(c, vR);
 		}
 	}
@@ -373,32 +398,31 @@ double FECellMassActionReversible::FwdReactionSupply()
 	return zhat;
 }
 
-double FECellMassActionReversible::RevReactionSupply()
+double FECellMassActionReversible::RevReactionSupply(FECell* cell)
 {
 
 	// get forward reaction rate
 	double k = m_pRev->ReactionRate();
-	m_cell = m_pRev->m_cell;
 
 	// evaluate the reaction molar supply
 	double zhat = k;
 
 	// start with contribution from solutes
 	int nsol = 0;
-	nsol = m_cell->Solutes.size();
+	nsol = cell->Solutes.size();
 	for (int i = 0; i<nsol; ++i) {
 		int vP = m_vP[i];
 		if (vP > 0) {
-			double c = m_cell->Solutes[i]->GetInt();
+			double c = cell->Solutes[i]->GetInt();
 			zhat *= pow(c, vP);
 		}
 	}
 	// add contribution of solid-bound molecules
-	const int nsbm = m_cell->SBMs.size();
+	const int nsbm = cell->SBMs.size();
 	for (int i = 0; i<nsbm; ++i) {
 		int vP = m_vP[nsol + i];
 		if (vP > 0) {
-			double c = m_cell->SBMs[i]->GetInt();
+			double c = cell->SBMs[i]->GetInt();
 			zhat *= pow(c, vP);
 		}
 	}
@@ -406,18 +430,23 @@ double FECellMassActionReversible::RevReactionSupply()
 	return zhat;
 }
 
-double FECellMassActionReversible::ReactionSupply()
+double FECellMassActionReversible::ReactionSupply(FECell* cell)
 {
-	double zhatF = FwdReactionSupply();
-	double zhatR = RevReactionSupply();
+	double zhatF = FwdReactionSupply(cell);
+	double zhatR = RevReactionSupply(cell);
 	return zhatF - zhatR;
 }
 
-double FECellMassActionReversibleEffective::FwdReactionSupply()
+bool FECellMassActionReversibleEffective::Init() {
+	// Initialize base class
+	if (FECellChemicalReaction::Init() == false) return false;
+	return true;
+}
+
+double FECellMassActionReversibleEffective::FwdReactionSupply(FECell* cell)
 {
 	// get forward reaction rate
 	double k = m_pFwd->ReactionRate();
-	m_cell = m_pFwd->m_cell;
 
 	// evaluate the reaction molar supply
 	double zhat = k;
@@ -425,21 +454,21 @@ double FECellMassActionReversibleEffective::FwdReactionSupply()
 	// start with contribution from solutes
 	int nsol = 0;
 		/*nsol = (int)spt.m_c.size();*/
-	nsol = m_cell->Solutes.size();
+	nsol = cell->Solutes.size();
 	for (int i = 0; i<nsol; ++i) {
 		int vR = m_vR[i];
 		if (vR > 0) {
-			double c = m_cell->Solutes[i]->GetInt();
+			double c = cell->Solutes[i]->GetInt();
 			zhat *= pow(c, vR);
 		}
 	}
 	// add contribution of solid-bound molecules
 	// add contribution of solid-bound molecules
-	const int nsbm = m_cell->SBMs.size();
+	const int nsbm = cell->SBMs.size();
 	for (int i = 0; i<nsbm; ++i) {
 		int vR = m_vR[nsol + i];
 		if (vR > 0) {
-			double c = m_cell->SBMs[i]->GetInt();
+			double c = cell->SBMs[i]->GetInt();
 			zhat *= pow(c, vR);
 		}
 	}
@@ -449,24 +478,22 @@ double FECellMassActionReversibleEffective::FwdReactionSupply()
 
 //-----------------------------------------------------------------------------
 //! molar supply at material point
-double FECellMassActionReversibleEffective::RevReactionSupply()
+double FECellMassActionReversibleEffective::RevReactionSupply(FECell* cell)
 {
-
 	// get forward reaction rate
 	double k = m_pRev->ReactionRate();
-	m_cell = m_pRev->m_cell;
 
 	// evaluate the reaction molar supply
 	double zhat = k;
 
 	// start with contribution from solutes
 	int nsol = 0;
-	nsol = m_cell->Solutes.size();
+	nsol = cell->Solutes.size();
 	/*nsol = (int)spt.m_c.size();*/
 	for (int i = 0; i<nsol; ++i) {
 		int vP = m_vP[i];
 		if (vP > 0) {
-			double c = m_cell->Solutes[i]->GetInt();
+			double c = cell->Solutes[i]->GetInt();
 			zhat *= pow(c, vP);
 		}
 	}
@@ -475,11 +502,11 @@ double FECellMassActionReversibleEffective::RevReactionSupply()
 		// add contribution of solid-bound molecules
 
 	/*const int nsbm = (int)spt.m_sbmr.size();*/
-	const int nsbm = m_cell->SBMs.size();
+	const int nsbm = cell->SBMs.size();
 	for (int i = 0; i<nsbm; ++i) {
 		int vP = m_vP[nsol + i];
 		if (vP > 0) {
-			double c = m_cell->SBMs[i]->GetInt();
+			double c = cell->SBMs[i]->GetInt();
 			zhat *= pow(c, vP);
 		}
 	}
@@ -489,10 +516,10 @@ double FECellMassActionReversibleEffective::RevReactionSupply()
 
 //-----------------------------------------------------------------------------
 //! molar supply at material point
-double FECellMassActionReversibleEffective::ReactionSupply()
+double FECellMassActionReversibleEffective::ReactionSupply(FECell* cell)
 {
-	double zhatF = FwdReactionSupply();
-	double zhatR = RevReactionSupply();
+	double zhatF = FwdReactionSupply(cell);
+	double zhatR = RevReactionSupply(cell);
 	return zhatF - zhatR;
 }
 
@@ -542,18 +569,17 @@ bool FECellMichaelisMenten::Init()
 }
 
 //! molar supply at material point
-double FECellMichaelisMenten::ReactionSupply()
+double FECellMichaelisMenten::ReactionSupply(FECell* cell)
 {
 
 	// get reaction rate
 	double Vmax = m_pFwd->ReactionRate();
-	m_cell = m_pFwd->m_cell;
 	double c = 0.0;
 	if (m_Rtype) {
-		c = m_cell->SBMs[m_Rid]->GetInt();
+		c = cell->SBMs[m_Rid-m_nsol]->GetInt();
 	}
 	else {
-		c = m_cell->Solutes[m_Rid]->GetInt();
+		c = cell->Solutes[m_Rid]->GetInt();
 	}
 
 	double zhat = 0;
@@ -562,77 +588,253 @@ double FECellMichaelisMenten::ReactionSupply()
 	return zhat;
 }
 
-double FECellInternalization::ReactionSupply()
+//! data initialization and checking
+bool FECellInternalization::Init()
+{
+	// Initialize base class
+	if (FECellChemicalReaction::Init() == false) return false;
+
+	// there is only one reactant and one product in a Michaelis-Menten reaction
+	if (m_solR.size() + m_sbmR.size() > 0) {
+		std::runtime_error("Only provide vP");
+		/*feLogError("Only provide vP");
+		return false;*/
+	}
+
+	if (m_solP.size() + m_sbmP.size() > 1) {
+		std::runtime_error("Only provide one vP for this reaction");
+		/*feLogError("Provide only one vP for this reaction");
+		return false;*/
+	}
+
+	return true;
+}
+
+
+double FECellInternalization::ReactionSupply(FECell* cell)
 {
 	// get reaction rate
 	double m_Ki = m_pFwd->ReactionRate();
-	m_cell = m_pFwd->m_cell;
 	
-	//double zhat = m_Ki;
+	double zhat = m_Ki;
 	// start with contribution from solutes
 
-	int nsol = m_cell->Solutes.size();
+	int nsol = cell->Solutes.size();
 	for (int isol = 0; isol < nsol; ++isol) {
 		int vP = m_vP[isol];
 		if (vP > 0) {
 			// Cells take away from the matrix
-			m_cell->Solutes[isol]->AddPR(-1.0*m_Ki);
-			return m_Ki;
+			/*std::vector<double> concentration_at_integration_points;*/
+			double m_c = 0;
+			for (int i = 0; i < cell->angio_element->_elem->GaussPoints(); i++)
+			{
+				FEMaterialPoint* gauss_point = cell->angio_element->_elem->GetMaterialPoint(i);
+				//! SL: Previously used the pangio->GetConcentration function however this wasn't working. Currently jsut take the FESolutesMaterialPoint but that may not work for other material types...
+				FESolutesMaterialPoint* pt = (gauss_point->ExtractData<FESolutesMaterialPoint>());
+				m_c += pt->m_ca[isol];
+			/*	concentration_at_integration_points.push_back(pt->m_ca[isol]);*/
+				//concentration_at_integration_points.push_back(pangio->GetConcentration(angio_element->_mat, gauss_point, sol_id));
+			}
+			m_c /= cell->angio_element->_elem->GaussPoints();
+			zhat *= pow(m_c, vP);
+			cell->Solutes[isol]->AddSolPRhat(-1.0 * zhat * vP);
 		}
 	}
 	// add contribution of solid-bound molecules
-	const int nsbm = m_cell->SBMs.size();
+	const int nsbm = cell->SBMs.size();
 	for (int isbm = 0; isbm < nsbm; ++isbm) {
 		int vP = m_vP[nsol + isbm];
 		if (vP > 0) {
-			m_cell->SBMs[isbm]->AddPR(-1.0*m_Ki);
+		/*std::vector<double> concentration_at_integration_points;*/
+		double m_c = 0;
+		for (int i = 0; i < cell->angio_element->_elem->GaussPoints(); i++)
+		{
+			FEMaterialPoint* gauss_point = cell->angio_element->_elem->GetMaterialPoint(i);
+			//! SL: Previously used the pangio->GetConcentration function however this wasn't working. Currently jsut take the FESolutesMaterialPoint but that may not work for other material types...
+			FESolutesMaterialPoint* pt = (gauss_point->ExtractData<FESolutesMaterialPoint>());
+			m_c += pt->m_sbmr[isbm];
+			/*	concentration_at_integration_points.push_back(pt->m_ca[isol]);*/
+			//concentration_at_integration_points.push_back(pangio->GetConcentration(angio_element->_mat, gauss_point, sol_id));
+		}
+		m_c /= cell->angio_element->_elem->GaussPoints();
+		zhat *= pow(m_c, vP);
+		cell->SBMs[isbm]->AddSBMPRhat(-1.0 * zhat * vP);
 
 			// Cells take away from the matrix
-			return m_Ki;
 		}
 	}
 	//! Add the species to the cell
-	//return zhat;
+	return zhat;
 }
 
 BEGIN_FECORE_CLASS(FECellInternalization, FECellChemicalReaction)
 ADD_PARAMETER(m_Ki, "Ki");
 END_FECORE_CLASS();
 
-double FECellSecretion::ReactionSupply()
+//! data initialization and checking
+bool FECellInternalizationConstant::Init()
+{
+	// Initialize base class
+	if (FECellChemicalReaction::Init() == false) return false;
+
+	// there is only one reactant and one product in a Michaelis-Menten reaction
+	if (m_solR.size() + m_sbmR.size() > 0) {
+		std::runtime_error("Only provide vP");
+		/*feLogError("Only provide vP");
+		return false;*/
+	}
+
+	if (m_solP.size() + m_sbmP.size() > 1) {
+		std::runtime_error("Only provide one vP for this reaction");
+		/*feLogError("Provide only one vP for this reaction");
+		return false;*/
+	}
+
+	return true;
+}
+
+
+double FECellInternalizationConstant::ReactionSupply(FECell* cell)
 {
 	// get reaction rate
-	double m_s = m_pFwd->ReactionRate();
-	m_cell = m_pFwd->m_cell;
+	double m_Ki = m_pFwd->ReactionRate();
 
+	double zhat = m_Ki;
+	// start with contribution from solutes
+
+	int nsol = cell->Solutes.size();
+	for (int isol = 0; isol < nsol; ++isol) {
+		int vP = m_vP[isol];
+		if (vP > 0) {
+			// Cells take away from the matrix
+			cell->Solutes[isol]->AddSolPRhat(-1.0 * zhat * vP);
+		}
+	}
+	// add contribution of solid-bound molecules
+	const int nsbm = cell->SBMs.size();
+	for (int isbm = 0; isbm < nsbm; ++isbm) {
+		int vP = m_vP[nsol + isbm];
+		if (vP > 0) {
+			cell->SBMs[isbm]->AddSBMPRhat(-1.0 * zhat * vP);
+			// Cells take away from the matrix
+		}
+	}
+	//! Add the species to the cell
+	return zhat;
+}
+
+BEGIN_FECORE_CLASS(FECellInternalizationConstant, FECellChemicalReaction)
+ADD_PARAMETER(m_Ki, "Ki");
+END_FECORE_CLASS();
+
+
+bool FECellSecretion::Init()
+{
+	// Initialize base class
+	if (FECellChemicalReaction::Init() == false) return false;
+
+	// there is only one reactant and one product in a Michaelis-Menten reaction
+	if (m_solP.size() + m_sbmP.size() > 0) {
+		std::runtime_error("Only provide vR");
+		/*feLogError("Only provide vR");
+		return false;*/
+	}
+
+	if (m_solR.size() + m_sbmR.size() > 1) {
+		std::runtime_error("Only provide one vR for this reaction");
+		/*feLogError("Provide only one vR for this reaction");
+		return false;*/
+	}
+
+	return true;
+}
+
+double FECellSecretion::ReactionSupply(FECell* cell)
+{
+	cell = cell;
+	// get reaction rate
+	double m_s = m_pFwd->ReactionRate();
 	double zhat = m_s;
 	// start with contribution from solutes
 
-	int nsol = m_cell->Solutes.size();
+	int nsol = cell->Solutes.size();
 	for (int isol = 0; isol < nsol; ++isol) {
 		int vR = m_vR[isol];
 		if (vR > 0) {
 
-			double m_c = m_cell->Solutes[isol]->GetInt();
+			double m_c = cell->Solutes[isol]->GetInt();
 			// Cells take away from the matrix
 			zhat *= pow(m_c, vR);
-			//double pr = m_cell->Solutes[isol]->GetPR();
-			//m_cell->Solutes[isol]->SetPR(pr+zhat);
+			cell->Solutes[isol]->AddSolPRhat(zhat * vR);
 		}
 	}
 	// add contribution of solid-bound molecules
-	const int nsbm = m_cell->SBMs.size();
+	const int nsbm = cell->SBMs.size();
 	for (int isbm = 0; isbm < nsbm; ++isbm) {
 		int vR = m_vR[nsol + isbm];
 		if (vR > 0) {
-			double m_c = m_cell->SBMs[isbm]->GetInt();
+			double m_c = cell->SBMs[isbm]->GetInt();
 			zhat *= pow(m_c, vR);
+			cell->SBMs[isbm]->AddSBMPRhat(zhat * vR);
 		}
 	}
 	//! Remove the species from the cell
+
 	return zhat;
 }
 
 BEGIN_FECORE_CLASS(FECellSecretion, FECellChemicalReaction)
+ADD_PARAMETER(m_s, "s");
+END_FECORE_CLASS();
+
+bool FECellSecretionConstant::Init()
+{
+	// Initialize base class
+	if (FECellChemicalReaction::Init() == false) return false;
+
+	// there is only one reactant and one product in a Michaelis-Menten reaction
+	if (m_solP.size() + m_sbmP.size() > 0) {
+		std::runtime_error("Only provide vR");
+		/*feLogError("Only provide vR");
+		return false;*/
+	}
+
+	if (m_solR.size() + m_sbmR.size() > 1) {
+		std::runtime_error("Only provide one vR for this reaction");
+		/*feLogError("Provide only one vR for this reaction");
+		return false;*/
+	}
+
+	return true;
+}
+
+double FECellSecretionConstant::ReactionSupply(FECell* cell)
+{
+	// get reaction rate
+	double m_s = m_pFwd->ReactionRate();
+	double zhat = m_s;
+	// start with contribution from solutes
+
+	int nsol = cell->Solutes.size();
+	for (int isol = 0; isol < nsol; ++isol) {
+		int vP = m_vP[isol];
+		if (vP > 0) {
+			cell->Solutes[isol]->AddSolPRhat(zhat * vP);
+		}
+	}
+	// add contribution of solid-bound molecules
+	const int nsbm = cell->SBMs.size();
+	for (int isbm = 0; isbm < nsbm; ++isbm) {
+		int vP = m_vP[nsol + isbm];
+		if (vP > 0) {
+			cell->SBMs[isbm]->AddSBMPRhat(zhat * vP);
+		}
+	}
+	//! Remove the species from the cell
+
+	return zhat;
+}
+
+BEGIN_FECORE_CLASS(FECellSecretionConstant, FECellChemicalReaction)
 ADD_PARAMETER(m_s, "s");
 END_FECORE_CLASS();

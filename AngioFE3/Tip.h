@@ -24,6 +24,8 @@ public:
 	AngioElement * angio_element = nullptr;
 	//! Time at which the tip occurs
 	double time = 0.0;
+	//! evaluation time
+	double etime = 0.0;
 	//! Velocity at which the tip grew
 	double growth_velocity;
 	//! The element where growth originated from

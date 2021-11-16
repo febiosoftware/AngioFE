@@ -126,7 +126,9 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS_EXPLICIT(FECellMassActionReversibleEffective, FEMATERIAL_ID, "cell mass-action-reversible-effective");
 	REGISTER_FECORE_CLASS_EXPLICIT(FECellMichaelisMenten, FEMATERIAL_ID, "cell michaelis-menten");
 	REGISTER_FECORE_CLASS_EXPLICIT(FECellInternalization, FEMATERIAL_ID, "cell internalization");
+	REGISTER_FECORE_CLASS_EXPLICIT(FECellInternalizationConstant, FEMATERIAL_ID, "cell internalization constant");
 	REGISTER_FECORE_CLASS_EXPLICIT(FECellSecretion, FEMATERIAL_ID, "cell secretion");
+	REGISTER_FECORE_CLASS_EXPLICIT(FECellSecretionConstant, FEMATERIAL_ID, "cell secretion constant");
 
 
 	// Mix Methods

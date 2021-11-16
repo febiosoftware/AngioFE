@@ -28,6 +28,8 @@ public:
 	AngioElement * angio_element = nullptr;
 	//! Time at which the cell occurs
 	double time = 0.0;
+	//! eval time
+	double etime = 0.0;
 	//! Will be initialized to values greater than or equal to zero, unique values per vessel
 	int initial_cell_id = -1;
 	//! Return the global position of the tip
@@ -44,6 +46,7 @@ public:
 	std::vector<FECellChemicalReaction*> Reactions;
 	void InitSpecies(FEMesh* mesh);
 	void UpdateSpecies(FEMesh * mesh);
+	void ProtoUpdateSpecies(FEMesh* mesh);
 	Tip* ParentTip;
 	double eval_time = 0;
 	double cell_vol = 1000; // cell volume is 1000 um3 = 1 uL
