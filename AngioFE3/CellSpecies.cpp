@@ -7,14 +7,12 @@
 
 BEGIN_FECORE_CLASS(CellSBM, FEMaterial)
 ADD_PARAMETER(SBM_ID, "SBM_ID");
-ADD_PARAMETER(SBM_prod_rate, "SBM_prod_rate");
-ADD_PARAMETER(n_SBM, "n_SBM");
+ADD_PARAMETER(c_SBM, "c_SBM");
 END_FECORE_CLASS();
 
 BEGIN_FECORE_CLASS(CellSolute, FEMaterial)
 ADD_PARAMETER(Solute_ID, "Solute_ID");
-ADD_PARAMETER(Solute_prod_rate, "Solute_prod_rate");
-ADD_PARAMETER(n_Solute, "n_Solute");
+ADD_PARAMETER(c_Sol, "c_Sol");
 END_FECORE_CLASS();
 
 BEGIN_FECORE_CLASS(FECellReactionRateConst, FECellReactionRate)

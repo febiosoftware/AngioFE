@@ -6,10 +6,10 @@
 #include "FEAngio.h"
 #include "CellSpecies.h"
 #include "FEProbabilityDistribution.h"
-#include <FEBioMix\FEMultiphasicStandard.h>
-#include <FEBioMix\FESolute.h>
-#include <FECore\log.h>
-#include <FECore\FEMaterial.h>
+#include <FEBioMix/FEMultiphasicStandard.h>
+#include <FEBioMix/FESolute.h>
+#include <FECore/log.h>
+#include <FECore/FEMaterial.h>
 
 vec3d FECell::GetPosition(FEMesh * mesh) const
 {
@@ -280,7 +280,7 @@ void FECell::UpdateSpecies(FEMesh* mesh)
 			//! Get the net stoichiometric ratio for each sbm
 			double v = Reactions[k]->m_v[nsol + isbm];
 			SBM->AddSBMhat(v * zetahat);
-			SBM->CellSBMPS->Accumulate(SBM->GetSBMhat()*dt);
+			SBM->CellSBMPS->Accumulate(-1*SBM->GetSBMhat()*dt);
 		}
 		// perform the time integration (midpoint rule)
 		double newc = SBM->GetInt() + (SBM->GetSBMhat() + SBM->GetSBMhatp()) / 2 * dt;

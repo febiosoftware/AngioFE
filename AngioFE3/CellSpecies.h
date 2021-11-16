@@ -2,12 +2,12 @@
 #include <FECore/FEBoundaryCondition.h>
 #include <FECore/FEMaterial.h>
 #include "AngioElement.h"
-#include <FEBioMix\FESolutePointSource.h>
-#include <FEBioMix\FESBMPointSource.h>
-#include <FEBioMix\FEChemicalReaction.h>
-#include <FEBioMix\FEReaction.h>
+#include <FEBioMix/FESolutePointSource.h>
+#include <FEBioMix/FESBMPointSource.h>
+#include <FEBioMix/FEChemicalReaction.h>
+#include <FEBioMix/FEReaction.h>
 #include <map>
-#include <FEBioMix\FESolute.h>
+#include <FEBioMix/FESolute.h>
 
 //! Forward declaration
 class FECellChemicalReaction;
@@ -21,8 +21,8 @@ public:
 	virtual ~CellSBM() {}
 	int GetSBMID() { return SBM_ID; }
 	void SetSBMID(int r) { SBM_ID = r; }
-	double GetInt() { return n_SBM; }
-	void SetInt(double r) { n_SBM = r; }
+	double GetInt() { return c_SBM; }
+	void SetInt(double r) { c_SBM = r; }
 	double GetSBMhat() { return SBMhat; }
 	void SetSBMhat(double r) { SBMhat = r; }
 	void SetSBMhatp(double r) { SBMhatp = r; }
@@ -51,9 +51,8 @@ protected:
 	DECLARE_FECORE_CLASS();
 private:
 	int SBM_ID = -1;
-	double SBM_prod_rate = 0;
 	// initial number of moles
-	double n_SBM = 0;			// SBM number/concentration
+	double c_SBM = 0;			// SBM number/concentration
 	double SBMhatp = 0;			// Previous SBM reaction supply
 	double SBMhat = 0;			// New SBM reaction supply
 	double SBMPRhat = 0;		// SBM point source reaction supply
@@ -76,10 +75,10 @@ public:
 	void SetPR(double r) { CellSolutePS->SetRate(r); }
 	void AddPR(double r) { CellSolutePS->SetRate(CellSolutePS->GetRate() + r); }
 	double c_flux = 0;
-	double GetInt() { return n_Solute; }
+	double GetInt() { return c_Sol; }
 	double GetSolhat() { return Solhat; }
 	double GetSolhatp() { return Solhatp; }
-	void SetInt(double r) { n_Solute = r; }
+	void SetInt(double r) { c_Sol = r; }
 	void SetSolhat(double r) { Solhat = r; }
 	void SetSolhatp(double r) { Solhatp = r; }
 	void AddSolhat(double r) { Solhat = Solhat + r; }
@@ -101,8 +100,7 @@ protected:
 	DECLARE_FECORE_CLASS();
 private:
 	int Solute_ID = -1;
-	double Solute_prod_rate = 0;
-	double n_Solute = 0;			// solute concentration/number
+	double c_Sol = 0;			// solute concentration/number
 	double Solhat = 0;				// Solute reaction supply		
 	double Solhatp = 0;				// Previous solute reaction supply
 	double SolPRhat = 0;			// Solute point source reaction supply
