@@ -241,7 +241,7 @@ void FECell::UpdateSpecies(FEMesh* mesh)
 		Sol->SetSolhatp(Sol->GetSolhat());
 		Sol->SetSolhat(0.0);
 		Sol->SetSolPRhat(0.0);
-		/*Sol->SetPR(0.0);*/
+		Sol->CellSolutePS->SetRate(0.0);
 		// combine the molar supplies from all the reactions
 		for (int k = 0; k < Reactions.size(); ++k) {
 			Reactions[k]->SetCell(this);
@@ -254,9 +254,7 @@ void FECell::UpdateSpecies(FEMesh* mesh)
 			double v = Reactions[k]->m_v[isol];
 			//Add the product of the stoichiometric ratio with the supply for the reaction
 			Sol->AddSolhat(v * zetahat);
-			//Sol->CellSolutePS->Accumulate(Sol->GetSolPRhat());// no dt since the rate is handled elsewhere
-			Sol->CellSolutePS->SetRate(Sol->GetSolPRhat());
-			//Sol->AddPR(Sol->GetSolPRhat()*dt);
+			Sol->CellSolutePS->Accumulate(Sol->GetSolPRhat());// no dt since the rate is handled elsewhere
 		}
 		// perform the time integration (midpoint rule)
 		double newc = Sol->GetInt() + (Sol->GetSolhat() + Sol->GetSolhatp()) / 2 * dt;
@@ -280,7 +278,7 @@ void FECell::UpdateSpecies(FEMesh* mesh)
 			//! Get the net stoichiometric ratio for each sbm
 			double v = Reactions[k]->m_v[nsol + isbm];
 			SBM->AddSBMhat(v * zetahat);
-			SBM->CellSBMPS->Accumulate(-1*SBM->GetSBMhat()*dt);
+			SBM->CellSBMPS->Accumulate(SBM->GetSBMPRhat()*dt);
 		}
 		// perform the time integration (midpoint rule)
 		double newc = SBM->GetInt() + (SBM->GetSBMhat() + SBM->GetSBMhatp()) / 2 * dt;
@@ -295,20 +293,10 @@ void FECell::ProtoUpdateSpecies(FEMesh* mesh)
 	{
 		//! Set the new position
 		Solutes[isol]->CellSolutePS->SetPosition(GetPosition(mesh));
-		//! Call the body load update
-		//if (this->eval_time >= 0.0) {
-		//	Solutes[isol]->CellSolutePS->Update();
-		//}
-		//Solutes[isol]->SetSolPRhat(0.0);
 	}
 	for (int isbm = 0; isbm < SBMs.size(); isbm++)
 	{
 		//! Set the new position
 		SBMs[isbm]->CellSBMPS->SetPosition(GetPosition(mesh));
-		////! Call the Body Load update
-		//if (this->eval_time >= 0.0) {
-		//	SBMs[isbm]->CellSBMPS->Update();
-		//}
-		//SBMs[isbm]->SetSBMPRhat(0.0);
 	}
 };

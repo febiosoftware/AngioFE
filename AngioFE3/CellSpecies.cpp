@@ -622,7 +622,6 @@ double FECellInternalization::ReactionSupply(FECell* cell)
 		int vP = m_vP[isol];
 		if (vP > 0) {
 			// Cells take away from the matrix
-			/*std::vector<double> concentration_at_integration_points;*/
 			double m_c = 0;
 			for (int i = 0; i < cell->angio_element->_elem->GaussPoints(); i++)
 			{
@@ -630,8 +629,6 @@ double FECellInternalization::ReactionSupply(FECell* cell)
 				//! SL: Previously used the pangio->GetConcentration function however this wasn't working. Currently jsut take the FESolutesMaterialPoint but that may not work for other material types...
 				FESolutesMaterialPoint* pt = (gauss_point->ExtractData<FESolutesMaterialPoint>());
 				m_c += pt->m_ca[isol];
-			/*	concentration_at_integration_points.push_back(pt->m_ca[isol]);*/
-				//concentration_at_integration_points.push_back(pangio->GetConcentration(angio_element->_mat, gauss_point, sol_id));
 			}
 			m_c /= cell->angio_element->_elem->GaussPoints();
 			zhat *= pow(m_c, vP);
@@ -643,22 +640,18 @@ double FECellInternalization::ReactionSupply(FECell* cell)
 	for (int isbm = 0; isbm < nsbm; ++isbm) {
 		int vP = m_vP[nsol + isbm];
 		if (vP > 0) {
-		/*std::vector<double> concentration_at_integration_points;*/
-		double m_c = 0;
-		for (int i = 0; i < cell->angio_element->_elem->GaussPoints(); i++)
-		{
-			FEMaterialPoint* gauss_point = cell->angio_element->_elem->GetMaterialPoint(i);
-			//! SL: Previously used the pangio->GetConcentration function however this wasn't working. Currently jsut take the FESolutesMaterialPoint but that may not work for other material types...
-			FESolutesMaterialPoint* pt = (gauss_point->ExtractData<FESolutesMaterialPoint>());
-			m_c += pt->m_sbmr[isbm];
-			/*	concentration_at_integration_points.push_back(pt->m_ca[isol]);*/
-			//concentration_at_integration_points.push_back(pangio->GetConcentration(angio_element->_mat, gauss_point, sol_id));
-		}
-		m_c /= cell->angio_element->_elem->GaussPoints();
-		zhat *= pow(m_c, vP);
-		cell->SBMs[isbm]->AddSBMPRhat(-1.0 * zhat * vP);
-
-			// Cells take away from the matrix
+		// Cells take away from the matrix
+			double m_c = 0;
+			for (int i = 0; i < cell->angio_element->_elem->GaussPoints(); i++)
+			{
+				FEMaterialPoint* gauss_point = cell->angio_element->_elem->GetMaterialPoint(i);
+				//! SL: Previously used the pangio->GetConcentration function however this wasn't working. Currently jsut take the FESolutesMaterialPoint but that may not work for other material types...
+				FESolutesMaterialPoint* pt = (gauss_point->ExtractData<FESolutesMaterialPoint>());
+				m_c += pt->m_sbmr[isbm];
+			}
+			m_c /= cell->angio_element->_elem->GaussPoints();
+			zhat *= pow(m_c, vP);
+			cell->SBMs[isbm]->AddSBMPRhat(-1.0 * zhat * vP);
 		}
 	}
 	//! Add the species to the cell
