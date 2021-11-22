@@ -453,6 +453,7 @@ vec3d FractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* angio_el
 	FEEllipticalDistribution E(this->GetFEModel());
 	E.spd = SPD_int;
 	E.Init();
+	E.efd_exp = this->efd_exp;
 	vec3d fiber_dir = E.NextVec(angio_element->_rengine);
 	if (fiber_dir*tip_dir < 0)
 	{
@@ -463,6 +464,7 @@ vec3d FractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* angio_el
 
 BEGIN_FECORE_CLASS(FractionalAnisotropyPDD, PositionDependentDirection)
 ADD_PARAMETER(alpha_override, "alpha_override");
+ADD_PARAMETER(efd_exp, "efd_exp");
 END_FECORE_CLASS();
 
 BEGIN_FECORE_CLASS(ProtoPositionDependentDirection, FEMaterial)
@@ -736,6 +738,7 @@ vec3d ProtoFractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* ang
 	FEEllipticalDistribution E(this->GetFEModel());
 	E.spd = proto_efd;
 	E.Init();
+	E.efd_exp = this->proto_efd_exp;
 	vec3d fiber_dir = E.NextVec(angio_element->_rengine);
 	if (fiber_dir*tip_dir < 0)
 	{
@@ -747,4 +750,5 @@ vec3d ProtoFractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* ang
 BEGIN_FECORE_CLASS(ProtoFractionalAnisotropyPDD, ProtoPositionDependentDirection)
 ADD_PARAMETER(alpha_override, "alpha_override");
 ADD_PARAMETER(proto_efd, "proto_efd");
+ADD_PARAMETER(proto_efd_exp, "proto_efd_exp");
 END_FECORE_CLASS();

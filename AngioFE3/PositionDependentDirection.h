@@ -72,6 +72,7 @@ public:
 	DECLARE_FECORE_CLASS();
 private:
 	bool alpha_override = false;// replace alpha with the override
+	double efd_exp = 1;
 };
 
 class LaGrangePStrainPDD : public PositionDependentDirection
@@ -275,6 +276,7 @@ private:
 	bool alpha_override = false;// replace alpha with the override
 	double proto_alpha = 1.0;
 	mat3ds proto_efd = mat3ds(1, 1, 1, 0, 0, 0);
+	double proto_efd_exp = 1.0;
 };
 
 //! The replacement for the bouncy boundary condition

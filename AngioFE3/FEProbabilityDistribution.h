@@ -310,12 +310,13 @@ public:
 	void TimeStepUpdate(double current_time) override;
 
 	mat3ds spd = mat3ds();
-
+	double efd_exp = 1;
 private:
 	vec3d rv;
 	mat3d Q = mat3d(1,0,0,0,1,0,0,0,1);
 	double d[3];
 	vec3d v[3];
+	
 
 	DECLARE_FECORE_CLASS();
 };
