@@ -451,6 +451,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	if ((possible_grow_length >= grow_len) && proj_success)
 	{
 		#ifndef NDEBUG
+			#pragma omp critical
 			std::cout << "case 0: growth within element" << endl;
 		#endif
 		//determine the new natural coordinate position in this element. Not sure that this calculation needs to be this convoluted.
@@ -503,6 +504,8 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	else if (proj_success)
 	{
 		#ifndef NDEBUG
+		#pragma omp critical
+			#pragma omp critical
 			std::cout << "case 1: growth into new element" << endl;
 		#endif
 		//the segment only grows for a portion of dt. This portion is the amount needed to hit the face.
@@ -579,6 +582,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 				if (index != -1)
 				{
 					#ifndef NDEBUG
+						#pragma omp critical
 						std::cout << "case 1a: adjacent element found" << endl;
 					#endif
 					Tip * adj = new Tip(next, mesh);
@@ -600,6 +604,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 			else
 			{
 				#ifndef NDEBUG
+					#pragma omp critical
 					std::cout << "case 1b: no adjacent element" << endl;
 				#endif
 				// in this element assign this tip for evaluation on the next step. We will assign it at the current element by pushing back the active tip.
@@ -671,6 +676,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 
 				if ((possible_grow_length >= grow_len) && proj_success) {
 					#ifndef NDEBUG
+						#pragma omp critical
 						std::cout << "case 0: growth within element" << endl;
 					#endif
 					//determine the new natural coordinate position in this element. Not sure that this calculation needs to be this convoluted.
@@ -726,6 +732,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 				else if (proj_success)
 				{
 					#ifndef NDEBUG
+						#pragma omp critical
 						std::cout << "case 1: growth into new element" << endl;
 					#endif
 					//the segment only grows for a portion of dt. This portion is the amount needed to hit the face.
@@ -798,6 +805,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 					if (possible_locations.size())
 					{
 						#ifndef NDEBUG
+							#pragma omp critical
 							std::cout << "case 1a: adjacent element found" << endl;
 						#endif
 						//need some way to choose the correct element to continue the tip in
@@ -827,6 +835,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		else
 		{ 
 			#ifndef NDEBUG
+				#pragma omp critical
 				std::cout << "case 1: tip time not greater than current time" << endl;
 			#endif
 			// add the tip that hit an external face to the active tips
@@ -838,6 +847,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 
 	else{
 		#ifndef NDEBUG
+			#pragma omp critical
 			std::cout << "case 2: growth into next element, projected failure" << endl;
 		#endif
 		angio_element->final_active_tips.push_back(active_tip);
@@ -954,6 +964,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 	if ((possible_grow_length >= grow_len) && proj_success)
 	{
 		#ifndef NDEBUG
+			#pragma omp critical
 			std::cout << "case 0: growth within element" << endl;
 		#endif
 		//determine the new natural coordinate position in this element. Not sure that this calculation needs to be this convoluted.
@@ -1009,6 +1020,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 	else if (proj_success)
 	{
 		#ifndef NDEBUG
+			#pragma omp critical
 			std::cout << "case 1: growth into new element" << endl;
 		#endif
 		//the segment only grows for a portion of dt. This portion is the amount needed to hit the face.
@@ -1082,6 +1094,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		if (possible_locations.size())
 		{
 			#ifndef NDEBUG
+				#pragma omp critical
 				std::cout << "case 1a: adjacent element found" << endl;
 			#endif
 			//need some way to choose the correct element to continue the tip in
@@ -1109,6 +1122,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		else
 		{
 			#ifndef NDEBUG
+				#pragma omp critical
 				std::cout << "case 1b: no adjacent element" << endl;
 			#endif
 			// in this element assign this tip for evaluation on the next step. We will assign it at the current element by pushing back the active tip.
@@ -1180,6 +1194,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 
 			if ((possible_grow_length >= grow_len) && proj_success) {
 				#ifndef NDEBUG
+					#pragma omp critical
 					std::cout << "case 0: growth within element" << endl;
 				#endif
 				//determine the new natural coordinate position in this element. Not sure that this calculation needs to be this convoluted.
@@ -1235,6 +1250,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 			else if (proj_success)
 			{
 				#ifndef NDEBUG
+					#pragma omp critical
 					std::cout << "case 1: growth into new element" << endl;
 				#endif
 				//the segment only grows for a portion of dt. This portion is the amount needed to hit the face.
@@ -1308,6 +1324,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 				if (possible_locations.size())
 				{
 					#ifndef NDEBUG
+						#pragma omp critical
 						std::cout << "case 1a: adjacent element found" << endl;
 					#endif
 					//need some way to choose the correct element to continue the tip in
@@ -1335,6 +1352,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 	}
 	else {
 		#ifndef NDEBUG
+			#pragma omp critical
 			std::cout << "case 2: growth into next element, projected failure" << endl;
 		#endif
 			

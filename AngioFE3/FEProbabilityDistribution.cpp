@@ -333,19 +333,21 @@ END_FECORE_CLASS();
 //implemenations of FEGammaDistribution
 vec3d FEEllipticalDistribution::NextVec(angiofe_random_engine & re)
 {
+//#pragma omp parallel for
 	bool found = false;
 	while(!found)
 	{
 		std::uniform_real_distribution<double> rd = std::uniform_real_distribution<double> (-1,1);
 		vec3d rv;
 		// get the random direction with magnitude up to the value of r^efd_exp
-		rv.x = pow(d[0],efd_exp)*rd(re);
-		rv.y = pow(d[1],efd_exp)*rd(re);
-		rv.z = pow(d[2],efd_exp)*rd(re);
+		double w = std::max(std::max(d[0], d[1]), d[2]);
+		rv.x = pow(w,efd_exp)*rd(re);
+		rv.y = pow(w,efd_exp)*rd(re);
+		rv.z = pow(w,efd_exp)*rd(re);
 		// Find the value of the standard ellipse equation
 		double ellipse_par_eq = (rv.x * rv.x) / (d[0] * d[0]) + (rv.y * rv.y) / (d[1] * d[1]) + (rv.z * rv.z) / (d[2] * d[2]);
 		// Find the radius to the random vector point
-		double r = rv.norm2();
+		double r = rv.norm();
 		// Find the max value which is equal to r^efd_exp for the given orientation.
 		double r_max = sqrt(1 / ellipse_par_eq) * r;
 		// If the sampled point is within the power elliptical distribution
