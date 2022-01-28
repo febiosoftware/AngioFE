@@ -60,6 +60,7 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS_EXPLICIT(ByElementFragmentSeederBiDirectional, FEMATERIAL_ID, "by_element_fragment_seeder_bidirectional");
 	REGISTER_FECORE_CLASS_EXPLICIT(ByVolumeFragmentSeeder, FEMATERIAL_ID, "by_volume_fragment_seeder");
 	REGISTER_FECORE_CLASS_EXPLICIT(ByVolumeFragmentSeederBiDirectional, FEMATERIAL_ID, "by_volume_fragment_seeder_bidirectional");
+	REGISTER_FECORE_CLASS_EXPLICIT(SingleCellSeeder, FEMATERIAL_ID, "single_cell_seeder");
 
 	//InitalModifiers any modifiers for angio_elements this will be run only once before much else happens
 	REGISTER_FECORE_CLASS_EXPLICIT(InitialModifierManager, FEMATERIAL_ID, "im_manager");
@@ -78,6 +79,7 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS_EXPLICIT(SegmentVelocityModifier, FEMATERIAL_ID, "segment_velocity_modifier");
 	REGISTER_FECORE_CLASS_EXPLICIT(SegmentVelocityDensityScaleModifier, FEMATERIAL_ID, "segment_velocity_density_scale_modifier");
 	REGISTER_FECORE_CLASS_EXPLICIT(SegmentVelocityRefDensityScaleModifier, FEMATERIAL_ID, "segment_velocity_ref_density_scale_modifier");
+	REGISTER_FECORE_CLASS_EXPLICIT(SegmentVelocityDensityFAScaleModifier, FEMATERIAL_ID, "segment_velocity_density_fa_scale_modifier");
 	REGISTER_FECORE_CLASS_EXPLICIT(SegmentVelocity3PModifier, FEMATERIAL_ID, "segment_velocity_3P_modifier");
 	REGISTER_FECORE_CLASS_EXPLICIT(SegmentVelocityFAModifier, FEMATERIAL_ID, "segment_velocity_fa_modifier");
 	REGISTER_FECORE_CLASS_EXPLICIT(SigmoidSegmentVelocity, FEMATERIAL_ID, "sigmoid_segment_velocity");
@@ -112,6 +114,7 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS_EXPLICIT(ContributionMixManager, FEMATERIAL_ID, "contribution_mix_manager");
 	REGISTER_FECORE_CLASS_EXPLICIT(ProtoPSCPDDContributionMix, FEMATERIAL_ID, "proto_psc_pdd_contribution_mix");
 	REGISTER_FECORE_CLASS_EXPLICIT(PSCPDDContributionMix, FEMATERIAL_ID, "psc_pdd_contribution_mix");
+	REGISTER_FECORE_CLASS_EXPLICIT(DensFAContributionMix, FEMATERIAL_ID, "density_FA_contribution_mix");
 
 	// Species Manager Classes
 	REGISTER_FECORE_CLASS_EXPLICIT(CellSpeciesManager, FEMATERIAL_ID, "species_manager");

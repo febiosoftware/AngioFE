@@ -53,6 +53,7 @@ public:
 	FECell * TipCell = nullptr;
 	void SetProtoGrowthLength(FEProbabilityDistribution* dist);
 	void SetProtoGrowthLength(Tip* tip);
+	void SetProtoGrowthLength(double initial_length);
 	double GetProtoGrowthLength();
 private:
 	vec3d local_pos;

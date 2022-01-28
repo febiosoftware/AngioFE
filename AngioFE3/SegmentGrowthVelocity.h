@@ -88,6 +88,30 @@ private:
 };
 
 //! scales the segment velocity based on the ecm density
+class SegmentVelocityDensityFAScaleModifier : public SegmentGrowthVelocity
+{
+public:
+	//!constructor
+	explicit SegmentVelocityDensityFAScaleModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) { AddClassProperty(this, &interpolation_prop, "interpolation_prop"); }
+	//! Scales the velocity based on the ecm density at the location
+	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
+	//! performs initialization
+	bool Init() override;
+	void UpdateScale() override;
+protected:
+	//! parameter list
+	DECLARE_FECORE_CLASS();
+private:
+	FEVariableInterpolation* interpolation_prop = nullptr;
+	double m_rFA_a = 3.557;
+	double m_rFA_b = 1.895;
+	double m_rFA_c = 0.5464;
+	double m_rFA_d = 0.01;
+	double m_rFA_r0 = 1.691;
+	double m_rFA_f0 = 0.8136;
+};
+
+//! scales the segment velocity based on the ecm density
 class SegmentVelocity3PModifier : public SegmentGrowthVelocity
 {
 public:

@@ -53,6 +53,27 @@ private:
 	double psc_weight = 1.0;
 };
 
+//! set the contribution mix to a value or a load curve
+class DensFAContributionMix : public ContributionMix
+{
+public:
+	//! constructor
+	explicit DensFAContributionMix(FEModel* pfem) : ContributionMix(pfem) {}
+	virtual ~DensFAContributionMix() {}
+	//! return the contribution mix at a given location
+	double ApplyModifiers(double dt, AngioElement* angio_element, vec3d local_pos, FEMesh* mesh) override;
+	//! updates the contribution mix to a given time
+	void Update(FEMesh* mesh) override;
+protected:
+	//! parameter list
+	DECLARE_FECORE_CLASS();
+private:
+	double a0 = 0.3582;
+	double a = 0.6272;
+	double b = 20.17;
+	double c = 0.291;
+};
+
 class ProtoContributionMix : public FEMaterial
 {
 public:

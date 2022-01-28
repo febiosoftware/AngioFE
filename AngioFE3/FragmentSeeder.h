@@ -22,6 +22,7 @@ public:
 	vec3d GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(FEMesh* mesh, AngioElement* angio_element, angiofe_random_engine random_engine);
 	//! return an incremented cell id
 	int IncrementCellCounter();
+	bool proto_mat_cross = true;
 protected:
 	//! number of fragments to seed
 	int number_fragments = 0;
@@ -31,6 +32,7 @@ protected:
 	int number_cells = 0;
 	//! used to initialize cell ids
 	static int initial_cell_id_counter;
+	double cell_radius = 10e-6;
 	//! Probability Distribution
 	FEProbabilityDistribution* initial_segment_length = nullptr;
 
@@ -75,4 +77,16 @@ public:
 	explicit ByVolumeFragmentSeederBiDirectional(FEModel * model);
 	//! Seed the fragments
 	bool SeedFragments(std::vector<AngioElement *> &angio_elements, FEMesh* mesh, FEAngioMaterial* angio_mat, int buffer_index) override;
+};
+
+//! seed fragments with all elements having equal probabilities of being choosen
+class SingleCellSeeder : public FragmentSeeder
+{
+public:
+	//! constructor for class
+	explicit SingleCellSeeder(FEModel* model);
+	//! Seed the fragments
+	bool SeedFragments(std::vector<AngioElement*>& angio_elements, FEMesh* mesh, FEAngioMaterial* angio_mat, int buffer_index) override;
+	vec3d initial_position = vec3d(0, 0, 0);
+	DECLARE_FECORE_CLASS();
 };

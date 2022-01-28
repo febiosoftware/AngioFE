@@ -505,7 +505,6 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	{
 		#ifndef NDEBUG
 		#pragma omp critical
-			#pragma omp critical
 			std::cout << "case 1: growth into new element" << endl;
 		#endif
 		//the segment only grows for a portion of dt. This portion is the amount needed to hit the face.
@@ -1072,10 +1071,15 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 
 		std::vector<AngioElement*> possible_locations;
 		std::vector<vec3d> possible_local_coordinates;
+		int current_mat = this->GetID_ang();
 		for (int i = 0; i < angio_element->adjacency_list.size(); i++) // TODO: HERE //!SL
 		{
 			AngioElement * ang_elem = angio_element->adjacency_list[i];
-			if (ang_elem)
+			// if it is an angio material and it is from the same material as the current one
+			int adj_mat = ang_elem->_angio_mat->GetID_ang();
+			bool proto_cross = common_properties->fseeder->proto_mat_cross;
+			bool same_mat = (adj_mat == current_mat);
+			if (ang_elem && (proto_cross || same_mat))
 			{
 				FESolidDomain * sd = dynamic_cast<FESolidDomain*>(ang_elem->_elem->GetMeshPartition());
 				if (sd)

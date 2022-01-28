@@ -49,7 +49,8 @@ public:
 	void ProtoUpdateSpecies(FEMesh* mesh);
 	Tip* ParentTip;
 	double eval_time = 0;
-	double cell_vol = 500; // cell volume is 500 um3 = 0.5 uL
+	double cell_radius = 1e-5; // 
+	double cell_volume;
 private:
 	vec3d local_pos;
 	friend class Tip;

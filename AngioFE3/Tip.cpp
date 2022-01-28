@@ -141,6 +141,11 @@ void Tip::SetProtoGrowthLength(Tip* tip)
 	proto_growth_length = tip->GetProtoGrowthLength();
 }
 
+void Tip::SetProtoGrowthLength(double initial_length)
+{
+	proto_growth_length = initial_length;
+}
+
 double Tip::GetProtoGrowthLength() {
 	return proto_growth_length;
 }

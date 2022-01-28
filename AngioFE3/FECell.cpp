@@ -128,6 +128,8 @@ void FECell::InitSpecies(FEMesh* mesh)
 			CellSolute* ref_solute = m_species->cell_solute_prop[i];
 			// get the sbm id
 			int SoluteID = ref_solute->GetSoluteID();
+			double int_c = ref_solute->GetInt();
+			cell_solute->SetInt(int_c);
 			// get the production rate/concentration
 			// Create new source
 			cell_solute->CellSolutePS = new FESolutePointSource(fem);
@@ -139,6 +141,7 @@ void FECell::InitSpecies(FEMesh* mesh)
 			cell_solute->SetDensity(psd->m_rhoT);
 			cell_solute->SetMolarMass(psd->m_M);
 			cell_solute->SetCharge(psd->m_z);
+			cell_solute->CellSolutePS->SetRadius(cell_radius);			
 			
 			// initialize and activate the bc
 			if (cell_solute->CellSolutePS->Init()) {
@@ -165,6 +168,7 @@ void FECell::InitSpecies(FEMesh* mesh)
 			cell_sbm->SetDensity(psd->m_rhoT);
 			cell_sbm->SetMolarMass(psd->m_M);
 			cell_sbm->SetCharge(psd->m_z);
+			cell_sbm->CellSBMPS->SetRadius(cell_radius);
 			// initialize and activate the bc
 			if (cell_sbm->CellSBMPS->Init()) {
 				cell_sbm->CellSBMPS->SetResetFlag(false);
@@ -225,6 +229,7 @@ void FECell::UpdateSpecies(FEMesh* mesh)
 	// update SBMs
 	//double ctime = mesh->GetFEModel()->GetTime().currentTime;
 	double dt = time - eval_time;
+	double t0 = eval_time;
 	eval_time = time;
 	int nsbm = this->SBMs.size();
 	int nsol = this->Solutes.size();
@@ -257,7 +262,13 @@ void FECell::UpdateSpecies(FEMesh* mesh)
 			Sol->CellSolutePS->Accumulate(Sol->GetSolPRhat());// no dt since the rate is handled elsewhere
 		}
 		// perform the time integration (midpoint rule)
-		double newc = Sol->GetInt() + (Sol->GetSolhat() + Sol->GetSolhatp()) / 2 * dt;
+		double newc;
+		if (t0 != 0) {
+			newc = Sol->GetInt() + (Sol->GetSolhat() + Sol->GetSolhatp()) / 2 * dt;
+		}
+		else {
+			newc = Sol->GetInt() + Sol->GetSolhat() * dt;
+		}
 		Sol->SetInt(std::max(newc, 0.0));
 	}
 
@@ -281,7 +292,13 @@ void FECell::UpdateSpecies(FEMesh* mesh)
 			SBM->CellSBMPS->Accumulate(SBM->GetSBMPRhat()*dt);
 		}
 		// perform the time integration (midpoint rule)
-		double newc = SBM->GetInt() + (SBM->GetSBMhat() + SBM->GetSBMhatp()) / 2 * dt;
+		double newc;
+		if (t0 != 0) {
+			newc = SBM->GetInt() + ((SBM->GetSBMhat() + SBM->GetSBMhatp()) / cell_volume) / 2 * dt;
+		}
+		else {
+			newc = SBM->GetInt() + (SBM->GetSBMhat() / cell_volume) * dt;
+		}
 		SBM->SetInt(std::max(newc, 0.0));
 	}
 };

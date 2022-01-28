@@ -699,6 +699,7 @@ double FECellInternalizationConstant::ReactionSupply(FECell* cell)
 		if (vP > 0) {
 			// Cells take away from the matrix
 			cell->Solutes[isol]->AddSolPRhat(-1.0 * zhat * vP);
+			cell->Solutes[isol]->SetSolhatp(cell->Solutes[isol]->GetSolhatp() / cell->cell_volume);
 		}
 	}
 	// add contribution of solid-bound molecules
@@ -707,6 +708,7 @@ double FECellInternalizationConstant::ReactionSupply(FECell* cell)
 		int vP = m_vP[nsol + isbm];
 		if (vP > 0) {
 			cell->SBMs[isbm]->AddSBMPRhat(-1.0 * zhat * vP);
+			cell->SBMs[isbm]->SetSBMhatp(cell->SBMs[isbm]->GetSBMhatp() / cell->cell_volume);
 			// Cells take away from the matrix
 		}
 	}
@@ -808,17 +810,17 @@ double FECellSecretionConstant::ReactionSupply(FECell* cell)
 
 	int nsol = cell->Solutes.size();
 	for (int isol = 0; isol < nsol; ++isol) {
-		int vP = m_vP[isol];
-		if (vP > 0) {
-			cell->Solutes[isol]->AddSolPRhat(zhat * vP);
+		int vR = m_vR[isol];
+		if (vR > 0) {
+			cell->Solutes[isol]->AddSolPRhat(zhat * vR);
 		}
 	}
 	// add contribution of solid-bound molecules
 	const int nsbm = cell->SBMs.size();
 	for (int isbm = 0; isbm < nsbm; ++isbm) {
-		int vP = m_vP[nsol + isbm];
-		if (vP > 0) {
-			cell->SBMs[isbm]->AddSBMPRhat(zhat * vP);
+		int vR = m_vR[nsol + isbm];
+		if (vR > 0) {
+			cell->SBMs[isbm]->AddSBMPRhat(zhat * vR);
 		}
 	}
 	//! Remove the species from the cell
