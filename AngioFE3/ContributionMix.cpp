@@ -59,8 +59,6 @@ double DensFAContributionMix::ApplyModifiers(double dt, AngioElement* angio_elem
 	std::sort(v.begin(), v.end(), EigComp());
 	double angioFA_int = 1 - (v[1].first / v[0].first);
 	double alpha = a0 + a / (1 + exp(-b * (angioFA_int-c)));
-	std::cout << "FA is " << angioFA_int << endl;
-	std::cout << "alpha is " << alpha << endl;
 	return alpha * dt;
 }
 

@@ -48,7 +48,7 @@ protected:
 
 	DECLARE_FECORE_CLASS();
 private:
-	mat3ds m_SPD;
+	FEParamMat3ds m_SPD;
 };
 
 class EFDFiberInitializer : public InitialModifier 
@@ -63,7 +63,7 @@ protected:
 
 	DECLARE_FECORE_CLASS();
 private:
-	mat3ds m_SPD;
+	FEParamMat3ds m_SPD;
 };
 
 //! sets the ecm density within a material
@@ -71,7 +71,7 @@ class DensityInitializer : public InitialModifier
 {
 public:
 	//! constructor
-	explicit DensityInitializer(FEModel * pfem) : InitialModifier(pfem) {}
+	explicit DensityInitializer(FEModel* pfem) : InitialModifier(pfem) { initial_density = 3.0; }
 	//! initialize all densities
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
 protected:
@@ -79,7 +79,7 @@ protected:
 
 	DECLARE_FECORE_CLASS();
 private:
-	double initial_density = 3.0;
+	FEParamDouble initial_density;
 };
 
 class RepulseInitializer : public InitialModifier

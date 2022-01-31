@@ -44,7 +44,7 @@ void DiscreteFiberEFDRandomizer::ApplyModifier(AngioElement * angio_element, FEM
 		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
 		// get the angio material point
 		FEAngioMaterialPoint * angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
-		angio_pt->initial_angioSPD = m_SPD;
+		angio_pt->initial_angioSPD = m_SPD(*mp);
 		FEEllipticalDistribution E(this->GetFEModel());
 		E.spd = angio_pt->initial_angioSPD;
 		E.Init();
@@ -63,8 +63,8 @@ void EFDFiberInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * m
 	{
 		FEMaterialPoint* mp = se->GetMaterialPoint(i);
 		FEAngioMaterialPoint * angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
-		angio_pt->initial_angioSPD = m_SPD;
-		angio_pt->angioSPD = m_SPD;
+		angio_pt->initial_angioSPD = m_SPD(*mp);
+		angio_pt->angioSPD = m_SPD(*mp);
 		angio_pt->UpdateAngioFractionalAnisotropy();
 	}
 }
@@ -80,7 +80,7 @@ void DensityInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * me
 		FEMaterialPoint *mp = angio_element->_elem->GetMaterialPoint(i);
 		FEAngioMaterialPoint *angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
 
-		angio_pt->ref_ecm_density = initial_density;
+		angio_pt->ref_ecm_density = initial_density(*mp);
 	}
 }
 
