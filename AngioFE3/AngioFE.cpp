@@ -84,6 +84,7 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS_EXPLICIT(SegmentVelocity3PModifier, FEMATERIAL_ID, "segment_velocity_3P_modifier");
 	REGISTER_FECORE_CLASS_EXPLICIT(SegmentVelocityFAModifier, FEMATERIAL_ID, "segment_velocity_fa_modifier");
 	REGISTER_FECORE_CLASS_EXPLICIT(SigmoidSegmentVelocity, FEMATERIAL_ID, "sigmoid_segment_velocity");
+	REGISTER_FECORE_CLASS_EXPLICIT(SigmoidAdjustedSegmentVelocity, FEMATERIAL_ID, "sigmoid_adjusted_segment_velocity");
 	REGISTER_FECORE_CLASS_EXPLICIT(GompertzSegmentVelocity, FEMATERIAL_ID, "gompertz_segment_velocity");
 
 	// PSC Classes
@@ -156,6 +157,7 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotMatrixStress, FEPLOTDATA_ID, "matrix stress");
 	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotVesselWeight, FEPLOTDATA_ID, "vessel weight");
 	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotMatrixWeight, FEPLOTDATA_ID, "matrix weight");
+	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotVascularDensity, FEPLOTDATA_ID, "vascular density");
 	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotMatrixTangent, FEPLOTDATA_ID, "matrix tangent");
 	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotMatrixViscoStress, FEPLOTDATA_ID, "matrix visco stress");
 	REGISTER_FECORE_CLASS_EXPLICIT(FEPlotMatrixElasticStress, FEPLOTDATA_ID, "matrix elastic stress");

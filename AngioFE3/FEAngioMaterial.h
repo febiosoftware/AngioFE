@@ -141,7 +141,8 @@ public:
 	//! interpolation and initialization of per node properties
 	NodeDataInterpolationManager* nodedata_interpolation_manager = nullptr;
 	//! radius of vessels used to calculate mixture between matrix and vessel materials
-	double vessel_radius = 7.0;
+	double vessel_radius = 10.0;
+	double thresh_vascularity = 100.0;
 	FEMixMethod* mix_method = nullptr;
 	SegmentGrowthVelocityManager* velocity_manager = nullptr;
 	//CellSBMManager* cell_SBM_manager = nullptr;

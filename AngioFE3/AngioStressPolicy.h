@@ -72,7 +72,7 @@ protected:
 	DECLARE_FECORE_CLASS();
 private:
 	double scale = 1.0;
-	double y0 = 0.0, x0 = 7, a = 1.0, b = 0.5435;
+	double y0 = 1e-8, x0 = 7, a = 1.0, b = 0.5435;
 	double sprout_mag = 0.0252;
 	double fan_exponential = 2;
 	double sprout_range = 200;//used to calculate the falloff of stress

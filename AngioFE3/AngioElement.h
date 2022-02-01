@@ -74,4 +74,6 @@ public:
 	double refernce_frame_segment_length = 0.0;
 	//! number of anastamoses that have occured
 	int anastamoses = 0;
+	//! time that the element becomes overly vascularized
+	double vasc_thresh_time = -1.0;
 };

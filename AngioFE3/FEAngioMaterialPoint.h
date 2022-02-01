@@ -41,6 +41,8 @@ public:
 	//! the weight of the matrix material
 	double matrix_weight;
 
+	double vascular_density;
+
 	//! pointer to material point of the vessel
 	FEMaterialPoint* vessPt = nullptr;
 	//! pointer to matrix material point

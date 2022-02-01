@@ -81,6 +81,16 @@ public:
 	bool Save(FEDomain& d, FEDataStream& str) override;
 };
 
+//! plot the weight of the vessel material
+class FEPlotVascularDensity: public FEPlotDomainData
+{
+public:
+	//! constructor
+	explicit FEPlotVascularDensity(FEModel* pfem) : FEPlotDomainData(pfem, PLT_FLOAT, FMT_ITEM) {}
+	//! plot vascular density
+	bool Save(FEDomain& d, FEDataStream& str) override;
+};
+
 //! Plot the matrix material's tangent
 class FEPlotMatrixTangent : public FEPlotDomainData
 {

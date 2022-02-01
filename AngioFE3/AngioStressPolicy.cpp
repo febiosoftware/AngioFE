@@ -35,8 +35,11 @@ double AngioStressPolicy::GetDensScale(AngioElement* angio_element, Tip* tip, FE
 	}
 	//Get interpolation method
 	FEModel* m_pfem = this->GetFEModel();
-	PerElementVI interp(m_pfem);
-	double density_at_point = interp.Interpolate(angio_element->_elem, density_at_integration_points, tip->GetLocalPosition(), mesh);
+	static PerElementVI* interp = nullptr;
+	if (interp == nullptr) interp = new PerElementVI(m_pfem);
+	double density_at_point = interp->Interpolate(angio_element->_elem, density_at_integration_points, tip->GetLocalPosition(), mesh);
+	/*PerElementVI interp(m_pfem);
+	double density_at_point = interp.Interpolate(angio_element->_elem, density_at_integration_points, tip->GetLocalPosition(), mesh);*/
 	double density_scale = m_density_scale_factor.x + m_density_scale_factor.y * exp(-m_density_scale_factor.z * density_at_point);
 	if (density_scale < 0) { return 0; }
 	else { return density_scale; }
@@ -139,7 +142,8 @@ void SigmoidDensAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAn
 		// zero the angio point
 		angio_mp->m_as.zero();
 		// get global position of elastic material point?
-		vec3d y = emp->m_rt;
+		vec3d y = emp->m_rt;			
+		this->UpdateScale();
 		// for each active tip
 		for (int j = 0; j < final_active_tips.size(); j++)
 		{
@@ -151,11 +155,10 @@ void SigmoidDensAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAn
 			double l = r.unit();
 			// get the angle between the tip and the sprout direction
 			double theta = acos(tip->GetDirection(mesh) * r);//same for GetDirection
-
 			//sprout s mag replaced with giving correct coeficients for scale
 			double p = den_scale * scale * sprout_mag * pow(cos(theta / 2), fan_exponential) * exp(-l / sprout_range);
 			//std::cout << "sprout mag is " << sprout_mag << endl;
-			//std::cout << "p is " << p << endl;
+			//std::cout << "val is " << scale << endl;
 			// make a dyad times the pressure
 			angio_mp->m_as += dyad(r) * p;
 		}

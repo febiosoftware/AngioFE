@@ -162,6 +162,30 @@ bool FEPlotMatrixWeight::Save(FEDomain& d, FEDataStream& str)
 	return true;
 };
 
+bool FEPlotVascularDensity::Save(FEDomain& d, FEDataStream& str)
+{
+	FEAngioMaterial* pmat = pfeangio->GetAngioComponent(d.GetMaterial());
+	if (pmat == nullptr) return false;
+
+	FESolidDomain& dom = dynamic_cast<FESolidDomain&>(d);
+	int NE = dom.Elements();
+	for (int i = 0; i < NE; ++i)
+	{
+		FESolidElement& el = dom.Element(i);
+		int nint = el.GaussPoints();
+		double s = 0.0;
+		for (int j = 0; j < nint; ++j)
+		{
+			FEMaterialPoint& mp = *(el.GetMaterialPoint(j));
+			FEAngioMaterialPoint* angioPt = FEAngioMaterialPoint::FindAngioMaterialPoint(&mp);
+			s += angioPt->vascular_density;
+		}
+		s /= static_cast<double>(nint);
+		str << s;
+	}
+	return true;
+};
+
 //-----------------------------------------------------------------------------
 bool FEPlotMatrixTangent::Save(FEDomain& d, FEDataStream& str)
 {

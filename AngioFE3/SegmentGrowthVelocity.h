@@ -172,6 +172,26 @@ private:
 	double c = 5;
 };
 
+class SigmoidAdjustedSegmentVelocity : public SegmentGrowthVelocity
+{
+public:
+	//!constructor
+	explicit SigmoidAdjustedSegmentVelocity(FEModel* pfem) : SegmentGrowthVelocity(pfem) {}
+	//! Scales the velocity based on the ecm density at the location
+	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
+	//! performs initialization
+	bool Init() override;
+	void UpdateScale() override;
+protected:
+	//! parameter list
+	DECLARE_FECORE_CLASS();
+private:
+	double scale = 1;
+	double a = 100;
+	double b = 1;
+	double c = 5;
+};
+
 class GompertzSegmentVelocity : public SegmentGrowthVelocity
 {
 public:
