@@ -50,7 +50,7 @@ bool SigmoidAngioStressPolicy::Init()
 void SigmoidAngioStressPolicy::UpdateScale()
 {
 	double time = GetFEModel()->GetTime().currentTime;
-	scale = y0 + a / (1 + exp(-(time - x0) / b));;
+	scale = y0 + a / (1 + exp(-(time - x0) / b));
 }
 
 void SigmoidAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
@@ -67,8 +67,6 @@ void SigmoidAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio*
 		FEAngioMaterialPoint * angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
 		// get the elastic material point at the gauss point
 		FEElasticMaterialPoint * emp = mp->ExtractData<FEElasticMaterialPoint>();
-		// get the density scale for the integration point
-		double den_scale = angio_element->_angio_mat->FindDensityScale(angio_mp);
 		// assert that the material point and gauss point are in the same point
 		assert(mp && angio_mp);
 		// zero the angio point
@@ -88,7 +86,7 @@ void SigmoidAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio*
 			double theta = acos(tip->GetDirection(mesh) * r);//same for GetDirection
 
 			//sprout s mag replaced with giving correct coeficients for scale
-			double p = den_scale * scale *sprout_mag * pow(cos(theta / 2), fan_exponential)* exp(-l / sprout_range);
+			double p = scale *sprout_mag * pow(cos(theta / 2), fan_exponential)* exp(-l / sprout_range);
 			//std::cout << "sprout mag is " << sprout_mag << endl;
 			//std::cout << "p is " << p << endl;
 			// make a dyad times the pressure
@@ -109,6 +107,72 @@ ADD_PARAMETER(y0, "y0");
 
 END_FECORE_CLASS();
 
+bool SigmoidDensAngioStressPolicy::Init()
+{
+	return true;
+}
+
+void SigmoidDensAngioStressPolicy::UpdateScale()
+{
+	double time = GetFEModel()->GetTime().currentTime;
+	scale = y0 + a / (1 + exp(-(time - x0) / b));
+}
+
+void SigmoidDensAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
+{
+	std::vector<Tip*> final_active_tips;
+	// Get active tips within a radius
+	FEAngio::GetActiveFinalTipsInRadius(angio_element, sprout_range * sprout_radius_multiplier, pangio, final_active_tips);
+	// for each integration point
+	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
+	{
+		// get the material point of the gauss point
+		FEMaterialPoint* mp = angio_element->_elem->GetMaterialPoint(i);
+		// get eh angio material point at the gauss point
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+		// get the elastic material point at the gauss point
+		FEElasticMaterialPoint* emp = mp->ExtractData<FEElasticMaterialPoint>();
+		// get the density scale for the integration point
+		double den_scale = angio_element->_angio_mat->FindDensityScale(angio_mp);
+		// assert that the material point and gauss point are in the same point
+		assert(mp && angio_mp);
+		// zero the angio point
+		angio_mp->m_as.zero();
+		// get global position of elastic material point?
+		vec3d y = emp->m_rt;
+		// for each active tip
+		for (int j = 0; j < final_active_tips.size(); j++)
+		{
+			Tip* tip = final_active_tips[j];
+			// get the tip position in the mesh
+			vec3d x = tip->GetPosition(mesh);//consider moving this out and calling it less
+			// determine vector from tip to integration point
+			vec3d r = y - x;
+			double l = r.unit();
+			// get the angle between the tip and the sprout direction
+			double theta = acos(tip->GetDirection(mesh) * r);//same for GetDirection
+
+			//sprout s mag replaced with giving correct coeficients for scale
+			double p = den_scale * scale * sprout_mag * pow(cos(theta / 2), fan_exponential) * exp(-l / sprout_range);
+			//std::cout << "sprout mag is " << sprout_mag << endl;
+			//std::cout << "p is " << p << endl;
+			// make a dyad times the pressure
+			angio_mp->m_as += dyad(r) * p;
+		}
+	}
+}
+
+BEGIN_FECORE_CLASS(SigmoidDensAngioStressPolicy, AngioStressPolicy)
+ADD_PARAMETER(sprout_mag, "sprout_mag");
+ADD_PARAMETER(fan_exponential, "fan_exponential");
+ADD_PARAMETER(sprout_range, "sprout_range");
+ADD_PARAMETER(sprout_radius_multiplier, "sprout_radius_multiplier");
+ADD_PARAMETER(a, "a");
+ADD_PARAMETER(b, "b");
+ADD_PARAMETER(x0, "x0");
+ADD_PARAMETER(y0, "y0");
+
+END_FECORE_CLASS();
 
 bool LoadCurveVelAngioStressPolicy::Init()
 {

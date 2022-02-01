@@ -48,6 +48,7 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 
 	// Stress Policy Classes
 	REGISTER_FECORE_CLASS_EXPLICIT(SigmoidAngioStressPolicy, FEMATERIAL_ID, "sigmoid_angio_stress_policy");
+	REGISTER_FECORE_CLASS_EXPLICIT(SigmoidDensAngioStressPolicy, FEMATERIAL_ID, "sigmoid_dens_angio_stress_policy");
 	REGISTER_FECORE_CLASS_EXPLICIT(LoadCurveVelAngioStressPolicy, FEMATERIAL_ID, "load_curve_vel_angio_stress_policy");
 	REGISTER_FECORE_CLASS_EXPLICIT(LoadCurveAngioStressPolicy, FEMATERIAL_ID, "load_curve_angio_stress_policy");
 	REGISTER_FECORE_CLASS_EXPLICIT(LoadCurveDenAngioStressPolicy, FEMATERIAL_ID, "load_curve_den_angio_stress_policy");

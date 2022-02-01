@@ -54,6 +54,32 @@ private:
 	//the default value cuts of tips stresses that are below 5% of a tip on top of a gauss point
 };
 
+//! legacy stress calculations
+class SigmoidDensAngioStressPolicy : public AngioStressPolicy
+{
+public:
+	//! constructor
+	explicit SigmoidDensAngioStressPolicy(FEModel* pfem) : AngioStressPolicy(pfem) {}
+	virtual ~SigmoidDensAngioStressPolicy() {}
+	//! performs initialization
+	bool Init() override;
+	//! update scale factor on a per timestep basis
+	void UpdateScale() override;
+	//! calculates the stress at the gauss point for a given element, this is scaled by a sigmoid which is used for legacy reasons
+	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
+protected:
+	//! parameter list
+	DECLARE_FECORE_CLASS();
+private:
+	double scale = 1.0;
+	double y0 = 0.0, x0 = 7, a = 1.0, b = 0.5435;
+	double sprout_mag = 0.0252;
+	double fan_exponential = 2;
+	double sprout_range = 200;//used to calculate the falloff of stress
+	double sprout_radius_multiplier = 3;//multiplied by sprout range implicitly gives the cutoff for the tips that are included
+	//the default value cuts of tips stresses that are below 5% of a tip on top of a gauss point
+};
+
 //! a stress calculation at the tips which includes velocity
 class LoadCurveVelAngioStressPolicy : public AngioStressPolicy
 {
