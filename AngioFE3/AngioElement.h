@@ -76,4 +76,6 @@ public:
 	int anastamoses = 0;
 	//! time that the element becomes overly vascularized
 	double vasc_thresh_time = -1.0;
+	//! element vessel weight
+	double vessel_weight;
 };

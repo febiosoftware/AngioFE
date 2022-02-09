@@ -274,6 +274,24 @@ public:
 	FECell* m_cell;				//!< cell containing this
 };
 
+class FECellMassActionForwardConstant : public FECellChemicalReaction
+{
+public:
+	//! constructor
+	FECellMassActionForwardConstant(FEModel* pfem) : FECellChemicalReaction(pfem) {}
+
+	//! data initializatino and checking
+	bool Init() override;
+
+	//! molar supply
+	double ReactionSupply(FECell* cell);
+	//! set the cell
+	void SetCell(FECell* cell) { m_cell = cell; }
+
+public:
+	FECell* m_cell;				//!< cell containing this
+};
+
 class FECellMassActionForwardEffective : public FECellChemicalReaction
 {
 public:

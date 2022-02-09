@@ -73,6 +73,32 @@ BEGIN_FECORE_CLASS(EFDFiberInitializer, InitialModifier)
 ADD_PARAMETER(m_SPD, "spd");
 END_FECORE_CLASS();
 
+void RotEFDFiberInitializer::ApplyModifier(AngioElement* angio_element, FEMesh* mesh, FEAngio* feangio)
+{
+	FESolidElement* se = angio_element->_elem;
+	auto zto2pi = std::uniform_real_distribution<double>(0, 2*PI);
+	double alpha = zto2pi(angio_element->_rengine);
+	double beta = 0;// zto2pi(angio_element->_rengine);
+	double gamma = zto2pi(angio_element->_rengine);
+
+	mat3d RandMat = feangio->rotationMatrix(alpha,beta,gamma);
+	
+	for (auto i = 0; i < se->GaussPoints(); i++)
+	{
+		FEMaterialPoint* mp = se->GetMaterialPoint(i);
+		FEAngioMaterialPoint* angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+		
+		mat3d P = RandMat*m_SPD(*mp)*RandMat.transpose();
+		angio_pt->initial_angioSPD = mat3ds(P(0,0), P(1,1), P(2,2), P(0,1), P(1,2), P(0,2));
+		angio_pt->angioSPD = m_SPD(*mp);
+		angio_pt->UpdateAngioFractionalAnisotropy();
+	}
+}
+
+BEGIN_FECORE_CLASS(RotEFDFiberInitializer, InitialModifier)
+ADD_PARAMETER(m_SPD, "spd");
+END_FECORE_CLASS();
+
 void DensityInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
 	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)

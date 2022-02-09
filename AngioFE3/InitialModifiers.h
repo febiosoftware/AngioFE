@@ -66,6 +66,21 @@ private:
 	FEParamMat3ds m_SPD;
 };
 
+class RotEFDFiberInitializer : public InitialModifier
+{
+public:
+	//! constructor
+	explicit RotEFDFiberInitializer(FEModel* pfem) : InitialModifier(pfem) {}
+	//! apply Isotropic EFD to each mdoel
+	void ApplyModifier(AngioElement* angio_element, FEMesh* mesh, FEAngio* feangio) override;
+protected:
+	//! parameter list
+
+	DECLARE_FECORE_CLASS();
+private:
+	FEParamMat3ds m_SPD;
+};
+
 //! sets the ecm density within a material
 class DensityInitializer : public InitialModifier
 {

@@ -354,7 +354,7 @@ void DelayedBranchingPolicyEFD::AddBranches(AngioElement * angio_elem, int buffe
 		{
 			// determine if and which segment the branch belongs to
 			// assign the segments to the branch if they match. Compares start/end times of segments and points of interest
-			if (seg->front->time >= iter->_end_time && seg->back->time <= iter->_start_time)
+			if ((seg->front->time >= iter->_end_time && seg->back->time <= iter->_start_time) && (angio_elem->vessel_weight < angio_elem->_angio_mat->thresh_vess_weight))
 			{
 				iter->current_segments.push_back(seg);
 			}

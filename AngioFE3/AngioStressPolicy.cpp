@@ -35,11 +35,11 @@ double AngioStressPolicy::GetDensScale(AngioElement* angio_element, Tip* tip, FE
 	}
 	//Get interpolation method
 	FEModel* m_pfem = this->GetFEModel();
-	static PerElementVI* interp = nullptr;
-	if (interp == nullptr) interp = new PerElementVI(m_pfem);
-	double density_at_point = interp->Interpolate(angio_element->_elem, density_at_integration_points, tip->GetLocalPosition(), mesh);
-	/*PerElementVI interp(m_pfem);
-	double density_at_point = interp.Interpolate(angio_element->_elem, density_at_integration_points, tip->GetLocalPosition(), mesh);*/
+	PerElementVI interp(m_pfem);
+	double density_at_point = interp.Interpolate(angio_element->_elem, density_at_integration_points, tip->GetLocalPosition(), mesh);
+	//static PerElementVI* interp = nullptr;
+	//if (interp == nullptr) interp = new PerElementVI(m_pfem);
+	//double density_at_point = interp->Interpolate(angio_element->_elem, density_at_integration_points, tip->GetLocalPosition(), mesh);
 	double density_scale = m_density_scale_factor.x + m_density_scale_factor.y * exp(-m_density_scale_factor.z * density_at_point);
 	if (density_scale < 0) { return 0; }
 	else { return density_scale; }

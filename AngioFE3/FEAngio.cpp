@@ -1172,6 +1172,7 @@ void FEAngio::CalculateSegmentLengths(FEMesh* mesh)
 
 void FEAngio::AdjustMatrixVesselWeights(class FEMesh* mesh)
 {
+	std::cout << "Adjusting weights" << endl;
 	double time = GetFEModel()->GetTime().currentTime;
 	int angio_elements_size = int (angio_elements.size());
 #pragma omp parallel for schedule(dynamic, 16)
@@ -1179,19 +1180,27 @@ void FEAngio::AdjustMatrixVesselWeights(class FEMesh* mesh)
 	{
 		AngioElement * angio_element = angio_elements[i];
 		double vessel_volume = PI * angio_element->_angio_mat->vessel_radius *angio_element->_angio_mat->vessel_radius * angio_element->refernce_frame_segment_length;
-		double element_volume = mesh->ElementVolume(*angio_element->_elem);
-		double vessel_weight = vessel_volume/element_volume;
-		double matrix_weight = 1 - vessel_weight;
+		double element_volume = mesh->CurrentElementVolume(*angio_element->_elem);
+		/*double vessel_weight = vessel_volume/element_volume;*/
+		angio_element->vessel_weight = vessel_volume / element_volume;
+		double matrix_weight = 1 - angio_element->vessel_weight;
 		// get vascular density in mm/mm3
 		double vascular_density = (angio_element->refernce_frame_segment_length * 1e-3) / (element_volume * 1e-9);
-		if ((vascular_density > angio_element->_angio_mat->thresh_vascularity) & (angio_element->vasc_thresh_time < 0.0)) {
+		double FA = 0;
+		for (int j = 0; j < angio_element->_elem->GaussPoints(); j++)
+		{
+			FEAngioMaterialPoint* angioPt = FEAngioMaterialPoint::FindAngioMaterialPoint(angio_element->_elem->GetMaterialPoint(j));
+			FA += angioPt->angioFA;
+		}
+		FA = FA / angio_element->_elem->GaussPoints();
+		if ((angio_element->vessel_weight*(1.0) > angio_element->_angio_mat->thresh_vess_weight) & (angio_element->vasc_thresh_time < 0.0)) {
 			angio_element->vasc_thresh_time = time;
 		}
 
 		for(int j=0; j < angio_element->_elem->GaussPoints();j++)
 		{
 			FEAngioMaterialPoint * angioPt = FEAngioMaterialPoint::FindAngioMaterialPoint(angio_element->_elem->GetMaterialPoint(j));
-			angioPt->vessel_weight = vessel_weight;
+			angioPt->vessel_weight = angio_element->vessel_weight;
 			angioPt->matrix_weight = matrix_weight;
 			angioPt->vascular_density = vascular_density;
 		}

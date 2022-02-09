@@ -168,7 +168,7 @@ protected:
 private:
 	double scale = 1;
 	double a = 100;
-	double b = 1; 
+	double b = 1.3; 
 	double c = 5;
 };
 
@@ -186,10 +186,10 @@ protected:
 	//! parameter list
 	DECLARE_FECORE_CLASS();
 private:
+	double a = 50.0;
+	double b = 2.572;
+	double c = 9.368;
 	double scale = 1;
-	double a = 100;
-	double b = 1;
-	double c = 5;
 };
 
 class GompertzSegmentVelocity : public SegmentGrowthVelocity

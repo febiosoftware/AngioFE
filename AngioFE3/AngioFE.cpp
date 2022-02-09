@@ -69,6 +69,7 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS_EXPLICIT(FiberRandomizer, FEMATERIAL_ID, "fiber_randomizer");
 	REGISTER_FECORE_CLASS_EXPLICIT(DiscreteFiberEFDRandomizer, FEMATERIAL_ID, "discrete_fiber_efd_randomizer");
 	REGISTER_FECORE_CLASS_EXPLICIT(EFDFiberInitializer, FEMATERIAL_ID, "efd_initializer");
+	REGISTER_FECORE_CLASS_EXPLICIT(RotEFDFiberInitializer, FEMATERIAL_ID, "rot_efd_initializer");
 	REGISTER_FECORE_CLASS_EXPLICIT(DensityInitializer, FEMATERIAL_ID, "density_initializer");
 	REGISTER_FECORE_CLASS_EXPLICIT(RepulseInitializer, FEMATERIAL_ID, "repulse_value_initializer");
 	REGISTER_FECORE_CLASS_EXPLICIT(DensityValuesNodeDataInterpolation, FEMATERIAL_ID, "ref_ecm_density");
@@ -126,6 +127,7 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS_EXPLICIT(FECellReaction, FEMATERIAL_ID, "cell_reaction");
 	REGISTER_FECORE_CLASS_EXPLICIT(FECellReactionRateConst, FEMATERIAL_ID, "cell constant reaction rate");
 	REGISTER_FECORE_CLASS_EXPLICIT(FECellMassActionForward, FEMATERIAL_ID, "cell mass-action-forward");
+	REGISTER_FECORE_CLASS_EXPLICIT(FECellMassActionForwardConstant, FEMATERIAL_ID, "cell mass-action-forward const");
 	REGISTER_FECORE_CLASS_EXPLICIT(FECellMassActionForwardEffective, FEMATERIAL_ID, "cell mass-action-forward-effective");
 	REGISTER_FECORE_CLASS_EXPLICIT(FECellMassActionReversible, FEMATERIAL_ID, "cell mass-action-reversible");
 	REGISTER_FECORE_CLASS_EXPLICIT(FECellMassActionReversibleEffective, FEMATERIAL_ID, "cell mass-action-reversible-effective");

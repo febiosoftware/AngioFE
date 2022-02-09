@@ -312,29 +312,19 @@ double SigmoidAdjustedSegmentVelocity::ApplyModifiers(double prev, vec3d natural
 	double time = GetFEModel()->GetTime().currentTime;
 	FESolidElement& el = *angio_element->_elem;
 	int nint = el.GaussPoints();
-	double s = 0.0;
-	for (int j = 0; j < nint; ++j)
-	{
-		FEMaterialPoint& mp = *(el.GetMaterialPoint(j));
-		FEAngioMaterialPoint* angioPt = FEAngioMaterialPoint::FindAngioMaterialPoint(&mp);
-		s += angioPt->vascular_density;
-	}
-	s /= static_cast<double>(nint);
+	//double s = 0.0;
+	//for (int j = 0; j < nint; ++j)
+	//{
+	//	FEMaterialPoint& mp = *(el.GetMaterialPoint(j));
+	//	FEAngioMaterialPoint* angioPt = FEAngioMaterialPoint::FindAngioMaterialPoint(&mp);
+	//	s += angioPt->vascular_density;
+	//}
+	//s /= static_cast<double>(nint);
 	// if growing too dense slow it down
-	if (s > angio_element->_angio_mat->thresh_vascularity) {
-		double e_val = -((time - angio_element->vasc_thresh_time) / b);
-		scale = (a * exp(e_val)) / (b * pow((1 + exp(e_val)), 2));
-		return scale * prev / (pow(s/angio_element->_angio_mat->thresh_vascularity,2));
-	}
-	// else if still in exponential part of growth (upward part of velocity curve)
-	else if (time < c) {
-		return scale * prev;
-	}
-	// else if in constant velocity 
-	else
-	{
-		return (a/(4*b)) * prev;
-	}
+	double sr = std::max(1.0,(angio_element->vessel_weight / angio_element->_angio_mat->thresh_vess_weight));
+	double scale_down = 11.92*exp(-sr/0.4)+0.02;
+
+	return scale * prev * scale_down;
 }
 
 bool SigmoidAdjustedSegmentVelocity::Init()
@@ -346,8 +336,7 @@ void SigmoidAdjustedSegmentVelocity::UpdateScale()
 {
 	double time = GetFEModel()->GetTime().currentTime;
 	// account for shift in curve due to the initial min angio dt
-	double e_val = -((time - c) / b);
-	scale = (a * exp(e_val)) / (b * pow((1 + exp(e_val)), 2));
+	scale = (a / (1 + exp(-(time - c) / b)));
 }
 
 BEGIN_FECORE_CLASS(SigmoidAdjustedSegmentVelocity, SegmentGrowthVelocity)

@@ -416,8 +416,12 @@ vec3d FiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d lo
 	}
 
 	quatd rv = interpolation_prop->Interpolate(angio_element->_elem, gauss_data, local_pos, mesh);
-	vec3d fiber_direction = rv.GetVector();
-	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_direction, alpha);
+	vec3d fiber_dir = rv.GetVector();
+	if (fiber_dir * tip_dir < 0)
+	{
+		fiber_dir = -fiber_dir;
+	}
+	return fiber_dir;//angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_direction, alpha);
 }
 
 void FractionalAnisotropyPDD::Update(FEMesh * mesh, FEAngio* angio)
@@ -453,13 +457,14 @@ vec3d FractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* angio_el
 	FEEllipticalDistribution E(this->GetFEModel());
 	E.spd = SPD_int;
 	E.Init();
-	E.efd_exp = this->efd_exp;
+	//E.efd_exp = this->efd_exp;
 	vec3d fiber_dir = E.NextVec(angio_element->_rengine);
 	if (fiber_dir*tip_dir < 0)
 	{
 		fiber_dir = -fiber_dir;
 	}
-	return angio_element->_angio_mat->mix_method->ApplyMix(tip_dir, fiber_dir, alpha);
+	//vec3d newdir = angio_element->_angio_mat->mix_method->ApplyMix(tip_dir, fiber_dir, std::max(alpha, 1.0));
+	return fiber_dir;
 }
 
 BEGIN_FECORE_CLASS(FractionalAnisotropyPDD, PositionDependentDirection)
@@ -744,7 +749,8 @@ vec3d ProtoFractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* ang
 	{
 		fiber_dir = -fiber_dir;
 	}
-	return angio_element->_angio_mat->mix_method->ApplyMix(tip_dir, fiber_dir, alpha);
+	//return angio_element->_angio_mat->mix_method->ApplyMix(tip_dir, fiber_dir, alpha);
+	return fiber_dir;
 }
 
 BEGIN_FECORE_CLASS(ProtoFractionalAnisotropyPDD, ProtoPositionDependentDirection)

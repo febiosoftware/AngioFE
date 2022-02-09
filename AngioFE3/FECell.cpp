@@ -264,10 +264,10 @@ void FECell::UpdateSpecies(FEMesh* mesh)
 		// perform the time integration (midpoint rule)
 		double newc;
 		if (t0 != 0) {
-			newc = Sol->GetInt() + (Sol->GetSolhat() + Sol->GetSolhatp()) / 2 * dt;
+			newc = Sol->GetInt() + ((Sol->GetSolhat() + Sol->GetSolhatp()) / (2 * cell_volume)) * dt ;
 		}
 		else {
-			newc = Sol->GetInt() + Sol->GetSolhat() * dt;
+			newc = Sol->GetInt() + Sol->GetSolhat() / cell_volume * dt ;
 		}
 		Sol->SetInt(std::max(newc, 0.0));
 	}
@@ -294,7 +294,7 @@ void FECell::UpdateSpecies(FEMesh* mesh)
 		// perform the time integration (midpoint rule)
 		double newc;
 		if (t0 != 0) {
-			newc = SBM->GetInt() + ((SBM->GetSBMhat() + SBM->GetSBMhatp()) / cell_volume) / 2 * dt;
+			newc = SBM->GetInt() + ((SBM->GetSBMhat() + SBM->GetSBMhatp()) / (2 * cell_volume)) * dt;
 		}
 		else {
 			newc = SBM->GetInt() + (SBM->GetSBMhat() / cell_volume) * dt;

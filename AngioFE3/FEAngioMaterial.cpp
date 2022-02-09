@@ -8,6 +8,7 @@
 #include "FEBioMech/FEViscoElasticMaterial.h"
 #include "FECore/FESPRProjection.h"
 #include <iostream>
+#include <algorithm>
 #include "angio3d.h"
 #include "AngioElement.h"
 #include "Segment.h"
@@ -398,12 +399,12 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 
 	// get the growth direction
 	// determine the alpha (mix value)
-	double alpha = cm_manager->ApplyModifiers(dt, active_tip->angio_element, active_tip->GetLocalPosition(), mesh);
+	double alpha = cm_manager->ApplyModifiers(1.0, active_tip->angio_element, active_tip->GetLocalPosition(), mesh);
 	// determine contributions from previous segments
 	vec3d psc_dir = psc_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip->angio_element, active_tip->GetLocalPosition(), active_tip->GetDirection(mesh), mesh);
 	// determine contributions from local stimuli
 	vec3d pdd_dir = pdd_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip->angio_element, active_tip->GetLocalPosition() , active_tip->initial_fragment_id , buffer_index , continue_growth, psc_dir, alpha, mesh, m_pangio);
-		alpha = std::max(0.0,std::min(1.0, alpha));
+	//alpha = std::max(0.36,std::min(1.0, alpha));
 	if(!continue_growth)
 	{
 		return;
@@ -436,15 +437,15 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 
 	// prevent vessels from getting stuck on faces. In the future will want to update this to account for element types. 
 	// See FEAngio::ScaleFactorToProjectToNaturalCoordinates(...) for method
-	if (possible_natc.x > 0.99) { possible_natc.x = 0.99; }
-	else if (possible_natc.x < -0.99) { possible_natc.x = -0.99; }
-	if (possible_natc.y > 0.99) { possible_natc.y = 0.99; }
-	else if (possible_natc.y < -0.99) { possible_natc.y = -0.99; }
-	if (possible_natc.z > 0.99) { possible_natc.z = 0.99; }
-	else if (possible_natc.z < -0.99) { possible_natc.z = -0.99; }
+	if (possible_natc.x > 0.999) { possible_natc.x = 0.999; }
+	else if (possible_natc.x < -0.999) { possible_natc.x = -0.999; }
+	if (possible_natc.y > 0.999) { possible_natc.y = 0.999; }
+	else if (possible_natc.y < -0.999) { possible_natc.y = -0.999; }
+	if (possible_natc.z > 0.999) { possible_natc.z = 0.999; }
+	else if (possible_natc.z < -0.999) { possible_natc.z = -0.999; }
 	// determine the hypothetical length to grow
 	double possible_grow_length = m_pangio->InElementLength(active_tip->angio_element->_elem, local_pos, possible_natc);
-		
+	possible_grow_length = std::min(possible_grow_length, 20.0);
 	////////// Determine which element to grow into //////////
 
 	// if the vessel is going to stay in this element (or hit the face) and a face to grow to was found:
@@ -664,12 +665,12 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 				possible_natc = local_pos + (nat_dir * factor);
 				// prevent vessels from getting stuck on faces. In the future will want to update this to account for element types.
 
-				if (possible_natc.x > 0.99) { possible_natc.x = 0.99; }
-				else if (possible_natc.x < -0.99) { possible_natc.x = -0.99; }
-				if (possible_natc.y > 0.99) { possible_natc.y = 0.99; }
-				else if (possible_natc.y < -0.99) { possible_natc.y = -0.99; }
-				if (possible_natc.z > 0.99) { possible_natc.z = 0.99; }
-				else if (possible_natc.z < -0.99) { possible_natc.z = -0.99; }
+				if (possible_natc.x > 0.999) { possible_natc.x = 0.999; }
+				else if (possible_natc.x < -0.999) { possible_natc.x = -0.999; }
+				if (possible_natc.y > 0.999) { possible_natc.y = 0.999; }
+				else if (possible_natc.y < -0.999) { possible_natc.y = -0.999; }
+				if (possible_natc.z > 0.999) { possible_natc.z = 0.999; }
+				else if (possible_natc.z < -0.999) { possible_natc.z = -0.999; }
 
 				possible_grow_length = m_pangio->InElementLength(active_tip->angio_element->_elem, local_pos, possible_natc);
 
@@ -886,12 +887,12 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 	double Gt[FESolidElement::MAX_NODES];
 	// get the local position of the tip
 	vec3d local_pos = active_tip->GetLocalPosition();
-	if (local_pos.x > 0.99) { local_pos.x = 0.99; }
-	else if (local_pos.x < -0.99) { local_pos.x = -0.99; }
-	if (local_pos.y > 0.99) { local_pos.y = 0.99; }
-	else if (local_pos.y < -0.99) { local_pos.y = -0.99; }
-	if (local_pos.z > 0.99) { local_pos.z = 0.99; }
-	else if (local_pos.z < -0.99) { local_pos.z = -0.99; }
+	if (local_pos.x > 0.999) { local_pos.x = 0.999; }
+	else if (local_pos.x < -0.999) { local_pos.x = -0.999; }
+	if (local_pos.y > 0.999) { local_pos.y = 0.999; }
+	else if (local_pos.y < -0.999) { local_pos.y = -0.999; }
+	if (local_pos.z > 0.999) { local_pos.z = 0.999; }
+	else if (local_pos.z < -0.999) { local_pos.z = -0.999; }
 	// get the shape function derivative values for the element type
 	angio_element->_elem->shape_deriv(Gr, Gs, Gt, local_pos.x, local_pos.y, local_pos.z);
 	vec3d er, es, et; // Basis vectors of the natural coordinates
@@ -947,12 +948,12 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 	vec3d possible_natc = local_pos + (nat_dir*factor);
 
 	// prevent vessels from getting stuck on faces. In the future will want to update this to account for element types.
-	if (possible_natc.x > 0.99) { possible_natc.x = 0.99; }
-	else if (possible_natc.x < -0.99) { possible_natc.x = -0.99; }
-	if (possible_natc.y > 0.99) { possible_natc.y = 0.99; }
-	else if (possible_natc.y < -0.99) { possible_natc.y = -0.99; }
-	if (possible_natc.z > 0.99) { possible_natc.z = 0.99; }
-	else if (possible_natc.z < -0.99) { possible_natc.z = -0.99; }
+	if (possible_natc.x > 0.999) { possible_natc.x = 0.999; }
+	else if (possible_natc.x < -0.999) { possible_natc.x = -0.999; }
+	if (possible_natc.y > 0.999) { possible_natc.y = 0.999; }
+	else if (possible_natc.y < -0.999) { possible_natc.y = -0.999; }
+	if (possible_natc.z > 0.999) { possible_natc.z = 0.999; }
+	else if (possible_natc.z < -0.999) { possible_natc.z = -0.999; }
 
 	// determine the hypothetical length to grow
 	double possible_grow_length = m_pangio->InElementLength(active_tip->angio_element->_elem, local_pos, possible_natc);
@@ -1187,12 +1188,12 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 			possible_natc = local_pos + (nat_dir * factor);
 			// prevent vessels from getting stuck on faces. In the future will want to update this to account for element types.
 			
-			if (possible_natc.x > 0.99) { possible_natc.x = 0.99; }
-			else if (possible_natc.x < -0.99) { possible_natc.x = -0.99; }
-			if (possible_natc.y > 0.99) { possible_natc.y = 0.99; }
-			else if (possible_natc.y < -0.99) { possible_natc.y = -0.99; }
-			if (possible_natc.z > 0.99) { possible_natc.z = 0.99; }
-			else if (possible_natc.z < -0.99) { possible_natc.z = -0.99; }
+			if (possible_natc.x > 0.999) { possible_natc.x = 0.999; }
+			else if (possible_natc.x < -0.999) { possible_natc.x = -0.999; }
+			if (possible_natc.y > 0.999) { possible_natc.y = 0.999; }
+			else if (possible_natc.y < -0.999) { possible_natc.y = -0.999; }
+			if (possible_natc.z > 0.999) { possible_natc.z = 0.999; }
+			else if (possible_natc.z < -0.999) { possible_natc.z = -0.999; }
 
 			possible_grow_length = m_pangio->InElementLength(active_tip->angio_element->_elem, local_pos, possible_natc);
 

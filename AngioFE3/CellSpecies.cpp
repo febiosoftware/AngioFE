@@ -317,6 +317,23 @@ double FECellMassActionForward::ReactionSupply(FECell* cell)
 	return zhat;
 }
 
+bool FECellMassActionForwardConstant::Init() {
+	// Initialize base class
+	if (FECellChemicalReaction::Init() == false) return false;
+	return true;
+}
+
+double FECellMassActionForwardConstant::ReactionSupply(FECell* cell)
+{
+	// get reaction rate
+	double kF = m_pFwd->ReactionRate();
+
+	// evaluate the reaction molar supply
+	double zhat = kF;
+
+	return zhat;
+}
+
 bool FECellMassActionForwardEffective::Init() {
 	// Initialize base class
 	if (FECellChemicalReaction::Init() == false) return false;
@@ -699,7 +716,7 @@ double FECellInternalizationConstant::ReactionSupply(FECell* cell)
 		if (vP > 0) {
 			// Cells take away from the matrix
 			cell->Solutes[isol]->AddSolPRhat(-1.0 * zhat * vP);
-			cell->Solutes[isol]->SetSolhatp(cell->Solutes[isol]->GetSolhatp() / cell->cell_volume);
+			//cell->Solutes[isol]->SetSolhatp(cell->Solutes[isol]->GetSolhatp() / cell->cell_volume);
 		}
 	}
 	// add contribution of solid-bound molecules
@@ -708,7 +725,7 @@ double FECellInternalizationConstant::ReactionSupply(FECell* cell)
 		int vP = m_vP[nsol + isbm];
 		if (vP > 0) {
 			cell->SBMs[isbm]->AddSBMPRhat(-1.0 * zhat * vP);
-			cell->SBMs[isbm]->SetSBMhatp(cell->SBMs[isbm]->GetSBMhatp() / cell->cell_volume);
+			//cell->SBMs[isbm]->SetSBMhatp(cell->SBMs[isbm]->GetSBMhatp() / cell->cell_volume);
 			// Cells take away from the matrix
 		}
 	}
