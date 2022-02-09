@@ -445,7 +445,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	else if (possible_natc.z < -0.999) { possible_natc.z = -0.999; }
 	// determine the hypothetical length to grow
 	double possible_grow_length = m_pangio->InElementLength(active_tip->angio_element->_elem, local_pos, possible_natc);
-	possible_grow_length = std::min(possible_grow_length, 20.0);
+	//possible_grow_length = std::min(possible_grow_length, 20.0);
 	////////// Determine which element to grow into //////////
 
 	// if the vessel is going to stay in this element (or hit the face) and a face to grow to was found:
