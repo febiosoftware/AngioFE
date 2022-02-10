@@ -58,8 +58,8 @@ double DensFAContributionMix::ApplyModifiers(double dt, AngioElement* angio_elem
 	// Sort based on absolute value of eigenvalues
 	std::sort(v.begin(), v.end(), EigComp());
 	double angioFA_int = 1 - (v[1].first / v[0].first);
-	double alpha = a0 + a / (1 + exp(-b * (angioFA_int-c)));
-	return alpha * dt;
+	double alpha = a0 + a / (1 + exp(b * (angioFA_int-c)));
+	return alpha;
 }
 
 BEGIN_FECORE_CLASS(DensFAContributionMix, ContributionMix)
