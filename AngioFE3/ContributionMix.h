@@ -68,10 +68,10 @@ protected:
 	//! parameter list
 	DECLARE_FECORE_CLASS();
 private:
-	double a0 = 0.36;
-	double a = 0.14;
-	double b = 58.3;
-	double c = 0.3409;
+	double a0 = 0.26;
+	double a = 0.1;
+	double b = -62.23;
+	double c = 0.3402;
 };
 
 class ProtoContributionMix : public FEMaterial
