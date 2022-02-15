@@ -68,8 +68,8 @@ protected:
 	//! parameter list
 	DECLARE_FECORE_CLASS();
 private:
-	double a0 = 0.26;
-	double a = 0.1;
+	double a0 = 0.1;
+	double a = 0.26;
 	double b = -62.23;
 	double c = 0.3402;
 };
