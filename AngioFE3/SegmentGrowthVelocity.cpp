@@ -322,8 +322,7 @@ double SigmoidAdjustedSegmentVelocity::ApplyModifiers(double prev, vec3d natural
 	//s /= static_cast<double>(nint);
 	// if growing too dense slow it down
 	double sr = std::max(1.0,(angio_element->vessel_weight / angio_element->_angio_mat->thresh_vess_weight));
-	double scale_down = 11.92*exp(-sr/0.4)+0.02;
-
+	double scale_down = 11.92*exp(-sr/0.4)+0.0215;
 	return scale * prev * scale_down;
 }
 
