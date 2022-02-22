@@ -128,6 +128,10 @@ public:
 
 	//! calculates the strain energy density. Effects convergence rate
 	double StrainEnergyDensity(FEMaterialPoint& mp) override;
+
+	//! prevent vessels from getting stuck on faces
+	vec3d CheckFaceProximity(vec3d pos, vec3d dir);
+
 	//! pointer to controlling class
 	FEAngio*	m_pangio = nullptr;
 	//! policy to calculate stress
