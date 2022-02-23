@@ -132,6 +132,9 @@ public:
 	//! prevent vessels from getting stuck on faces
 	vec3d CheckFaceProximity(vec3d pos, vec3d dir);
 
+	//! find the possible places to move to when the tip is stuck on an exterior face/corner
+	std::vector<double> CornerPossibleValues(vec3d local_pos, vec3d nat_dir);
+
 	//! pointer to controlling class
 	FEAngio*	m_pangio = nullptr;
 	//! policy to calculate stress

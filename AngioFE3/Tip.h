@@ -44,7 +44,7 @@ public:
 	vec3d GetDirection(FEMesh* mesh) const;
 	//! Return the global position of the tip
 	vec3d GetPosition(FEMesh * mesh) const;
-	//! returns the global position of the tip in the refernce frame
+	//! returns the global position of the tip in the reference frame
 	vec3d GetRefPosition(FEMesh * mesh) const;
 	//! Prints information about the tip to the console
 	void PrintTipInfo(FEMesh *mesh) const;

@@ -1179,13 +1179,13 @@ void FEAngio::AdjustMatrixVesselWeights(class FEMesh* mesh)
 	for (int i = 0; i < angio_elements_size; i++)
 	{
 		AngioElement * angio_element = angio_elements[i];
-		double vessel_volume = PI * angio_element->_angio_mat->vessel_radius *angio_element->_angio_mat->vessel_radius * angio_element->refernce_frame_segment_length;
+		double vessel_volume = PI * angio_element->_angio_mat->vessel_radius *angio_element->_angio_mat->vessel_radius * angio_element->reference_frame_segment_length;
 		double element_volume = mesh->CurrentElementVolume(*angio_element->_elem);
 		/*double vessel_weight = vessel_volume/element_volume;*/
 		angio_element->vessel_weight = vessel_volume / element_volume;
 		double matrix_weight = 1 - angio_element->vessel_weight;
 		// get vascular density in mm/mm3
-		double vascular_density = (angio_element->refernce_frame_segment_length * 1e-3) / (element_volume * 1e-9);
+		double vascular_density = (angio_element->reference_frame_segment_length * 1e-3) / (element_volume * 1e-9);
 		double FA = 0;
 		for (int j = 0; j < angio_element->_elem->GaussPoints(); j++)
 		{

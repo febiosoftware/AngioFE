@@ -368,7 +368,7 @@ bool FEPlotRefSegmentLength::Save(FEDomain& d, FEDataStream& str)
 		if (se)
 		{
 			AngioElement * angio_element = pfeangio->se_to_angio_element.at(se);
-			str << angio_element->refernce_frame_segment_length;
+			str << angio_element->reference_frame_segment_length;
 		}
 	}
 	return true;

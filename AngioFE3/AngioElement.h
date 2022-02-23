@@ -71,7 +71,7 @@ public:
 	//! segment length within the global frame within this element
 	double global_segment_length = 0.0;
 	//! segment length within the reference frame within this element
-	double refernce_frame_segment_length = 0.0;
+	double reference_frame_segment_length = 0.0;
 	//! number of anastamoses that have occured
 	int anastamoses = 0;
 	//! time that the element becomes overly vascularized
