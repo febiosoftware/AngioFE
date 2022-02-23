@@ -103,6 +103,14 @@ Tip::Tip(Tip * other, FEMesh * mesh)
 	direction = other->GetDirection(mesh);
 	direction.unit();
 	FEModel* fem = angio_element->_mat->GetFEModel();
+	if (other->TipCell) 
+	{ 
+		TipCell = other->TipCell; 
+		TipCell->angio_element = angio_element; 
+		TipCell->ParentTip = this; 
+		TipCell->time = time; 
+		TipCell->UpdateSpecies(mesh); 
+	}
 	// inherit the tip cell and remove it from the parent
 }
 
@@ -124,6 +132,7 @@ void Tip::SetLocalPosition(vec3d pos, FEMesh* mesh)
 	local_pos.y = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound_s(angio_element->_elem->Type()), local_pos.y), FEAngio::NaturalCoordinatesLowerBound_s(angio_element->_elem->Type()));
 	local_pos.z = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound_t(angio_element->_elem->Type()), local_pos.z), FEAngio::NaturalCoordinatesLowerBound_t(angio_element->_elem->Type()));
 	vec3d GlobalPos = GetPosition(mesh);
+	if (TipCell) { TipCell->SetLocalPosition(local_pos,mesh); }
 }
 
 vec3d Tip::GetLocalPosition() const

@@ -407,7 +407,6 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	assert(active_tip);
 	// get the mesh, set the min segment length, and set the next buffer (change to write buffer from read).
 	auto mesh = m_pangio->GetMesh();
-	const double min_segm_len = 5;
 	int next_buffer_index = (buffer_index + 1) % 2;
 	// calculate the change in time
 	double dt = end_time - active_tip->time;
@@ -493,19 +492,10 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		Tip * next = new Tip(active_tip, mesh);
 		next->time = end_time;
 		Segment * seg = new Segment();
-		next->TipCell = active_tip->TipCell;
-		next->angio_element = angio_element;
-		next->TipCell->angio_element = angio_element;
-		next->TipCell->ParentTip = next;
 		next->SetLocalPosition(real_natc, mesh);
-		next->TipCell->SetLocalPosition(real_natc, mesh);
 		next->TipCell->time = next->time;
 		next->TipCell->UpdateSpecies(mesh);
 		next->parent = seg;
-		next->face = angio_element;
-		next->growth_velocity = grow_vel;
-		next->initial_fragment_id = active_tip->initial_fragment_id;
-		next->use_direction = true;
 		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (local_pos.x + local_pos.y + local_pos.z) < 1.01 : true);
 		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (local_pos.x + local_pos.y + local_pos.z) < 1.01 : true);
 
@@ -515,14 +505,11 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		{
 			seg->parent = active_tip->parent;
 		}
-		next->direction = global_dir;
 
 		// cleanup and add recent segments and final tips.
 		angio_element->recent_segments.push_back(seg);
 		angio_element->reference_frame_segment_length += seg->RefLength(mesh);
-		// tips used by elements for growth
 		angio_element->next_tips.at(angio_element).push_back(next);
-		// tips used by elements for stress calculations.
 		angio_element->final_active_tips.push_back(next);
 		assert(next->angio_element);
 	}
@@ -541,35 +528,20 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		assert(tip_time_start <= end_time);
 		next->time = tip_time_start;
 		Segment * seg = new Segment();
-		next->TipCell = active_tip->TipCell;
-		next->angio_element = angio_element;
-		next->TipCell->angio_element = angio_element;
-		next->TipCell->ParentTip = next;
 		next->SetLocalPosition(next_natc, mesh);
-		next->TipCell->SetLocalPosition(next_natc, mesh);
 		next->TipCell->UpdateSpecies(mesh);
 		next->TipCell->time = next->time;
 		next->parent = seg;
-		next->face = angio_element;
-		next->growth_velocity = grow_vel;
-		next->initial_fragment_id = active_tip->initial_fragment_id;
-		next->use_direction = true;
 		seg->back = active_tip;
 		seg->front = next;
 		if (active_tip->parent)
 		{
 			seg->parent = active_tip->parent;
 		}
-		next->direction = global_dir;
-
-		// cleanup and add recent segments and final tips.
-		angio_element->recent_segments.push_back(seg);
-		angio_element->reference_frame_segment_length += seg->RefLength(mesh);
 
 		// prep for the intermediary segment/tip
 		vec3d pos = next->GetPosition(mesh);
 		local_pos = next->GetLocalPosition();
-		grow_len = grow_len - possible_grow_length;
 
 		// find the next location we can go to
 		std::vector<AngioElement*> possible_locations;
@@ -604,35 +576,19 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 					std::cout << "case 1a: adjacent element found" << endl;
 				#endif
 				vec3d real_natc_a = possible_local_coordinates[index];
-				Tip * adj = new Tip(next, mesh);
-				adj->time = next->time;
-				Segment* seg_adj = new Segment();
-				adj->TipCell = next->TipCell;
-				adj->angio_element = possible_locations[index];
-				adj->TipCell->angio_element = possible_locations[index];
-				adj->TipCell->ParentTip = adj;
-				adj->SetLocalPosition(real_natc_a, mesh);
-				adj->TipCell->SetLocalPosition(real_natc_a, mesh);
-				adj->TipCell->UpdateSpecies(mesh);
-				adj->parent = seg_adj;
-				adj->face = adj->angio_element;
-				adj->growth_velocity = grow_vel;
-				adj->initial_fragment_id = next->initial_fragment_id;
-				adj->use_direction = true;
-				local_pos = adj->GetLocalPosition();
-				assert(adj->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (local_pos.x + local_pos.y + local_pos.z) < 1.01 : true);
-				assert(adj->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (local_pos.x + local_pos.y + local_pos.z) < 1.01 : true);
-				seg_adj->back = next;
-				seg_adj->front = adj;
-				adj->parent = seg_adj;
-				if (next->parent) {
-					seg_adj->parent = next->parent;
-				}
+				next->angio_element = possible_locations[index];
+				next->TipCell->angio_element = possible_locations[index];
+				next->SetLocalPosition(real_natc_a, mesh);
+				next->TipCell->UpdateSpecies(mesh);
+				next->face = next->angio_element;
+				local_pos = next->GetLocalPosition();
+				assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (local_pos.x + local_pos.y + local_pos.z) < 1.01 : true);
+				assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (local_pos.x + local_pos.y + local_pos.z) < 1.01 : true);
 
 				// cleanup and add recent segments and final tips.
-				adj->angio_element->recent_segments.push_back(seg_adj);
-				adj->angio_element->reference_frame_segment_length += seg_adj->RefLength(mesh);
-				adj->angio_element->active_tips[next_buffer_index].at(adj->angio_element).push_back(adj);
+				next->angio_element->recent_segments.push_back(seg);
+				next->angio_element->reference_frame_segment_length += seg->RefLength(mesh);
+				next->angio_element->active_tips[next_buffer_index].at(next->angio_element).push_back(next);
 				}
 			}
 		// If the tip is near a geometric boundary:
@@ -659,13 +615,15 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 				plane_projection = nat_dir - (face_norm * ((nat_dir * face_norm) / face_norm.norm2()) * 2.0);
 			}
 			else {
-				plane_projection = nat_dir - (face_norm * ((nat_dir * face_norm) / face_norm.norm2()) );
+				plane_projection = nat_dir - (face_norm * ((nat_dir * face_norm) / face_norm.norm2()) * 1.0);
 			}
 			plane_projection.unit();
 			next->direction = plane_projection;
 			next->use_direction = true;
 			next->angio_element->active_tips[next_buffer_index].at(next->angio_element).push_back(next);
-		}
+			next->angio_element->recent_segments.push_back(seg);
+			next->angio_element->reference_frame_segment_length += seg->RefLength(mesh);
+			}
 	}
 	// generally not hit unless there is large matrix deformation
 
@@ -689,7 +647,6 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 	assert(active_tip);
 	// get the mesh, set the min segment length, and set the next buffer (change to write buffer from read).
 	auto mesh = m_pangio->GetMesh();
-	const double min_segm_len = 5;
 	int next_buffer_index = (buffer_index + 1) % 2;
 	// calculate the change in time
 	double dt = end_time - active_tip->time;
@@ -739,12 +696,6 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 	vec3d proto_psc_dir = proto_psc_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip->angio_element, active_tip->GetLocalPosition(), active_tip->GetDirection(mesh), mesh);
 	// determine contributions from local stimuli
 	vec3d proto_pdd_dir = proto_pdd_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip->angio_element, active_tip->GetLocalPosition(), active_tip->initial_fragment_id, buffer_index, continue_growth, proto_psc_dir, alpha, mesh, m_pangio);
-	
-
-
-
-
-
 	// get the new direction in global coordinates
 	vec3d global_dir = mix_method->ApplyMix(proto_psc_dir, proto_pdd_dir, alpha);
 	global_dir.unit();
@@ -777,19 +728,11 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		Tip * next = new Tip(active_tip, mesh);
 		next->time = end_time;
 		Segment* seg = new Segment();
-		next->TipCell = active_tip->TipCell;
-		next->angio_element = angio_element;
-		next->TipCell->angio_element = angio_element;
-		next->TipCell->ParentTip = next;
 		next->SetLocalPosition(real_natc, mesh);
-		next->TipCell->SetLocalPosition(real_natc, mesh);
 		next->TipCell->time = next->time;
 		next->TipCell->ProtoUpdateSpecies(mesh);
 		next->parent = seg;
-		next->face = angio_element;
-		next->growth_velocity = grow_vel;
 		next->SetProtoGrowthLength(active_tip);
-		next->initial_fragment_id = active_tip->initial_fragment_id;
 		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (local_pos.x + local_pos.y + local_pos.z) < 1.01 : true);
 		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (local_pos.x + local_pos.y + local_pos.z) < 1.01 : true);
 		
@@ -799,14 +742,11 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		{
 			seg->parent = active_tip->parent;
 		}
-		next->direction = global_dir;
 
 		// cleanup and add recent segments and final tips.
 		angio_element->recent_segments.push_back(seg);
 		angio_element->reference_frame_segment_length += seg->RefLength(mesh);
-		// tips used by elements for growth
 		angio_element->next_tips.at(angio_element).push_back(next);
-		// tips used by elements for stress calculations.
 		angio_element->final_active_tips.push_back(next);
 		assert(next->angio_element);
 	}
@@ -825,18 +765,10 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		assert(tip_time_start < end_time);
 		next->time = tip_time_start;
 		Segment* seg = new Segment();
-		next->TipCell = active_tip->TipCell;
-		next->angio_element = angio_element;
-		next->TipCell->angio_element = angio_element;
-		next->TipCell->ParentTip = next;
 		next->SetLocalPosition(next_natc, mesh);
-		next->TipCell->SetLocalPosition(next_natc, mesh);
 		next->TipCell->ProtoUpdateSpecies(mesh);
 		next->TipCell->time = next->time;
 		next->parent = seg;
-		next->face = angio_element;
-		next->growth_velocity = grow_vel;
-		next->initial_fragment_id = active_tip->initial_fragment_id;
 		next->SetProtoGrowthLength(active_tip);
 		seg->back = active_tip;
 		seg->front = next;
@@ -844,16 +776,10 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		{
 			seg->parent = active_tip->parent;
 		}
-		next->direction = global_dir;
-
-		// cleanup and add recent segments and final tips
-		angio_element->recent_segments.push_back(seg);
-		angio_element->reference_frame_segment_length += seg->RefLength(mesh);
 
 		// prep for the intermediary segment/tip
 		vec3d pos = next->GetPosition(mesh);
 		local_pos = next->GetLocalPosition();
-		grow_len = grow_len - possible_grow_length;
 		
 		// find the next location we can go to
 		std::vector<AngioElement*> possible_locations;
@@ -893,33 +819,19 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 					std::cout << "case 1a: adjacent element found" << endl;
 				#endif
 				vec3d real_natc_a = possible_local_coordinates[index];
-				Tip * adj = new Tip(next, mesh);
-				adj->time = next->time;
-				Segment* seg_adj = new Segment();
-				adj->TipCell = next->TipCell;
-				adj->angio_element = possible_locations[index];
-				adj->TipCell->angio_element = possible_locations[index];
-				adj->TipCell->ParentTip = adj;
-				adj->SetLocalPosition(real_natc_a, mesh);
-				adj->TipCell->SetLocalPosition(real_natc_a, mesh);
-				adj->TipCell->ProtoUpdateSpecies(mesh);
-				adj->parent = seg_adj;
-				adj->face = angio_element;
-				adj->growth_velocity = grow_vel;
-				local_pos = adj->GetLocalPosition();
-				assert(adj->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (local_pos.x + local_pos.y + local_pos.z) < 1.01 : true);
-				assert(adj->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (local_pos.x + local_pos.y + local_pos.z) < 1.01 : true);
-				seg_adj->back = next;
-				seg_adj->front = adj;
-				adj->parent = seg_adj;
-				if (next->parent) {
-					seg_adj->parent = next->parent;
-				}
+				next->angio_element = possible_locations[index];
+				next->TipCell->angio_element = possible_locations[index];
+				next->SetLocalPosition(real_natc_a, mesh);
+				next->TipCell->ProtoUpdateSpecies(mesh);
+				next->face = next->angio_element;
+				local_pos = next->GetLocalPosition();
+				assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (local_pos.x + local_pos.y + local_pos.z) < 1.01 : true);
+				assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (local_pos.x + local_pos.y + local_pos.z) < 1.01 : true);
 
 				// cleanup and add recent segments and final tips.
-				adj->angio_element->recent_segments.push_back(seg_adj);
-				adj->angio_element->reference_frame_segment_length += seg_adj->RefLength(mesh);
-				adj->angio_element->active_tips[next_buffer_index].at(adj->angio_element).push_back(adj);
+				next->angio_element->recent_segments.push_back(seg);
+				next->angio_element->reference_frame_segment_length += seg->RefLength(mesh);
+				next->angio_element->active_tips[next_buffer_index].at(next->angio_element).push_back(next);
 			}
 		}
 		// if there are no adjacent elements to grow into then 
@@ -930,8 +842,9 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 				#pragma omp critical
 				std::cout << "case 1b: no adjacent element" << endl;
 			#endif
-			FESolidElement* se = active_tip->angio_element->_elem;
+			//! Find which face we are encountering
 			//! Todo: In future need to adapt this to work for any element type
+			FESolidElement* se = active_tip->angio_element->_elem;
 			vec3d upper_bounds = vec3d(1, 1, 1);
 			vec3d lower_bounds = vec3d(-1, -1, -1);
 			std::vector<double> possible_values = CornerPossibleValues(local_pos, nat_dir);
@@ -942,14 +855,19 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 			else { d[minElemIndex] = -1.0; }
 			vec3d face_norm = vec3d(d[0], d[1], d[2]);
 			// If bounce, then bounce off face. Else grow along the face.
-			vec3d plane_projection = nat_dir - (face_norm * ((nat_dir * face_norm) / face_norm.norm2()) * pow(2, m_pangio->bounce));
+			vec3d plane_projection;
 			if (m_pangio->bounce) {
 				plane_projection = nat_dir - (face_norm * ((nat_dir * face_norm) / face_norm.norm2()) * 2.0);
 			}
 			else {
-				plane_projection = nat_dir - (face_norm * ((nat_dir * face_norm) / face_norm.norm2()));
+				plane_projection = nat_dir - (face_norm * ((nat_dir * face_norm) / face_norm.norm2()) * 1.0);
 			}
+			plane_projection.unit();
+			next->direction = plane_projection;
+			next->use_direction = true;
 			next->angio_element->active_tips[next_buffer_index].at(next->angio_element).push_back(next);
+			next->angio_element->recent_segments.push_back(seg);
+			next->angio_element->reference_frame_segment_length += seg->RefLength(mesh);
 		}
 	}
 	// generally not hit unless there is large matrix deformation
