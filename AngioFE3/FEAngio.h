@@ -114,10 +114,10 @@ public:
 	static double MinDistance(std::vector<vec3d> & element_bounds0, std::vector<vec3d>  & element_bounds1);
 
 	//! grow the segments
-	void GrowSegments(double min_scale_factor, double bounds_tolerance, double min_angle, int growth_substeps);
+	void GrowSegments(double min_scale_factor, double bounds_tolerance, int growth_substeps);
 
 	//! grow the segments before t=0
-	void ProtoGrowSegments(double min_scale_factor, double bounds_tolerance, double min_angle, int growth_substeps);
+	void ProtoGrowSegments(double min_scale_factor, double bounds_tolerance, int growth_substeps);
 
 	//! get the final active tips in a radius, used in stress calculations
 	static void GetActiveFinalTipsInRadius(AngioElement* angio_element, double radius, FEAngio* pangio, std::vector<Tip *> & tips);
@@ -240,8 +240,7 @@ private:
 	const double eps = 0.001;
 
 	double min_scale_factor = 0.01;
-	double bounds_tolerance = 1e-3;
-	double min_angle = 75;
+	double bounds_tolerance = 1e-2;
 	int growth_substeps = 3;
 	double max_angio_dt = 0.25;
 	double min_angio_dt = -1;

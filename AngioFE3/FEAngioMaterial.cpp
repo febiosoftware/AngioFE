@@ -331,7 +331,7 @@ double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem, FEMesh* mesh)
 	return (min_side_length_so_far * 0.5 * dt_safety_multiplier) / max_grow_velocity;
 }
 
-void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle)
+void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor, double bounds_tolerance)
 {
 	assert(angio_elem);
 
@@ -349,7 +349,7 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, i
 			{
 				assert(tips.at(j)->angio_element == angio_elem);
 				// call GrowthInElement providing the end time of the step, the active tip, the source index of the adjacent element, the buffer index, and other 3 things.
-				GrowthInElement(end_time, tips.at(j), i, buffer_index, min_scale_factor,bounds_tolerance, min_angle);
+				GrowthInElement(end_time, tips.at(j), i, buffer_index, min_scale_factor,bounds_tolerance);
 			}
 			
 		}
@@ -364,11 +364,11 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, i
 	{
 		assert(tips[j]->angio_element == angio_elem);
 		// call GrowthInElement providing the end time, the active tip, -1 to indicate the tip originated within this element, the buffer index, etc.
-		GrowthInElement(end_time, tips[j], -1, buffer_index, min_scale_factor,bounds_tolerance, min_angle);
+		GrowthInElement(end_time, tips[j], -1, buffer_index, min_scale_factor,bounds_tolerance);
 	}
 }
 
-void FEAngioMaterial::ProtoGrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle)
+void FEAngioMaterial::ProtoGrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor, double bounds_tolerance)
 {
 	assert(angio_elem);
 	for (int i = 0; i < angio_elem->adjacency_list.size(); i++)
@@ -381,7 +381,7 @@ void FEAngioMaterial::ProtoGrowSegments(AngioElement * angio_elem, double end_ti
 			for (int j = 0; j < tips.size(); j++)
 			{
 				assert(tips.at(j)->angio_element == angio_elem);
-				ProtoGrowthInElement(end_time, tips.at(j), i, buffer_index, min_scale_factor, bounds_tolerance, min_angle);
+				ProtoGrowthInElement(end_time, tips.at(j), i, buffer_index, min_scale_factor, bounds_tolerance);
 			}
 		}
 	}
@@ -392,12 +392,12 @@ void FEAngioMaterial::ProtoGrowSegments(AngioElement * angio_elem, double end_ti
 	for (int j = 0; j < tips.size(); j++)
 	{
 		assert(tips[j]->angio_element == angio_elem);
-		ProtoGrowthInElement(end_time, tips[j], -1, buffer_index, min_scale_factor, bounds_tolerance,min_angle);
+		ProtoGrowthInElement(end_time, tips[j], -1, buffer_index, min_scale_factor, bounds_tolerance);
 	}
 }
 
 //Grow a provided active tip based on the dt, originating element, etc.
-void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle)
+void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor, double bounds_tolerance)
 {
 	////////// Initialization //////////
 
@@ -596,7 +596,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		if (possible_locations.size())
 		{
 			//choose the next location based on which location would require the least change in direction
-			int index = SelectNextTip(possible_locations, possible_local_coordinates, next, dt, buffer_index, mesh, min_scale_factor, min_angle);
+			int index = SelectNextTip(possible_locations, possible_local_coordinates, next, dt, buffer_index, mesh, min_scale_factor);
 			if (index != -1)
 			{
 				#ifndef NDEBUG
@@ -679,7 +679,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	}
 }
 
-void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor, double bounds_tolerance, double min_angle)
+void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, int source_index, int buffer_index, double min_scale_factor, double bounds_tolerance)
 {
 	////////// Initialization //////////
 
@@ -885,7 +885,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		if (possible_locations.size())
 		{
 			//choose the next location based on which location would require the least change in direction
-			int index = ProtoSelectNextTip(possible_locations, possible_local_coordinates, next, dt, buffer_index , mesh, min_scale_factor, min_angle);
+			int index = SelectNextTip(possible_locations, possible_local_coordinates, next, dt, buffer_index , mesh, min_scale_factor);
 			if (index != -1)
 			{
 				#ifndef NDEBUG
@@ -969,7 +969,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 //most similar in direction to the tip's direction and above a 
 //SL: selects direction based on least change in angle from current trajectory.
 
-int FEAngioMaterial::SelectNextTip(std::vector<AngioElement*> & possible_locations, std::vector<vec3d> & possible_local_coordinates, Tip* tip, double dt, int buffer, FEMesh* mesh, double min_scale_factor, double min_angle)
+int FEAngioMaterial::SelectNextTip(std::vector<AngioElement*> & possible_locations, std::vector<vec3d> & possible_local_coordinates, Tip* tip, double dt, int buffer, FEMesh* mesh, double min_scale_factor)
 {
 #ifndef NDEBUG
 #pragma omp critical
@@ -1025,92 +1025,6 @@ int FEAngioMaterial::SelectNextTip(std::vector<AngioElement*> & possible_locatio
 			index = i;
 		}
 	}
-	return index;
-}
-
-int FEAngioMaterial::ProtoSelectNextTip(std::vector<AngioElement*> & possible_locations, std::vector<vec3d> & possible_local_coordinates, Tip* tip, double dt, int buffer, FEMesh* mesh, double min_scale_factor, double min_angle)
-{
-	assert(possible_locations.size() == possible_local_coordinates.size());
-	if (possible_locations.size() == 1)
-		return 0;
-	auto dir = tip->GetDirection(mesh);
-	std::vector<double> angles;
-	std::vector<double> dists;
-	bool continue_growth = true;
-	for (int i = 0; i < possible_locations.size(); i++)
-	{
-		double alpha = proto_cm_manager->ApplyModifiers(dt, possible_locations[i], possible_local_coordinates[i], mesh);
-		vec3d proto_psc_dir = proto_psc_manager->ApplyModifiers(vec3d(1, 0, 0), possible_locations[i], possible_local_coordinates[i], tip->GetDirection(mesh), mesh);
-		vec3d proto_pdd_dir = proto_pdd_manager->ApplyModifiers(vec3d(1, 0, 0), possible_locations[i], possible_local_coordinates[i], tip->initial_fragment_id, buffer, continue_growth, proto_psc_dir, alpha, mesh, m_pangio);
-		if (!continue_growth)
-		{
-			return i;
-		}
-		vec3d global_dir = mix_method->ApplyMix(proto_psc_dir, proto_pdd_dir, (alpha));
-		global_dir.unit();
-		vec3d possible_dir = possible_locations[i]->_angio_mat->proto_pdd_manager->ApplyModifiers({ 1,0,0 }, possible_locations[i], possible_local_coordinates[i], tip->initial_fragment_id, buffer, continue_growth, proto_psc_dir, alpha, mesh, m_pangio);
-		double Gr[FESolidElement::MAX_NODES];
-		double Gs[FESolidElement::MAX_NODES];
-		double Gt[FESolidElement::MAX_NODES];
-		vec3d local_pos = possible_local_coordinates[i];
-		possible_locations[i]->_elem->shape_deriv(Gr, Gs, Gt, local_pos.x, local_pos.y, local_pos.z);
-		vec3d er, es, et; // Basis vectors of the natural coordinates
-		for (int j = 0; j < possible_locations[i]->_elem->Nodes(); j++)
-		{
-			er += mesh->Node(possible_locations[i]->_elem->m_node[j]).m_rt* Gr[j];
-		}
-		for (int j = 0; j < possible_locations[i]->_elem->Nodes(); j++)
-		{
-			es += mesh->Node(possible_locations[i]->_elem->m_node[j]).m_rt* Gs[j];
-		}
-		for (int j = 0; j < possible_locations[i]->_elem->Nodes(); j++)
-		{
-			et += mesh->Node(possible_locations[i]->_elem->m_node[j]).m_rt* Gt[j];
-		}
-		mat3d natc_to_global(er, es, et);
-		vec3d nat_dir = natc_to_global * nat_dir; nat_dir.unit();
-		vec3d global_pos = this->m_pangio->Position(possible_locations[i]->_elem, local_pos);
-		dists.push_back((global_pos - tip->GetPosition(mesh)).norm());
-		angles.push_back(dir * nat_dir);
-	}
-	double min = dists[0];
-	double mina = 0;
-	int index = 0;
-	for (int i = 0; i < dists.size(); i++)
-	{
-		if (dists[i] < min && angles[i] > mina)
-		{
-			min = dists[i];
-			mina = angles[i];
-			index = i;
-		}
-	}
-
-		//mat3d natc_to_global(er, es, et);
-		//mat3d global_to_natc = natc_to_global.inverse();
-		//vec3d nat_dir = global_to_natc * possible_dir;
-
-	//	double factor;
-	//	bool proj_success = m_pangio->ScaleFactorToProjectToNaturalCoordinates(possible_locations[i]->_elem, nat_dir, local_pos, factor, min_scale_factor);
-	//	if (proj_success && factor > min_scale_factor && possible_dir*dir >= min_angle)
-	//	{
-	//		angles.push_back(factor);
-	//	}
-	//	else
-	//	{
-	//		angles.push_back(-1);
-	//	}
-	//}
-	//double min = -1;
-	//int index = -1;
-	//for (int i = 0; i < angles.size(); i++)
-	//{
-	//	if (angles[i] > min)
-	//	{
-	//		min = angles[i];
-	//		index = i;
-	//	}
-	//}
 	return index;
 }
 
