@@ -253,17 +253,17 @@ std::vector<double> FEAngioMaterial::CornerPossibleValues(vec3d local_pos, vec3d
 
 void FEAngioMaterial::SetSeeds(AngioElement* angio_elem)
 {
-	static int offset = 0;
+	int offset = angio_elem->_elem->GetID();
 	static int seed = int (m_pangio->m_fem->GetGlobalConstant("seed"));
 	std::seed_seq sq{ offset + seed };
 	angio_elem->_rengine.seed(sq);
-	offset++;
+	//offset++;
 }
 
-double FEAngioMaterial::GetSegmentVelocity(AngioElement * angio_element, vec3d local_pos, FEMesh* mesh)
+double FEAngioMaterial::GetSegmentVelocity(AngioElement * angio_element, vec3d local_pos, double time_shift, FEMesh* mesh)
 {
 	double const vel_init = 1;
-	return velocity_manager->ApplyModifiers(vel_init, local_pos, angio_element, mesh);
+	return velocity_manager->ApplyModifiers(vel_init, local_pos, angio_element, time_shift, mesh);
 }
 
 double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem, FEMesh* mesh)
@@ -276,7 +276,7 @@ double FEAngioMaterial::GetMin_dt(AngioElement* angio_elem, FEMesh* mesh)
 	for (int i = 0; i < angio_elem->_elem->GaussPoints();i++)
 	{
 		vec3d pos(angio_elem->_elem->gr(i), angio_elem->_elem->gs(i), angio_elem->_elem->gt(i));
-		double vel = angio_elem->_angio_mat->GetSegmentVelocity(angio_elem, pos, mesh);
+		double vel = angio_elem->_angio_mat->GetSegmentVelocity(angio_elem, pos, 0.0, mesh);
 		max_grow_velocity = std::max(max_grow_velocity, vel);
 	}
 
@@ -335,27 +335,6 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, i
 {
 	assert(angio_elem);
 
-	// Grow tips on shared faces that are growing into/out of? the element. This should handle passing of tips between adjacent elements.
-	// for each adjacent element
-	for(int i=0; i < angio_elem->adjacency_list.size();i++)
-	{
-		// if there are adjacent elements
-		if(angio_elem->adjacency_list.at(i))
-		{
-			// create a vector of tips on the shared face?
-			std::vector<Tip*> & tips = angio_elem->adjacency_list.at(i)->active_tips[buffer_index].at(angio_elem);
-			// for each tip in the vector ensure that ... then call growth in element.
-			for(int j=0; j < tips.size();j++)
-			{
-				assert(tips.at(j)->angio_element == angio_elem);
-				// call GrowthInElement providing the end time of the step, the active tip, the source index of the adjacent element, the buffer index, and other 3 things.
-				GrowthInElement(end_time, tips.at(j), i, buffer_index, min_scale_factor,bounds_tolerance);
-			}
-			
-		}
-		
-	}
-
 	// Grow tips that originate in this element and have not reached an adjacent face.
 	// create a vector for the active tips in the element
 	std::vector<Tip*> & tips = angio_elem->active_tips[buffer_index].at(angio_elem);
@@ -371,20 +350,6 @@ void FEAngioMaterial::GrowSegments(AngioElement * angio_elem, double end_time, i
 void FEAngioMaterial::ProtoGrowSegments(AngioElement * angio_elem, double end_time, int buffer_index, double min_scale_factor, double bounds_tolerance)
 {
 	assert(angio_elem);
-	for (int i = 0; i < angio_elem->adjacency_list.size(); i++)
-	{
-		if (angio_elem->adjacency_list.at(i))
-		{
-			//copy the vector of active tips in the adjacent angio element
-			std::vector<Tip*> & tips = angio_elem->adjacency_list.at(i)->active_tips[buffer_index].at(angio_elem);
-			// for each tip in the adjacent element grow the tips
-			for (int j = 0; j < tips.size(); j++)
-			{
-				assert(tips.at(j)->angio_element == angio_elem);
-				ProtoGrowthInElement(end_time, tips.at(j), i, buffer_index, min_scale_factor, bounds_tolerance);
-			}
-		}
-	}
 
 	// copy the vector of active tips in the current angio element
 	std::vector<Tip*> & tips = angio_elem->active_tips[buffer_index].at(angio_elem);\
@@ -412,7 +377,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	double dt = end_time - active_tip->time;
 	if (dt < 0) { return; }
 	// determine the length the segment grows.
-	double grow_vel = this->GetSegmentVelocity(angio_element, active_tip->GetLocalPosition(), mesh);
+	double grow_vel = this->GetSegmentVelocity(angio_element, active_tip->GetLocalPosition(), active_tip->seg_time, mesh);
 	//If the velocity is negative wrt the tip direction then end the tip/
 	if(grow_vel < 0)
 	{
@@ -463,7 +428,6 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	// get the new direction in global coordinates
 	vec3d global_dir = mix_method->ApplyMix(psc_dir, pdd_dir, alpha);
 	global_dir.unit();
-
 	vec3d nat_dir = global_to_natc* global_dir;
 	
 	////////// Calculate variables to determine which element to grow into //////////
@@ -501,9 +465,25 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 
 		seg->back = active_tip;
 		seg->front = next;
+		seg->is_branch_base = seg->back->is_branch;
 		if (active_tip->parent)
 		{
 			seg->parent = active_tip->parent;
+		}
+		if(angio_element->_angio_mat->branch_policy && angio_element->vessel_weight < angio_element->_angio_mat->thresh_vess_weight){
+			if (seg->is_branch_base) { seg->LengthSinceBranch = 0.0; seg->time_emerged = seg->back->time; }
+			else {
+				seg->LengthSinceBranch = seg->parent->LengthSinceBranch + seg->RefLength(mesh);
+			}
+			double l2b = dynamic_cast<DelayBranchInfo*>(angio_element->branch_info)->length_to_branch;
+			if (seg->LengthSinceBranch >= l2b) {
+				double rel = (l2b - seg->parent->LengthSinceBranch) / (seg->LengthSinceBranch - seg->parent->LengthSinceBranch);
+				double branch_time = active_tip->time + rel * dt;
+				vec3d real_natc_b = local_pos + (nat_dir * (factor * rel * (grow_len / possible_grow_length)));
+				double final_time = branch_time;
+				angio_element->_angio_mat->branch_policy->AddBranchTipEFD(angio_element, real_natc_b, seg, branch_time, next->initial_fragment_id, buffer_index, mesh);
+				seg->LengthSinceBranch = seg->LengthSinceBranch - l2b;
+			}
 		}
 
 		// cleanup and add recent segments and final tips.
@@ -534,9 +514,25 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		next->parent = seg;
 		seg->back = active_tip;
 		seg->front = next;
+		seg->is_branch_base = seg->back->is_branch;
 		if (active_tip->parent)
 		{
 			seg->parent = active_tip->parent;
+		}
+		if (angio_element->_angio_mat->branch_policy && angio_element->vessel_weight < angio_element->_angio_mat->thresh_vess_weight) {
+			if (seg->is_branch_base) { seg->LengthSinceBranch = 0.0; seg->time_emerged = seg->back->time;}
+			else {
+				seg->LengthSinceBranch = seg->parent->LengthSinceBranch + seg->RefLength(mesh);
+			}
+			double l2b = dynamic_cast<DelayBranchInfo*>(angio_element->branch_info)->length_to_branch;
+			if (seg->LengthSinceBranch >= l2b) {
+				double rel = (l2b - seg->parent->LengthSinceBranch) / (seg->LengthSinceBranch - seg->parent->LengthSinceBranch);
+				double branch_time = active_tip->time + rel * dt;
+				vec3d real_natc_b = local_pos + (nat_dir * (rel * (possible_grow_length / grow_len)));
+				double final_time = branch_time;
+				angio_element->_angio_mat->branch_policy->AddBranchTipEFD(angio_element, real_natc_b, seg, branch_time, next->initial_fragment_id, buffer_index, mesh);
+				seg->LengthSinceBranch = seg->LengthSinceBranch - l2b;
+			}
 		}
 
 		// prep for the intermediary segment/tip
@@ -587,6 +583,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 
 				// cleanup and add recent segments and final tips.
 				next->angio_element->recent_segments.push_back(seg);
+				//SL: This line crashes occasionally...
 				next->angio_element->reference_frame_segment_length += seg->RefLength(mesh);
 				next->angio_element->active_tips[next_buffer_index].at(next->angio_element).push_back(next);
 				}
@@ -613,9 +610,9 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 			vec3d plane_projection;
 			if (m_pangio->bounce) {
 				plane_projection = nat_dir - (face_norm * ((nat_dir * face_norm) / face_norm.norm2()) * 2.0);
-			}
+			} 
 			else {
-				plane_projection = nat_dir - (face_norm * ((nat_dir * face_norm) / face_norm.norm2()) * 1.0);
+				plane_projection = nat_dir - (face_norm * ((nat_dir * face_norm) / face_norm.norm2()) * 1.1);
 			}
 			plane_projection.unit();
 			next->direction = plane_projection;
@@ -883,9 +880,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 }
 
 //needs to be selected on some criteria 
-//possibilites include: longest possible growth length,
-//most similar in direction to the tip's direction and above a 
-//SL: selects direction based on least change in angle from current trajectory.
+//SL: selects direction based on closest and least change in angle from current trajectory.
 
 int FEAngioMaterial::SelectNextTip(std::vector<AngioElement*> & possible_locations, std::vector<vec3d> & possible_local_coordinates, Tip* tip, double dt, int buffer, FEMesh* mesh, double min_scale_factor)
 {
@@ -947,13 +942,7 @@ int FEAngioMaterial::SelectNextTip(std::vector<AngioElement*> & possible_locatio
 }
 
 void FEAngioMaterial::PostGrowthUpdate(AngioElement* angio_elem, double end_time, double final_time, double min_scale_factor, int buffer_index, FEMesh* mesh, FEAngio* feangio)
-{
-	//do the branching
-	if(angio_elem->_angio_mat->branch_policy)
-	{
-		angio_elem->_angio_mat->branch_policy->AddBranches(angio_elem, buffer_index, end_time , final_time, min_scale_factor, mesh, feangio);
-	}
-	
+{	
 
 	//do the buffer management
 	for(auto iter = angio_elem->active_tips[buffer_index].begin(); iter != angio_elem->active_tips[buffer_index].end(); ++iter)
@@ -964,12 +953,6 @@ void FEAngioMaterial::PostGrowthUpdate(AngioElement* angio_elem, double end_time
 
 void FEAngioMaterial::ProtoPostGrowthUpdate(AngioElement* angio_elem, double end_time, double min_scale_factor, int buffer_index, FEMesh* mesh, FEAngio* feangio)
 {
-	//do the branching
-	if (angio_elem->_angio_mat->proto_branch_policy)
-	{
-		angio_elem->_angio_mat->proto_branch_policy->AddBranches(angio_elem, buffer_index, end_time, std::numeric_limits<int>::max(), min_scale_factor , mesh, feangio);
-	}
-
 
 	//do the buffer management
 	for (auto iter = angio_elem->active_tips[buffer_index].begin(); iter != angio_elem->active_tips[buffer_index].end(); ++iter)

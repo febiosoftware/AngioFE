@@ -112,7 +112,7 @@ public:
 	mat3ds Stress(FEMaterialPoint& mp) override;
 
 	//! returns the segment velocity at a given location
-	double GetSegmentVelocity(AngioElement * angio_element, vec3d local_pos, FEMesh* mesh);
+	double GetSegmentVelocity(AngioElement * angio_element, vec3d local_pos, double time_shift, FEMesh* mesh);
 
 	//! returns the inital segment velocity
 	//double GetInitialVelocity(AngioElement * angio_element) const;

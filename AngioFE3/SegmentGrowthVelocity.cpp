@@ -16,7 +16,7 @@ struct EigComp {
 };
 
 // scales prev (should be just value of 1 if this is placed first) by the constant growth length over time
-double SegmentVelocityModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh)
+double SegmentVelocityModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
 	return prev *= segment_velocity_over_time;
 }
@@ -35,7 +35,7 @@ BEGIN_FECORE_CLASS(SegmentVelocityModifier, SegmentGrowthVelocity)
 ADD_PARAMETER(segment_velocity_over_time, "segment_velocity_over_time");
 END_FECORE_CLASS();
 
-double SegmentVelocityDensityScaleModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh)
+double SegmentVelocityDensityScaleModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
 	std::vector<double> density_at_integration_points;
 
@@ -69,7 +69,7 @@ ADD_PARAMETER(m_density_scale_factor, "density_scale_factor");
 END_FECORE_CLASS();
 
 // SL: Added so that growth is scaled only by the referential density
-double SegmentVelocityRefDensityScaleModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh)
+double SegmentVelocityRefDensityScaleModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
 	std::vector<double> density_at_integration_points;
 
@@ -102,7 +102,7 @@ BEGIN_FECORE_CLASS(SegmentVelocityRefDensityScaleModifier, SegmentGrowthVelocity
 ADD_PARAMETER(m_density_scale_factor, "density_scale_factor");
 END_FECORE_CLASS();
 
-double SegmentVelocityDensityFAScaleModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh)
+double SegmentVelocityDensityFAScaleModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
 	std::vector<double> density_at_integration_points;
 
@@ -172,7 +172,7 @@ ADD_PARAMETER(m_rFA_r0, "rFA_r0");
 ADD_PARAMETER(m_rFA_f0, "rFA_f0");
 END_FECORE_CLASS();
 
-double SegmentVelocity3PModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh)
+double SegmentVelocity3PModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
 	mat3ds E;
 	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
@@ -211,7 +211,7 @@ ADD_PARAMETER(scale, "scale");
 ADD_PARAMETER(threshold, "threshold");
 END_FECORE_CLASS();
 
-double SegmentVelocityFAModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh)
+double SegmentVelocityFAModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
 
 	// vector containing the SPD for each gauss point in the element
@@ -281,7 +281,7 @@ ADD_PARAMETER(scale, "scale");
 ADD_PARAMETER(m_density_scale_factor, "density_scale_factor");
 END_FECORE_CLASS();
 
-double SigmoidSegmentVelocity::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh)
+double SigmoidSegmentVelocity::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
 	return scale*prev;
 }
@@ -307,20 +307,24 @@ ADD_PARAMETER(b, "b");
 ADD_PARAMETER(c, "c");
 END_FECORE_CLASS();
 
-double SigmoidAdjustedSegmentVelocity::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh)
+double SigmoidAdjustedSegmentVelocity::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
 	double time = GetFEModel()->GetTime().currentTime;
+	double b_s = b;
+	if (time_shift > 0) {
+		if (time > c) {
+			time = c - 2;
+			b_s = b / 2.0;
+		}
+		else {
+			time = time - time_shift;
+		}
+	}
+
+	scale = (a / (1 + exp(-(time - c) / b_s)));
 	FESolidElement& el = *angio_element->_elem;
 	int nint = el.GaussPoints();
 	//double s = 0.0;
-	//for (int j = 0; j < nint; ++j)
-	//{
-	//	FEMaterialPoint& mp = *(el.GetMaterialPoint(j));
-	//	FEAngioMaterialPoint* angioPt = FEAngioMaterialPoint::FindAngioMaterialPoint(&mp);
-	//	s += angioPt->vascular_density;
-	//}
-	//s /= static_cast<double>(nint);
-	// if growing too dense slow it down
 	double sr = std::max(1.0,(angio_element->vessel_weight / angio_element->_angio_mat->thresh_vess_weight));
 	double scale_down = 11.92*exp(-sr/0.4)+0.0215;
 	return scale * prev * scale_down;
@@ -345,7 +349,7 @@ ADD_PARAMETER(b, "b");
 ADD_PARAMETER(c, "c");
 END_FECORE_CLASS();
 
-double GompertzSegmentVelocity::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh)
+double GompertzSegmentVelocity::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
 	return scale * prev;
 }
@@ -370,11 +374,11 @@ ADD_PARAMETER(c, "c");
 ADD_PARAMETER(d, "d");
 END_FECORE_CLASS();
 
-double SegmentGrowthVelocityManager::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_elem, FEMesh* mesh)
+double SegmentGrowthVelocityManager::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_elem, double time_shift, FEMesh* mesh)
 {
 	for (int i = 0; i < seg_vel_modifiers.size(); i++)
 	{
-		prev = seg_vel_modifiers[i]->ApplyModifiers(prev, natural_coords, angio_elem, mesh);
+		prev = seg_vel_modifiers[i]->ApplyModifiers(prev, natural_coords, angio_elem, time_shift, mesh);
 	}
 	return prev;
 }

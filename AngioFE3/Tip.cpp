@@ -95,6 +95,7 @@ Tip::Tip(Tip * other, FEMesh * mesh)
 	angio_element = other->angio_element;
 	face = other->face;
 	time = other->time;
+	seg_time = other->seg_time;
 	growth_velocity = other->growth_velocity;
 	SetProtoGrowthLength(other);
 	local_pos = other->local_pos;
@@ -131,7 +132,6 @@ void Tip::SetLocalPosition(vec3d pos, FEMesh* mesh)
 	local_pos.x = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound_r(angio_element->_elem->Type()), local_pos.x), FEAngio::NaturalCoordinatesLowerBound_r(angio_element->_elem->Type()));
 	local_pos.y = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound_s(angio_element->_elem->Type()), local_pos.y), FEAngio::NaturalCoordinatesLowerBound_s(angio_element->_elem->Type()));
 	local_pos.z = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound_t(angio_element->_elem->Type()), local_pos.z), FEAngio::NaturalCoordinatesLowerBound_t(angio_element->_elem->Type()));
-	vec3d GlobalPos = GetPosition(mesh);
 	if (TipCell) { TipCell->SetLocalPosition(local_pos,mesh); }
 }
 

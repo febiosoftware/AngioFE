@@ -26,6 +26,8 @@ public:
 	double time = 0.0;
 	//! evaluation time
 	double etime = 0.0;
+	//! segment initial time
+	double seg_time = 0.0;
 	//! Velocity at which the tip grew
 	double growth_velocity;
 	//! The element where growth originated from

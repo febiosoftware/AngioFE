@@ -122,38 +122,34 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, int
 		// current time is next time plus min_dt
 		double ctime = next_time + min_dt;
 		// allow 16 iterations to be run on each thread as they become available
-		#pragma omp parallel for schedule(dynamic, 16)
+		#pragma omp parallel for 
 		// for each angio element
 		for (int j = 0; j <angio_element_count; j++)
 		{
 			// prep the buffers
 			angio_elements[j]->_angio_mat->PrepBuffers(angio_elements[j], next_time, buffer_index);
 		}
-//worse performace than separate declarations
-//#pragma omp parallel
+		// for each growth substep
+		for (int i = 0; i <growth_substeps; i++)
 		{
-			// for each growth substep
-			for (int i = 0; i <growth_substeps; i++)
+			// for 16 iteration chunks
+			#pragma omp parallel for 
+			// for each angio element
+			for (int j = 0; j <angio_element_count; j++)
 			{
-				// for 16 iteration chunks
-				#pragma omp parallel for schedule(dynamic, 16)
-				// for each angio element
-				for (int j = 0; j <angio_element_count; j++)
-				{
-					// Grow segments
-					angio_elements.at(j)->_angio_mat->GrowSegments(angio_elements.at(j), ctime, buffer_index, min_scale_factor,bounds_tolerance);
-				}
-
-				#pragma omp parallel for schedule(dynamic, 16)
-				// for each angio element 
-				for (int j = 0; j <angio_element_count; j++)
-				{
-					// Post growth update for each element
-					angio_elements[j]->_angio_mat->PostGrowthUpdate(angio_elements[j], ctime, cs->m_tend , min_scale_factor, buffer_index, mesh, this);
-				}
-				// update the buffer index
-				buffer_index = (buffer_index + 1) % 2;
+				// Grow segments
+				angio_elements.at(j)->_angio_mat->GrowSegments(angio_elements.at(j), ctime, buffer_index, min_scale_factor,bounds_tolerance);
 			}
+
+			#pragma omp parallel for
+			// for each angio element 
+			for (int j = 0; j <angio_element_count; j++)
+			{
+				// Post growth update for each element
+				angio_elements[j]->_angio_mat->PostGrowthUpdate(angio_elements[j], ctime, cs->m_tend , min_scale_factor, buffer_index, mesh, this);
+			}
+			// update the buffer index
+			buffer_index = (buffer_index + 1) % 2;
 		}
 	}
 	ApplydtToTimestepper(min_dt, true);
@@ -168,7 +164,7 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, int
 	{
 		next_time += min_dt;
 		printf("\nangio dt chosen is: %lg next angio time\n", min_dt);
-		#pragma omp parallel for schedule(dynamic, 16)
+		#pragma omp parallel for 
 		for (int j = 0; j <angio_element_count; j++)
 		{
 			angio_elements[j]->_angio_mat->Cleanup(angio_elements[j], next_time, buffer_index);
@@ -220,45 +216,40 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 			}
 
 			// prepare buffers for each angio element
-			#pragma omp parallel for schedule(dynamic, 32)
+			#pragma omp parallel for 
 			for (int j = 0; j <angio_element_count; j++)
 			{
 				angio_elements[j]->_angio_mat->PrepBuffers(angio_elements[j], next_time, buffer_index);
 			}
-			//worse performace than separate declarations
-			//#pragma omp parallel
+			int n = growth_substeps;
+			//				int n = 3;
+			for (int i = 0; i <n; i++)
 			{
-				int n = growth_substeps;
-				//				int n = 3;
-				for (int i = 0; i <n; i++)
+				#pragma omp parallel for 
+				// for each element
+				for (int j = 0; j <angio_element_count; j++)
 				{
-					#pragma omp parallel for schedule(dynamic, 32)
-					// for each element
-					for (int j = 0; j <angio_element_count; j++)
-					{
-						// grow the segments
-						angio_elements.at(j)->_angio_mat->ProtoGrowSegments(angio_elements.at(j), ctime, buffer_index, min_scale_factor, bounds_tolerance);
-					}
-
-					#pragma omp parallel for schedule(dynamic, 32)
-					// for each angio element
-					for (int j = 0; j <angio_element_count; j++)
-					{
-						// update the elements
-						angio_elements[j]->_angio_mat->ProtoPostGrowthUpdate(angio_elements[j], ctime, min_scale_factor, buffer_index, mesh, this);
-					}
-					buffer_index = (buffer_index + 1) % 2;
+					// grow the segments
+					angio_elements.at(j)->_angio_mat->ProtoGrowSegments(angio_elements.at(j), ctime, buffer_index, min_scale_factor, bounds_tolerance);
 				}
+
+				#pragma omp parallel for 
+				// for each angio element
+				for (int j = 0; j <angio_element_count; j++)
+				{
+					// update the elements
+					angio_elements[j]->_angio_mat->ProtoPostGrowthUpdate(angio_elements[j], ctime, min_scale_factor, buffer_index, mesh, this);
+				}
+				buffer_index = (buffer_index + 1) % 2;
 			}
 
 		}
-
 		//do the cleanup if needed
 		if (time_info.currentTime >= next_time)
 		{
 			next_time += min_dt;
 			//printf("\nproto angio dt chosen is: %lg next angio time\n", min_dt);
-			#pragma omp parallel for schedule(dynamic, 16)
+			#pragma omp parallel for 
 			for (int j = 0; j <angio_element_count; j++)
 			{
 				angio_elements[j]->_angio_mat->Cleanup(angio_elements[j], next_time, buffer_index);
@@ -1158,7 +1149,7 @@ vec3d FEAngio::Position(FESolidElement * se, vec3d local) const
 void FEAngio::CalculateSegmentLengths(FEMesh* mesh)
 {
 	int angio_elements_size = int (angio_elements.size());
-#pragma omp parallel for schedule(dynamic, 16)
+#pragma omp parallel for 
 	for(int i=0; i < angio_elements_size;i++)
 	{
 		AngioElement * angio_element = angio_elements[i];
@@ -1175,7 +1166,7 @@ void FEAngio::AdjustMatrixVesselWeights(class FEMesh* mesh)
 	std::cout << "Adjusting weights" << endl;
 	double time = GetFEModel()->GetTime().currentTime;
 	int angio_elements_size = int (angio_elements.size());
-#pragma omp parallel for schedule(dynamic, 16)
+#pragma omp parallel for 
 	for (int i = 0; i < angio_elements_size; i++)
 	{
 		AngioElement * angio_element = angio_elements[i];
@@ -1274,7 +1265,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 				p.setValuator(val);
 			}
 		}
-#pragma omp parallel for schedule(dynamic, 16)
+#pragma omp parallel for 
 		// apply the initial modifiers to each angio element
 		for (int i = 0; i < angio_element_count; i++)
 		{
@@ -1294,7 +1285,6 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		}
 
 		//setup the branch info before doing any growth
-#pragma omp parallel for schedule(dynamic, 16)
 		for (int i = 0; i < angio_element_count; i++)
 		{
 			if (angio_elements[i]->_angio_mat->proto_branch_policy)
@@ -1320,7 +1310,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		{
 			angio_materials[i]->angio_stress_policy->UpdateScale();
 		}
-#pragma omp parallel for schedule(dynamic, 16)
+#pragma omp parallel for 
 		for (int i = 0; i < angio_element_count; i++)
 		{
 			angio_elements[i]->_angio_mat->angio_stress_policy->AngioStress(angio_elements[i], this, mesh);
@@ -1369,7 +1359,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		CalculateSegmentLengths(mesh);
 
 		size_t angio_element_count = angio_elements.size();
-#pragma omp parallel for schedule(static, 16)
+#pragma omp parallel for 
 		for (int i = 0; i < angio_element_count; i++)
 		{
 			angio_elements[i]->_angio_mat->angio_stress_policy->AngioStress(angio_elements[i], this,mesh);

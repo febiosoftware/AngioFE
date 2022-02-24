@@ -146,7 +146,6 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS_EXPLICIT(PerElementVI, FEMATERIAL_ID, "per_element_vi");
 
 	//BranchPolicy
-	REGISTER_FECORE_CLASS_EXPLICIT(DelayedBranchingPolicy, FEMATERIAL_ID, "delayed_branching_policy");
 	REGISTER_FECORE_CLASS_EXPLICIT(DelayedBranchingPolicyEFD, FEMATERIAL_ID, "delayed_branching_policy_efd");
 
 	//branch related classes

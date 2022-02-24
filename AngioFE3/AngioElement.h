@@ -68,6 +68,8 @@ public:
 	BranchInfo * branch_info = nullptr;
 	//! count of branches
 	int branch_count = 0;
+	//! segments containing branch points that have not been added
+	std::vector<Segment*> active_branch_segs;
 	//! segment length within the global frame within this element
 	double global_segment_length = 0.0;
 	//! segment length within the reference frame within this element

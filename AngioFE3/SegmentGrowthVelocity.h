@@ -15,7 +15,7 @@ public:
 	explicit SegmentGrowthVelocity(FEModel* pfem) : FEMaterial(pfem) {}
 	virtual ~SegmentGrowthVelocity() {}
 	//! returns the velocity at the position after it has been modified by this modifier
-	virtual double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_elem, FEMesh* mesh) = 0;
+	virtual double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_elem, double time_shift, FEMesh* mesh) = 0;
 	virtual void UpdateScale() = 0;
 };
 
@@ -27,7 +27,7 @@ public:
 	explicit SegmentGrowthVelocityManager(FEModel* pfem) : FEMaterial(pfem) { AddClassProperty(this, &seg_vel_modifiers, "velocity_modifier", FEProperty::Optional); }
 	virtual ~SegmentGrowthVelocityManager() {}
 	//! Apply all of the modifier to calculate the velocity at a location
-	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_elem, FEMesh* mesh);
+	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_elem, double time_shift, FEMesh* mesh);
 	std::vector<SegmentGrowthVelocity*>	seg_vel_modifiers;	//!< pointers to elastic materials
 	//SegmentGrowthVelocity* seg_vel_modifiers;	
 };
@@ -39,7 +39,7 @@ public:
 	//!constructor
 	explicit SegmentVelocityModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) {}
 	//! modifies the velocity by the velocity over time parameter
-	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
+	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh) override;
 	//! performs initialization
 	bool Init() override;
 	void UpdateScale() override;
@@ -57,7 +57,7 @@ public:
 	//!constructor
 	explicit SegmentVelocityDensityScaleModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) { AddClassProperty(this, &interpolation_prop, "interpolation_prop"); }
 	//! Scales the velocity based on the ecm density at the location
-	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
+	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh) override;
 	//! performs initialization
 	bool Init() override;
 	void UpdateScale() override;
@@ -75,7 +75,7 @@ public:
 	//!constructor
 	explicit SegmentVelocityRefDensityScaleModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) { AddClassProperty(this, &interpolation_prop, "interpolation_prop"); }
 	//! Scales the velocity based on the ecm density at the location
-	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
+	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh) override;
 	//! performs initialization
 	bool Init() override;
 	void UpdateScale() override;
@@ -94,7 +94,7 @@ public:
 	//!constructor
 	explicit SegmentVelocityDensityFAScaleModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) { AddClassProperty(this, &interpolation_prop, "interpolation_prop"); }
 	//! Scales the velocity based on the ecm density at the location
-	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
+	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh) override;
 	//! performs initialization
 	bool Init() override;
 	void UpdateScale() override;
@@ -118,7 +118,7 @@ public:
 	//!constructor
 	explicit SegmentVelocity3PModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) { AddClassProperty(this, &interpolation_prop, "interpolation_prop"); }
 	//! Scales the velocity based on the ecm density at the location
-	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
+	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh) override;
 	//! performs initialization
 	bool Init() override;
 	void UpdateScale() override;
@@ -138,7 +138,7 @@ public:
 	//!constructor
 	explicit SegmentVelocityFAModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) { AddClassProperty(this, &interpolation_prop, "interpolation_prop"); }
 	//! Scales the velocity based on the ecm density at the location
-	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
+	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh) override;
 	//! performs initialization
 	bool Init() override;
 	void UpdateScale() override;
@@ -158,7 +158,7 @@ public:
 	//!constructor
 	explicit SigmoidSegmentVelocity(FEModel* pfem) : SegmentGrowthVelocity(pfem) {}
 	//! Scales the velocity based on the ecm density at the location
-	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
+	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh) override;
 	//! performs initialization
 	bool Init() override;
 	void UpdateScale() override;
@@ -178,7 +178,7 @@ public:
 	//!constructor
 	explicit SigmoidAdjustedSegmentVelocity(FEModel* pfem) : SegmentGrowthVelocity(pfem) {}
 	//! Scales the velocity based on the ecm density at the location
-	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
+	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh) override;
 	//! performs initialization
 	bool Init() override;
 	void UpdateScale() override;
@@ -198,7 +198,7 @@ public:
 	//!constructor
 	explicit GompertzSegmentVelocity(FEModel* pfem) : SegmentGrowthVelocity(pfem) {}
 	//! Scales the velocity based on the ecm density at the location
-	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, FEMesh* mesh) override;
+	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh) override;
 	//! performs initialization
 	bool Init() override;
 	void UpdateScale() override;

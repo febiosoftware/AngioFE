@@ -333,7 +333,6 @@ END_FECORE_CLASS();
 //implemenations of FEGammaDistribution
 vec3d FEEllipticalDistribution::NextVec(angiofe_random_engine & re)
 {
-//#pragma omp parallel for
 	bool found = false;
 	while(!found)
 	{
@@ -354,8 +353,6 @@ vec3d FEEllipticalDistribution::NextVec(angiofe_random_engine & re)
 		if (r < pow(r_max,efd_exp)) {
 			// rotate the random direction from the global basis into the EFD basis and normalize
 			rv = Q*rv;
-//#pragma omp critical
-//			std::cout << "dir is " << rv.x << ", " << rv.y << ", " << rv.z << endl;
 			rv = rv.normalized();
 			found = true;
 			return rv;
