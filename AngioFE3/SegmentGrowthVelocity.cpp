@@ -310,21 +310,18 @@ END_FECORE_CLASS();
 double SigmoidAdjustedSegmentVelocity::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
 	double time = GetFEModel()->GetTime().currentTime;
-	double b_s = b;
 	if (time_shift > 0) {
 		if (time > c) {
 			time = c - 2;
-			b_s = b / 2.0;
 		}
 		else {
 			time = time - time_shift;
 		}
 	}
 
-	scale = (a / (1 + exp(-(time - c) / b_s)));
+	scale = (a / (1 + exp(-(time - c) / b)));
 	FESolidElement& el = *angio_element->_elem;
 	int nint = el.GaussPoints();
-	//double s = 0.0;
 	double sr = std::max(1.0,(angio_element->vessel_weight / angio_element->_angio_mat->thresh_vess_weight));
 	double scale_down = 11.92*exp(-sr/0.4)+0.0215;
 	return scale * prev * scale_down;

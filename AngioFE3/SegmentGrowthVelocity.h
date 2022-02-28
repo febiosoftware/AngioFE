@@ -103,12 +103,12 @@ protected:
 	DECLARE_FECORE_CLASS();
 private:
 	FEVariableInterpolation* interpolation_prop = nullptr;
-	double m_rFA_a = 3.557;
-	double m_rFA_b = 1.895;
-	double m_rFA_c = 0.5464;
-	double m_rFA_d = 0.01;
-	double m_rFA_r0 = 1.691;
-	double m_rFA_f0 = 0.8136;
+	double m_rFA_a = 3.413;
+	double m_rFA_b = 1.759;
+	double m_rFA_c = 0.6155;
+	double m_rFA_d = 0.1;
+	double m_rFA_r0 = 2.0;
+	double m_rFA_f0 = 0.85;
 };
 
 //! scales the segment velocity based on the ecm density
