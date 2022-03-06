@@ -133,6 +133,7 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, int
 		for (int i = 0; i <growth_substeps; i++)
 		{
 			// for 16 iteration chunks
+			// causes a bug on linux. Jobs occasionally fail.
 			//#pragma omp parallel for 
 			// for each angio element
 			for (int j = 0; j <angio_element_count; j++)
@@ -225,6 +226,7 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 			//				int n = 3;
 			for (int i = 0; i <n; i++)
 			{
+				// causes a bug on linux. Jobs occasionally fail.
 				//#pragma omp parallel for 
 				// for each element
 				for (int j = 0; j <angio_element_count; j++)
