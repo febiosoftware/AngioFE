@@ -133,7 +133,7 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, int
 		for (int i = 0; i <growth_substeps; i++)
 		{
 			// for 16 iteration chunks
-			#pragma omp parallel for 
+			//#pragma omp parallel for 
 			// for each angio element
 			for (int j = 0; j <angio_element_count; j++)
 			{
@@ -141,7 +141,7 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, int
 				angio_elements.at(j)->_angio_mat->GrowSegments(angio_elements.at(j), ctime, buffer_index, min_scale_factor,bounds_tolerance);
 			}
 
-			//#pragma omp parallel for
+			#pragma omp parallel for
 			// for each angio element 
 			for (int j = 0; j <angio_element_count; j++)
 			{
@@ -225,7 +225,7 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 			//				int n = 3;
 			for (int i = 0; i <n; i++)
 			{
-				#pragma omp parallel for 
+				//#pragma omp parallel for 
 				// for each element
 				for (int j = 0; j <angio_element_count; j++)
 				{
@@ -233,7 +233,7 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 					angio_elements.at(j)->_angio_mat->ProtoGrowSegments(angio_elements.at(j), ctime, buffer_index, min_scale_factor, bounds_tolerance);
 				}
 
-				//#pragma omp parallel for 
+				#pragma omp parallel for 
 				// for each angio element
 				for (int j = 0; j <angio_element_count; j++)
 				{
