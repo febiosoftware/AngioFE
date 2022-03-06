@@ -216,7 +216,7 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 			}
 
 			// prepare buffers for each angio element
-			//#pragma omp parallel for 
+			#pragma omp parallel for 
 			for (int j = 0; j <angio_element_count; j++)
 			{
 				angio_elements[j]->_angio_mat->PrepBuffers(angio_elements[j], next_time, buffer_index);
