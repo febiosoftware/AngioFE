@@ -122,7 +122,7 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, int
 		// current time is next time plus min_dt
 		double ctime = next_time + min_dt;
 		// allow 16 iterations to be run on each thread as they become available
-		//#pragma omp parallel for 
+		#pragma omp parallel for 
 		// for each angio element
 		for (int j = 0; j <angio_element_count; j++)
 		{
