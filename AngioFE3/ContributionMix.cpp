@@ -17,7 +17,7 @@ struct EigComp {
 
 double PSCPDDContributionMix::ApplyModifiers(double dt, AngioElement* angio_element, vec3d local_pos, FEMesh* mesh)
 {
-		return psc_weight * dt;
+		return psc_weight;
 }
 
 // this is supposed to update the psc to a load curve? Probably also will allow it to be updated by fractional anisotropy, concentrations, gradients, etc.
