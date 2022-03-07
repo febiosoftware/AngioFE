@@ -203,7 +203,8 @@ void FEAngio::ProtoGrowSegments(double min_scale_factor, double bounds_tolerance
 				}
 			}
 
-			min_dt = 1.0 / (growth_substeps*3.0);
+			min_dt = 1.0 / (9.0);
+			/*min_dt = 1.0 / (growth_substeps*3.0);*/
 
 			//min_dt = 0;
 

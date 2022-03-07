@@ -416,7 +416,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 	bool continue_growth = true;
 
 	// get the growth direction
-	double alpha = cm_manager->ApplyModifiers(1.0, active_tip->angio_element, active_tip->GetLocalPosition(), mesh);
+	double alpha = cm_manager->ApplyModifiers(dt, active_tip->angio_element, active_tip->GetLocalPosition(), mesh);
 	// determine contributions from previous segments
 	vec3d psc_dir = psc_manager->ApplyModifiers(vec3d(1, 0, 0), active_tip->angio_element, active_tip->GetLocalPosition(), active_tip->GetDirection(mesh), mesh);
 	// determine contributions from local stimuli

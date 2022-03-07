@@ -2,12 +2,16 @@
 #include "Segment.h"
 #include <FECore/vec3d.h>
 #include "angio3d.h"
+#include <iostream>
 
 vec3d Segment::Direction(FEMesh * mesh) const
 {
 	vec3d p0 = front->GetPosition(mesh);
 	vec3d p1 = back->GetPosition(mesh);
 	vec3d r = p0 - p1;
+	if (r.norm() < 0.001) {
+		r = front->direction;
+	}
 	r.unit();
 	return r;
 }

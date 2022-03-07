@@ -185,6 +185,12 @@ bool ByElementFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElemen
 		r1->TipCell->cell_volume = pow(cell_radius, 3) * 4 / 3 * PI;
 		r1->TipCell->InitSpecies(mesh);
 		r1->angio_element->next_tips.at(r1->angio_element).push_back(r1);
+		Segment* seg = new Segment();
+		seg->front = r0;
+		seg->back = r1;
+		r0->parent = seg;
+		r1->parent = seg;
+		seg->parent = seg;
 	}
 	return true;
 }
@@ -334,6 +340,12 @@ bool ByVolumeFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElement
 		r1->TipCell->cell_volume = pow(cell_radius, 3) * 4 / 3 * PI;
 		r1->angio_element->next_tips.at(r1->angio_element).push_back(r1);
 		r1->SetProtoGrowthLength(r0);
+		Segment* seg = new Segment();
+		seg->front = r0;
+		seg->back = r1;
+		r0->parent = seg;
+		r1->parent = seg;
+		seg->parent = seg;
 	}
 
 	delete[] element_beginning_volume;
