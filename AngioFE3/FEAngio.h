@@ -51,7 +51,7 @@ public:
 	//! updates the weighting between the matrix and vessel submaterials
 	void AdjustMatrixVesselWeights(FEMesh* mesh);
 
-#ifndef __linux__
+#ifdef WIN32
 	//! generate a rotation matrix in which all rotations are equally probable
 	mat3d unifromRandomRotationMatrix(angiofe_random_engine & rengine) const;
 #else
