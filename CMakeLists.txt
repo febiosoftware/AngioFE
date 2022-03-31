@@ -143,6 +143,11 @@ if(FEBio_LIB_DIR)
     findLib(FEBioRVE FEBio_LIB_DIR FEBIORVE)
 endif()
 
+if(APPLE)
+    # OpenMP
+    find_package(OpenMP QUIET)
+endif()
+
 ##### Set appropriate defines and includes #####
 
 if(WIN32)
@@ -151,6 +156,12 @@ elseif(APPLE)
     add_definitions(-D__APPLE__)
     set(CMAKE_OSX_DEPLOYMENT_TARGET 10.13)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -undefined dynamic_lookup")
+    
+    # Add openMP flags for macOS if found.
+    if(${OpenMP_C_FOUND})
+        add_compile_options(-Xpreprocessor -fopenmp)
+        include_directories(${OpenMP_C_INCLUDE_DIRS})
+    endif()
 else()
 	add_definitions(-DLINUX)
     add_compile_options(-static-libstdc++ -static-libgcc -w -Wall)
