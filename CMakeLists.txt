@@ -114,7 +114,7 @@ function(findLib libName libDir libOut)
     string(TOLOWER ${libName} lname)
 
     find_library(TEMP 
-        NAMES ${libName} ${lname} ${lname}_gcc64 ${lname}_lnx64 
+        NAMES ${libName} ${lname}
         PATHS ${${libDir}} 
         NO_DEFAULT_PATH)
 
@@ -140,6 +140,7 @@ if(FEBio_LIB_DIR)
     findLib(FEBioMix FEBio_LIB_DIR FEBIOMIX)
     findLib(FEBioPlot FEBio_LIB_DIR FEBIOPLOT)
     findLib(FEBioXML FEBio_LIB_DIR FEBIOXML)
+    findLib(FEBioRVE FEBio_LIB_DIR FEBIORVE)
 endif()
 
 ##### Set appropriate defines and includes #####
@@ -175,4 +176,4 @@ set_property(TARGET AngioFE PROPERTY AUTOGEN_BUILD_DIR ${CMAKE_BINARY_DIR}/CMake
 
 ##### Link Libraries #####
 
-target_link_libraries(AngioFE ${FECORE} ${FEBIOMECH} ${FEBIOLIB} ${FEBIOMIX} ${FEBIOPLOT} ${FEBIOXML})
+target_link_libraries(AngioFE  ${FEBIOLIB} ${FEBIOMIX} ${FEBIOPLOT} ${FEBIOXML} ${FEBIORVE} ${FEBIOMECH} ${FECORE})
