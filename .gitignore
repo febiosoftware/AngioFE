@@ -32,7 +32,6 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
-build/
 build5/
 
 # Visual Studio 2015/2017 cache/options directory
@@ -390,3 +389,6 @@ MigrationBackup/
 
 # VS Code
 .vscode/
+
+#MacOS Stuff
+.DS_Store

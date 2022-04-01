@@ -114,7 +114,7 @@ function(findLib libName libDir libOut)
     string(TOLOWER ${libName} lname)
 
     find_library(TEMP 
-        NAMES ${libName} ${lname} ${lname}_gcc64 ${lname}_lnx64 
+        NAMES ${libName} ${lname}
         PATHS ${${libDir}} 
         NO_DEFAULT_PATH)
 
@@ -140,6 +140,12 @@ if(FEBio_LIB_DIR)
     findLib(FEBioMix FEBio_LIB_DIR FEBIOMIX)
     findLib(FEBioPlot FEBio_LIB_DIR FEBIOPLOT)
     findLib(FEBioXML FEBio_LIB_DIR FEBIOXML)
+    findLib(FEBioRVE FEBio_LIB_DIR FEBIORVE)
+endif()
+
+if(APPLE)
+    # OpenMP
+    find_package(OpenMP QUIET)
 endif()
 
 ##### Set appropriate defines and includes #####
@@ -150,6 +156,12 @@ elseif(APPLE)
     add_definitions(-D__APPLE__)
     set(CMAKE_OSX_DEPLOYMENT_TARGET 10.13)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -undefined dynamic_lookup")
+    
+    # Add openMP flags for macOS if found.
+    if(${OpenMP_C_FOUND})
+        add_compile_options(-Xpreprocessor -fopenmp)
+        include_directories(${OpenMP_C_INCLUDE_DIRS})
+    endif()
 else()
 	add_definitions(-DLINUX)
     add_compile_options(-static-libstdc++ -static-libgcc -w -Wall)
@@ -175,4 +187,4 @@ set_property(TARGET AngioFE PROPERTY AUTOGEN_BUILD_DIR ${CMAKE_BINARY_DIR}/CMake
 
 ##### Link Libraries #####
 
-target_link_libraries(AngioFE ${FECORE} ${FEBIOMECH} ${FEBIOLIB} ${FEBIOMIX} ${FEBIOPLOT} ${FEBIOXML})
+target_link_libraries(AngioFE  ${FEBIOLIB} ${FEBIOMIX} ${FEBIOPLOT} ${FEBIOXML} ${FEBIORVE} ${FEBIOMECH} ${FECORE})

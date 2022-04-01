@@ -916,7 +916,7 @@ double FEAngio::GetDoubleFromDataStore(int record, int elem_id, int item)
 	DataStore & ds = m_fem->GetDataStore();
 	return ds.GetDataRecord(record)->Evaluate(elem_id, item);
 }
-#ifndef __linux__
+#ifdef WIN32
 mat3d FEAngio::unifromRandomRotationMatrix(angiofe_random_engine & rengine) const
 {
 	//collagen fibers are right handed so the following transformation is legal
