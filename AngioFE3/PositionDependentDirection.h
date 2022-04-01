@@ -262,9 +262,7 @@ class ProtoFractionalAnisotropyPDD : public ProtoPositionDependentDirection
 {
 public:
 	//! constructor
-	explicit ProtoFractionalAnisotropyPDD(FEModel* pfem) : ProtoPositionDependentDirection(pfem) {
-		AddClassProperty(this, &interpolation_prop, "interpolation_prop");
-	}
+	explicit ProtoFractionalAnisotropyPDD(FEModel* pfem) : ProtoPositionDependentDirection(pfem) {}
 	virtual ~ProtoFractionalAnisotropyPDD() {}
 	//! return the direction given by the fibers at this location
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
