@@ -970,16 +970,16 @@ mat3d FEAngio::unifromRandomRotationMatrix(angiofe_random_engine & rengine)
 	double beta = zto2pi(rengine);
 	double gamma = zto2pi(rengine);
 
-	double c_alpha = cos(alpha);
-	double c_beta = cos(beta);
-	double c_gamma = cos(gamma);
-	double s_alpha = sin(alpha);
-	double s_beta = sin(beta);
-	double s_gamma = sin(gamma);
-	//see: https://en.wikipedia.org/wiki/Change_of_basis Three dimensions section
-	mat3d rv(c_alpha*c_gamma - s_alpha*c_beta*s_gamma, -c_alpha*s_gamma - s_alpha*c_beta*c_gamma, s_beta*s_alpha,
-		s_alpha*c_gamma + c_alpha*c_beta*s_gamma, -s_alpha*s_gamma + c_alpha*c_beta*c_gamma, -s_beta*c_alpha,
-		s_beta*s_gamma, s_beta*c_gamma, c_beta
+	double c1 = cos(alpha);
+	double c2 = cos(beta);
+	double c3 = cos(gamma);
+	double s1 = sin(alpha);
+	double s2 = sin(beta);
+	double s3 = sin(gamma);
+	//see: https://en.wikipedia.org/wiki/Euler_angles Z1X2Z3 proper euler angle rotation
+	mat3d rv(c1*c3 - c2*s1*s3, -c1*s3 - c2*c3*sa, s1*s2,
+		c3*s1 + c1*c2*s3, c1*c2*c3 -s1*s3, -c1s2,
+		s2*s3, c3*s2, c2
 	);
 	//rv = rv.transinv();
 #ifndef NDEBUG

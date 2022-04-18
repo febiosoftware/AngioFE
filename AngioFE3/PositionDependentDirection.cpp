@@ -457,7 +457,6 @@ vec3d FractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* angio_el
 	FEEllipticalDistribution E(this->GetFEModel());
 	E.spd = SPD_int;
 	E.Init();
-	//E.efd_exp = this->efd_exp;
 	vec3d fiber_dir = E.NextVec(angio_element->_rengine);
 	if (fiber_dir*tip_dir < 0)
 	{

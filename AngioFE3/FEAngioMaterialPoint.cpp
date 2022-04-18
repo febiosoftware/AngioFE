@@ -103,23 +103,23 @@ void FEAngioMaterialPoint::UpdateSPD()
 {
 	// get the material point data and polar decomposition of F
 	FEElasticMaterialPoint* emp = this->ExtractData<FEElasticMaterialPoint>();
-	mat3d F = emp->m_F;
-	mat3d Uinv = emp->RightStretchInverse();
-	mat3d R = F*Uinv;
-	// get the initial semiprincipal axes magnitudes and directions
-	double B[3]; vec3d N[3];
-	initial_angioSPD = (3.0 / initial_angioSPD.tr())*initial_angioSPD;
-	initial_angioSPD.eigen2(B, N);
-	// get the stretch ratios
-	double b[3]; vec3d n[3]; double lam[3];
-	lam[0] = (F*N[0]).norm(); b[0] = B[0] * lam[0];
-	lam[1] = (F*N[1]).norm(); b[1] = B[1] * lam[1];
-	lam[2] = (F*N[2]).norm(); b[2] = B[2] * lam[2];
-	// Assemble the diagonal matrix
+	// get the net deformation gradient which includes the mapping of a sphere to the initial angio SPD and the applied deformation.
+	mat3d Fnet = emp->m_F*initial_angioSPD; 
+	// get the Left cauchy-green deformation tensor
+	mat3d Bh = Fnet * Fnet.transpose();
+	mat3ds B = mat3ds(Bh[0][0], Bh[1][1], Bh[2][2], Bh[0][1], Bh[1][2], Bh[0][2]);
+	// get the ellipsoid associated with B
+	double l2[3];
+	vec3d v[3];
+	B.eigen2(l2, v);
+	// get V from B
+	mat3ds V = dyad(v[0]) * sqrt(l2[0]) + dyad(v[1]) * sqrt(l2[1]) + dyad(v[2]) * sqrt(l2[2]);
+	double b[3]; vec3d n[3];
+	// get the ellipsoid associated with V
+	V.eigen2(b, n);
+	//// Construct the SPD from components of V's eigensolution.
 	mat3dd d = mat3dd(b[0], b[1], b[2]);
-	// Assemble the matrix containing the rotated directions
-	mat3d q; q.setCol(0, R*N[0]); q.setCol(1, R*N[1]); q.setCol(2, R*N[2]);
-	// Construct the SPD from the eigen components. The transpose can be used because it is an orthogonal matrix.
+	mat3d q; q.setCol(0, n[0]); q.setCol(1, n[1]); q.setCol(2, n[2]);
 	mat3d p = q*d*q.transpose();
 	// input to SPD
 	angioSPD = mat3ds(p[0][0], p[1][1], p[2][2], p[0][1], p[1][2], p[0][2]);
