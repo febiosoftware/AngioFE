@@ -977,8 +977,8 @@ mat3d FEAngio::unifromRandomRotationMatrix(angiofe_random_engine & rengine)
 	double s2 = sin(beta);
 	double s3 = sin(gamma);
 	//see: https://en.wikipedia.org/wiki/Euler_angles Z1X2Z3 proper euler angle rotation
-	mat3d rv(c1*c3 - c2*s1*s3, -c1*s3 - c2*c3*sa, s1*s2,
-		c3*s1 + c1*c2*s3, c1*c2*c3 -s1*s3, -c1s2,
+	mat3d rv(c1*c3 - c2*s1*s3, -c1*s3 - c2*c3*s1, s1*s2,
+		c3*s1 + c1*c2*s3, c1*c2*c3 -s1*s3, -c1*s2,
 		s2*s3, c3*s2, c2
 	);
 	//rv = rv.transinv();
