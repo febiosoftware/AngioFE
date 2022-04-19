@@ -39,7 +39,7 @@ Before any make configuration is called, a set of subdirectories must first be c
 ./Mkdir.bash lnx64
 ```
 
-Each configuration calls the `angiofe2.mk` makefile, which in turn include a configuration-specific makefile in which are defined include and link paths for the third pary libraries.
+Each configuration calls the `angiofe.mk` makefile, which in turn include a configuration-specific makefile in which are defined include and link paths for the third pary libraries.
 
 `lnx64d.mk` and `osxd.mk` are base configuration files for most of the make configurations on Linux and OSX respectively. For instance, when the lnx64 configuration is called, `lnx64.mk` simply includes the information in `lnx64d.mk` and removes the debug flag. This is done to make it easier to set up include and link paths. If the default include and link paths do not match the install locations of third party libraries on your machine, it  is only necessary to change these paths in `lnx64d.mk` in order for these changes to be made to all of the following configurations: lnx64, lnx64d, lnx64g, lnx64s, and gcc64.
 
