@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Documentation/angiofe_intro_img.png" alt="FEBio" width="60%">
+  <img src="Documentation/angiofe_intro_img.png" alt="FEBio" width="75%">
 </p>
 AngioFE couples a rule-based model of growth from microvessel fragments to a nonlinear finite element (FE) solver that is specifically designed for biomechanical applications. The software is open-source, and pre-compiled executables for Windows, OS-X and Linux platforms are available.
 
