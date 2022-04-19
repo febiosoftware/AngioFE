@@ -392,3 +392,6 @@ MigrationBackup/
 
 #MacOS Stuff
 .DS_Store
+
+#MS Office
+*.docx
