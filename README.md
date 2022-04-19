@@ -70,6 +70,3 @@ make -j8 gcc
 ```
 
 Please note that this will only increase the speed of the compilation process and will in no way affect the final binary.
-
-# Contributing <a name="Contributing"></a>
-
