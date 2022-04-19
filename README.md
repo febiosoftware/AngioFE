@@ -1,3 +1,6 @@
+<p align="center">
+  <img src="Documentation/angiofe_intro_img.png" alt="FEBio" width="60%">
+</p>
 AngioFE couples a rule-based model of growth from microvessel fragments to a nonlinear finite element (FE) solver that is specifically designed for biomechanical applications. The software is open-source, and pre-compiled executables for Windows, OS-X and Linux platforms are available.
 
 Executables for AngioFE can be downloaded from https://febio.org/plugins/.  Please inform us of publications that use AngioFE+FEBio in research.  Information can be found on the Publications tab.  
@@ -6,11 +9,10 @@ Support forums can be found at https://forums.febio.org/.
 
 A user manual for running and building models with AngioFE is available at GitHub/AngioFE/Documentation.
 
-AngioFE example problems are included in GitHub/AngioFE/TestProblems. To run the problems use "control.feb" as the input with the containing folder as the working directory.
+AngioFE example problems are included in GitHub/AngioFE/Documentation/ExampleProblems. Instructions for running AngioFE with FEBio are provided in the user manual.
 
 ### Table of contents
 - [AngioFE BUILD GUIDE](#Build)  
-- [Contributing](#Contributing)  
 
 # AngioFE BUILD GUIDE <a name="Build"></a>
 
