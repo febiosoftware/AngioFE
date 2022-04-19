@@ -61,15 +61,12 @@ s:	Configuration used to build a sequential version of FEBio in which no multith
 Once a build configuration has been decided on and the `Mkdir.bash` script has been run, simply run the make command followed by the configuration name as argument. For example, to build the lnx64 configuration you would run:
 
 ```
-make lnx64
+make gcc
 ```
 
 If your machine's processor has multiple cores, it is possible to decrease your build time by parallelizing your build with the -j flag followed by the number of cores you would like make to use. For example, to build the lnx64 configuration using 8 cores you would run:
 ```
-make lnx64 -j8
+make -j8 gcc
 ```
 
 Please note that this will only increase the speed of the compilation process and will in no way affect the final binary.
-
-# Contributing <a name="Contributing"></a>
-
