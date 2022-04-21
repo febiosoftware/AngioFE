@@ -179,8 +179,8 @@ include_directories(${FEBio_INC})
 
 ##### Add library #####
 
-file(GLOB HDR_AngioFE "AngioFE3/*.h")
-file(GLOB SRC_AngioFE "AngioFE3/*.cpp")
+file(GLOB HDR_AngioFE "AngioFE/*.h")
+file(GLOB SRC_AngioFE "AngioFE/*.cpp")
 
 add_library(AngioFE SHARED ${HDR_AngioFE} ${SRC_AngioFE})
 set_property(TARGET AngioFE PROPERTY AUTOGEN_BUILD_DIR ${CMAKE_BINARY_DIR}/CMakeFiles/AutoGen/AngioFE_autogen)
