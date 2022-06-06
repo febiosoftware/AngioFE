@@ -8,11 +8,13 @@ class AngioElement;
 class Tip;
 
 //! base class for calculating the stress from the vascular network
-class AngioStressPolicy : public FEMaterial
+class AngioStressPolicy : public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(AngioStressPolicy)
+
 public:
 	//! constructor
-	explicit AngioStressPolicy(FEModel* pfem) : FEMaterial(pfem) {}
+	explicit AngioStressPolicy(FEModel* pfem) : FEMaterialProperty(pfem) {}
 	virtual ~AngioStressPolicy() {}
 	//! calculates the stress at the gauss point for a given element
 	virtual void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) = 0;

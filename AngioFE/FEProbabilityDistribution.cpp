@@ -7,7 +7,7 @@
 #include <iostream>
 #include <algorithm>
 
-BEGIN_FECORE_CLASS(FEProbabilityDistribution, FEMaterial)
+BEGIN_FECORE_CLASS(FEProbabilityDistribution, FEMaterialProperty)
 ADD_PARAMETER(max_retries, "max_retries");
 END_FECORE_CLASS();
 
@@ -22,7 +22,7 @@ void FEProbabilityDistribution::SetLoadCurveToStep(const char * param)
 	//assert(mlc);
 	if (mlc)
 	{
-		mlc->SetInterpolation(FEPointFunction::STEP);
+		mlc->SetInterpolation(PointCurve::STEP);
 	}
 }
 
@@ -477,7 +477,7 @@ bool FEPrescribedDistribution::Init()
 
 	FEModel * model = GetFEModel();
 	FELoadCurve* mlc = dynamic_cast<FELoadCurve*>(model->GetLoadController(m));
-	prescribed_distribution = mlc->GetFunction().m_points;
+	prescribed_distribution = mlc->GetFunction().GetPoints();
 
 	//Create the cdf
 	n = prescribed_distribution.size();

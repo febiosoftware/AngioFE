@@ -2,10 +2,10 @@
 #include <FECore/FEMaterial.h>
 /*
 
-class rbf_norm : public FEMaterial
+class rbf_norm : public FEMaterialProperty
 {
 public:
-	explicit rbf_norm(FEModel* pfem) : FEMaterial(pfem) {}
+	explicit rbf_norm(FEModel* pfem) : FEMaterialProperty(pfem) {}
 	virtual double rbfnorm(vec3d pos, vec3d center) = 0;
 protected:
 	double max_intpt_contribution = 100000;

@@ -7,8 +7,10 @@
 #include "FEProbabilityDistribution.h"
 
 //! Base class for all fragment seeders
-class FragmentSeeder : public FEMaterial
+class FragmentSeeder : public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(FragmentSeeder)
+
 public:
 	//! seed the fragments within the elements
 	virtual bool SeedFragments(std::vector<AngioElement *> &angio_elements, FEMesh* mesh, FEAngioMaterial* angio_mat, int buffer_index) = 0;

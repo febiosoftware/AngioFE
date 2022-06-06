@@ -8,11 +8,13 @@ class FEAngio;
 class Tip;
 
 //! The component of vessel growth that is dependent on position within the mesh
-class PositionDependentDirection : public FEMaterial
+class PositionDependentDirection : public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(PositionDependentDirection)
+
 public:
 	//! constructor
-	explicit PositionDependentDirection(FEModel* pfem) : FEMaterial(pfem) {}
+	explicit PositionDependentDirection(FEModel* pfem) : FEMaterialProperty(pfem) {}
 	virtual ~PositionDependentDirection() {}
 	//! return the direction given by this component
 	virtual vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) = 0;
@@ -27,11 +29,13 @@ protected:
 };
 
 //! Contain the collection of Position Dependent Direction modifiers
-class PositionDependentDirectionManager : public FEMaterial
+class PositionDependentDirectionManager : public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(PositionDependentDirectionManager)
+
 public:
 	//! constructor
-	explicit PositionDependentDirectionManager(FEModel* pfem) : FEMaterial(pfem) { AddClassProperty(this, &pdd_modifiers, "pdd_modifier", FEProperty::Required); }
+	explicit PositionDependentDirectionManager(FEModel* pfem) : FEMaterialProperty(pfem) { AddClassProperty(this, &pdd_modifiers, "pdd_modifier", FEProperty::Required); }
 	virtual ~PositionDependentDirectionManager() {}
 	//! return the direction given by all direction modifiers
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int buffer, bool& continue_growth, vec3d& tip_dir, double& alpha, FEMesh* mesh, FEAngio* pangio);
@@ -206,11 +210,13 @@ private:
 };
 
 //! The component of vessel growth that is dependent on position within the mesh
-class ProtoPositionDependentDirection : public FEMaterial
+class ProtoPositionDependentDirection : public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(ProtoPositionDependentDirection)
+
 public:
 	//! constructor
-	explicit ProtoPositionDependentDirection(FEModel* pfem) : FEMaterial(pfem) {}
+	explicit ProtoPositionDependentDirection(FEModel* pfem) : FEMaterialProperty(pfem) {}
 	virtual ~ProtoPositionDependentDirection() {}
 	//! return the direction given by this component
 	virtual vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) = 0;
@@ -224,11 +230,13 @@ protected:
 };
 
 //! Contain the collection of Position Dependent Direction modifiers
-class ProtoPositionDependentDirectionManager : public FEMaterial
+class ProtoPositionDependentDirectionManager : public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(ProtoPositionDependentDirectionManager)
+
 public:
 	//! constructor
-	explicit ProtoPositionDependentDirectionManager(FEModel* pfem) : FEMaterial(pfem) { AddClassProperty(this, &proto_pdd_modifiers, "proto_pdd_modifier", FEProperty::Required); }
+	explicit ProtoPositionDependentDirectionManager(FEModel* pfem) : FEMaterialProperty(pfem) { AddClassProperty(this, &proto_pdd_modifiers, "proto_pdd_modifier", FEProperty::Required); }
 	virtual ~ProtoPositionDependentDirectionManager() {}
 	//! return the direction given by all direction modifiers
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int buffer, bool& continue_growth, vec3d& tip_dir, double& alpha, FEMesh* mesh, FEAngio* pangio);

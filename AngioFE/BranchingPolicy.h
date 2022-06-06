@@ -14,11 +14,13 @@ public:
 };
 
 //! Implements a class that will return the zentih angle for a given branch
-class ZenithAngle : public FEMaterial
+class ZenithAngle : public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(ZenithAngle)
+
 public:
 	//! Constructor for zenith angle
-	ZenithAngle(FEModel* pfem) : FEMaterial(pfem) {}
+	ZenithAngle(FEModel* pfem) : FEMaterialProperty(pfem) {}
 	//! Gives the zenith angle based on the parameters
 	virtual double GetZenithAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element) = 0;
 	//! performs any modifications the zenith angle as time changes
@@ -26,11 +28,13 @@ public:
 };
 
 //! Implements a class that will return the azimuth angle for a given branch
-class AzimuthAngle :public FEMaterial
+class AzimuthAngle :public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(AzimuthAngle)
+
 public:
 	//! Constructor for azimuth angle
-	AzimuthAngle(FEModel* pfem) : FEMaterial(pfem) {}
+	AzimuthAngle(FEModel* pfem) : FEMaterialProperty(pfem) {}
 	//! Gives the zenith angle based on the parameters
 	virtual double GetAzimuthAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element) = 0;
 	//! performs any modifications the zenith angle as time changes
@@ -71,11 +75,13 @@ private:
 };
 
 //! A Branch Policy determines where and when branches occur
-class BranchPolicy :public FEMaterial
+class BranchPolicy :public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(BranchPolicy)
+
 public:
 	//! constructor for class
-	BranchPolicy(FEModel* pfem) : FEMaterial(pfem) { 
+	BranchPolicy(FEModel* pfem) : FEMaterialProperty(pfem) {
 		AddClassProperty(this, &azimuth_angle, "azimuth_angle"); 
 		AddClassProperty(this, &zenith_angle, "zenith_angle");
 		AddClassProperty(this, &interpolation_prop, "interpolation_prop");
@@ -126,6 +132,8 @@ public:
 //! As growth occurs length to branch is calculated, once length to branch is hit a time to emerge is sampled from a probability distribution.Length to branch is calculated only when the last value of length to branch has been hit
 class DelayedBranchingPolicyEFD :public BranchPolicy
 {
+	FECORE_BASE_CLASS(DelayedBranchingPolicyEFD)
+
 public:
 	//! constructor for class
 	DelayedBranchingPolicyEFD(FEModel* pfem) : BranchPolicy(pfem) {

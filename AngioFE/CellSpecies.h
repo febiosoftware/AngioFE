@@ -13,11 +13,13 @@
 class FECellChemicalReaction;
 
 //! (Incomplete) Prescribed dof to allow tips to deposit chemicals within a multiphasic material
-class CellSBM : public FEMaterial
+class CellSBM : public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(CellSBM)
+
 public:
 	//! constructor
-	explicit CellSBM(FEModel* pfem) : FEMaterial(pfem) {}
+	explicit CellSBM(FEModel* pfem) : FEMaterialProperty(pfem) {}
 	virtual ~CellSBM() {}
 	int GetSBMID() { return SBM_ID; }
 	void SetSBMID(int r) { SBM_ID = r; }
@@ -62,11 +64,13 @@ private:
 };
 
 //! (Incomplete) Prescribed dof to allow tips to deposit chemicals within a multiphasic material
-class CellSolute : public FEMaterial
+class CellSolute : public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(CellSolute)
+
 public:
 	//! constructor
-	explicit CellSolute(FEModel* pfem) : FEMaterial(pfem) {}
+	explicit CellSolute(FEModel* pfem) : FEMaterialProperty(pfem) {}
 	virtual ~CellSolute() {}
 	int GetSoluteID() { return Solute_ID; }
 	void SetSoluteID(int i) { Solute_ID = i; }
@@ -109,10 +113,12 @@ private:
 	int m_z = 1;
 };
 
-class CellSpeciesManager : public FEMaterial
+class CellSpeciesManager : public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(CellSpeciesManager)
+
 public:
-	explicit CellSpeciesManager(FEModel* pfem) : FEMaterial(pfem)
+	explicit CellSpeciesManager(FEModel* pfem) : FEMaterialProperty(pfem)
 	{
 		AddClassProperty(this, &cell_solute_prop, "cell_solute_prop", FEProperty::Optional);
 		AddClassProperty(this, &cell_SBM_prop, "cell_SBM_prop", FEProperty::Optional);
@@ -124,10 +130,12 @@ protected:
 private:
 };
 
-class CellReactionManager : public FEMaterial
+class CellReactionManager : public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(CellReactionManager)
+
 public:
-	explicit CellReactionManager(FEModel* pfem) : FEMaterial(pfem)
+	explicit CellReactionManager(FEModel* pfem) : FEMaterialProperty(pfem)
 	{
 		AddClassProperty(this, &cell_reaction, "cell_reaction", FEProperty::Optional);
 	}
@@ -139,8 +147,10 @@ protected:
 private:
 };
 
-class FECellReaction : public FEMaterial
+class FECellReaction : public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(FECellReaction)
+
 public:
 	//! constructor
 	FECellReaction(FEModel* pfem);
@@ -158,11 +168,13 @@ public:
 	FEModel* m_pfem;
 };
 
-class FECellReactionRate : public FEMaterial
+class FECellReactionRate : public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(FECellReactionRate)
+
 public:
 	//! constructor
-	FECellReactionRate(FEModel* pfem) : FEMaterial(pfem) {}
+	FECellReactionRate(FEModel* pfem) : FEMaterialProperty(pfem) {}
 
 	//! data initializatino and checking
 	bool Init() override;
@@ -211,9 +223,9 @@ public:
 	bool Init() override;
 
 public:
-	void SetParameter(FEParam& p) override;
+//	void SetParameter(FEParam& p) override;
 
-	bool SetParameterAttribute(FEParam& p, const char* szatt, const char* szval) override;
+//	bool SetParameterAttribute(FEParam& p, const char* szatt, const char* szval) override;
 
 	//! set the forward reaction rate
 	void SetForwardReactionRate(FECellReactionRate* pfwd) { m_pFwd = pfwd; }
@@ -249,7 +261,7 @@ public:
 	vector<int>		m_vP;		//!< stoichiometric coefficients of products
 	vector<int>		m_v;		//!< net stoichiometric coefficients of reactants and products
 	double          m_Vbar;     //!< weighted molar volume of reactants and products
-	bool            m_Vovr;     //!< override flag for m_Vbar
+//	bool            m_Vovr;     //!< override flag for m_Vbar
 	int				m_vRtmp;	//!< helper variable for reading in stoichiometric coefficients for reactants
 	int				m_vPtmp;	//!< helper variable for reading in stoichiometric coefficients for products
 

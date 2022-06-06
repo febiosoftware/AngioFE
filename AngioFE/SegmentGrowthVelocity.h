@@ -8,11 +8,13 @@ class Tip;
 
 
 //! Get the segment velocity at the given position
-class SegmentGrowthVelocity : public FEMaterial
+class SegmentGrowthVelocity : public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(SegmentGrowthVelocity)
+
 public:
 	//! constructor
-	explicit SegmentGrowthVelocity(FEModel* pfem) : FEMaterial(pfem) {}
+	explicit SegmentGrowthVelocity(FEModel* pfem) : FEMaterialProperty(pfem) {}
 	virtual ~SegmentGrowthVelocity() {}
 	//! returns the velocity at the position after it has been modified by this modifier
 	virtual double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_elem, double time_shift, FEMesh* mesh) = 0;
@@ -20,11 +22,13 @@ public:
 };
 
 //! return the segment velocity at a given location. A combination of all velocity modifier
-class SegmentGrowthVelocityManager : public FEMaterial
+class SegmentGrowthVelocityManager : public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(SegmentGrowthVelocityManager)
+
 public:
 	//!constructor
-	explicit SegmentGrowthVelocityManager(FEModel* pfem) : FEMaterial(pfem) { AddClassProperty(this, &seg_vel_modifiers, "velocity_modifier", FEProperty::Optional); }
+	explicit SegmentGrowthVelocityManager(FEModel* pfem) : FEMaterialProperty(pfem) { AddClassProperty(this, &seg_vel_modifiers, "velocity_modifier", FEProperty::Optional); }
 	virtual ~SegmentGrowthVelocityManager() {}
 	//! Apply all of the modifier to calculate the velocity at a location
 	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_elem, double time_shift, FEMesh* mesh);

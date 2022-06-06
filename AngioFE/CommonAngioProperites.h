@@ -7,8 +7,10 @@
 #include <FEBioMech/FEElasticMaterial.h>
 
 //! separate out components that may be shared if an angio material needs to inherit from another material
-class CommonAngioProperties :public FEMaterial
+class CommonAngioProperties :public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(CommonAngioProperties)
+
 public:
 	//! constructor
 	CommonAngioProperties(FEModel * pfem);

@@ -3,7 +3,7 @@
 #include <FECore/FENodeDataMap.h>
 #include <iostream>
 
-BEGIN_FECORE_CLASS(NodeDataInterpolation, FEMaterial)
+BEGIN_FECORE_CLASS(NodeDataInterpolation, FEMaterialProperty)
 ADD_PARAMETER(node_set_id, "node_set_id");
 ADD_PARAMETER(interpolation_mode, "interpolation_mode");
 END_FECORE_CLASS();

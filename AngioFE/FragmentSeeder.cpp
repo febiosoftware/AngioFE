@@ -12,7 +12,7 @@
 int FragmentSeeder::initial_fragment_id_counter = 0;
 int FragmentSeeder::initial_cell_id_counter = 0;
 
-FragmentSeeder::FragmentSeeder(FEModel * model) : FEMaterial(model)
+FragmentSeeder::FragmentSeeder(FEModel * model) : FEMaterialProperty(model)
 {
 	AddClassProperty(this, &initial_segment_length, "initial_segment_length");
 }
@@ -80,7 +80,7 @@ vec3d FragmentSeeder::GetRandomVectorPositionWithinNaturalCoordinateBoundsByElem
 int FragmentSeeder::IncrementCellCounter() {
 	return initial_cell_id_counter++;
 }
-BEGIN_FECORE_CLASS(FragmentSeeder, FEMaterial)
+BEGIN_FECORE_CLASS(FragmentSeeder, FEMaterialProperty)
 	ADD_PARAMETER(number_fragments, "number_fragments");
 	ADD_PARAMETER(proto_mat_cross, "proto_mat_cross");
 	ADD_PARAMETER(cell_radius, "cell_radius");

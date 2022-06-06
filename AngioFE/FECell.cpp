@@ -145,7 +145,7 @@ void FECell::InitSpecies(FEMesh* mesh)
 			
 			// initialize and activate the bc
 			if (cell_solute->CellSolutePS->Init()) {
-				mesh->GetFEModel()->AddBodyLoad(cell_solute->CellSolutePS);
+				mesh->GetFEModel()->AddModelLoad(cell_solute->CellSolutePS);
 				cell_solute->CellSolutePS->SetAccumulateFlag(false);
 				Solutes.emplace_back(cell_solute);
 			}
@@ -174,7 +174,7 @@ void FECell::InitSpecies(FEMesh* mesh)
 				cell_sbm->CellSBMPS->SetResetFlag(false);
 				cell_sbm->CellSBMPS->SetWeighVolume(true);
 				cell_sbm->CellSBMPS->SetAccumulateFlag(false);
-				mesh->GetFEModel()->AddBodyLoad(cell_sbm->CellSBMPS);
+				mesh->GetFEModel()->AddModelLoad(cell_sbm->CellSBMPS);
 				SBMs.emplace_back(cell_sbm);
 			}
 		}

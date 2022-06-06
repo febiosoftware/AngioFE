@@ -12,11 +12,13 @@
 #endif
 
 //! pure virtual base class for probability distributions
-class FEProbabilityDistribution : public FEMaterial
+class FEProbabilityDistribution : public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(FEProbabilityDistribution)
+
 public:
 	//! constructor
-	explicit FEProbabilityDistribution(FEModel* pfem) : FEMaterial(pfem) {}
+	explicit FEProbabilityDistribution(FEModel* pfem) : FEMaterialProperty(pfem) {}
 
 	//! generates the next value in the given sequence which fits a given distribution
 	virtual double NextValue(angiofe_random_engine & re) = 0;
