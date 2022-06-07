@@ -53,8 +53,8 @@ FEAngioMaterial::~FEAngioMaterial()
 //-----------------------------------------------------------------------------
 bool FEAngioMaterial::Init()
 {
-	// Create symmetry vectors
-
+	// Make sure the angio class was allocated
+	if (m_pangio == nullptr) return false;
 
 	if(!matrix_material->Init()) return false;
 
