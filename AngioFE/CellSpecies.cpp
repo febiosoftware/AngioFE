@@ -805,14 +805,14 @@ bool FECellSecretionConstant::Init()
 	// there is only one reactant and one product in a Michaelis-Menten reaction
 	if (m_solP.size() + m_sbmP.size() > 0) {
 		std::runtime_error("Only provide vR");
-		/*feLogError("Only provide vR");
-		return false;*/
+		feLogError("Only provide vR");
+		return false;
 	}
 
 	if (m_solR.size() + m_sbmR.size() > 1) {
 		std::runtime_error("Only provide one vR for this reaction");
-		/*feLogError("Provide only one vR for this reaction");
-		return false;*/
+		feLogError("Provide only one vR for this reaction");
+		return false;
 	}
 
 	return true;

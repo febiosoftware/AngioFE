@@ -5,6 +5,7 @@
 #include <FECore/FESolidDomain.h>
 #include "AngioElement.h"
 #include "FEProbabilityDistribution.h"
+#include <FECore/FEOctreeSearch.h>
 
 //! Base class for all fragment seeders
 class FragmentSeeder : public FEMaterial
@@ -88,5 +89,9 @@ public:
 	//! Seed the fragments
 	bool SeedFragments(std::vector<AngioElement*>& angio_elements, FEMesh* mesh, FEAngioMaterial* angio_mat, int buffer_index) override;
 	vec3d initial_position = vec3d(0, 0, 0);
+private:
+	FEOctreeSearch		m_search;
+	FESolidElement*		m_el;
+	double				m_q[3];
 	DECLARE_FECORE_CLASS();
 };

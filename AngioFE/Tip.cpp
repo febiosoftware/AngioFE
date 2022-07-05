@@ -6,6 +6,7 @@
 #include "CellSpecies.h"
 #include "FEProbabilityDistribution.h"
 #include "FECell.h"
+#include <unordered_map>
 
 vec3d Tip::GetDirection(FEMesh* mesh) const
 {
@@ -106,11 +107,23 @@ Tip::Tip(Tip * other, FEMesh * mesh)
 	FEModel* fem = angio_element->_mat->GetFEModel();
 	if (other->TipCell) 
 	{ 
+		//copy the tip info
 		TipCell = other->TipCell; 
 		TipCell->angio_element = angio_element; 
 		TipCell->ParentTip = this; 
 		TipCell->time = time; 
-		TipCell->UpdateSpecies(mesh); 
+		TipCell->initial_cell_id = other->TipCell->initial_cell_id;
+		//update
+		/*if (time >= 0)
+		{
+			TipCell->UpdateSpecies(mesh);
+		}*/
+		//clean up old tip
+		//other->angio_element->tip_cells.erase(other->TipCell->initial_cell_id);
+		//TipCell->angio_element->tip_cells.emplace(TipCell->initial_cell_id, TipCell);
+		//angio_element->_angio_mat->m_pangio->cells.erase(other->TipCell->initial_cell_id);
+		//angio_element->_angio_mat->m_pangio->cells.emplace(TipCell->initial_cell_id,TipCell);
+		other->TipCell = nullptr;
 	}
 	// inherit the tip cell and remove it from the parent
 }

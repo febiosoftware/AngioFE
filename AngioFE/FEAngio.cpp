@@ -33,6 +33,9 @@
 #include <math.h>
 #include "FECore/FEDomainMap.h"
 
+int FEAngio::fragment_id_counter = 0;
+int FEAngio::cell_id_counter = 0;
+
 //-----------------------------------------------------------------------------
 // create a map of fiber vectors based on the material's orientatin
 bool CreateFiberMap(vector<vec3d>& fiber, FEMaterial* pmat);
@@ -97,6 +100,7 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, int
 	if(time_info.currentTime >= next_time)
 	{	// 
 		min_dt = std::numeric_limits<double>::max();
+		FEAnalysis* fea = m_fem->GetCurrentStep();
 		// parallel for with value min_dt shared
 		#pragma omp parallel for shared(min_dt)
 		// for each angio element
@@ -108,7 +112,7 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, int
 			#pragma omp critical
 			{
 				// change min_dt to the lesser of min_dt and temp dt
-				min_dt = std::min(min_dt, temp_dt);
+				min_dt = std::min(std::min(min_dt, temp_dt),fea->m_dt);
 			}
 		}
 		// check that the max_angio time is not greater than the angio dt max.
@@ -156,8 +160,8 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, int
 	ApplydtToTimestepper(min_dt, true);
 
 	//do the output
-	fileout->save_vessel_state(*this);
-	fileout->save_final_cells_txt(*this);
+	//fileout->save_vessel_state(*this);
+	//fileout->save_final_cells_txt(*this);
 
 
 	//do the cleanup if needed
@@ -765,7 +769,7 @@ bool FEAngio::InitFEM()
 
 	// register the angio callback
 
-	m_fem->AddCallback(FEAngio::feangio_callback, CB_UPDATE_TIME | CB_MAJOR_ITERS | CB_SOLVED | CB_STEP_ACTIVE | CB_INIT, this, CallbackHandler::CB_ADD_FRONT);
+	m_fem->AddCallback(FEAngio::feangio_callback, CB_UPDATE_TIME | CB_MAJOR_ITERS | CB_SOLVED | CB_STEP_ACTIVE | CB_INIT | CB_MODEL_UPDATE, this, CallbackHandler::CB_ADD_FRONT);
 
 	return true;
 }
@@ -1201,6 +1205,67 @@ void FEAngio::AdjustMatrixVesselWeights(class FEMesh* mesh)
 	}
 }
 
+bool FEAngio::CheckSpecies(FEMesh* mesh)
+{
+	bool r_val = true;
+	int angio_elements_size = angio_elements.size();
+	for (int i = 0; i < angio_elements_size; i++)
+	{
+		AngioElement* angio_element = angio_elements[i];
+		FEDomain* dom = dynamic_cast<FEDomain*>(angio_element->_elem->GetMeshPartition());
+		FEMultiphasic* mat = dynamic_cast<FEMultiphasic*>(dom->GetMaterial());
+		if (mat == nullptr) break;
+		int n_sol = mat->Solutes();
+		int n_sbm = mat->SBMs();
+		int n_nodes = angio_element->_elem->Nodes();
+		int n_mp = angio_element->_elem->GaussPoints();
+		
+		//! scale down solute rates as needed
+		for (int j = 0; j < n_sol; j++) 
+		{
+			int m_dofC = GetFEModel()->GetDOFIndex("concentration", j);
+			for (int l = 0; l < n_nodes; l++)
+			{
+				double c;
+				c = mesh->Node(angio_element->_elem->m_node[l]).get(m_dofC);
+				if (c < 0.0) {
+					r_val = false;
+					int n_cells = angio_element->tip_cells.size();
+					for (auto iter = angio_element->tip_cells.begin(); iter != angio_element->tip_cells.end(); iter++)
+					{
+						std::cout << "initial tolscale is " << iter->second->Solutes[j]->GetTolScale() << endl;
+						iter->second->Solutes[j]->ScaleTolScale(0.1);
+						std::cout << "new tolscale is " << iter->second->Solutes[j]->GetTolScale() << endl;
+					}
+					break;
+				}
+			}
+		}
+
+		//! scale down SBM rates as needed
+		for (int j = 0; j < n_sbm; j++)
+		{
+			for (int l = 0; l < n_mp; l++)
+			{
+				FEMaterialPoint& mp = *angio_element->_elem->GetMaterialPoint(l);
+				FESolutesMaterialPoint& pd = *(mp.ExtractData<FESolutesMaterialPoint>());
+				if (pd.m_sbmr[j] < 0.0)
+				{
+					r_val = false;
+					int n_cells = angio_element->tip_cells.size();
+					for (auto iter = angio_element->tip_cells.begin(); iter != angio_element->tip_cells.end(); iter++)
+					{
+						iter->second->SBMs[j]->ScaleTolScale(0.1);
+					}
+					break;
+				}
+			}
+		}
+
+	}
+
+	return r_val;
+}
 
 
 //-----------------------------------------------------------------------------
@@ -1210,6 +1275,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 	FEMesh * mesh = GetMesh();
 	if(nwhen == CB_INIT)
 	{
+		std::cout << "Initialization Time" << endl;
 		SetupAngioElements();
 
 		SetSeeds();
@@ -1319,10 +1385,16 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 			angio_elements[i]->_angio_mat->angio_stress_policy->AngioStress(angio_elements[i], this, mesh);
 		}
 		update_angio_stress_timer.stop();
+
+		for (auto iter = cells.begin(); iter != cells.end(); iter++)
+		{
+			iter->second->ProtoUpdateSpecies(mesh);
+		}
 	}
 
 	if (nwhen == CB_UPDATE_TIME)
 	{
+		std::cout << "Update Time" << endl;
 		static int index = 0;
 		// grab the time information
 		
@@ -1351,7 +1423,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		grow_timer.start();
 		GrowSegments(min_scale_factor, bounds_tolerance,growth_substeps);
 		grow_timer.stop();
-
+		
 		update_angio_stress_timer.start();
 		for (int i = 0; i < angio_materials.size(); i++)
 		{
@@ -1369,8 +1441,26 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		}
 		update_angio_stress_timer.stop();
 	}
+	else if (nwhen == CB_MODEL_UPDATE) {
+		size_t cell_count = cells.size();
+		for (auto iter = cells.begin(); iter != cells.end(); iter++)
+		{
+			iter->second->UpdateSpecies(mesh);
+		}
+		bool positive_conc = CheckSpecies(mesh);
+		if (positive_conc)
+		{
+			std::cout << "All positive" << endl;
+		}
+		else 
+		{
+			std::cout << "Negative detected" << endl;	
+			throw DoRunningRestart();
+		}
+	}
 	else if (nwhen == CB_MAJOR_ITERS)
 	{
+		std::cout << "Major Iteration" << endl;
 
 		fileout->save_feangio_stats(*this);
 		ResetTimers();
@@ -1380,10 +1470,13 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 			CalculateSegmentLengths(mesh);
 			// Print the status of angio3d to the user    
 			fileout->printStatus(*this, fem.GetTime().currentTime);
+			fileout->save_vessel_state(*this);
+			fileout->save_final_cells_txt(*this);
 		}
 	}
 	else if (nwhen == CB_SOLVED)
 	{
+		std::cout << "Solved Time" << endl;
 		// do the final output
 		if (!m_fem->GetGlobalConstant("no_io"))
 		{
@@ -1438,39 +1531,51 @@ bool FEAngio::ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d
 		if (dir.x > 0)
 		{
 			double temp = (upper_bounds.x - pt.x) / dir.x;
-			if (temp >= 0)
+			if (temp > 0)
 				possible_values.push_back(temp);
+			else if (temp == 0.0)
+				possible_values.push_back(1e-2);
 		}
 		else if (dir.x < 0)
 		{
 			double temp = (lower_bounds.x - pt.x) / dir.x;
-			if (temp >= 0)
+			if (temp > 0)
 				possible_values.push_back(temp);
+			else if (temp == 0.0)
+				possible_values.push_back(1e-2);
 		}
 		if (dir.y > 0)
 		{
 			double temp = (upper_bounds.y - pt.y) / dir.y;
-			if (temp >= 0)
+			if (temp > 0)
 				possible_values.push_back(temp);
+			else if (temp == 0.0)
+				possible_values.push_back(1e-2);
 		}
 		else if (dir.y < 0)
 		{
 			double temp = (lower_bounds.y - pt.y) / dir.y;
-			if (temp >= 0)
+			if (temp > 0)
 				possible_values.push_back(temp);
+			else if (temp == 0.0)
+				possible_values.push_back(1e-2);
 		}
 
 		if (dir.z > 0)
 		{
 			double temp = (upper_bounds.z - pt.z) / dir.z;
-			if (temp >= 0)
+			if (temp > 0)
 				possible_values.push_back(temp);
+			else if (temp == 0.0)
+				possible_values.push_back(1e-2);
 		}
 		else if (dir.z < 0)
 		{
 			double temp = (lower_bounds.z - pt.z) / dir.z;
-			if (temp >= 0)
+			if (temp > 0)
 				possible_values.push_back(temp);
+			else if (temp == 0.0)
+				possible_values.push_back(1e-2);
 		}
 		if (possible_values.size())
 		{
@@ -2010,4 +2115,14 @@ bool CreateConcentrationMap(vector<double>& concentration, FEMaterial* pmat, int
 
 	// If we get here, all is well.
 	return true;
+}
+
+int FEAngio::AddFragment() {
+	
+	return fragment_id_counter++;
+}
+
+int FEAngio::AddCell() {
+
+	return cell_id_counter++;
 }

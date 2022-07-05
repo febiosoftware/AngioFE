@@ -352,7 +352,7 @@ void FEAngioMaterial::ProtoGrowSegments(AngioElement * angio_elem, double end_ti
 	assert(angio_elem);
 
 	// copy the vector of active tips in the current angio element
-	std::vector<Tip*> & tips = angio_elem->active_tips[buffer_index].at(angio_elem);\
+	std::vector<Tip*> & tips = angio_elem->active_tips[buffer_index].at(angio_elem);
 	// for each tip in the current element grow the tips.
 	for (int j = 0; j < tips.size(); j++)
 	{
@@ -458,7 +458,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		Segment * seg = new Segment();
 		next->SetLocalPosition(real_natc, mesh);
 		next->TipCell->time = next->time;
-		next->TipCell->UpdateSpecies(mesh);
+		//next->TipCell->UpdateSpecies(mesh);
 		next->parent = seg;
 		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (local_pos.x + local_pos.y + local_pos.z) < 1.01 : true);
 		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (local_pos.x + local_pos.y + local_pos.z) < 1.01 : true);
@@ -509,7 +509,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 		next->time = tip_time_start;
 		Segment * seg = new Segment();
 		next->SetLocalPosition(next_natc, mesh);
-		next->TipCell->UpdateSpecies(mesh);
+		//next->TipCell->UpdateSpecies(mesh);
 		next->TipCell->time = next->time;
 		next->parent = seg;
 		seg->back = active_tip;
@@ -575,7 +575,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 				next->angio_element = possible_locations[index];
 				next->TipCell->angio_element = possible_locations[index];
 				next->SetLocalPosition(real_natc_a, mesh);
-				next->TipCell->UpdateSpecies(mesh);
+				//next->TipCell->UpdateSpecies(mesh);
 				next->face = next->angio_element;
 				local_pos = next->GetLocalPosition();
 				assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (local_pos.x + local_pos.y + local_pos.z) < 1.01 : true);
@@ -620,6 +620,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip * active_tip, int sou
 			next->angio_element->active_tips[next_buffer_index].at(next->angio_element).push_back(next);
 			next->angio_element->recent_segments.push_back(seg);
 			next->angio_element->reference_frame_segment_length += seg->RefLength(mesh);
+			//next->TipCell->UpdateSpecies(mesh);
 			}
 	}
 	// generally not hit unless there is large matrix deformation
@@ -727,7 +728,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		Segment* seg = new Segment();
 		next->SetLocalPosition(real_natc, mesh);
 		next->TipCell->time = next->time;
-		next->TipCell->ProtoUpdateSpecies(mesh);
+		//next->TipCell->ProtoUpdateSpecies(mesh);
 		next->parent = seg;
 		next->SetProtoGrowthLength(active_tip);
 		assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (local_pos.x + local_pos.y + local_pos.z) < 1.01 : true);
@@ -763,7 +764,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 		next->time = tip_time_start;
 		Segment* seg = new Segment();
 		next->SetLocalPosition(next_natc, mesh);
-		next->TipCell->ProtoUpdateSpecies(mesh);
+		//next->TipCell->ProtoUpdateSpecies(mesh);
 		next->TipCell->time = next->time;
 		next->parent = seg;
 		next->SetProtoGrowthLength(active_tip);
@@ -819,7 +820,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 				next->angio_element = possible_locations[index];
 				next->TipCell->angio_element = possible_locations[index];
 				next->SetLocalPosition(real_natc_a, mesh);
-				next->TipCell->ProtoUpdateSpecies(mesh);
+				//next->TipCell->ProtoUpdateSpecies(mesh);
 				next->face = next->angio_element;
 				local_pos = next->GetLocalPosition();
 				assert(next->angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (local_pos.x + local_pos.y + local_pos.z) < 1.01 : true);
@@ -867,7 +868,7 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip * active_tip, in
 			next->angio_element->reference_frame_segment_length += seg->RefLength(mesh);
 		}
 	}
-	// generally not hit unless there is large matrix deformation
+	// generally not hit unless there is large matrix deformation or a tip is right on a vertex
 	else {
 		#ifndef NDEBUG
 			#pragma omp critical

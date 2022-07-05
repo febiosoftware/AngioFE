@@ -33,9 +33,9 @@ public:
 	void AddSBMPRhat(double r) { SBMPRhat = SBMPRhat + r; }
 	double GetSBMPRhat() { return SBMPRhat; }
 	FESBMPointSource* CellSBMPS;
-	double GetPR() { return CellSBMPS->GetValue(); }
-	void SetPR(double r) { CellSBMPS->SetValue(r); }
-	void AddPR(double r) { CellSBMPS->SetValue(CellSBMPS->GetValue() + r); }
+	double GetPR() { return CellSBMPS->GetRate(); }
+	void SetPR(double r) { CellSBMPS->SetRate(r); }
+	void AddPR(double r) { CellSBMPS->SetRate(CellSBMPS->GetRate() + r); }
 	double c_flux = 0;
 	double MolarMass() { return m_M; }
 	double Density() { return m_rhoT; }
@@ -43,6 +43,9 @@ public:
 	void SetMolarMass(double r) { m_M = r; }
 	void SetDensity(double r) { m_rhoT = r; }
 	void SetCharge(int r) { m_z = r; }
+	double GetTolScale() { return tol_scale; }
+	void ScaleTolScale(double m) { tol_scale = tol_scale * m; }
+	void ResetTolScale() { tol_scale = 1.0; }
 	FESBMData* SBMData;
 	FESBMData* FindSBMData(int nid);
 	//! idealy changes how the concentrations are updated to be based on the location of tips
@@ -59,6 +62,7 @@ private:
 	double m_M = 1;
 	double m_rhoT = 1;
 	int m_z = 0;
+	double tol_scale = 1.0;
 };
 
 //! (Incomplete) Prescribed dof to allow tips to deposit chemicals within a multiphasic material
@@ -94,19 +98,23 @@ public:
 	int ChargeNumber() { return m_z; }
 	FESoluteData* SolData;
 	FESoluteData* FindSoluteData(int nid);
+	double GetTolScale() { return tol_scale; }
+	void ScaleTolScale(double m) { tol_scale = tol_scale * m; }
+	void ResetTolScale() { tol_scale = 1.0; }
 	//! idealy changes how the concentrations are updated to be based on the location of tips
 	//void Update();
 protected:
 	DECLARE_FECORE_CLASS();
 private:
 	int Solute_ID = -1;
-	double c_Sol = 0;			// solute concentration/number
-	double Solhat = 0;				// Solute reaction supply		
+	double c_Sol = 0;				// solute concentration/number
+	double Solhat = 0;				// Solute reaction supply
 	double Solhatp = 0;				// Previous solute reaction supply
 	double SolPRhat = 0;			// Solute point source reaction supply
 	double m_M = 0;
 	double m_rhoT = 1;
 	int m_z = 1;
+	double tol_scale = 1.0;
 };
 
 class CellSpeciesManager : public FEMaterial

@@ -8,6 +8,7 @@
 #include <future>
 #include "AngioElement.h"
 #include <random>
+#include <unordered_map>
 
 class FEElemElemList;
 //-----------------------------------------------------------------------------
@@ -50,6 +51,9 @@ public:
 
 	//! updates the weighting between the matrix and vessel submaterials
 	void AdjustMatrixVesselWeights(FEMesh* mesh);
+
+	//! updates the weighting between the matrix and vessel submaterials
+	bool CheckSpecies(FEMesh* mesh);
 
 #ifdef WIN32
 	//! generate a rotation matrix in which all rotations are equally probable
@@ -163,7 +167,6 @@ private:
 	//! setup the map from nodes to elements
 	void SetupNodesToElement(int min_element_id);
 
-
 	//! do the final output
 	void Output();
 
@@ -214,6 +217,14 @@ public:	// parameters read directly from file
 	std::unordered_map<AngioElement *, std::vector<AngioElement *>> angio_elements_to_all_adjacent_elements;//adjacent is shares a node with the element
 	//! elements by material
 	std::unordered_map < FEAngioMaterial *, std::vector<AngioElement *>> elements_by_material;
+
+	//! increment fragment number
+	int AddFragment();
+
+	//! increment cell number
+	int AddCell();
+
+	std::unordered_map<int, FECell*> cells;
 private:
 	//both nodes and elements id's go from 1 to n+1 for n items
 	//first element is padding so the id can be used to lookup the data for that node
@@ -231,14 +242,14 @@ private:
 	std::vector<AngioElement *> angio_elements;//the dense list of angio elements
 	std::unordered_map<FESolidElement*,std::pair<AngioElement *,int>> se_to_angio_elem;//the int is the index which is used in neighbor lookups
 	std::vector<AngioElement *> angio_elements_with_holes;//the possibly sparse list of elements .. used to serialize data
-	
 	std::vector<FEAngioMaterial*> angio_materials;
 	int buffer_index = 0;
 
 	double next_time = -1;
 
 	const double eps = 0.001;
-
+	static int fragment_id_counter;
+	static int cell_id_counter;
 	double min_scale_factor = 0.01;
 	double bounds_tolerance = 1e-2;
 	int growth_substeps = 3;
@@ -246,5 +257,6 @@ private:
 	double min_angio_dt = -1;
 	double min_segment_length = 5.0;
 	int auto_stepper_key = -1;
-	int bounce = 1;						// determines whether vessels bounce or grow along a wall. Bounce condition is a symmetry condition.
+	int bounce = 1;		
+				// determines whether vessels bounce or grow along a wall. Bounce condition is a symmetry condition.
 };

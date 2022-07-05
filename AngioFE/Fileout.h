@@ -55,6 +55,7 @@ private:
 	// get per angio material
 	std::vector <int> getTipCount_pm(FEAngio& angio);
 	std::ofstream logstream;
+	static std::string m_sfile;
 
 	FILE*  vessel_state_stream = nullptr;
 	FILE*  feangio_state_stream = nullptr;
