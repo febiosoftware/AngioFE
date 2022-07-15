@@ -46,7 +46,9 @@ public:
 	std::vector<FECellChemicalReaction*> Reactions;
 	void InitSpecies(FEMesh* mesh);
 	void UpdateSpecies(FEMesh * mesh);
+	void SetInternalSpecies(double t0, double dt);
 	void ProtoUpdateSpecies(FEMesh* mesh);
+	double GetMaxSpeciesDT(FEMesh* mesh, double t0, double dt);
 	Tip* ParentTip;
 	double eval_time = 0;
 	double cell_radius = 1e-5; // 

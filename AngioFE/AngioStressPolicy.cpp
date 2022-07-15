@@ -174,6 +174,7 @@ ADD_PARAMETER(a, "a");
 ADD_PARAMETER(b, "b");
 ADD_PARAMETER(x0, "x0");
 ADD_PARAMETER(y0, "y0");
+ADD_PARAMETER(scale, "scale")
 
 END_FECORE_CLASS();
 
