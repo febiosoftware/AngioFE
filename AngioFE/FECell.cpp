@@ -11,7 +11,7 @@
 #include <FECore/log.h>
 #include <FECore/FEMaterial.h>
 
-vec3d FECell::GetPosition(FEMesh * mesh) const
+vec3d FECell::GetPosition(FEMesh* mesh) const
 {
 	double arr[FESolidElement::MAX_NODES];
 	assert(angio_element);
@@ -21,12 +21,12 @@ vec3d FECell::GetPosition(FEMesh * mesh) const
 
 	for (int j = 0; j < angio_element->_elem->Nodes(); j++)
 	{
-		rc += mesh->Node(angio_element->_elem->m_node[j]).m_rt* arr[j];
+		rc += mesh->Node(angio_element->_elem->m_node[j]).m_rt * arr[j];
 	}
 	return rc;
 }
 
-vec3d FECell::GetRefPosition(FEMesh * mesh) const
+vec3d FECell::GetRefPosition(FEMesh* mesh) const
 {
 	double arr[FESolidElement::MAX_NODES];
 	assert(angio_element);
@@ -36,12 +36,12 @@ vec3d FECell::GetRefPosition(FEMesh * mesh) const
 
 	for (int j = 0; j < angio_element->_elem->Nodes(); j++)
 	{
-		rc += mesh->Node(angio_element->_elem->m_node[j]).m_r0* arr[j];
+		rc += mesh->Node(angio_element->_elem->m_node[j]).m_r0 * arr[j];
 	}
 	return rc;
 }
 
-void FECell::PrintCellInfo(FEMesh *mesh, std::string title) const
+void FECell::PrintCellInfo(FEMesh* mesh, std::string title) const
 {
 #ifndef NDEBUG
 	std::cout << title << std::endl;
@@ -49,7 +49,7 @@ void FECell::PrintCellInfo(FEMesh *mesh, std::string title) const
 #endif
 }
 
-void FECell::PrintCellInfo(FEMesh *mesh) const
+void FECell::PrintCellInfo(FEMesh* mesh) const
 {
 #ifndef NDEBUG
 	/*std::cout << "local position: " << local_pos.x << " , " << local_pos.y << " , " << local_pos.z << std::endl;
@@ -75,7 +75,7 @@ void FECell::PrintCellInfo(FEMesh *mesh) const
 }
 
 // create a new cell based on the pre-existing cell.
-FECell::FECell(FECell * other, FEMesh * mesh)
+FECell::FECell(FECell* other, FEMesh* mesh)
 {
 	// get the other tip's parameters.
 	angio_element = other->angio_element;
@@ -141,12 +141,12 @@ void FECell::InitSpecies(FEMesh* mesh)
 			cell_solute->SetDensity(psd->m_rhoT);
 			cell_solute->SetMolarMass(psd->m_M);
 			cell_solute->SetCharge(psd->m_z);
-			cell_solute->CellSolutePS->SetRadius(cell_radius);			
-			
+			cell_solute->CellSolutePS->SetRadius(cell_radius);
+
 			// initialize and activate the bc
 			if (cell_solute->CellSolutePS->Init()) {
-				mesh->GetFEModel()->AddBodyLoad(cell_solute->CellSolutePS);
 				cell_solute->CellSolutePS->SetAccumulateFlag(false);
+				mesh->GetFEModel()->AddBodyLoad(cell_solute->CellSolutePS);
 				Solutes.emplace_back(cell_solute);
 			}
 		}
@@ -171,8 +171,8 @@ void FECell::InitSpecies(FEMesh* mesh)
 			cell_sbm->CellSBMPS->SetRadius(cell_radius);
 			// initialize and activate the bc
 			if (cell_sbm->CellSBMPS->Init()) {
-				cell_sbm->CellSBMPS->SetResetFlag(false);
-				cell_sbm->CellSBMPS->SetWeighVolume(true);
+				//cell_sbm->CellSBMPS->SetResetFlag(false);
+				//cell_sbm->CellSBMPS->SetWeighVolume(true);
 				cell_sbm->CellSBMPS->SetAccumulateFlag(false);
 				mesh->GetFEModel()->AddBodyLoad(cell_sbm->CellSBMPS);
 				SBMs.emplace_back(cell_sbm);
@@ -194,7 +194,7 @@ void FECell::InitSpecies(FEMesh* mesh)
 					m_CR->m_pRev->SetCell(this);
 				}
 				m_CR->Init();
-				
+
 				this->Reactions.emplace_back(m_CR);
 			}
 		}
@@ -204,11 +204,14 @@ void FECell::InitSpecies(FEMesh* mesh)
 
 void FECell::UpdateSpecies(FEMesh* mesh)
 {
+	double dt = time - eval_time;
+	if (dt == 0) { return; }
+	std::cout << "Updating Species" << endl;
 	// Update body loads for secreted species
 	for (int isol = 0; isol < Solutes.size(); isol++)
 	{
 		//! Set the new position
-		
+
 		//! Call the Body Load update
 		if (this->eval_time >= 0.0) {
 			Solutes[isol]->CellSolutePS->SetPosition(GetPosition(mesh));
@@ -226,9 +229,7 @@ void FECell::UpdateSpecies(FEMesh* mesh)
 		SBMs[isbm]->SetSBMPRhat(0.0);
 	}
 
-	// update SBMs
-	//double ctime = mesh->GetFEModel()->GetTime().currentTime;
-	double dt = time - eval_time;
+	// update species
 	double t0 = eval_time;
 	eval_time = time;
 	int nsbm = this->SBMs.size();
@@ -259,45 +260,59 @@ void FECell::UpdateSpecies(FEMesh* mesh)
 			double v = Reactions[k]->m_v[isol];
 			//Add the product of the stoichiometric ratio with the supply for the reaction
 			Sol->AddSolhat(v * zetahat);
-			Sol->CellSolutePS->Accumulate(Sol->GetSolPRhat());// no dt since the rate is handled elsewhere
+			//Sol->AddSolhat(v * zetahat * Sol->GetTolScale());
+			std::cout << "tol scale during eval is " << Sol->GetTolScale() << endl;
+			// accumulate unless there's no dt. Solutes have the dt evaluated elsewhere.
+			Sol->CellSolutePS->Accumulate(Sol->GetSolPRhat());// no dt since the rate is handled elsewhere so this is different than SBMs.
 		}
-		// perform the time integration (midpoint rule)
+		Sol->CellSolutePS->Update();
+		// perform the time integration (switch to midpoint rule in future?)
 		double newc;
-		if (t0 != 0) {
-			newc = Sol->GetInt() + ((Sol->GetSolhat() + Sol->GetSolhatp()) / (2 * cell_volume)) * dt ;
+		//SL: Will probably need to add sum from reactions as well to this.
+		if (t0 != 0)
+		{
+			newc = Sol->GetInt() + ((Sol->GetSolhat() + Sol->GetSolhatp()) / 2.0) * dt;
 		}
-		else {
-			newc = Sol->GetInt() + Sol->GetSolhat() / cell_volume * dt ;
+		else
+		{
+			newc = Sol->GetInt() + Sol->GetSolhat() * dt;
 		}
 		Sol->SetInt(std::max(newc, 0.0));
 	}
 
 	for (int isbm = 0; isbm < nsbm; isbm++) {
 		CellSBM* SBM = SBMs[isbm];
-		int SolID = SBM->GetSBMID();
+		int SBMID = SBM->GetSBMID();
 		SBM->SetSBMhatp(SBM->GetSBMhat());
 		SBM->SetSBMhat(0.0);
 		SBM->SetSBMPRhat(0.0);
-		SBM->c_flux = 0;
+		SBM->CellSBMPS->SetRate(0.0);
+		//SBM->c_flux = 0;
 		// combine the molar supplies from all the reactions
 		for (int k = 0; k < Reactions.size(); ++k) {
 			Reactions[k]->SetCell(this);
 			if (Reactions[k]->m_pFwd) { Reactions[k]->m_pFwd->SetCell(this); }
 			if (Reactions[k]->m_pRev) { Reactions[k]->m_pRev->SetCell(this); }
+			//! Get the reaction supply for each reaction that the SBM is involved in
 			double zetahat;
 			zetahat = Reactions[k]->ReactionSupply(this);
 			//! Get the net stoichiometric ratio for each sbm
 			double v = Reactions[k]->m_v[nsol + isbm];
+			//Add the product of the stoichiometric ratio with the supply for the reaction
 			SBM->AddSBMhat(v * zetahat);
-			SBM->CellSBMPS->Accumulate(SBM->GetSBMPRhat()*dt);
+			SBM->CellSBMPS->Accumulate(SBM->GetSBMPRhat() * dt); //need to include dt for SBMs since they are not handled the same as solutes.
 		}
-		// perform the time integration (midpoint rule)
+		SBM->CellSBMPS->Update();
+		//perform the time integration (midpoint rule)
 		double newc;
-		if (t0 != 0) {
-			newc = SBM->GetInt() + ((SBM->GetSBMhat() + SBM->GetSBMhatp()) / (2 * cell_volume)) * dt;
+		//SL: Will probably need to add sum from reactions as well to this.
+		if (t0 != 0)
+		{
+			newc = SBM->GetInt() + ((SBM->GetSBMhat() + SBM->GetSBMhatp()) / 2.0) * dt;
 		}
-		else {
-			newc = SBM->GetInt() + (SBM->GetSBMhat() / cell_volume) * dt;
+		else
+		{
+			newc = SBM->GetInt() + SBM->GetSBMhat() * dt;
 		}
 		SBM->SetInt(std::max(newc, 0.0));
 	}

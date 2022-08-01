@@ -19,7 +19,7 @@ BEGIN_FECORE_CLASS(FECellReactionRateConst, FECellReactionRate)
 ADD_PARAMETER(m_k, FE_RANGE_GREATER_OR_EQUAL(0.0), "k");
 END_FECORE_CLASS();
 
-FECellReaction::FECellReaction(FEModel* pfem) : FEMaterial(pfem) 
+FECellReaction::FECellReaction(FEModel* pfem) : FEMaterial(pfem)
 {
 
 }
@@ -80,7 +80,7 @@ bool FECellChemicalReaction::Init()
 {
 	// initialize base class
 	FECellReaction::Init();
-	
+
 
 	// set the parents for the reaction rates
 	if (m_pFwd) m_pFwd->m_pReact = this;
@@ -132,22 +132,22 @@ bool FECellChemicalReaction::Init()
 			m_v[itot] = m_vP[itot] - m_vR[itot];
 		}
 
-		 //evaluate the weighted molar volume of reactants and products
+		//evaluate the weighted molar volume of reactants and products
 		if (!m_Vovr) {
 			m_Vbar = 0;
-			for (isol = 0; isol<nsol; ++isol){
+			for (isol = 0; isol < nsol; ++isol) {
 				m_Vbar += m_v[isol] * m_cell->Solutes[isol]->MolarMass() / m_cell->Solutes[isol]->Density();
 			}
-			for (isbm = 0; isbm<nsbm; ++isbm)
+			for (isbm = 0; isbm < nsbm; ++isbm)
 				m_Vbar += m_v[nsol + isbm] * m_cell->SBMs[isbm]->MolarMass() / m_cell->SBMs[isbm]->Density();
 		}
 
-		 //check that the chemical reaction satisfies electroneutrality
+		//check that the chemical reaction satisfies electroneutrality
 		int znet = 0;
-		for (isol = 0; isol<nsol; ++isol){
-				znet += m_v[isol] * m_cell->Solutes[isol]->ChargeNumber();
+		for (isol = 0; isol < nsol; ++isol) {
+			znet += m_v[isol] * m_cell->Solutes[isol]->ChargeNumber();
 		}
-		for (isbm = 0; isbm<nsbm; ++isbm)
+		for (isbm = 0; isbm < nsbm; ++isbm)
 			znet += m_v[nsol + isbm] * m_cell->SBMs[isbm]->ChargeNumber();
 		if (znet != 0) {
 			feLogError("chemical reaction must satisfy electroneutrality");
@@ -213,7 +213,7 @@ bool FECellChemicalReaction::SetParameterAttribute(FEParam& p, const char* szatt
 
 bool FECellReactionRate::Init() {
 	// Initialize base class
-	
+
 	return true;
 }
 
@@ -253,25 +253,25 @@ void FECellChemicalReaction::Serialize(DumpStream& ar)
 			ar >> m_nsol >> m_vR >> m_vP >> m_v >> m_Vovr;
 			int size, id, vR;
 			ar >> size;
-			for (int i = 0; i<size; ++i)
+			for (int i = 0; i < size; ++i)
 			{
 				ar >> id; ar >> vR;
 				SetStoichiometricCoefficient(m_solR, id, vR);
 			}
 			ar >> size;
-			for (int i = 0; i<size; ++i)
+			for (int i = 0; i < size; ++i)
 			{
 				ar >> id; ar >> vR;
 				SetStoichiometricCoefficient(m_solP, id, vR);
 			}
 			ar >> size;
-			for (int i = 0; i<size; ++i)
+			for (int i = 0; i < size; ++i)
 			{
 				ar >> id; ar >> vR;
 				SetStoichiometricCoefficient(m_sbmR, id, vR);
 			}
 			ar >> size;
-			for (int i = 0; i<size; ++i)
+			for (int i = 0; i < size; ++i)
 			{
 				ar >> id; ar >> vR;
 				SetStoichiometricCoefficient(m_sbmP, id, vR);
@@ -351,7 +351,7 @@ double FECellMassActionForwardEffective::ReactionSupply(FECell* cell)
 	// start with contribution from solutes
 	int nsol = 0;
 	nsol = cell->Solutes.size();
-	for (int i = 0; i<nsol; ++i) {
+	for (int i = 0; i < nsol; ++i) {
 		int vR = m_vR[i];
 		if (vR > 0) {
 			double c = 0;
@@ -362,7 +362,7 @@ double FECellMassActionForwardEffective::ReactionSupply(FECell* cell)
 
 	// add contribution of solid-bound molecules
 	const int nsbm = cell->SBMs.size();
-	for (int i = 0; i<nsbm; ++i) {
+	for (int i = 0; i < nsbm; ++i) {
 		int vR = m_vR[nsol + i];
 		if (vR > 0) {
 			double c = cell->SBMs[i]->GetInt();
@@ -392,7 +392,7 @@ double FECellMassActionReversible::FwdReactionSupply(FECell* cell)
 
 	// start with contribution from solutes
 	nsol = cell->Solutes.size();
-	for (int i = 0; i<nsol; ++i) {
+	for (int i = 0; i < nsol; ++i) {
 		int vR = m_vR[i];
 		if (vR > 0) {
 			double c = cell->Solutes[i]->GetInt();
@@ -402,7 +402,7 @@ double FECellMassActionReversible::FwdReactionSupply(FECell* cell)
 
 	// add contribution of solid-bound molecules
 	const int nsbm = cell->SBMs.size();
-	for (int i = 0; i<nsbm; ++i) {
+	for (int i = 0; i < nsbm; ++i) {
 		int vR = m_vR[nsol + i];
 		if (vR > 0) {
 			double c = cell->SBMs[i]->GetInt();
@@ -425,7 +425,7 @@ double FECellMassActionReversible::RevReactionSupply(FECell* cell)
 	// start with contribution from solutes
 	int nsol = 0;
 	nsol = cell->Solutes.size();
-	for (int i = 0; i<nsol; ++i) {
+	for (int i = 0; i < nsol; ++i) {
 		int vP = m_vP[i];
 		if (vP > 0) {
 			double c = cell->Solutes[i]->GetInt();
@@ -434,7 +434,7 @@ double FECellMassActionReversible::RevReactionSupply(FECell* cell)
 	}
 	// add contribution of solid-bound molecules
 	const int nsbm = cell->SBMs.size();
-	for (int i = 0; i<nsbm; ++i) {
+	for (int i = 0; i < nsbm; ++i) {
 		int vP = m_vP[nsol + i];
 		if (vP > 0) {
 			double c = cell->SBMs[i]->GetInt();
@@ -468,9 +468,9 @@ double FECellMassActionReversibleEffective::FwdReactionSupply(FECell* cell)
 
 	// start with contribution from solutes
 	int nsol = 0;
-		/*nsol = (int)spt.m_c.size();*/
+	/*nsol = (int)spt.m_c.size();*/
 	nsol = cell->Solutes.size();
-	for (int i = 0; i<nsol; ++i) {
+	for (int i = 0; i < nsol; ++i) {
 		int vR = m_vR[i];
 		if (vR > 0) {
 			double c = cell->Solutes[i]->GetInt();
@@ -480,7 +480,7 @@ double FECellMassActionReversibleEffective::FwdReactionSupply(FECell* cell)
 	// add contribution of solid-bound molecules
 	// add contribution of solid-bound molecules
 	const int nsbm = cell->SBMs.size();
-	for (int i = 0; i<nsbm; ++i) {
+	for (int i = 0; i < nsbm; ++i) {
 		int vR = m_vR[nsol + i];
 		if (vR > 0) {
 			double c = cell->SBMs[i]->GetInt();
@@ -505,7 +505,7 @@ double FECellMassActionReversibleEffective::RevReactionSupply(FECell* cell)
 	int nsol = 0;
 	nsol = cell->Solutes.size();
 	/*nsol = (int)spt.m_c.size();*/
-	for (int i = 0; i<nsol; ++i) {
+	for (int i = 0; i < nsol; ++i) {
 		int vP = m_vP[i];
 		if (vP > 0) {
 			double c = cell->Solutes[i]->GetInt();
@@ -518,7 +518,7 @@ double FECellMassActionReversibleEffective::RevReactionSupply(FECell* cell)
 
 	/*const int nsbm = (int)spt.m_sbmr.size();*/
 	const int nsbm = cell->SBMs.size();
-	for (int i = 0; i<nsbm; ++i) {
+	for (int i = 0; i < nsbm; ++i) {
 		int vP = m_vP[nsol + i];
 		if (vP > 0) {
 			double c = cell->SBMs[i]->GetInt();
@@ -567,7 +567,7 @@ bool FECellMichaelisMenten::Init()
 	}
 
 	const int ntot = (int)m_v.size();
-	for (int itot = 0; itot<ntot; itot++) {
+	for (int itot = 0; itot < ntot; itot++) {
 		if (m_vR[itot] > 0) m_Rid = itot;
 		if (m_vP[itot] > 0) m_Pid = itot;
 	}
@@ -591,14 +591,14 @@ double FECellMichaelisMenten::ReactionSupply(FECell* cell)
 	double Vmax = m_pFwd->ReactionRate();
 	double c = 0.0;
 	if (m_Rtype) {
-		c = cell->SBMs[m_Rid-m_nsol]->GetInt();
+		c = cell->SBMs[m_Rid - m_nsol]->GetInt();
 	}
 	else {
 		c = cell->Solutes[m_Rid]->GetInt();
 	}
 
 	double zhat = 0;
-	if (c > m_c0) zhat = Vmax*c / (m_Km + c);
+	if (c > m_c0) zhat = Vmax * c / (m_Km + c);
 
 	return zhat;
 }
@@ -630,7 +630,7 @@ double FECellInternalization::ReactionSupply(FECell* cell)
 {
 	// get reaction rate
 	double m_Ki = m_pFwd->ReactionRate();
-	
+
 	double zhat = m_Ki;
 	// start with contribution from solutes
 
@@ -657,7 +657,7 @@ double FECellInternalization::ReactionSupply(FECell* cell)
 	for (int isbm = 0; isbm < nsbm; ++isbm) {
 		int vP = m_vP[nsol + isbm];
 		if (vP > 0) {
-		// Cells take away from the matrix
+			// Cells take away from the matrix
 			double m_c = 0;
 			for (int i = 0; i < cell->angio_element->_elem->GaussPoints(); i++)
 			{
@@ -805,14 +805,14 @@ bool FECellSecretionConstant::Init()
 	// there is only one reactant and one product in a Michaelis-Menten reaction
 	if (m_solP.size() + m_sbmP.size() > 0) {
 		std::runtime_error("Only provide vR");
-		/*feLogError("Only provide vR");
-		return false;*/
+		feLogError("Only provide vR");
+		return false;
 	}
 
 	if (m_solR.size() + m_sbmR.size() > 1) {
 		std::runtime_error("Only provide one vR for this reaction");
-		/*feLogError("Provide only one vR for this reaction");
-		return false;*/
+		feLogError("Provide only one vR for this reaction");
+		return false;
 	}
 
 	return true;
