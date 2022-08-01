@@ -1207,7 +1207,6 @@ bool FEAngio::CheckSpecies(FEMesh* mesh)
 		int n_sbm = mat->SBMs();
 		int n_nodes = angio_element->_elem->Nodes();
 		int n_mp = angio_element->_elem->GaussPoints();
-
 		//! scale down solute rates as needed
 		for (int j = 0; j < n_sol; j++)
 		{
@@ -1410,7 +1409,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		grow_timer.start();
 		GrowSegments(min_scale_factor, bounds_tolerance,growth_substeps);
 		grow_timer.stop();
-
+		
 		update_angio_stress_timer.start();
 		for (int i = 0; i < angio_materials.size(); i++)
 		{
@@ -1459,6 +1458,8 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 			CalculateSegmentLengths(mesh);
 			// Print the status of angio3d to the user    
 			fileout->printStatus(*this, fem.GetTime().currentTime);
+			fileout->save_vessel_state(*this);
+			fileout->save_final_cells_txt(*this);
 		}
 		// cleanup
 #pragma omp parallel for 
@@ -2112,7 +2113,6 @@ bool CreateConcentrationMap(vector<double>& concentration, FEMaterial* pmat, int
 }
 
 int FEAngio::AddFragment() {
-
 	return fragment_id_counter++;
 }
 

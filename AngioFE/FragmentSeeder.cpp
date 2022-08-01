@@ -382,7 +382,7 @@ bool ByVolumeFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElement
 
 SingleCellSeeder::SingleCellSeeder(FEModel* model) : FragmentSeeder(model), m_search(&model->GetMesh())
 {
-
+	
 }
 
 bool SingleCellSeeder::SeedFragments(std::vector<AngioElement*>& angio_elements, FEMesh* mesh, FEAngioMaterial* angio_mat, int buffer_index)

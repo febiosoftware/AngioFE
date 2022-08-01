@@ -357,6 +357,7 @@ void FEAngioMaterial::ProtoGrowSegments(AngioElement* angio_elem, double end_tim
 
 	// copy the vector of active tips in the current angio element
 	std::vector<Tip*>& tips = angio_elem->active_tips[buffer_index].at(angio_elem);
+
 	// for each tip in the current element grow the tips.
 	for (int j = 0; j < tips.size(); j++)
 	{
@@ -625,7 +626,6 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip* active_tip, int sour
 			next->angio_element->recent_segments.push_back(seg);
 			next->angio_element->reference_frame_segment_length += seg->RefLength(mesh);
 			//next->TipCell->UpdateSpecies(mesh);
-		}
 	}
 	// generally not hit unless there is large matrix deformation
 

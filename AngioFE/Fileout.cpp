@@ -40,7 +40,6 @@ Fileout::Fileout(FEAngio& angio)
 	unsigned int version = 1;
 	unsigned int num_bitmasks = angio.m_fem->Materials() / 32 + 1;
 	// write the magic number, version, and number of materials
-
 	fwrite(&magic, sizeof(unsigned int), 1, vessel_state_stream);
 	fwrite(&version, sizeof(unsigned int), 1, vessel_state_stream);
 	fwrite(&num_bitmasks, sizeof(unsigned int), 1, vessel_state_stream);
@@ -232,7 +231,6 @@ void Fileout::save_final_vessel_csv(FEAngio& angio)
 
 void Fileout::save_final_cells_txt(FEAngio& angio)
 {
-
 	FILE* final_cell_file = fopen((m_sfile + "_cells.txt").c_str(), "at");
 	assert(final_cell_file);
 	FEMesh* mesh = angio.GetMesh();

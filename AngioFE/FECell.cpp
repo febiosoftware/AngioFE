@@ -238,7 +238,6 @@ void FECell::UpdateSpecies(FEMesh* mesh)
 		FEModel* fem = angio_element->_mat->GetFEModel();
 		FEDomain* dom = &mesh->Domain(0);
 		FEMultiphasic* mat = dynamic_cast<FEMultiphasic*>(dom->GetMaterial());
-
 		FEMaterialPoint& mp = *angio_element->_elem->GetMaterialPoint(0);
 		//! Solutes
 
