@@ -8,9 +8,9 @@
 #include <FECore/mathalg.h>
 #include <unordered_map>
 
-void BranchPolicy::AddBranchTipEFD(AngioElement * angio_element, vec3d local_pos, Segment* parent_seg, double start_time, int vessel_id, int buffer_index, FEMesh* mesh)
+void BranchPolicy::AddBranchTipEFD(AngioElement* angio_element, vec3d local_pos, Segment* parent_seg, double start_time, int vessel_id, int buffer_index, FEMesh* mesh)
 {
-	Tip * branch = new Tip();
+	Tip* branch = new Tip();
 	branch->TipCell = new FECell();
 	branch->time = start_time;
 	branch->TipCell->time = start_time;
@@ -23,7 +23,7 @@ void BranchPolicy::AddBranchTipEFD(AngioElement * angio_element, vec3d local_pos
 	branch->initial_fragment_id = angio_element->_angio_mat->m_pangio->AddFragment();
 	// create a completely new cell id
 	branch->TipCell->initial_cell_id = angio_element->_angio_mat->m_pangio->AddCell();
-	angio_element->_angio_mat->m_pangio->cells.emplace(branch->TipCell->initial_cell_id,branch->TipCell);
+	angio_element->_angio_mat->m_pangio->cells.emplace(branch->TipCell->initial_cell_id, branch->TipCell);
 	angio_element->tip_cells.emplace(branch->TipCell->initial_cell_id, branch->TipCell);
 	//branch->TipCell->initial_cell_id = angio_element->_angio_mat->GetCommonAngioProperties()->fseeder->IncrementCellCounter();
 	branch->direction = GetBranchDirectionEFD(local_pos, parent_seg->Direction(mesh), angio_element, mesh);
@@ -43,7 +43,7 @@ vec3d BranchPolicy::GetBranchDirectionEFD(vec3d local_pos, vec3d parent_directio
 	mat3ds SPDs_gausspts[8];
 	double H[8];
 	// get the local EFD
-	for (int i = 0; i< angio_element->_elem->GaussPoints(); i++)
+	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
 	{
 		// get the angio point
 		FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
@@ -51,7 +51,7 @@ vec3d BranchPolicy::GetBranchDirectionEFD(vec3d local_pos, vec3d parent_directio
 		// Get the SPD   
 		angio_mp->UpdateSPD();
 		mat3ds temp_SPD = angio_mp->angioSPD;
-		SPDs_gausspts[i] = temp_SPD*(3.0 / temp_SPD.tr());
+		SPDs_gausspts[i] = temp_SPD * (3.0 / temp_SPD.tr());
 		// TODO: calculate all distances from mp to nodes then normalize. Currently assumes equidistance
 		H[i] = 1.0 / angio_element->_elem->GaussPoints();
 	}
@@ -59,7 +59,7 @@ vec3d BranchPolicy::GetBranchDirectionEFD(vec3d local_pos, vec3d parent_directio
 	mat3ds SPDs_nodes[8];
 	// Get the interpolated SPD from the shape function-weighted Average Structure Tensor
 	mat3ds SPD_int = weightedAverageStructureTensor(SPDs_gausspts, H, angio_element->_elem->GaussPoints());
-	SPD_int = (3.0 / SPD_int.tr())*SPD_int;
+	SPD_int = (3.0 / SPD_int.tr()) * SPD_int;
 
 	FEEllipticalDistribution E(this->GetFEModel());
 	E.spd = SPD_int;
@@ -76,10 +76,10 @@ vec3d BranchPolicy::GetBranchDirectionEFD(vec3d local_pos, vec3d parent_directio
 }
 
 
-void DelayedBranchingPolicyEFD::SetupBranchInfo(AngioElement * angio_elem)
+void DelayedBranchingPolicyEFD::SetupBranchInfo(AngioElement* angio_elem)
 {
 	angio_elem->branch_info = new DelayBranchInfo();
-	DelayBranchInfo *dbi = dynamic_cast<DelayBranchInfo*>(angio_elem->branch_info);
+	DelayBranchInfo* dbi = dynamic_cast<DelayBranchInfo*>(angio_elem->branch_info);
 	dbi->length_to_branch = l2b->NextValue(angio_elem->_rengine);
 }
 

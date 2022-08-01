@@ -112,7 +112,7 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, int
 			#pragma omp critical
 			{
 				// change min_dt to the lesser of min_dt and temp dt
-				min_dt = std::min(std::min(min_dt, temp_dt),fea->m_dt);
+				min_dt = std::min(std::min(min_dt, temp_dt), fea->m_dt);
 			}
 		}
 		// check that the max_angio time is not greater than the angio dt max.
@@ -159,22 +159,10 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, int
 	}
 	ApplydtToTimestepper(min_dt, true);
 
-	//do the output
-	//fileout->save_vessel_state(*this);
-	//fileout->save_final_cells_txt(*this);
-
-
-	//do the cleanup if needed
 	if(time_info.currentTime >= next_time)
 	{
 		next_time += min_dt;
 		printf("\nangio dt chosen is: %lg next angio time\n", min_dt);
-		#pragma omp parallel for 
-		for (int j = 0; j <angio_element_count; j++)
-		{
-			angio_elements[j]->_angio_mat->Cleanup(angio_elements[j], next_time, buffer_index);
-		}
-		buffer_index = (buffer_index + 1) % 2;
 	}
 
 }
@@ -1219,9 +1207,8 @@ bool FEAngio::CheckSpecies(FEMesh* mesh)
 		int n_sbm = mat->SBMs();
 		int n_nodes = angio_element->_elem->Nodes();
 		int n_mp = angio_element->_elem->GaussPoints();
-		
 		//! scale down solute rates as needed
-		for (int j = 0; j < n_sol; j++) 
+		for (int j = 0; j < n_sol; j++)
 		{
 			int m_dofC = GetFEModel()->GetDOFIndex("concentration", j);
 			for (int l = 0; l < n_nodes; l++)
@@ -1266,7 +1253,6 @@ bool FEAngio::CheckSpecies(FEMesh* mesh)
 
 	return r_val;
 }
-
 
 //-----------------------------------------------------------------------------
 bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
@@ -1452,9 +1438,9 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		{
 			std::cout << "All positive" << endl;
 		}
-		else 
+		else
 		{
-			std::cout << "Negative detected" << endl;	
+			std::cout << "Negative detected" << endl;
 			//throw DoRunningRestart();
 		}
 	}
@@ -1462,6 +1448,8 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 	{
 		std::cout << "Major Iteration" << endl;
 
+		fileout->save_vessel_state(*this);
+		fileout->save_final_cells_txt(*this);
 		fileout->save_feangio_stats(*this);
 		ResetTimers();
 		if (!m_fem->GetGlobalConstant("no_io"))
@@ -1473,6 +1461,13 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 			fileout->save_vessel_state(*this);
 			fileout->save_final_cells_txt(*this);
 		}
+		// cleanup
+#pragma omp parallel for 
+			for (int j = 0; j < angio_elements.size(); j++)
+			{
+				angio_elements[j]->_angio_mat->Cleanup(angio_elements[j], next_time, buffer_index);
+			}
+			buffer_index = (buffer_index + 1) % 2;
 	}
 	else if (nwhen == CB_SOLVED)
 	{
@@ -2118,7 +2113,6 @@ bool CreateConcentrationMap(vector<double>& concentration, FEMaterial* pmat, int
 }
 
 int FEAngio::AddFragment() {
-	
 	return fragment_id_counter++;
 }
 

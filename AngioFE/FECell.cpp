@@ -11,7 +11,7 @@
 #include <FECore/log.h>
 #include <FECore/FEMaterial.h>
 
-vec3d FECell::GetPosition(FEMesh * mesh) const
+vec3d FECell::GetPosition(FEMesh* mesh) const
 {
 	double arr[FESolidElement::MAX_NODES];
 	assert(angio_element);
@@ -21,12 +21,12 @@ vec3d FECell::GetPosition(FEMesh * mesh) const
 
 	for (int j = 0; j < angio_element->_elem->Nodes(); j++)
 	{
-		rc += mesh->Node(angio_element->_elem->m_node[j]).m_rt* arr[j];
+		rc += mesh->Node(angio_element->_elem->m_node[j]).m_rt * arr[j];
 	}
 	return rc;
 }
 
-vec3d FECell::GetRefPosition(FEMesh * mesh) const
+vec3d FECell::GetRefPosition(FEMesh* mesh) const
 {
 	double arr[FESolidElement::MAX_NODES];
 	assert(angio_element);
@@ -36,12 +36,12 @@ vec3d FECell::GetRefPosition(FEMesh * mesh) const
 
 	for (int j = 0; j < angio_element->_elem->Nodes(); j++)
 	{
-		rc += mesh->Node(angio_element->_elem->m_node[j]).m_r0* arr[j];
+		rc += mesh->Node(angio_element->_elem->m_node[j]).m_r0 * arr[j];
 	}
 	return rc;
 }
 
-void FECell::PrintCellInfo(FEMesh *mesh, std::string title) const
+void FECell::PrintCellInfo(FEMesh* mesh, std::string title) const
 {
 #ifndef NDEBUG
 	std::cout << title << std::endl;
@@ -49,7 +49,7 @@ void FECell::PrintCellInfo(FEMesh *mesh, std::string title) const
 #endif
 }
 
-void FECell::PrintCellInfo(FEMesh *mesh) const
+void FECell::PrintCellInfo(FEMesh* mesh) const
 {
 #ifndef NDEBUG
 	/*std::cout << "local position: " << local_pos.x << " , " << local_pos.y << " , " << local_pos.z << std::endl;
@@ -75,7 +75,7 @@ void FECell::PrintCellInfo(FEMesh *mesh) const
 }
 
 // create a new cell based on the pre-existing cell.
-FECell::FECell(FECell * other, FEMesh * mesh)
+FECell::FECell(FECell* other, FEMesh* mesh)
 {
 	// get the other tip's parameters.
 	angio_element = other->angio_element;
@@ -141,8 +141,8 @@ void FECell::InitSpecies(FEMesh* mesh)
 			cell_solute->SetDensity(psd->m_rhoT);
 			cell_solute->SetMolarMass(psd->m_M);
 			cell_solute->SetCharge(psd->m_z);
-			cell_solute->CellSolutePS->SetRadius(cell_radius);			
-			
+			cell_solute->CellSolutePS->SetRadius(cell_radius);
+
 			// initialize and activate the bc
 			if (cell_solute->CellSolutePS->Init()) {
 				cell_solute->CellSolutePS->SetAccumulateFlag(false);
@@ -194,7 +194,7 @@ void FECell::InitSpecies(FEMesh* mesh)
 					m_CR->m_pRev->SetCell(this);
 				}
 				m_CR->Init();
-				
+
 				this->Reactions.emplace_back(m_CR);
 			}
 		}
@@ -238,7 +238,6 @@ void FECell::UpdateSpecies(FEMesh* mesh)
 		FEModel* fem = angio_element->_mat->GetFEModel();
 		FEDomain* dom = &mesh->Domain(0);
 		FEMultiphasic* mat = dynamic_cast<FEMultiphasic*>(dom->GetMaterial());
-
 		FEMaterialPoint& mp = *angio_element->_elem->GetMaterialPoint(0);
 		//! Solutes
 
@@ -307,11 +306,11 @@ void FECell::SetInternalSpecies(double t0, double dt)
 		double newc;
 		if (t0 != 0.0)
 		{
-			newc = std::max((Sol->GetInt() + ((Sol->GetSolhat() + Sol->GetSolhatp()) / 2.0) * dt),0.0);
+			newc = std::max((Sol->GetInt() + ((Sol->GetSolhat() + Sol->GetSolhatp()) / 2.0) * dt), 0.0);
 		}
 		else
 		{
-			newc = std::max((Sol->GetInt() + Sol->GetSolhat() * dt),0.0);
+			newc = std::max((Sol->GetInt() + Sol->GetSolhat() * dt), 0.0);
 		}
 		Sol->SetInt(newc);
 		Sol->CellSolutePS->Update();
@@ -322,11 +321,11 @@ void FECell::SetInternalSpecies(double t0, double dt)
 		double newc;
 		if (t0 != 0.0)
 		{
-			newc = std::max((SBM->GetInt() + ((SBM->GetSBMhat() + SBM->GetSBMhatp()) / 2.0) * dt),0.0);
+			newc = std::max((SBM->GetInt() + ((SBM->GetSBMhat() + SBM->GetSBMhatp()) / 2.0) * dt), 0.0);
 		}
 		else
 		{
-			newc = std::max((SBM->GetInt() + SBM->GetSBMhat() * dt),0.0);
+			newc = std::max((SBM->GetInt() + SBM->GetSBMhat() * dt), 0.0);
 		}
 		SBM->SetInt(newc);
 		SBM->CellSBMPS->Update();

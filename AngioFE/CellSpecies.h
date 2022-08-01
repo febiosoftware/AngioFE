@@ -241,8 +241,8 @@ public:
 	void Serialize(DumpStream& ar) override;
 
 public:
-	FECellReactionRate*    m_pFwd;        //!< pointer to forward reaction rate
-	FECellReactionRate*    m_pRev;        //!< pointer to reverse reaction rate
+	FECellReactionRate* m_pFwd;        //!< pointer to forward reaction rate
+	FECellReactionRate* m_pRev;        //!< pointer to reverse reaction rate
 	FECell* m_cell;							//!< cell containing this
 
 public:
@@ -402,7 +402,7 @@ public:
 typedef std::map<int, int> intmap;
 typedef std::map<int, int>::iterator itrmap;
 
-class FECellInternalization: public FECellChemicalReaction
+class FECellInternalization : public FECellChemicalReaction
 {
 public:
 	//! constructor
@@ -448,11 +448,11 @@ public:
 
 };
 
-class FECellSecretion: public FECellChemicalReaction
+class FECellSecretion : public FECellChemicalReaction
 {
 public:
 	bool Init() override;
-	
+
 	//! constructor
 	FECellSecretion(FEModel* pfem) : FECellChemicalReaction(pfem) { m_s = 0; }
 
