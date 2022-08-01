@@ -6,14 +6,15 @@
 #include "CellSpecies.h"
 #include "FEProbabilityDistribution.h"
 #include "FECell.h"
+#include <unordered_map>
 
 vec3d Tip::GetDirection(FEMesh* mesh) const
 {
-	if(is_branch || use_direction)
+	if (is_branch || use_direction)
 	{
 		return direction;
 	}
-	else if(parent)
+	else if (parent)
 	{
 		return parent->Direction(mesh);
 	}
@@ -25,7 +26,7 @@ vec3d Tip::GetDirection(FEMesh* mesh) const
 	}
 }
 
-vec3d Tip::GetPosition(FEMesh * mesh) const
+vec3d Tip::GetPosition(FEMesh* mesh) const
 {
 	double arr[FESolidElement::MAX_NODES];
 	assert(angio_element);
@@ -35,12 +36,12 @@ vec3d Tip::GetPosition(FEMesh * mesh) const
 
 	for (int j = 0; j < angio_element->_elem->Nodes(); j++)
 	{
-		rc += mesh->Node(angio_element->_elem->m_node[j]).m_rt* arr[j];
+		rc += mesh->Node(angio_element->_elem->m_node[j]).m_rt * arr[j];
 	}
 	return rc;
 }
 
-vec3d Tip::GetRefPosition(FEMesh * mesh) const
+vec3d Tip::GetRefPosition(FEMesh* mesh) const
 {
 	double arr[FESolidElement::MAX_NODES];
 	assert(angio_element);
@@ -50,12 +51,12 @@ vec3d Tip::GetRefPosition(FEMesh * mesh) const
 
 	for (int j = 0; j < angio_element->_elem->Nodes(); j++)
 	{
-		rc += mesh->Node(angio_element->_elem->m_node[j]).m_r0* arr[j];
+		rc += mesh->Node(angio_element->_elem->m_node[j]).m_r0 * arr[j];
 	}
 	return rc;
 }
 
-void Tip::PrintTipInfo(FEMesh *mesh, std::string title) const
+void Tip::PrintTipInfo(FEMesh* mesh, std::string title) const
 {
 #ifndef NDEBUG
 	std::cout << title << std::endl;
@@ -63,14 +64,14 @@ void Tip::PrintTipInfo(FEMesh *mesh, std::string title) const
 #endif
 }
 
-void Tip::PrintTipInfo(FEMesh *mesh) const
+void Tip::PrintTipInfo(FEMesh* mesh) const
 {
 #ifndef NDEBUG
 	std::cout << "local position: " << local_pos.x << " , " << local_pos.y << " , " << local_pos.z << std::endl;
 	vec3d pos = GetPosition(mesh);
 	std::cout << "global position: " << pos.x << " , " << pos.y << " , " << pos.z << std::endl;
 	std::cout << "element id: " << angio_element->_elem->GetID() << std::endl;
-	if(face)
+	if (face)
 	{
 		std::cout << "face id: " << face->_elem->GetID() << std::endl;
 	}
@@ -81,7 +82,7 @@ void Tip::PrintTipInfo(FEMesh *mesh) const
 
 	vec3d dir = GetDirection(mesh);
 	std::cout << "direction: " << dir.x << " , " << dir.y << " , " << dir.z << std::endl;
-	
+
 	std::cout << "is branch: " << is_branch << std::endl;
 	std::cout << "use direction: " << use_direction << std::endl;
 	std::cout << std::endl;
@@ -89,7 +90,7 @@ void Tip::PrintTipInfo(FEMesh *mesh) const
 }
 
 // create a new tip based on the pre-existing tip.
-Tip::Tip(Tip * other, FEMesh * mesh)
+Tip::Tip(Tip* other, FEMesh* mesh)
 {
 	// get the other tip's parameters.
 	angio_element = other->angio_element;
@@ -104,13 +105,25 @@ Tip::Tip(Tip * other, FEMesh * mesh)
 	direction = other->GetDirection(mesh);
 	direction.unit();
 	FEModel* fem = angio_element->_mat->GetFEModel();
-	if (other->TipCell) 
-	{ 
-		TipCell = other->TipCell; 
-		TipCell->angio_element = angio_element; 
-		TipCell->ParentTip = this; 
-		TipCell->time = time; 
-		TipCell->UpdateSpecies(mesh); 
+	if (other->TipCell)
+	{
+		//copy the tip info
+		TipCell = other->TipCell;
+		TipCell->angio_element = angio_element;
+		TipCell->ParentTip = this;
+		TipCell->time = time;
+		TipCell->initial_cell_id = other->TipCell->initial_cell_id;
+		//update
+		/*if (time >= 0)
+		{
+			TipCell->UpdateSpecies(mesh);
+		}*/
+		//clean up old tip
+		//other->angio_element->tip_cells.erase(other->TipCell->initial_cell_id);
+		//TipCell->angio_element->tip_cells.emplace(TipCell->initial_cell_id, TipCell);
+		//angio_element->_angio_mat->m_pangio->cells.erase(other->TipCell->initial_cell_id);
+		//angio_element->_angio_mat->m_pangio->cells.emplace(TipCell->initial_cell_id,TipCell);
+		other->TipCell = nullptr;
 	}
 	// inherit the tip cell and remove it from the parent
 }
@@ -132,7 +145,7 @@ void Tip::SetLocalPosition(vec3d pos, FEMesh* mesh)
 	local_pos.x = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound_r(angio_element->_elem->Type()), local_pos.x), FEAngio::NaturalCoordinatesLowerBound_r(angio_element->_elem->Type()));
 	local_pos.y = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound_s(angio_element->_elem->Type()), local_pos.y), FEAngio::NaturalCoordinatesLowerBound_s(angio_element->_elem->Type()));
 	local_pos.z = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound_t(angio_element->_elem->Type()), local_pos.z), FEAngio::NaturalCoordinatesLowerBound_t(angio_element->_elem->Type()));
-	if (TipCell) { TipCell->SetLocalPosition(local_pos,mesh); }
+	if (TipCell) { TipCell->SetLocalPosition(local_pos, mesh); }
 }
 
 vec3d Tip::GetLocalPosition() const
@@ -140,12 +153,12 @@ vec3d Tip::GetLocalPosition() const
 	return local_pos;
 }
 
-void Tip::SetProtoGrowthLength(FEProbabilityDistribution* dist) 
+void Tip::SetProtoGrowthLength(FEProbabilityDistribution* dist)
 {
-	proto_growth_length = 0.5*dist->NextValue(angio_element->_rengine);
+	proto_growth_length = 0.5 * dist->NextValue(angio_element->_rengine);
 }
 
-void Tip::SetProtoGrowthLength(Tip* tip)	
+void Tip::SetProtoGrowthLength(Tip* tip)
 {
 	proto_growth_length = tip->GetProtoGrowthLength();
 }
