@@ -240,7 +240,7 @@ void Fileout::save_final_cells_txt(FEAngio& angio)
 		auto cell = iter->second;
 		vec3d p = cell->GetPosition(mesh);
 		int time = angio.GetFEModel()->GetCurrentStep()->m_ntimesteps;
-		fprintf(final_cell_file, "%d,%d,%-12.5e,%-12.5e,%-12.5e", time+1, cell->initial_cell_id, p.x, p.y, p.z);
+		fprintf(final_cell_file, "%d,%d,%-12.5e,%-12.5e,%-12.5e", time, cell->initial_cell_id, p.x, p.y, p.z);
 		//! Print solute values
 		for (int isol = 0; isol < cell->Solutes.size(); isol++) {
 			fprintf(final_cell_file, ",%-12.5e", cell->Solutes[isol]->GetInt());
