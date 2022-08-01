@@ -626,6 +626,7 @@ void FEAngioMaterial::GrowthInElement(double end_time, Tip* active_tip, int sour
 			next->angio_element->recent_segments.push_back(seg);
 			next->angio_element->reference_frame_segment_length += seg->RefLength(mesh);
 			//next->TipCell->UpdateSpecies(mesh);
+		}
 	}
 	// generally not hit unless there is large matrix deformation
 

@@ -1458,8 +1458,6 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 			CalculateSegmentLengths(mesh);
 			// Print the status of angio3d to the user    
 			fileout->printStatus(*this, fem.GetTime().currentTime);
-			fileout->save_vessel_state(*this);
-			fileout->save_final_cells_txt(*this);
 		}
 		// cleanup
 #pragma omp parallel for 
