@@ -8,6 +8,7 @@
 #include <future>
 #include "AngioElement.h"
 #include <random>
+#include <unordered_map>
 
 class FEElemElemList;
 //-----------------------------------------------------------------------------
@@ -214,6 +215,14 @@ public:	// parameters read directly from file
 	std::unordered_map<AngioElement *, std::vector<AngioElement *>> angio_elements_to_all_adjacent_elements;//adjacent is shares a node with the element
 	//! elements by material
 	std::unordered_map < FEAngioMaterial *, std::vector<AngioElement *>> elements_by_material;
+
+	//! increment fragment number
+	int AddFragment();
+
+	//! increment cell number
+	int AddCell();
+
+	std::unordered_map<int, FECell*> cells;
 private:
 	//both nodes and elements id's go from 1 to n+1 for n items
 	//first element is padding so the id can be used to lookup the data for that node
@@ -239,6 +248,8 @@ private:
 
 	const double eps = 0.001;
 
+	static int fragment_id_counter;
+	static int cell_id_counter;
 	double min_scale_factor = 0.01;
 	double bounds_tolerance = 1e-2;
 	int growth_substeps = 3;

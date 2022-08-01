@@ -33,6 +33,9 @@
 #include <math.h>
 #include "FECore/FEDomainMap.h"
 
+int FEAngio::fragment_id_counter = 0;
+int FEAngio::cell_id_counter = 0;
+
 //-----------------------------------------------------------------------------
 // create a map of fiber vectors based on the material's orientatin
 bool CreateFiberMap(vector<vec3d>& fiber, FEMaterial* pmat);
@@ -97,6 +100,7 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, int
 	if(time_info.currentTime >= next_time)
 	{	// 
 		min_dt = std::numeric_limits<double>::max();
+		FEAnalysis* fea = m_fem->GetCurrentStep();
 		// parallel for with value min_dt shared
 		#pragma omp parallel for shared(min_dt)
 		// for each angio element
@@ -108,7 +112,7 @@ void FEAngio::GrowSegments(double min_scale_factor, double bounds_tolerance, int
 			#pragma omp critical
 			{
 				// change min_dt to the lesser of min_dt and temp dt
-				min_dt = std::min(min_dt, temp_dt);
+				min_dt = std::min(std::min(min_dt, temp_dt), fea->m_dt);
 			}
 		}
 		// check that the max_angio time is not greater than the angio dt max.
@@ -2010,4 +2014,14 @@ bool CreateConcentrationMap(vector<double>& concentration, FEMaterial* pmat, int
 
 	// If we get here, all is well.
 	return true;
+}
+
+int FEAngio::AddFragment() {
+
+	return fragment_id_counter++;
+}
+
+int FEAngio::AddCell() {
+
+	return cell_id_counter++;
 }
