@@ -1442,7 +1442,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		else
 		{
 			std::cout << "Negative detected" << endl;
-			throw DoRunningRestart();
+			//throw DoRunningRestart();
 		}
 	}
 	else if (nwhen == CB_MAJOR_ITERS)

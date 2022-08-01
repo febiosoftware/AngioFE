@@ -204,119 +204,191 @@ void FECell::InitSpecies(FEMesh* mesh)
 
 void FECell::UpdateSpecies(FEMesh* mesh)
 {
-	double dt = time - eval_time;
-	if (dt == 0) { return; }
-	std::cout << "Updating Species" << endl;
-	// Update body loads for secreted species
 	for (int isol = 0; isol < Solutes.size(); isol++)
 	{
 		//! Set the new position
-
-		//! Call the Body Load update
 		if (this->eval_time >= 0.0) {
 			Solutes[isol]->CellSolutePS->SetPosition(GetPosition(mesh));
 		}
+		//! Update the body load
 		Solutes[isol]->SetSolPRhat(0.0);
 	}
 	for (int isbm = 0; isbm < SBMs.size(); isbm++)
 	{
 		//! Set the new position
-		SBMs[isbm]->CellSBMPS->SetPosition(GetPosition(mesh));
-		//! Call the Body Load update
 		if (this->eval_time >= 0.0) {
 			SBMs[isbm]->CellSBMPS->SetPosition(this->GetPosition(mesh));
 		}
+		//! Update the body load
 		SBMs[isbm]->SetSBMPRhat(0.0);
 	}
-
-	// update species
+	//! total timestep to be taken
+	double dt = time - eval_time;
 	double t0 = eval_time;
 	eval_time = time;
+	if (dt == 0) { return; }
+	//! Get the maximum timestep before an internal species is negative
+	double max_dt = 0.0;
+	double t_r = dt - max_dt;
+	while (t_r > 0.0)
+	{
+		max_dt = GetMaxSpeciesDT(mesh, t0, dt);
+		int nsbm = this->SBMs.size();
+		int nsol = this->Solutes.size();
+		FEModel* fem = angio_element->_mat->GetFEModel();
+		FEDomain* dom = &mesh->Domain(0);
+		FEMultiphasic* mat = dynamic_cast<FEMultiphasic*>(dom->GetMaterial());
+
+		FEMaterialPoint& mp = *angio_element->_elem->GetMaterialPoint(0);
+		//! Solutes
+
+		for (int isol = 0; isol < nsol; isol++) {
+			CellSolute* Sol = Solutes[isol];
+			int SolID = Sol->GetSoluteID();
+			Sol->SetSolhatp(Sol->GetSolhat());
+			Sol->SetSolhat(0.0);
+			Sol->SetSolPRhat(0.0);
+			Sol->CellSolutePS->SetRate(0.0);
+			// combine the molar supplies from all the reactions
+			for (int k = 0; k < Reactions.size(); ++k)
+			{
+				Reactions[k]->SetCell(this);
+				if (Reactions[k]->m_pFwd) { Reactions[k]->m_pFwd->SetCell(this); }
+				if (Reactions[k]->m_pRev) { Reactions[k]->m_pRev->SetCell(this); }
+				//! Get the reaction supply for each reaction that the solute is involved in
+				double zetahat;
+				zetahat = Reactions[k]->ReactionSupply(this);
+				// Get the net stoichiometric ratio for each solute
+				double v = Reactions[k]->m_v[isol];
+				//Add the product of the stoichiometric ratio with the supply for the reaction
+				Sol->AddSolhat(v * zetahat);
+				//Sol->AddSolhat(v * zetahat * Sol->GetTolScale());
+				std::cout << "tol scale during eval is " << Sol->GetTolScale() << endl;
+				// accumulate unless there's no dt. Solutes have the dt evaluated elsewhere.
+				Sol->CellSolutePS->Accumulate(Sol->GetSolPRhat() * max_dt / dt);// no dt since the rate is handled elsewhere so this is different than SBMs.
+			}
+		}
+
+		for (int isbm = 0; isbm < nsbm; isbm++) {
+			CellSBM* SBM = SBMs[isbm];
+			int SBMID = SBM->GetSBMID();
+			SBM->SetSBMhatp(SBM->GetSBMhat());
+			SBM->SetSBMhat(0.0);
+			SBM->SetSBMPRhat(0.0);
+			SBM->CellSBMPS->SetRate(0.0);
+			// combine the molar supplies from all the reactions
+			for (int k = 0; k < Reactions.size(); ++k)
+			{
+				Reactions[k]->SetCell(this);
+				if (Reactions[k]->m_pFwd) { Reactions[k]->m_pFwd->SetCell(this); }
+				if (Reactions[k]->m_pRev) { Reactions[k]->m_pRev->SetCell(this); }
+				//! Get the reaction supply for each reaction that the SBM is involved in
+				double zetahat;
+				zetahat = Reactions[k]->ReactionSupply(this);
+				//! Get the net stoichiometric ratio for each sbm
+				double v = Reactions[k]->m_v[nsol + isbm];
+				//Add the product of the stoichiometric ratio with the supply for the reaction
+				SBM->AddSBMhat(v * zetahat);
+				SBM->CellSBMPS->Accumulate(SBM->GetSBMPRhat() * max_dt); //need to include dt for SBMs since they are not handled the same as solutes.
+			}
+		}
+		SetInternalSpecies(t0, max_dt);
+		t_r = t_r - max_dt;
+	}
+};
+
+void FECell::SetInternalSpecies(double t0, double dt)
+{
 	int nsbm = this->SBMs.size();
 	int nsol = this->Solutes.size();
-	FEModel* fem = angio_element->_mat->GetFEModel();
-	FEDomain* dom = &mesh->Domain(0);
-	FEMultiphasic* mat = dynamic_cast<FEMultiphasic*>(dom->GetMaterial());
-
-	FEMaterialPoint& mp = *angio_element->_elem->GetMaterialPoint(0);
-	//! Solutes
-
-	for (int isol = 0; isol < nsol; isol++) {
+	for (int isol = 0; isol < nsol; isol++)
+	{
 		CellSolute* Sol = Solutes[isol];
-		int SolID = Sol->GetSoluteID();
-		Sol->SetSolhatp(Sol->GetSolhat());
-		Sol->SetSolhat(0.0);
-		Sol->SetSolPRhat(0.0);
-		Sol->CellSolutePS->SetRate(0.0);
-		// combine the molar supplies from all the reactions
-		for (int k = 0; k < Reactions.size(); ++k) {
-			Reactions[k]->SetCell(this);
-			if (Reactions[k]->m_pFwd) { Reactions[k]->m_pFwd->SetCell(this); }
-			if (Reactions[k]->m_pRev) { Reactions[k]->m_pRev->SetCell(this); }
-			//! Get the reaction supply for each reaction that the solute is involved in
-			double zetahat;
-			zetahat = Reactions[k]->ReactionSupply(this);
-			// Get the net stoichiometric ratio for each solute
-			double v = Reactions[k]->m_v[isol];
-			//Add the product of the stoichiometric ratio with the supply for the reaction
-			Sol->AddSolhat(v * zetahat);
-			//Sol->AddSolhat(v * zetahat * Sol->GetTolScale());
-			std::cout << "tol scale during eval is " << Sol->GetTolScale() << endl;
-			// accumulate unless there's no dt. Solutes have the dt evaluated elsewhere.
-			Sol->CellSolutePS->Accumulate(Sol->GetSolPRhat());// no dt since the rate is handled elsewhere so this is different than SBMs.
-		}
-		Sol->CellSolutePS->Update();
-		// perform the time integration (switch to midpoint rule in future?)
 		double newc;
-		//SL: Will probably need to add sum from reactions as well to this.
-		if (t0 != 0)
+		if (t0 != 0.0)
+		{
+			newc = std::max((Sol->GetInt() + ((Sol->GetSolhat() + Sol->GetSolhatp()) / 2.0) * dt), 0.0);
+		}
+		else
+		{
+			newc = std::max((Sol->GetInt() + Sol->GetSolhat() * dt), 0.0);
+		}
+		Sol->SetInt(newc);
+		Sol->CellSolutePS->Update();
+	}
+	for (int isbm = 0; isbm < nsbm; isbm++)
+	{
+		CellSBM* SBM = SBMs[isbm];
+		double newc;
+		if (t0 != 0.0)
+		{
+			newc = std::max((SBM->GetInt() + ((SBM->GetSBMhat() + SBM->GetSBMhatp()) / 2.0) * dt), 0.0);
+		}
+		else
+		{
+			newc = std::max((SBM->GetInt() + SBM->GetSBMhat() * dt), 0.0);
+		}
+		SBM->SetInt(newc);
+		SBM->CellSBMPS->Update();
+	}
+}
+
+double FECell::GetMaxSpeciesDT(FEMesh* mesh, double t0, double dt)
+{
+	//! SL: Currently catches the case where cells are constantly producing species. Unsure if this will cause bugs down the line.
+	int nsbm = this->SBMs.size();
+	int nsol = this->Solutes.size();
+	double dt_max = dt;
+	for (int isol = 0; isol < nsol; isol++)
+	{
+		CellSolute* Sol = Solutes[isol];
+		double newc;
+		double dt_try;
+		if (t0 != 0.0)
 		{
 			newc = Sol->GetInt() + ((Sol->GetSolhat() + Sol->GetSolhatp()) / 2.0) * dt;
+			if (newc < 0.0)
+			{
+				dt_try = std::min((-2.0 * Sol->GetInt()) / (Sol->GetSolhat() + Sol->GetSolhatp()), dt_max);
+				if (dt_try > 0.0) { dt_max = dt_try; }
+			}
 		}
 		else
 		{
 			newc = Sol->GetInt() + Sol->GetSolhat() * dt;
+			if (newc < 0.0)
+			{
+				dt_try = std::min((-2.0 * Sol->GetInt() / Sol->GetSolhat()), dt_max);
+				if (dt_try > 0.0) { dt_max = dt_try; }
+			}
 		}
-		Sol->SetInt(std::max(newc, 0.0));
 	}
-
-	for (int isbm = 0; isbm < nsbm; isbm++) {
+	for (int isbm = 0; isbm < nsbm; isbm++)
+	{
 		CellSBM* SBM = SBMs[isbm];
-		int SBMID = SBM->GetSBMID();
-		SBM->SetSBMhatp(SBM->GetSBMhat());
-		SBM->SetSBMhat(0.0);
-		SBM->SetSBMPRhat(0.0);
-		SBM->CellSBMPS->SetRate(0.0);
-		//SBM->c_flux = 0;
-		// combine the molar supplies from all the reactions
-		for (int k = 0; k < Reactions.size(); ++k) {
-			Reactions[k]->SetCell(this);
-			if (Reactions[k]->m_pFwd) { Reactions[k]->m_pFwd->SetCell(this); }
-			if (Reactions[k]->m_pRev) { Reactions[k]->m_pRev->SetCell(this); }
-			//! Get the reaction supply for each reaction that the SBM is involved in
-			double zetahat;
-			zetahat = Reactions[k]->ReactionSupply(this);
-			//! Get the net stoichiometric ratio for each sbm
-			double v = Reactions[k]->m_v[nsol + isbm];
-			//Add the product of the stoichiometric ratio with the supply for the reaction
-			SBM->AddSBMhat(v * zetahat);
-			SBM->CellSBMPS->Accumulate(SBM->GetSBMPRhat() * dt); //need to include dt for SBMs since they are not handled the same as solutes.
-		}
-		SBM->CellSBMPS->Update();
-		//perform the time integration (midpoint rule)
 		double newc;
-		//SL: Will probably need to add sum from reactions as well to this.
-		if (t0 != 0)
+		double dt_try;
+		if (t0 != 0.0)
 		{
 			newc = SBM->GetInt() + ((SBM->GetSBMhat() + SBM->GetSBMhatp()) / 2.0) * dt;
+			if (newc < 0.0)
+			{
+				dt_try = std::min((-2.0 * SBM->GetInt()) / (SBM->GetSBMhat() + SBM->GetSBMhatp()), dt_max);
+				if (dt_try > 0.0) { dt_max = dt_try; }
+			}
 		}
 		else
 		{
 			newc = SBM->GetInt() + SBM->GetSBMhat() * dt;
+			if (newc < 0.0)
+			{
+				dt_try = std::min((-2.0 * SBM->GetInt() / SBM->GetSBMhat()), dt_max);
+				if (dt_try > 0.0) { dt_max = dt_try; }
+			}
 		}
-		SBM->SetInt(std::max(newc, 0.0));
 	}
-};
+	return dt_max;
+}
 
 void FECell::ProtoUpdateSpecies(FEMesh* mesh)
 {

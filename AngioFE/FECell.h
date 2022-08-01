@@ -17,15 +17,15 @@ public:
 	//! constructor
 	FECell() {}
 	//! used to copy another tip
-	FECell(FECell * other, FEMesh * mesh);
+	FECell(FECell* other, FEMesh* mesh);
 	//! Init
 	bool Init();
 	//! sets the local positions clamps the values to -1 to 1
-	void SetLocalPosition(vec3d pos, FEMesh * mesh);
+	void SetLocalPosition(vec3d pos, FEMesh* mesh);
 	//! returns the local position
 	vec3d GetLocalPosition() const;
 	//! The element that contains the local_pos coordinates
-	AngioElement * angio_element = nullptr;
+	AngioElement* angio_element = nullptr;
 	//! Time at which the cell occurs
 	double time = 0.0;
 	//! eval time
@@ -33,20 +33,22 @@ public:
 	//! Will be initialized to values greater than or equal to zero, unique values per vessel
 	int initial_cell_id = -1;
 	//! Return the global position of the tip
-	vec3d GetPosition(FEMesh * mesh) const;
+	vec3d GetPosition(FEMesh* mesh) const;
 	//! returns the global position of the tip in the reference frame
-	vec3d GetRefPosition(FEMesh * mesh) const;
+	vec3d GetRefPosition(FEMesh* mesh) const;
 	//! Prints information about the tip to the console
-	void PrintCellInfo(FEMesh *mesh) const;
+	void PrintCellInfo(FEMesh* mesh) const;
 	//! Prints information about the tip to the console
-	void PrintCellInfo(FEMesh *mesh, std::string title) const;
+	void PrintCellInfo(FEMesh* mesh, std::string title) const;
 	//! Cell Species
 	std::vector<CellSBM*> SBMs;
 	std::vector<CellSolute*> Solutes;
 	std::vector<FECellChemicalReaction*> Reactions;
 	void InitSpecies(FEMesh* mesh);
-	void UpdateSpecies(FEMesh * mesh);
+	void UpdateSpecies(FEMesh* mesh);
+	void SetInternalSpecies(double t0, double dt);
 	void ProtoUpdateSpecies(FEMesh* mesh);
+	double GetMaxSpeciesDT(FEMesh* mesh, double t0, double dt);
 	Tip* ParentTip;
 	double eval_time = 0;
 	double cell_radius = 1e-5; // 
