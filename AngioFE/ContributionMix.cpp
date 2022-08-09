@@ -66,17 +66,16 @@ double DensFAContributionMix::ApplyModifiers(double dt, AngioElement* angio_elem
 	//Get the density
 	PerElementVI interp(this->GetFEModel());
 	double density_at_point = interp.Interpolate(angio_element->_elem, density_at_integration_points, local_pos, mesh);
-	double a_eff = a + 0.1 * (density_at_point - 3.0);
+	double a = std::min(std::max(a_min, a_min * (density_at_point - 2.0)), 0.3);
 	
 	// solve for alpha
-	double alpha = a0 + a_eff / (1.0 + exp(b * (angioFA_int - c)));
-	alpha = std::max(std::min(alpha, 0.3), 0.1);	
+	double alpha = a0 + a / (1.0 + exp(b * (angioFA_int - c)));
 	return alpha;
 }
 
 BEGIN_FECORE_CLASS(DensFAContributionMix, ContributionMix)
 ADD_PARAMETER(a0, "a0");
-ADD_PARAMETER(a, "a");
+ADD_PARAMETER(a_min, "a_min");
 ADD_PARAMETER(b, "b");
 ADD_PARAMETER(c, "c");
 END_FECORE_CLASS();
