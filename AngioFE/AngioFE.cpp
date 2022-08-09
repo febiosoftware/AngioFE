@@ -59,6 +59,7 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	// Seeder Classes
 	REGISTER_FECORE_CLASS_EXPLICIT(ByElementFragmentSeeder, FEMATERIAL_ID, "by_element_fragment_seeder");
 	REGISTER_FECORE_CLASS_EXPLICIT(ByElementFragmentSeederBiDirectional, FEMATERIAL_ID, "by_element_fragment_seeder_bidirectional");
+	REGISTER_FECORE_CLASS_EXPLICIT(ByElementSetFragmentSeederBiDirectional, FEMATERIAL_ID, "by_element_set_fragment_seeder_bidirectional");
 	REGISTER_FECORE_CLASS_EXPLICIT(ByVolumeFragmentSeeder, FEMATERIAL_ID, "by_volume_fragment_seeder");
 	REGISTER_FECORE_CLASS_EXPLICIT(ByVolumeFragmentSeederBiDirectional, FEMATERIAL_ID, "by_volume_fragment_seeder_bidirectional");
 	REGISTER_FECORE_CLASS_EXPLICIT(SingleCellSeeder, FEMATERIAL_ID, "single_cell_seeder");

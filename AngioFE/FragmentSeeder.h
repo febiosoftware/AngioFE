@@ -60,6 +60,16 @@ public:
 	bool SeedFragments(std::vector<AngioElement*>& angio_elements, FEMesh* mesh, FEAngioMaterial* angio_mat, int buffer_index) override;
 };
 
+//! seed fragments with all elements having equal probabilities of being choosen, seeds 2 oppositly directed tips at each loaction that is choosen
+class ByElementSetFragmentSeederBiDirectional : public FragmentSeeder
+{
+public:
+	//! constructor for class
+	explicit ByElementSetFragmentSeederBiDirectional(FEModel* model);
+	//! Seed the fragments
+	bool SeedFragments(std::vector<AngioElement*>& angio_elements, FEMesh* mesh, FEAngioMaterial* angio_mat, int buffer_index) override;
+};
+
 //! seed fragments with each unit of volume having the same probability of being choosen
 class ByVolumeFragmentSeeder : public FragmentSeeder
 {
