@@ -40,6 +40,7 @@ double DensFAContributionMix::ApplyModifiers(double dt, AngioElement* angio_elem
 		SPDs_gausspts.push_back(angio_mp->angioSPD);
 	}
 
+	// get the FA
 	// array containing the SPD for each node in the element
 	mat3ds SPDs_nodes[FESolidElement::MAX_NODES];
 	// array for the shape function values
@@ -58,7 +59,8 @@ double DensFAContributionMix::ApplyModifiers(double dt, AngioElement* angio_elem
 	// Sort based on absolute value of eigenvalues
 	std::sort(v.begin(), v.end(), EigComp());
 	double angioFA_int = 1 - (v[1].first / v[0].first);
-	double alpha = a0 + a / (1 + exp(b * (angioFA_int-c)));
+	// solve for alpha
+	double alpha = a0 + a / (1.0 + exp(b * (angioFA_int - c)));
 	return alpha;
 }
 

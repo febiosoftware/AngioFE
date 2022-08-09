@@ -69,7 +69,7 @@ protected:
 	DECLARE_FECORE_CLASS();
 private:
 	double a0 = 0.1;
-	double a = 0.1;
+	double a = 0.075;
 	double b = -33.28;
 	double c = 0.4251;
 };
