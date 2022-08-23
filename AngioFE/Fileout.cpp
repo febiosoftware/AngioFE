@@ -10,28 +10,41 @@
 #include "FEAngioMaterial.h"
 #include <unordered_set>
 #include <FECore/FEAnalysis.h>
+#include <FECore/FSPath.h>
+#include <FEBioLib/FEBioModel.h>
+#include <FEBioLib/FEBioConfig.h>
+#include <FEBioLib/febiolib_api.h>
+
+// needed for GetInputFileName()
+#pragma comment(lib, "psapi.lib")
 
 using namespace std;
+
+string Fileout::m_sfile;
 
 //-----------------------------------------------------------------------------
 Fileout::Fileout(FEAngio& angio)
 {
-    logstream.open("out_log.csv");
+	m_sfile = angio.m_fem->GetInputFileName();
+	size_t dot = m_sfile.rfind('.');
+	m_sfile = m_sfile.substr(0, dot);
+
+	logstream.open(m_sfile + "_log.csv");
 	//write the headers
 	logstream << "Time,Material,Segments,Total Length,Vessels,Branches,Anastamoses,Active Tips" << endl;
 
 	// write the line file
-	vessel_state_stream = fopen("out_vess_state.ang2" , "wb");//check the parameters consider setting the compression level
+	vessel_state_stream = fopen((m_sfile + ".ang2").c_str(), "wb");//check the parameters consider setting the compression level
 	// initialize version and line numbers
 	unsigned int magic = 0xfdb97531;
 	unsigned int version = 1;
-	unsigned int num_bitmasks = angio.m_fem->Materials()/32 + 1;
+	unsigned int num_bitmasks = angio.m_fem->Materials() / 32 + 1;
 	// write the magic number, version, and number of materials
 	fwrite(&magic, sizeof(unsigned int), 1, vessel_state_stream);
 	fwrite(&version, sizeof(unsigned int), 1, vessel_state_stream);
 	fwrite(&num_bitmasks, sizeof(unsigned int), 1, vessel_state_stream);
 	// for each material
-	for(unsigned int j=0; j < num_bitmasks;j++)
+	for (unsigned int j = 0; j < num_bitmasks; j++)
 	{
 		unsigned int c_bitmask = 0;
 		unsigned int place_holder = 1;
@@ -41,8 +54,8 @@ Fileout::Fileout(FEAngio& angio)
 			if (index == angio.m_fem->Materials())
 				break;
 			FEMaterial* mat = angio.m_fem->GetMaterial(index);
-			FEAngioMaterial * angio_mat = angio.GetAngioComponent(mat);
-			if(angio_mat)
+			FEAngioMaterial* angio_mat = angio.GetAngioComponent(mat);
+			if (angio_mat)
 			{
 				c_bitmask |= place_holder;
 			}
@@ -51,16 +64,16 @@ Fileout::Fileout(FEAngio& angio)
 		fwrite(&c_bitmask, sizeof(unsigned int), 1, vessel_state_stream);
 	}
 
-	feangio_state_stream = fopen("angio_stats.csv", "wt");
+	feangio_state_stream = fopen((m_sfile + "_time_stats.csv").c_str(), "wt");
 	fprintf(feangio_state_stream, "%-64s,%-64s,%-64s,%-64s\n",
-		"Timestep", "Growth Process","Branch Policy Update", "Update Stress");
-	cell_state_stream = fopen("final_cells.txt", "wt"); // cells
+		"Timestep", "Growth Process", "Branch Policy Update", "Update Stress");
+	cell_state_stream = fopen((m_sfile + "_cells.txt").c_str(), "wt"); // cells
 }
 
 //-----------------------------------------------------------------------------
 Fileout::~Fileout()
 {
-    logstream.close();
+	logstream.close();
 	fclose(vessel_state_stream);
 	fclose(cell_state_stream);
 	fclose(feangio_state_stream);
@@ -93,7 +106,7 @@ void PrintSegment(vec3d r0, vec3d r1)
 void Fileout::save_vessel_state(FEAngio& angio)
 {
 	unsigned int new_seg_count = 0;
-	for(int i=0; i < angio.angio_elements.size();i++)
+	for (int i = 0; i < angio.angio_elements.size(); i++)
 	{
 		new_seg_count += angio.angio_elements[i]->recent_segments.size();
 	}
@@ -105,13 +118,13 @@ void Fileout::save_vessel_state(FEAngio& angio)
 	fwrite(&rtime, sizeof(float), 1, vessel_state_stream);// == sizeof(float); SL: Not sure what the equivalency was doing
 
 	unsigned int crc_segcount = 0;
-	for (int i = 0; i <angio.angio_elements.size(); i++)
+	for (int i = 0; i < angio.angio_elements.size(); i++)
 	{
-		for(int j=0; j <  angio.angio_elements[i]->recent_segments.size();j++)
+		for (int j = 0; j < angio.angio_elements[i]->recent_segments.size(); j++)
 		{
 			crc_segcount++;
-			Tip * back_tip = angio.angio_elements[i]->recent_segments[j]->back;
-			Tip * front_tip = angio.angio_elements[i]->recent_segments[j]->front;
+			Tip* back_tip = angio.angio_elements[i]->recent_segments[j]->back;
+			Tip* front_tip = angio.angio_elements[i]->recent_segments[j]->front;
 			vec3d r0 = angio.ReferenceCoordinates(back_tip);
 			vec3d r1 = angio.ReferenceCoordinates(front_tip);
 
@@ -140,7 +153,7 @@ void Fileout::save_vessel_state(FEAngio& angio)
 void Fileout::bulk_save_vessel_state(FEAngio& angio)
 {
 	unsigned int new_seg_count = 0;
-	for (int i = 0; i <angio.angio_elements.size(); i++)
+	for (int i = 0; i < angio.angio_elements.size(); i++)
 	{
 		new_seg_count += angio.angio_elements[i]->grown_segments.size();
 	}
@@ -152,13 +165,13 @@ void Fileout::bulk_save_vessel_state(FEAngio& angio)
 	fwrite(&rtime, sizeof(float), 1, vessel_state_stream);// == sizeof(float); SL: Not sure what this equivalency is doing
 
 	unsigned int crc_segcount = 0;
-	for (int i = 0; i <angio.angio_elements.size(); i++)
+	for (int i = 0; i < angio.angio_elements.size(); i++)
 	{
 		for (int j = 0; j < angio.angio_elements[i]->grown_segments.size(); j++)
 		{
 			crc_segcount++;
-			Tip * back_tip = angio.angio_elements[i]->grown_segments[j]->back;
-			Tip * front_tip = angio.angio_elements[i]->grown_segments[j]->front;
+			Tip* back_tip = angio.angio_elements[i]->grown_segments[j]->back;
+			Tip* front_tip = angio.angio_elements[i]->grown_segments[j]->front;
 			vec3d r0 = angio.ReferenceCoordinates(back_tip);
 			vec3d r1 = angio.ReferenceCoordinates(front_tip);
 
@@ -187,8 +200,8 @@ void Fileout::bulk_save_vessel_state(FEAngio& angio)
 //-----------------------------------------------------------------------------
 // Save active points
 void Fileout::save_active_tips(FEAngio& angio) const
-{	
-	
+{
+
 }
 void Fileout::save_timeline(FEAngio& angio)
 {
@@ -197,99 +210,89 @@ void Fileout::save_timeline(FEAngio& angio)
 #endif
 }
 
-void Fileout::save_final_vessel_csv(FEAngio & angio)
+void Fileout::save_final_vessel_csv(FEAngio& angio)
 {
-	FILE * final_vessel_file = fopen("final_vessels.csv", "wt");
+	FILE* final_vessel_file = fopen((m_sfile + "_vessels.csv").c_str(), "wt");
 	assert(final_vessel_file);
 	fprintf(final_vessel_file, "x0,y0,z0,x1,y1,z1,start time\n");
-	FEMesh * mesh = angio.GetMesh();
+	FEMesh* mesh = angio.GetMesh();
 	for (int i = 0; i < angio.angio_elements.size(); i++)
 	{
 		for (int j = 0; j < angio.angio_elements[i]->grown_segments.size(); j++) {
 			auto seg = *(angio.angio_elements[i]->grown_segments[j]);
 			vec3d p0 = seg.front->GetPosition(mesh);
 			vec3d p1 = seg.back->GetPosition(mesh);
-			fprintf(final_vessel_file, "%-12.7f,%-12.7f,%-12.7f,%-12.7f,%-12.7f,%-12.7f,%-12.7f\n", p0.x, p0.y, p0.z, p1.x, p1.y, p1.z,seg.back->time);
+			fprintf(final_vessel_file, "%-12.7f,%-12.7f,%-12.7f,%-12.7f,%-12.7f,%-12.7f,%-12.7f\n", p0.x, p0.y, p0.z, p1.x, p1.y, p1.z, seg.back->time);
 		}
 
 	}
 	fclose(final_vessel_file);
-
 }
 
-void Fileout::save_final_cells_txt(FEAngio & angio)
+void Fileout::save_final_cells_txt(FEAngio& angio)
 {
-	FILE * final_cell_file = fopen("final_cells.txt", "at");
+	FILE* final_cell_file = fopen((m_sfile + "_cells.txt").c_str(), "at");
 	assert(final_cell_file);
-	FEMesh * mesh = angio.GetMesh(); 
-	for (int i = 0; i < angio.angio_elements.size(); i++)
-	{
-		AngioElement * angio_elem = angio.angio_elements[i];
-		for (int j =0; j < angio_elem->final_active_tips.size(); j++){
-			auto cell = angio_elem->final_active_tips[j]->TipCell;
-				vec3d p = cell->GetPosition(mesh);
-				int time = angio.GetFEModel()->GetCurrentStep()->m_ntimesteps;
-				fprintf(final_cell_file, "%d,%d,%-12.5e,%-12.5e,%-12.5e", time + 1, cell->initial_cell_id, p.x, p.y, p.z);
-				//! Print solute values
-				for (int isol = 0; isol < cell->Solutes.size(); isol++) {
-					fprintf(final_cell_file, ",%-12.5e", cell->Solutes[isol]->GetInt());
-				}
-				//! Print SBM values
-				for (int isbm = 0; isbm < cell->SBMs.size(); isbm++) {
-					fprintf(final_cell_file, ",%-12.5e", cell->SBMs[isbm]->GetInt());
-				}
-				fprintf(final_cell_file, "\n");
+	FEMesh* mesh = angio.GetMesh();
+	for (auto iter = angio.cells.begin(); iter != angio.cells.end(); iter++) {
+		auto cell = iter->second;
+		vec3d p = cell->GetPosition(mesh);
+		int time = angio.GetFEModel()->GetCurrentStep()->m_ntimesteps;
+		fprintf(final_cell_file, "%d,%d,%-12.5e,%-12.5e,%-12.5e", time, cell->initial_cell_id, p.x, p.y, p.z);
+		//! Print solute values
+		for (int isol = 0; isol < cell->Solutes.size(); isol++) {
+			fprintf(final_cell_file, ",%-12.5e", cell->Solutes[isol]->GetInt());
 		}
-
+		//! Print SBM values
+		for (int isbm = 0; isbm < cell->SBMs.size(); isbm++) {
+			fprintf(final_cell_file, ",%-12.5e", cell->SBMs[isbm]->GetInt());
+		}
+		fprintf(final_cell_file, "\n");
 	}
 	fclose(final_cell_file);
-
 }
 
-void Fileout::save_initial_cells_txt(FEAngio & angio)
+void Fileout::save_initial_cells_txt(FEAngio& angio)
 {
-	FILE * final_cell_file = fopen("final_cells.txt", "at");
+	FILE* final_cell_file = fopen((m_sfile + "_cells.txt").c_str(), "at");
 	assert(final_cell_file);
-	FEMesh * mesh = angio.GetMesh();
-	fprintf(final_cell_file,"*timestep,cell id,X Pos,Y Pos,Z Pos");
+	FEMesh* mesh = angio.GetMesh();
+	fprintf(final_cell_file, "*timestep,cell id,X Pos,Y Pos,Z Pos");
 	CellSpeciesManager* m_species = angio.angio_elements[0]->_angio_mat->cell_species_manager;
 	if (m_species) {
 		for (int isol = 0; isol < m_species->cell_solute_prop.size(); isol++) {
 			int sol_id = m_species->cell_solute_prop[isol]->GetSoluteID();
-			fprintf(final_cell_file,",Sol %d",sol_id);
+			fprintf(final_cell_file, ",Sol %d", sol_id);
 		}
 		// assign the properties to each SBM. Initialize body loads and add to the SBMs container.
 		for (int isbm = 0; isbm < m_species->cell_SBM_prop.size(); isbm++)
 		{
 			int sbm_id = m_species->cell_SBM_prop[isbm]->GetSBMID();
-			fprintf(final_cell_file,",SBM %d",sbm_id);
+			fprintf(final_cell_file, ",SBM %d", sbm_id);
 		}
 	}
 	fprintf(final_cell_file, "\n");
-	for (int i = 0; i < angio.angio_elements.size(); i++) {
-		AngioElement * angio_elem = angio.angio_elements[i];
-		for (int j = 0; j < angio_elem->final_active_tips.size(); j++) {
-			auto cell = angio_elem->final_active_tips[j]->TipCell;
-			vec3d p = cell->GetPosition(mesh);
-			fprintf(final_cell_file,"%d,%d,%-12.5e,%-12.5e,%-12.5e",0,cell->initial_cell_id,p.x,p.y,p.z);
-			//! Print solute values
-			for (int isol = 0; isol < cell->Solutes.size(); isol++) {
-				fprintf(final_cell_file,",%-12.5e",cell->Solutes[isol]->GetInt());
-			}
-			//! Print SBM values
-			for (int isbm = 0; isbm < cell->SBMs.size(); isbm++) {
-				fprintf(final_cell_file,",%-12.5e",cell->SBMs[isbm]->GetInt());
-			}
-			fprintf(final_cell_file,"\n");
+	for (auto iter = angio.cells.begin(); iter != angio.cells.end(); iter++)
+	{
+		auto cell = iter->second;
+		vec3d p = cell->GetPosition(mesh);
+		fprintf(final_cell_file, "%d,%d,%-12.5e,%-12.5e,%-12.5e", 0, cell->initial_cell_id, p.x, p.y, p.z);
+		//! Print solute values
+		for (int isol = 0; isol < cell->Solutes.size(); isol++) {
+			fprintf(final_cell_file, ",%-12.5e", cell->Solutes[isol]->GetInt());
 		}
+		//! Print SBM values
+		for (int isbm = 0; isbm < cell->SBMs.size(); isbm++) {
+			fprintf(final_cell_file, ",%-12.5e", cell->SBMs[isbm]->GetInt());
+		}
+		fprintf(final_cell_file, "\n");
 	}
 	fclose(final_cell_file);
-
 }
 
 void Fileout::save_feangio_stats(FEAngio& angio)
 {
-	FETimeInfo & ti = angio.m_fem->GetTime();
+	FETimeInfo& ti = angio.m_fem->GetTime();
 	const int STR_SIZE = 64;
 	char grow_time[STR_SIZE];
 	char update_branch_policy[STR_SIZE];
@@ -305,7 +308,7 @@ void Fileout::save_feangio_stats(FEAngio& angio)
 int Fileout::getBranchCount(FEAngio& angio)
 {
 	int count = 0;
-	for(int i=0; i < angio.angio_elements.size();i++)
+	for (int i = 0; i < angio.angio_elements.size(); i++)
 	{
 		count += angio.angio_elements[i]->branch_count;
 	}
@@ -320,7 +323,7 @@ std::vector <int> Fileout::getBranchCount_pm(FEAngio& angio)
 	}
 	for (int i = 0; i < angio.angio_elements.size(); i++)
 	{
-		FESolidElement * se = angio.angio_elements[i]->_elem;
+		FESolidElement* se = angio.angio_elements[i]->_elem;
 		int mat_id = se->GetMatID();
 		count[mat_id] += angio.angio_elements[i]->branch_count;
 	}
@@ -332,7 +335,7 @@ int Fileout::getSegmentCount(FEAngio& angio)
 	int count = 0;
 	for (int i = 0; i < angio.angio_elements.size(); i++)
 	{
-		count += int (angio.angio_elements[i]->grown_segments.size());
+		count += int(angio.angio_elements[i]->grown_segments.size());
 	}
 	return count;
 }
@@ -345,7 +348,7 @@ std::vector <int> Fileout::getSegmentCount_pm(FEAngio& angio)
 	}
 	for (int i = 0; i < angio.angio_elements.size(); i++)
 	{
-		FESolidElement * se = angio.angio_elements[i]->_elem;
+		FESolidElement* se = angio.angio_elements[i]->_elem;
 		int mat_id = se->GetMatID();
 		count[mat_id] += angio.angio_elements[i]->grown_segments.size();
 	}
@@ -354,8 +357,8 @@ std::vector <int> Fileout::getSegmentCount_pm(FEAngio& angio)
 
 double Fileout::getSegmentLength(FEAngio& angio, double time)
 {
-	FEMesh * mesh = angio.GetMesh();
-	double len= 0;
+	FEMesh* mesh = angio.GetMesh();
+	double len = 0;
 #pragma omp parallel for
 	for (int i = 0; i < angio.angio_elements.size(); i++)
 	{
@@ -372,10 +375,10 @@ std::vector <double> Fileout::getSegmentLength_pm(FEAngio& angio, double time)
 	for (int i = 0; i < angio.m_pmat_ids.size(); i++) {
 		len.emplace_back(0);
 	}
-	FEMesh * mesh = angio.GetMesh();
+	FEMesh* mesh = angio.GetMesh();
 	for (int i = 0; i < angio.angio_elements.size(); i++)
 	{
-		FESolidElement * se = angio.angio_elements[i]->_elem;
+		FESolidElement* se = angio.angio_elements[i]->_elem;
 		int mat_id = se->GetMatID();
 		double temp = angio.angio_elements[i]->GetLengthAtTime(mesh, time);
 #pragma omp critical
@@ -389,9 +392,9 @@ int Fileout::getTipCount(FEAngio& angio)
 	int count = 0;
 	for (int i = 0; i < angio.angio_elements.size(); i++)
 	{
-		for(auto iter = angio.angio_elements[i]->next_tips.begin(); iter != angio.angio_elements[i]->next_tips.end();++iter)
+		for (auto iter = angio.angio_elements[i]->next_tips.begin(); iter != angio.angio_elements[i]->next_tips.end(); ++iter)
 		{
-			count += int (iter->second.size());
+			count += int(iter->second.size());
 		}
 	}
 	return count;
@@ -405,10 +408,10 @@ std::vector <int> Fileout::getTipCount_pm(FEAngio& angio)
 	}
 	for (int i = 0; i < angio.angio_elements.size(); i++)
 	{
-		FESolidElement * se = angio.angio_elements[i]->_elem;
+		FESolidElement* se = angio.angio_elements[i]->_elem;
 		int mat_id = se->GetMatID();
 		for (auto iter = angio.angio_elements[i]->next_tips.begin(); iter != angio.angio_elements[i]->next_tips.end(); ++iter)
-		//for (auto iter = angio.angio_elements[i]->active_tips.begin(); iter != angio.angio_elements[i]->active_tips.end(); ++iter)
+			//for (auto iter = angio.angio_elements[i]->active_tips.begin(); iter != angio.angio_elements[i]->active_tips.end(); ++iter)
 		{
 			count[mat_id] += int(iter->second.size());
 			//count[mat_id] += iter->second.size();

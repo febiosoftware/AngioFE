@@ -30,16 +30,20 @@ double DensFAContributionMix::ApplyModifiers(double dt, AngioElement* angio_elem
 {
 	// vector containing the SPD for each gauss point in the element
 	std::vector<mat3ds> SPDs_gausspts;
+	std::vector<double> density_at_integration_points;
 
-	// get each gauss point's SPD
+	// get each gauss point's SPD and density
 	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
 	{
 		// get the angio point
 		FEMaterialPoint* gauss_point = angio_element->_elem->GetMaterialPoint(i);
 		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
+		FEElasticMaterialPoint* elastic_mp = gauss_point->ExtractData<FEElasticMaterialPoint>();
 		SPDs_gausspts.push_back(angio_mp->angioSPD);
+		density_at_integration_points.push_back(angio_mp->ref_ecm_density * (1.0 / elastic_mp->m_J));
 	}
 
+	// get the FA
 	// array containing the SPD for each node in the element
 	mat3ds SPDs_nodes[FESolidElement::MAX_NODES];
 	// array for the shape function values
@@ -58,13 +62,20 @@ double DensFAContributionMix::ApplyModifiers(double dt, AngioElement* angio_elem
 	// Sort based on absolute value of eigenvalues
 	std::sort(v.begin(), v.end(), EigComp());
 	double angioFA_int = 1 - (v[1].first / v[0].first);
-	double alpha = a0 + a / (1 + exp(b * (angioFA_int-c)));
+	
+	//Get the density
+	PerElementVI interp(this->GetFEModel());
+	double density_at_point = interp.Interpolate(angio_element->_elem, density_at_integration_points, local_pos, mesh);
+	double a = std::min(std::max(a_min, a_min * (density_at_point - 2.0)), 0.3);
+	
+	// solve for alpha
+	double alpha = a0 + a / (1.0 + exp(b * (angioFA_int - c)));
 	return alpha;
 }
 
 BEGIN_FECORE_CLASS(DensFAContributionMix, ContributionMix)
 ADD_PARAMETER(a0, "a0");
-ADD_PARAMETER(a, "a");
+ADD_PARAMETER(a_min, "a_min");
 ADD_PARAMETER(b, "b");
 ADD_PARAMETER(c, "c");
 END_FECORE_CLASS();
