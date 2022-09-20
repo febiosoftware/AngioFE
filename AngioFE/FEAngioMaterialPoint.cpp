@@ -8,15 +8,13 @@
 #include "angio3d.h"
 
 //-----------------------------------------------------------------------------
-FEAngioMaterialPoint::FEAngioMaterialPoint(FEMaterialPoint* pt, FEMaterialPoint* vesselPt, FEMaterialPoint *matrixPt) : FEMaterialPoint(pt)
+FEAngioMaterialPoint::FEAngioMaterialPoint(FEMaterialPointData* pt, FEMaterialPointData* vesselPt, FEMaterialPointData* matrixPt) : FEMaterialPointData(pt)
 {
-	vessPt = vesselPt;
-	matPt = matrixPt;
+	vessPt = new FEMaterialPoint(vesselPt);
+	matPt = new FEMaterialPoint(matrixPt);
 	matrix_weight = 1.0;
 	vessel_weight = 0.0;
 	ref_ecm_density = 3.0;
-	vessPt->SetPrev(this);
-	matPt->SetPrev(this);
 	m_as.zero();
 }
 
@@ -24,21 +22,21 @@ FEAngioMaterialPoint::FEAngioMaterialPoint(FEMaterialPoint* pt, FEMaterialPoint*
 //! The init function is used to intialize data
 void FEAngioMaterialPoint::Init()
 {
-	FEMaterialPoint::Init();
+	FEMaterialPointData::Init();
 	vessPt->Init();
 	matPt->Init();
 }
 
 void FEAngioMaterialPoint::Update(const FETimeInfo& timeInfo)
 {
-	FEMaterialPoint::Update(timeInfo);
+	FEMaterialPointData::Update(timeInfo);
 	matPt->Update(timeInfo);
 	vessPt->Update(timeInfo);
 }
 
 //-----------------------------------------------------------------------------
 //! copy material point data (for running restarts) \todo Is this still used?
-FEMaterialPoint* FEAngioMaterialPoint::Copy()
+FEMaterialPointData* FEAngioMaterialPoint::Copy()
 {
 	FEAngioMaterialPoint* pt = new FEAngioMaterialPoint(*this);
 	if (m_pNext) pt->m_pNext = m_pNext->Copy();
@@ -49,13 +47,14 @@ FEMaterialPoint* FEAngioMaterialPoint::Copy()
 //! copy material point data (for running restarts) \todo Is this still used?
 void FEAngioMaterialPoint::Serialize(DumpStream& dmp)
 {
-
-	FEMaterialPoint::Serialize(dmp);
+	FEMaterialPointData::Serialize(dmp);
 }
 
 FEAngioMaterialPoint* FEAngioMaterialPoint::FindAngioMaterialPoint(FEMaterialPoint* mp)
 {
-	FEAngioMaterialPoint* angioPt = dynamic_cast<FEAngioMaterialPoint*>(mp);
+	return mp->ExtractData<FEAngioMaterialPoint>();
+
+/*	FEAngioMaterialPoint* angioPt = dynamic_cast<FEAngioMaterialPoint*>(mp);
 	if (angioPt)
 		return angioPt;
 
@@ -82,6 +81,7 @@ FEAngioMaterialPoint* FEAngioMaterialPoint::FindAngioMaterialPoint(FEMaterialPoi
 		pt = pt->Next();
 	}
 	return nullptr;
+*/
 }
 
 void FEAngioMaterialPoint::UpdateAngioFractionalAnisotropy()

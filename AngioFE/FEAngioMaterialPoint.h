@@ -4,11 +4,11 @@
 #include <FECore/FEMaterialPoint.h>
 
 //! per integration point values for angiofe
-class FEAngioMaterialPoint : public FEMaterialPoint
+class FEAngioMaterialPoint : public FEMaterialPointData
 {
 public:
 	//! constructor
-	explicit FEAngioMaterialPoint(FEMaterialPoint* pt, FEMaterialPoint* vesselPt, FEMaterialPoint *matrixPt);
+	explicit FEAngioMaterialPoint(FEMaterialPointData* pt, FEMaterialPointData* vesselPt, FEMaterialPointData* matrixPt);
 
 	//! The init function is used to intialize data
 	void Init() override;
@@ -21,7 +21,7 @@ public:
 	void UpdateSPD();
 	
 	//! copy material point data (for running restarts) todo Is this still used?
-	FEMaterialPoint* Copy() override;
+	FEMaterialPointData* Copy() override;
 
 	//! copy material point data (for running restarts) todo Is this still used?
 	void Serialize(DumpStream& dmp) override;
@@ -45,6 +45,7 @@ public:
 
 	//! pointer to material point of the vessel
 	FEMaterialPoint* vessPt = nullptr;
+
 	//! pointer to matrix material point
 	FEMaterialPoint* matPt = nullptr;
 

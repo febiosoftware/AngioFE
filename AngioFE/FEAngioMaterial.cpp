@@ -127,25 +127,24 @@ mat3ds FEAngioMaterial::Stress(FEMaterialPoint& mp)
 	assert(angioPt);
 	if (angioPt)
 	{
-		FEElasticMaterialPoint& vessel_elastic = *angioPt->vessPt->ExtractData<FEElasticMaterialPoint>();
-		FEElasticMaterialPoint& matrix_elastic = *angioPt->matPt->ExtractData<FEElasticMaterialPoint>();
-
-		vessel_elastic.m_rt = elastic_pt.m_rt; //spatial position
-		vessel_elastic.m_r0 = elastic_pt.m_r0; //material position
-		vessel_elastic.m_F = elastic_pt.m_F; //deformation gradient
-		vessel_elastic.m_J = elastic_pt.m_J; //determinant
+		angioPt->vessPt->m_r0 = mp.m_r0;
+		angioPt->vessPt->m_rt = mp.m_rt;
 		angioPt->vessPt->m_elem = mp.m_elem;
 		angioPt->vessPt->m_index = mp.m_index;
+		FEElasticMaterialPoint& vessel_elastic = *angioPt->vessPt->ExtractData<FEElasticMaterialPoint>();
+		vessel_elastic.m_F = elastic_pt.m_F;
+		vessel_elastic.m_J = elastic_pt.m_J;
 
-		matrix_elastic.m_rt = elastic_pt.m_rt;
-		matrix_elastic.m_r0 = elastic_pt.m_r0;
-		matrix_elastic.m_F = elastic_pt.m_F;
-		matrix_elastic.m_J = elastic_pt.m_J;
+		angioPt->matPt->m_r0 = mp.m_r0;
+		angioPt->matPt->m_rt = mp.m_rt;
 		angioPt->matPt->m_elem = mp.m_elem;
 		angioPt->matPt->m_index = mp.m_index;
+		FEElasticMaterialPoint& matrix_elastic = *angioPt->matPt->ExtractData<FEElasticMaterialPoint>();
+		matrix_elastic.m_F = elastic_pt.m_F;
+		matrix_elastic.m_J = elastic_pt.m_J;
 
-		vessel_elastic.m_s = common_properties->vessel_material->Stress(*(angioPt->vessPt));
-		matrix_elastic.m_s = matrix_material->Stress(*(angioPt->matPt));
+		vessel_elastic.m_s = common_properties->vessel_material->Stress(*angioPt->vessPt);
+		matrix_elastic.m_s = matrix_material->Stress(*angioPt->matPt);
 
 		s = angioPt->m_as + angioPt->vessel_weight * vessel_elastic.m_s + angioPt->matrix_weight * matrix_elastic.m_s;
 	}
@@ -160,17 +159,24 @@ tens4ds FEAngioMaterial::Tangent(FEMaterialPoint& mp)
 	tens4ds s(0.0);
 	if (angioPt)
 	{
+		angioPt->vessPt->m_r0 = mp.m_r0;
+		angioPt->vessPt->m_rt = mp.m_rt;
+		angioPt->vessPt->m_elem = mp.m_elem;
+		angioPt->vessPt->m_index = mp.m_index;
 		FEElasticMaterialPoint& vessel_elastic = *angioPt->vessPt->ExtractData<FEElasticMaterialPoint>();
-		vessel_elastic.m_rt = elastic_pt.m_rt;
-		vessel_elastic.m_r0 = elastic_pt.m_r0;
 		vessel_elastic.m_F = elastic_pt.m_F;
 		vessel_elastic.m_J = elastic_pt.m_J;
+
+		angioPt->matPt->m_r0 = mp.m_r0;
+		angioPt->matPt->m_rt = mp.m_rt;
+		angioPt->matPt->m_elem = mp.m_elem;
+		angioPt->matPt->m_index = mp.m_index;
 		FEElasticMaterialPoint& matrix_elastic = *angioPt->matPt->ExtractData<FEElasticMaterialPoint>();
-		matrix_elastic.m_rt = elastic_pt.m_rt;
-		matrix_elastic.m_r0 = elastic_pt.m_r0;
 		matrix_elastic.m_F = elastic_pt.m_F;
 		matrix_elastic.m_J = elastic_pt.m_J;
-		s = angioPt->vessel_weight * common_properties->vessel_material->Tangent(*angioPt->vessPt) + angioPt->matrix_weight * matrix_material->Tangent(*angioPt->matPt);
+
+		s = angioPt->vessel_weight * common_properties->vessel_material->Tangent(*angioPt->vessPt) + \
+			angioPt->matrix_weight * matrix_material->Tangent(*angioPt->matPt);
 	}
 	return s;
 }
@@ -184,17 +190,24 @@ double FEAngioMaterial::StrainEnergyDensity(FEMaterialPoint& mp)
 	double sed = 0.0;
 	if (angioPt)
 	{
+		angioPt->vessPt->m_r0 = mp.m_r0;
+		angioPt->vessPt->m_rt = mp.m_rt;
+		angioPt->vessPt->m_elem = mp.m_elem;
+		angioPt->vessPt->m_index = mp.m_index;
 		FEElasticMaterialPoint& vessel_elastic = *angioPt->vessPt->ExtractData<FEElasticMaterialPoint>();
-		vessel_elastic.m_rt = elastic_pt.m_rt;
-		vessel_elastic.m_r0 = elastic_pt.m_r0;
 		vessel_elastic.m_F = elastic_pt.m_F;
 		vessel_elastic.m_J = elastic_pt.m_J;
+
+		angioPt->matPt->m_r0 = mp.m_r0;
+		angioPt->matPt->m_rt = mp.m_rt;
+		angioPt->matPt->m_elem = mp.m_elem;
+		angioPt->matPt->m_index = mp.m_index;
 		FEElasticMaterialPoint& matrix_elastic = *angioPt->matPt->ExtractData<FEElasticMaterialPoint>();
-		matrix_elastic.m_rt = elastic_pt.m_rt;
-		matrix_elastic.m_r0 = elastic_pt.m_r0;
 		matrix_elastic.m_F = elastic_pt.m_F;
 		matrix_elastic.m_J = elastic_pt.m_J;
-		sed = angioPt->vessel_weight * common_properties->vessel_material->ExtractProperty<FEElasticMaterial>()->StrainEnergyDensity(*angioPt->vessPt) + angioPt->matrix_weight * matrix_material->ExtractProperty<FEElasticMaterial>()->StrainEnergyDensity(*angioPt->matPt);
+
+		sed = angioPt->vessel_weight * common_properties->vessel_material->ExtractProperty<FEElasticMaterial>()->StrainEnergyDensity(*angioPt->vessPt) + \
+			  angioPt->matrix_weight * matrix_material->ExtractProperty<FEElasticMaterial>()->StrainEnergyDensity(*angioPt->matPt);
 	}
 	return sed;
 }
@@ -1006,7 +1019,10 @@ bool FEAngioMaterial::SeedFragments(std::vector<AngioElement*>& angio_elements, 
 
 
 //-----------------------------------------------------------------------------
-FEMaterialPoint* FEAngioMaterial::CreateMaterialPointData()
+FEMaterialPointData* FEAngioMaterial::CreateMaterialPointData()
 {
-	return new FEAngioMaterialPoint((FEElasticMaterial::CreateMaterialPointData()), common_properties->vessel_material->CreateMaterialPointData(), matrix_material->CreateMaterialPointData());
+	return new FEAngioMaterialPoint(
+		(FEElasticMaterial::CreateMaterialPointData()), 
+		common_properties->vessel_material->CreateMaterialPointData(), 
+		matrix_material->CreateMaterialPointData());
 }

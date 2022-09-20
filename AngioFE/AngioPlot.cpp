@@ -261,7 +261,7 @@ bool FEPlotMatrixElasticStress::Save(FEDomain& d, FEDataStream& str)
 		{
 			FEMaterialPoint& mp = *(el.GetMaterialPoint(j));
 			FEAngioMaterialPoint* angioPt = FEAngioMaterialPoint::FindAngioMaterialPoint(&mp);
-			FEElasticMaterialPoint& emp = *angioPt->matPt->Next()->ExtractData<FEElasticMaterialPoint>();
+			FEElasticMaterialPoint& emp = *angioPt->matPt->ExtractData<FEElasticMaterialPoint>();
 
 			mat3ds sj = emp.m_s;
 			s += sj;

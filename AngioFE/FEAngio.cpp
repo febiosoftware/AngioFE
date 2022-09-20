@@ -1965,7 +1965,7 @@ bool CreateFiberMap(vector<vec3d>& fiber, FEMaterial* pmat)
 				FEParamMat3d& p = matax->value<FEParamMat3d>();
 				FEMappedValueMat3d* val = dynamic_cast<FEMappedValueMat3d*>(p.valuator());
 				FEDomainMap* map = dynamic_cast<FEDomainMap*>(val->dataMap());
-				mat3d m_Q = map->valueMat3d(pt);
+				mat3d m_Q = map->valueMat3d(*mpoint);
 
 				mat3d m = m_Q;
 				//mat3d m = pt.m_Q;

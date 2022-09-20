@@ -121,7 +121,7 @@ public:
 	tens4ds Tangent(FEMaterialPoint& mp) override;
 
 	//! create material point data for this material
-	FEMaterialPoint* CreateMaterialPointData() override;
+	FEMaterialPointData* CreateMaterialPointData() override;
 
 	//! calculates the strain energy density. Effects convergence rate
 	double StrainEnergyDensity(FEMaterialPoint& mp) override;
