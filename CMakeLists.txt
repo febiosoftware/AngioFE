@@ -164,7 +164,7 @@ endif()
 ##### Set appropriate defines and includes #####
 
 if(WIN32)
-    add_definitions(-DWIN32 /MP /openmp)
+    add_definitions(-DWIN32 /MP /openmp /D_ALLOW_RANDOM_DISTRIBUTION_CONST_OPERATOR)
 elseif(APPLE)
     add_definitions(-D__APPLE__)
     set(CMAKE_OSX_DEPLOYMENT_TARGET 10.13)
