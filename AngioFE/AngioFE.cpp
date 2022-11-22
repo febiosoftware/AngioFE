@@ -45,6 +45,7 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS_EXPLICIT(FEEllipticalDistribution, FEMATERIAL_ID, "elliptical_distribution");
 	REGISTER_FECORE_CLASS_EXPLICIT(FEFisherDistribution, FEMATERIAL_ID, "fisher_distribution");
 	REGISTER_FECORE_CLASS_EXPLICIT(FEPrescribedDistribution, FEMATERIAL_ID, "prescribed_distribution");
+	REGISTER_FECORE_CLASS_EXPLICIT(FERationalDistribution, FEMATERIAL_ID, "rational_distribution");
 
 	// Stress Policy Classes
 	REGISTER_FECORE_CLASS_EXPLICIT(SigmoidAngioStressPolicy, FEMATERIAL_ID, "sigmoid_angio_stress_policy");
