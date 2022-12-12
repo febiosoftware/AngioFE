@@ -8,11 +8,13 @@ class FEAngio;
 class Tip;
 
 //! determines the mixture between the position dependent direction and previous segment contribution 
-class ContributionMix : public FEMaterial
+class ContributionMix : public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(ContributionMix)
+
 public:
 	//! constructor
-	explicit ContributionMix(FEModel* pfem) : FEMaterial(pfem) {}
+	explicit ContributionMix(FEModel* pfem) : FEMaterialProperty(pfem) {}
 	virtual ~ContributionMix() {}
 	//! return the contribution mix at a given location
 	virtual double ApplyModifiers(double prev, AngioElement* angio_element, vec3d local_pos, FEMesh* mesh) = 0;
@@ -21,11 +23,13 @@ public:
 };
 
 //! combines the contribution mixes
-class ContributionMixManager : public FEMaterial
+class ContributionMixManager : public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(ContributionMixManager)
+
 public:
 	//! constructor
-	explicit ContributionMixManager(FEModel* pfem) : FEMaterial(pfem) { AddClassProperty(this, &cm_modifiers, "psc_modifier", FEProperty::Optional); }
+	explicit ContributionMixManager(FEModel* pfem) : FEMaterialProperty(pfem) { AddClassProperty(this, &cm_modifiers, "psc_modifier", FEProperty::Optional); }
 	virtual ~ContributionMixManager() {}
 	//! return the contribution mix at a given location
 	double ApplyModifiers(double prev, AngioElement* angio_element, vec3d local_pos, FEMesh* mesh);
@@ -74,11 +78,13 @@ private:
 	double c = 0.3;
 };
 
-class ProtoContributionMix : public FEMaterial
+class ProtoContributionMix : public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(ProtoContributionMix)
+
 public:
 	//! constructor
-	explicit ProtoContributionMix(FEModel* pfem) : FEMaterial(pfem) {}
+	explicit ProtoContributionMix(FEModel* pfem) : FEMaterialProperty(pfem) {}
 	virtual ~ProtoContributionMix() {}
 	//! return the contribution mix at a given location
 	virtual double ApplyModifiers(double prev, AngioElement* angio_element, vec3d local_pos, FEMesh* mesh) = 0;
@@ -87,11 +93,13 @@ public:
 };
 
 //! combines the contribution mixes
-class ProtoContributionMixManager : public FEMaterial
+class ProtoContributionMixManager : public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(ProtoContributionMixManager)
+
 public:
 	//! constructor
-	explicit ProtoContributionMixManager(FEModel* pfem) : FEMaterial(pfem) { AddClassProperty(this, &proto_cm_modifiers, "proto_psc_modifier", FEProperty::Optional); }
+	explicit ProtoContributionMixManager(FEModel* pfem) : FEMaterialProperty(pfem) { AddClassProperty(this, &proto_cm_modifiers, "proto_psc_modifier", FEProperty::Optional); }
 	virtual ~ProtoContributionMixManager() {}
 	//! return the contribution mix at a given location
 	double ApplyModifiers(double prev, AngioElement* angio_element, vec3d local_pos, FEMesh* mesh);

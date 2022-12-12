@@ -4,21 +4,25 @@
 
 class FEAngio;
 //! Anything that should be applied to all elements within an angio material, applied before nodedatainterpolation values
-class InitialModifier : public FEMaterial
+class InitialModifier : public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(InitialModifier)
+
 public:
 	//! constructor
-	explicit InitialModifier(FEModel * pfem) :FEMaterial(pfem){}
+	explicit InitialModifier(FEModel * pfem) :FEMaterialProperty(pfem){}
 	//! applies an initial modifier
 	virtual void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)=0;
 };
 
 //! applies all initial modifiers
-class InitialModifierManager: public FEMaterial
+class InitialModifierManager: public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(InitialModifierManager)
+
 public:
 	//! constructor
-	explicit InitialModifierManager(FEModel * pfem) :FEMaterial(pfem) { AddClassProperty(this, &initial_modifiers, "initial_modifier", FEProperty::Optional); }
+	explicit InitialModifierManager(FEModel * pfem) :FEMaterialProperty(pfem) { AddClassProperty(this, &initial_modifiers, "initial_modifier", FEProperty::Optional); }
 	//! apply all initial modifiers
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio);
 private:

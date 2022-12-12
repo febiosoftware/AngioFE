@@ -75,7 +75,7 @@ void SigmoidAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio*
 		// zero the angio point
 		angio_mp->m_as.zero();
 		// get global position of elastic material point?
-		vec3d y = emp->m_rt;
+		vec3d y = mp->m_rt;
 		// for each active tip
 		for (int j = 0; j < final_active_tips.size(); j++)
 		{
@@ -142,7 +142,7 @@ void SigmoidDensAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAn
 		// zero the angio point
 		angio_mp->m_as.zero();
 		// get global position of elastic material point?
-		vec3d y = emp->m_rt;
+		vec3d y = mp->m_rt;
 		this->UpdateScale();
 		// for each active tip
 		for (int j = 0; j < final_active_tips.size(); j++)
@@ -174,7 +174,7 @@ ADD_PARAMETER(a, "a");
 ADD_PARAMETER(b, "b");
 ADD_PARAMETER(x0, "x0");
 ADD_PARAMETER(y0, "y0");
-ADD_PARAMETER(scale, "scale")
+ADD_PARAMETER(scale, "scale");
 
 END_FECORE_CLASS();
 
@@ -204,7 +204,7 @@ void LoadCurveVelAngioStressPolicy::AngioStress(AngioElement* angio_element, FEA
 		assert(mp && angio_mp);
 		angio_mp->m_as.zero();
 		// get the global position of the material point
-		vec3d y = emp->m_rt;
+		vec3d y = mp->m_rt;
 		for (int j = 0; j < final_active_tips.size(); j++)
 		{
 			Tip* tip = final_active_tips[j];
@@ -254,7 +254,7 @@ void LoadCurveAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngi
 		FEElasticMaterialPoint* emp = mp->ExtractData<FEElasticMaterialPoint>();
 		assert(mp && angio_mp);
 		angio_mp->m_as.zero();
-		vec3d y = emp->m_rt;
+		vec3d y = mp->m_rt;
 		for (int j = 0; j < final_active_tips.size(); j++)
 		{
 			Tip* tip = final_active_tips[j];
@@ -299,7 +299,7 @@ void LoadCurveDenAngioStressPolicy::AngioStress(AngioElement* angio_element, FEA
 		FEElasticMaterialPoint* emp = mp->ExtractData<FEElasticMaterialPoint>();
 		assert(mp && angio_mp);
 		angio_mp->m_as.zero();
-		vec3d y = emp->m_rt;
+		vec3d y = mp->m_rt;
 		for (int j = 0; j < final_active_tips.size(); j++)
 		{
 			Tip* tip = final_active_tips[j];
@@ -345,7 +345,7 @@ void LoadCurveRefDenAngioStressPolicy::AngioStress(AngioElement* angio_element, 
 		FEElasticMaterialPoint* emp = mp->ExtractData<FEElasticMaterialPoint>();
 		assert(mp && angio_mp);
 		angio_mp->m_as.zero();
-		vec3d y = emp->m_rt;
+		vec3d y = mp->m_rt;
 		for (int j = 0; j < final_active_tips.size(); j++)
 		{
 			Tip* tip = final_active_tips[j];
@@ -391,7 +391,7 @@ void GrownSegmentsAngioStressPolicy::AngioStress(AngioElement* angio_element, FE
 		FEElasticMaterialPoint* emp = mp->ExtractData<FEElasticMaterialPoint>();
 		assert(mp && angio_mp);
 		angio_mp->m_as.zero();
-		vec3d y = emp->m_rt;
+		vec3d y = mp->m_rt;
 		for (int j = 0; j < grown_tips.size(); j++)
 		{
 			Tip* tip = grown_tips[j];
@@ -436,7 +436,7 @@ void GrownSegmentsVelAngioStressPolicy::AngioStress(AngioElement* angio_element,
 		FEElasticMaterialPoint* emp = mp->ExtractData<FEElasticMaterialPoint>();
 		assert(mp && angio_mp);
 		angio_mp->m_as.zero();
-		vec3d y = emp->m_rt;
+		vec3d y = mp->m_rt;
 		for (int j = 0; j < grown_tips.size(); j++)
 		{
 			Tip* tip = grown_tips[j];

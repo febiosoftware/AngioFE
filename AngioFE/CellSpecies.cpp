@@ -5,12 +5,12 @@
 #include <iostream>
 #include <FECore/log.h>
 
-BEGIN_FECORE_CLASS(CellSBM, FEMaterial)
+BEGIN_FECORE_CLASS(CellSBM, FEMaterialProperty)
 ADD_PARAMETER(SBM_ID, "SBM_ID");
 ADD_PARAMETER(c_SBM, "c_SBM");
 END_FECORE_CLASS();
 
-BEGIN_FECORE_CLASS(CellSolute, FEMaterial)
+BEGIN_FECORE_CLASS(CellSolute, FEMaterialProperty)
 ADD_PARAMETER(Solute_ID, "Solute_ID");
 ADD_PARAMETER(c_Sol, "c_Sol");
 END_FECORE_CLASS();
@@ -19,7 +19,7 @@ BEGIN_FECORE_CLASS(FECellReactionRateConst, FECellReactionRate)
 ADD_PARAMETER(m_k, FE_RANGE_GREATER_OR_EQUAL(0.0), "k");
 END_FECORE_CLASS();
 
-FECellReaction::FECellReaction(FEModel* pfem) : FEMaterial(pfem)
+FECellReaction::FECellReaction(FEModel* pfem) : FEMaterialProperty(pfem)
 {
 
 }
@@ -71,7 +71,7 @@ FESoluteData* CellSolute::FindSoluteData(int nid) {
 FECellChemicalReaction::FECellChemicalReaction(FEModel* pfem) : FECellReaction(pfem)
 {
 	// additional initializations
-	m_Vovr = false;
+//	m_Vovr = false;
 	m_pFwd = m_pRev = 0;
 }
 
@@ -133,7 +133,9 @@ bool FECellChemicalReaction::Init()
 		}
 
 		//evaluate the weighted molar volume of reactants and products
-		if (!m_Vovr) {
+		// TODO: where did m_Vovr go?? 
+//		if (!m_Vovr) 
+		{
 			m_Vbar = 0;
 			for (isol = 0; isol < nsol; ++isol) {
 				m_Vbar += m_v[isol] * m_cell->Solutes[isol]->MolarMass() / m_cell->Solutes[isol]->Density();
@@ -157,7 +159,7 @@ bool FECellChemicalReaction::Init()
 
 	return true;
 }
-
+/*
 //-----------------------------------------------------------------------------
 void FECellChemicalReaction::SetParameter(FEParam& p)
 {
@@ -166,8 +168,9 @@ void FECellChemicalReaction::SetParameter(FEParam& p)
 		m_Vovr = true;
 	}
 }
-
+*/
 //-----------------------------------------------------------------------------
+/*
 bool FECellChemicalReaction::SetParameterAttribute(FEParam& p, const char* szatt, const char* szval)
 {
 	// get number of DOFS
@@ -210,7 +213,7 @@ bool FECellChemicalReaction::SetParameterAttribute(FEParam& p, const char* szatt
 	}
 	return false;
 }
-
+*/
 bool FECellReactionRate::Init() {
 	// Initialize base class
 
@@ -227,14 +230,14 @@ bool FECellReactionRateConst::Init() {
 //! Data serialization
 void FECellChemicalReaction::Serialize(DumpStream& ar)
 {
-	FEMaterial::Serialize(ar);
+	FEMaterialProperty::Serialize(ar);
 
 	if (ar.IsShallow() == false)
 	{
 		if (ar.IsSaving())
 		{
 			itrmap p;
-			ar << m_nsol << m_vR << m_vP << m_v << m_Vovr;
+			ar << m_nsol << m_vR << m_vP << m_v;// << m_Vovr;
 			ar << (int)m_solR.size();
 			for (p = m_solR.begin(); p != m_solR.end(); ++p) { ar << p->first; ar << p->second; }
 			ar << (int)m_solP.size();
@@ -250,7 +253,7 @@ void FECellChemicalReaction::Serialize(DumpStream& ar)
 			if (m_pFwd) m_pFwd->m_pReact = this;
 			if (m_pRev) m_pRev->m_pReact = this;
 
-			ar >> m_nsol >> m_vR >> m_vP >> m_v >> m_Vovr;
+			ar >> m_nsol >> m_vR >> m_vP >> m_v;// >> m_Vovr;
 			int size, id, vR;
 			ar >> size;
 			for (int i = 0; i < size; ++i)

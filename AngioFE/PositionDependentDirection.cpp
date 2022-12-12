@@ -14,7 +14,7 @@
 #include "FEProbabilityDistribution.h"
 #include <FEBioMix/FESolutesMaterialPoint.h>
 
-BEGIN_FECORE_CLASS(PositionDependentDirection, FEMaterial)
+BEGIN_FECORE_CLASS(PositionDependentDirection, FEMaterialProperty)
 ADD_PARAMETER(contribution, "contribution");
 END_FECORE_CLASS();
 
@@ -471,7 +471,7 @@ ADD_PARAMETER(alpha_override, "alpha_override");
 ADD_PARAMETER(efd_exp, "efd_exp");
 END_FECORE_CLASS();
 
-BEGIN_FECORE_CLASS(ProtoPositionDependentDirection, FEMaterial)
+BEGIN_FECORE_CLASS(ProtoPositionDependentDirection, FEMaterialProperty)
 ADD_PARAMETER(proto_contribution, "proto_contribution");
 END_FECORE_CLASS();
 

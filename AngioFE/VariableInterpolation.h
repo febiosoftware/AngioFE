@@ -9,10 +9,12 @@ class FESolidElement;
 //! consider rewritting this once data has been collected on actual simulations
 
 //! base class for doing interpolation to all locations within an element
-class FEVariableInterpolation : public FEMaterial {
+class FEVariableInterpolation : public FEMaterialProperty {
+	FECORE_BASE_CLASS(FEVariableInterpolation)
+
 public:
 	//! constructor
-	explicit FEVariableInterpolation(FEModel * pfem) : FEMaterial(pfem){}
+	explicit FEVariableInterpolation(FEModel * pfem) : FEMaterialProperty(pfem){}
 	//! interpolate doubles
 	virtual double Interpolate(FESolidElement *se, std::vector<double> & values_at_gauss_points, vec3d local_pos, FEMesh* mesh) = 0;
 	//! interpolate directions
@@ -22,6 +24,7 @@ public:
 //! discontinuous interpolation of values at the gauss points
 // issue
 class PerElementVI : public FEVariableInterpolation {
+	FECORE_BASE_CLASS(PerElementVI)
 public:
 	//! constructor
 	explicit PerElementVI(FEModel * pfem) : FEVariableInterpolation(pfem){}
@@ -33,10 +36,12 @@ public:
 
 // FEMixMethod, class for interpolating the contribution of two vectors.
 // issue
-class FEMixMethod : public FEMaterial {
+class FEMixMethod : public FEMaterialProperty {
+	FECORE_BASE_CLASS(FEMixMethod)
+
 public:
 	// constructor
-	explicit FEMixMethod(FEModel * pfem) : FEMaterial(pfem){}
+	explicit FEMixMethod(FEModel * pfem) : FEMaterialProperty(pfem){}
 	// interpolate doubles
 	virtual vec3d ApplyMix(vec3d psc_dir, vec3d pdd_dir, double contribution) = 0;
 	// interpolate along an axis (selects direction of growth)

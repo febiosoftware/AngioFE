@@ -1,6 +1,6 @@
 #include "CommonAngioProperites.h"
 
-CommonAngioProperties::CommonAngioProperties(FEModel * pfem) : FEMaterial(pfem)
+CommonAngioProperties::CommonAngioProperties(FEModel * pfem) : FEMaterialProperty(pfem)
 {
 	AddClassProperty(this, &vessel_material, "vessel");
 	//AddProperty(&fiber_initializer, "fiber_initializer");

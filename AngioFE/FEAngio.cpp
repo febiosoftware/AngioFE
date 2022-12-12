@@ -1315,14 +1315,13 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 				FEDomainMap* map = new FEDomainMap(FE_MAT3D, FMT_MATPOINTS);
 				map->Create(elset);
 				map->fillValue(mat3d::identity());
-				FEParam* matax = test_angmat->FindParameter("mat_axis");
-				// create parameter
-				FEParamMat3d& p = matax->value<FEParamMat3d>();
+
 				// create evaluator
 				FEMappedValueMat3d* val = fecore_alloc(FEMappedValueMat3d, GetFEModel());
 				val->setDataMap(map);
-				//set the valuator to the model parameter
-				p.setValuator(val);
+
+				// set the material axis
+				test_angmat->SetMaterialAxis(val);
 			}
 		}
 #pragma omp parallel for 
@@ -1971,7 +1970,7 @@ bool CreateFiberMap(vector<vec3d>& fiber, FEMaterial* pmat)
 				FEParamMat3d& p = matax->value<FEParamMat3d>();
 				FEMappedValueMat3d* val = dynamic_cast<FEMappedValueMat3d*>(p.valuator());
 				FEDomainMap* map = dynamic_cast<FEDomainMap*>(val->dataMap());
-				mat3d m_Q = map->valueMat3d(pt);
+				mat3d m_Q = map->valueMat3d(*mpoint);
 
 				mat3d m = m_Q;
 				//mat3d m = pt.m_Q;

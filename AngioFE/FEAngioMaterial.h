@@ -121,7 +121,7 @@ public:
 	tens4ds Tangent(FEMaterialPoint& mp) override;
 
 	//! create material point data for this material
-	FEMaterialPoint* CreateMaterialPointData() override;
+	FEMaterialPointData* CreateMaterialPointData() override;
 
 	//! calculates the strain energy density. Effects convergence rate
 	double StrainEnergyDensity(FEMaterialPoint& mp) override;
@@ -159,7 +159,7 @@ private:
 
 	double dt_safety_multiplier = 1.0;
 
-	FESolidMaterial* matrix_material = nullptr;
+	FEElasticMaterial* matrix_material = nullptr;
 	ProtoPreviousSegmentContributionManager* proto_psc_manager = nullptr;
 	PreviousSegmentContributionManager* psc_manager = nullptr;
 	ProtoPositionDependentDirectionManager* proto_pdd_manager = nullptr;

@@ -10,10 +10,10 @@ class FEAngioMaterialBase;
 class RandomFiberManager;
 
 //the base class for classes that initialize the fibers
-class FiberInitializer : public FEMaterial
+class FiberInitializer : public FEMaterialProperty
 {
 public:
-	explicit FiberInitializer(FEModel * model):FEMaterial(model){}
+	explicit FiberInitializer(FEModel * model):FEMaterialProperty(model){}
 	virtual ~FiberInitializer(){}
 	virtual void InitializeFibers(RandomFiberManager * fman) = 0;
 

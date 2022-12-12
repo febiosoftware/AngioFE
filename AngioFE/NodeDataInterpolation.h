@@ -7,11 +7,13 @@ class FEAngio;
 class FEAngioMaterial;
 
 //! the ability to set certain values on a per node basis
-class NodeDataInterpolation :public FEMaterial
+class NodeDataInterpolation :public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(NodeDataInterpolation)
+
 public:
 	//! constructor
-	NodeDataInterpolation(FEModel * pfem) :FEMaterial(pfem) { }
+	NodeDataInterpolation(FEModel * pfem) :FEMaterialProperty(pfem) { }
 	//! returns the value from a material point
 	virtual double & ValueReference(FEMaterialPoint * mp) = 0;
 	//! the name to which the data is bound
@@ -31,13 +33,15 @@ protected:
 };
 
 //! applies all node data interpolation values
-class NodeDataInterpolationManager :public FEMaterial
+class NodeDataInterpolationManager :public FEMaterialProperty
 {
+	FECORE_BASE_CLASS(NodeDataInterpolationManager)
+
 public:
 	//! constructor
-	NodeDataInterpolationManager(FEModel * pfem) :FEMaterial(pfem) { AddClassProperty(this, &node_data_interpolation_vals, "node_interpolation_value", FEProperty::Optional); }
+	NodeDataInterpolationManager(FEModel * pfem) :FEMaterialProperty(pfem) { AddClassProperty(this, &node_data_interpolation_vals, "node_interpolation_value", FEProperty::Optional); }
 	//! performs initialization
-	bool Init() override { return FEMaterial::Init(); }
+	bool Init() override { return FEMaterialProperty::Init(); }
 	//! do the interpolation for the given element
 	void DoInterpolations(FEAngio * angio, FEMesh* mesh, FEAngioMaterial* angio_mat);
 private:
@@ -52,7 +56,7 @@ public:
 	//! constructor
 	DensityValuesNodeDataInterpolation(FEModel * pfem) :NodeDataInterpolation(pfem) {}
 	//! performs initialization
-	bool Init() override { return FEMaterial::Init(); }
+	bool Init() override { return FEMaterialProperty::Init(); }
 	//! returns the density values from a material point
 	double & ValueReference(FEMaterialPoint * mp) override;
 	//! the name to which the data is bound
@@ -66,7 +70,7 @@ public:
 	//! constructor
 	RepulseValuesNodeDataInterpolation(FEModel * pfem) :NodeDataInterpolation(pfem) {}
 	//! performs initialization
-	bool Init() override { return FEMaterial::Init(); }
+	bool Init() override { return FEMaterialProperty::Init(); }
 	//! returns the repulse value from a material point
 	double & ValueReference(FEMaterialPoint * mp) override;
 	//! the name to which the data is bound
