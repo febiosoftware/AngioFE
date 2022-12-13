@@ -10,7 +10,6 @@ class FEAngioMaterial;
 class NodeDataInterpolation :public FEMaterialProperty
 {
 	FECORE_BASE_CLASS(NodeDataInterpolation)
-
 public:
 	//! constructor
 	NodeDataInterpolation(FEModel * pfem) :FEMaterialProperty(pfem) { }
@@ -27,23 +26,22 @@ protected:
 	std::unordered_map<int, double> node_id_to_values;
 	//! 0 use shape functions to interpolate to gauss points, 1 average all nodes in element and set that value at all gauss points
 	int interpolation_mode = 0;
-	//! parameter list
-
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 };
 
 //! applies all node data interpolation values
 class NodeDataInterpolationManager :public FEMaterialProperty
 {
 	FECORE_BASE_CLASS(NodeDataInterpolationManager)
-
 public:
 	//! constructor
-	NodeDataInterpolationManager(FEModel * pfem) :FEMaterialProperty(pfem) { AddClassProperty(this, &node_data_interpolation_vals, "node_interpolation_value", FEProperty::Optional); }
+	NodeDataInterpolationManager(FEModel * pfem) :FEMaterialProperty(pfem) {}
 	//! performs initialization
 	bool Init() override { return FEMaterialProperty::Init(); }
 	//! do the interpolation for the given element
 	void DoInterpolations(FEAngio * angio, FEMesh* mesh, FEAngioMaterial* angio_mat);
+protected:
+	DECLARE_FECORE_CLASS()
 private:
 	std::vector<NodeDataInterpolation*>	node_data_interpolation_vals;	//!< pointers to elastic materials
 	//NodeDataInterpolation* node_data_interpolation_vals;

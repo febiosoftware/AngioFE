@@ -14,9 +14,92 @@
 #include "FEProbabilityDistribution.h"
 #include <FEBioMix/FESolutesMaterialPoint.h>
 
+#pragma region FECoreClassDefs
 BEGIN_FECORE_CLASS(PositionDependentDirection, FEMaterialProperty)
-ADD_PARAMETER(contribution, "contribution");
-END_FECORE_CLASS();
+	ADD_PARAMETER(contribution, "contribution");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(PositionDependentDirectionManager, FEMaterialProperty)
+	ADD_PROPERTY(pdd_modifiers, "pdd_modifier", FEProperty::Required);
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(FiberPDD,PositionDependentDirection)
+	ADD_PROPERTY(interpolation_prop, "interpolation_prop");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(LaGrangePStrainPDD, PositionDependentDirection)
+	ADD_PROPERTY(interpolation_prop, "interpolation_prop");
+	ADD_PARAMETER(beta, "beta");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(ECMDensityGradientPDD, PositionDependentDirection)
+	ADD_PROPERTY(interpolation_prop, "interpolation_prop");
+	ADD_PARAMETER(alpha_override, "alpha_override");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(RepulsePDD, PositionDependentDirection)
+	ADD_PROPERTY(interpolation_prop, "interpolation_prop");
+	ADD_PARAMETER(threshold, "threshold");
+	ADD_PARAMETER(alpha_override, "alpha_override");
+	ADD_PARAMETER(grad_threshold, "grad_threshold");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(ConcentrationGradientPDD, PositionDependentDirection)
+	ADD_PARAMETER(threshold, "threshold");
+	ADD_PARAMETER(alpha_override, "alpha_override");
+	ADD_PARAMETER(sol_id, "sol_id");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(FisherConcentrationGradientPDD, PositionDependentDirection)
+	ADD_PARAMETER(threshold, "threshold");
+	ADD_PARAMETER(alpha_override, "alpha_override");
+	ADD_PARAMETER(sol_id, "sol_id");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(AnastamosisPDD, PositionDependentDirection)
+	ADD_PARAMETER(anastamosis_radius, "anastamosis_radius");
+	ADD_PARAMETER(contribution, "contribution");
+	ADD_PARAMETER(fuse_radius, "fuse_radius");
+	ADD_PARAMETER(fuse_angle, "fuse_angle");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(FractionalAnisotropyPDD, PositionDependentDirection)
+	ADD_PARAMETER(alpha_override, "alpha_override");
+	ADD_PARAMETER(efd_exp, "efd_exp");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(ProtoPositionDependentDirectionManager, FEMaterialProperty)
+	ADD_PROPERTY(proto_pdd_modifiers, "proto_pdd_modifier", FEProperty::Required);
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(ProtoPositionDependentDirection, FEMaterialProperty)
+	ADD_PARAMETER(proto_contribution, "proto_contribution");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(ProtoFiberPDD, ProtoPositionDependentDirection)
+	ADD_PROPERTY(interpolation_prop, "interpolation_prop");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(ProtoRepulsePDD, ProtoPositionDependentDirection)
+	ADD_PROPERTY(interpolation_prop, "interpolation_prop");
+	ADD_PARAMETER(threshold, "threshold");
+	ADD_PARAMETER(alpha_override, "alpha_override");
+	ADD_PARAMETER(grad_threshold, "grad_threshold");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(ProtoAnastamosisPDD, ProtoPositionDependentDirection)
+	ADD_PARAMETER(anastamosis_radius, "anastamosis_radius");
+	ADD_PARAMETER(proto_contribution, "proto_contribution");
+	ADD_PARAMETER(fuse_radius, "fuse_radius");
+	ADD_PARAMETER(fuse_angle, "fuse_angle");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(ProtoFractionalAnisotropyPDD, ProtoPositionDependentDirection)
+	ADD_PARAMETER(alpha_override, "alpha_override");
+	ADD_PARAMETER(proto_efd, "proto_efd");
+	ADD_PARAMETER(proto_efd_exp, "proto_efd_exp");
+END_FECORE_CLASS()
+#pragma endregion FECoreClassDefs
 
 vec3d PositionDependentDirectionManager::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int buffer, bool& continue_growth, vec3d& tip_dir, double& alpha, FEMesh* mesh, FEAngio* pangio)
 {
@@ -35,10 +118,6 @@ void PositionDependentDirectionManager::Update(FEMesh * mesh, FEAngio* angio)
 	}
 	mat3ds eye;
 }
-
-BEGIN_FECORE_CLASS(LaGrangePStrainPDD, PositionDependentDirection)
-ADD_PARAMETER(beta, "beta");
-END_FECORE_CLASS();
 
 struct EigComp {
 	bool operator()(const std::pair<double, vec3d>& x , std::pair<double, vec3d>& y) const{
@@ -77,11 +156,6 @@ vec3d LaGrangePStrainPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element
 	return angio_element->_angio_mat->mix_method->ApplyMixAxis(prev, least_strain, beta);
 }
 
-BEGIN_FECORE_CLASS(ECMDensityGradientPDD, PositionDependentDirection)
-ADD_PARAMETER(threshold, "threshold");
-ADD_PARAMETER(alpha_override, "alpha_override");
-END_FECORE_CLASS();
-
 vec3d ECMDensityGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio)
 {
 	std::vector<double> density_at_integration_points;
@@ -112,12 +186,6 @@ vec3d ECMDensityGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_elem
 	}
 	return prev;
 }
-
-BEGIN_FECORE_CLASS(RepulsePDD, PositionDependentDirection)
-ADD_PARAMETER(threshold, "threshold");
-ADD_PARAMETER(alpha_override, "alpha_override");
-ADD_PARAMETER(grad_threshold, "grad_threshold");
-END_FECORE_CLASS();
 
 vec3d RepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio)
 {
@@ -194,12 +262,6 @@ vec3d RepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d 
 	return prev;
 }
 
-BEGIN_FECORE_CLASS(ConcentrationGradientPDD, PositionDependentDirection)
-ADD_PARAMETER(threshold, "threshold");
-ADD_PARAMETER(alpha_override, "alpha_override");
-ADD_PARAMETER(sol_id, "sol_id");
-END_FECORE_CLASS();
-
 vec3d ConcentrationGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio)
 {
 	std::vector<double> concentration_at_integration_points;
@@ -225,12 +287,6 @@ vec3d ConcentrationGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_e
 	}
 	return prev;
 }
-
-BEGIN_FECORE_CLASS(FisherConcentrationGradientPDD, PositionDependentDirection)
-ADD_PARAMETER(threshold, "threshold");
-ADD_PARAMETER(alpha_override, "alpha_override");
-ADD_PARAMETER(sol_id, "sol_id");
-END_FECORE_CLASS();
 
 vec3d FisherConcentrationGradientPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio)
 {
@@ -390,14 +446,6 @@ Tip * AnastamosisPDD::BestInElement(AngioElement* angio_element, FEAngio* pangio
 	return nullptr;
 }
 
-
-BEGIN_FECORE_CLASS(AnastamosisPDD, PositionDependentDirection)
-ADD_PARAMETER(anastamosis_radius, "anastamosis_radius");
-ADD_PARAMETER(contribution, "contribution");
-ADD_PARAMETER(fuse_radius, "fuse_radius");
-ADD_PARAMETER(fuse_angle, "fuse_angle");
-END_FECORE_CLASS();
-
 void FiberPDD::Update(FEMesh * mesh, FEAngio* angio)
 {
 
@@ -466,15 +514,6 @@ vec3d FractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* angio_el
 	return fiber_dir;
 }
 
-BEGIN_FECORE_CLASS(FractionalAnisotropyPDD, PositionDependentDirection)
-ADD_PARAMETER(alpha_override, "alpha_override");
-ADD_PARAMETER(efd_exp, "efd_exp");
-END_FECORE_CLASS();
-
-BEGIN_FECORE_CLASS(ProtoPositionDependentDirection, FEMaterialProperty)
-ADD_PARAMETER(proto_contribution, "proto_contribution");
-END_FECORE_CLASS();
-
 vec3d ProtoPositionDependentDirectionManager::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int buffer, bool& continue_growth, vec3d& tip_dir, double& alpha, FEMesh* mesh, FEAngio* pangio)
 {
 	for (int i = 0; i < proto_pdd_modifiers.size(); i++)
@@ -492,12 +531,6 @@ void ProtoPositionDependentDirectionManager::Update(FEMesh * mesh, FEAngio* angi
 	}
 	mat3ds eye;
 }
-
-BEGIN_FECORE_CLASS(ProtoRepulsePDD, ProtoPositionDependentDirection)
-ADD_PARAMETER(threshold, "threshold");
-ADD_PARAMETER(alpha_override, "alpha_override");
-ADD_PARAMETER(grad_threshold, "grad_threshold");
-END_FECORE_CLASS();
 
 vec3d ProtoRepulsePDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio)
 {
@@ -698,14 +731,6 @@ Tip * ProtoAnastamosisPDD::BestInElement(AngioElement* angio_element, FEAngio* p
 	return nullptr;
 }
 
-
-BEGIN_FECORE_CLASS(ProtoAnastamosisPDD, ProtoPositionDependentDirection)
-ADD_PARAMETER(anastamosis_radius, "anastamosis_radius");
-ADD_PARAMETER(proto_contribution, "proto_contribution");
-ADD_PARAMETER(fuse_radius, "fuse_radius");
-ADD_PARAMETER(fuse_angle, "fuse_angle");
-END_FECORE_CLASS();
-
 void ProtoFiberPDD::Update(FEMesh * mesh, FEAngio* angio)
 {
 
@@ -728,9 +753,6 @@ vec3d ProtoFiberPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec
 	return angio_element->_angio_mat->mix_method->ApplyMixAxis(tip_dir, fiber_direction, alpha);
 }
 
-BEGIN_FECORE_CLASS(ProtoFiberPDD, ProtoPositionDependentDirection)
-END_FECORE_CLASS();
-
 
 void ProtoFractionalAnisotropyPDD::Update(FEMesh * mesh, FEAngio* angio)
 {
@@ -751,9 +773,3 @@ vec3d ProtoFractionalAnisotropyPDD::ApplyModifiers(vec3d prev, AngioElement* ang
 	//return angio_element->_angio_mat->mix_method->ApplyMix(tip_dir, fiber_dir, alpha);
 	return fiber_dir;
 }
-
-BEGIN_FECORE_CLASS(ProtoFractionalAnisotropyPDD, ProtoPositionDependentDirection)
-ADD_PARAMETER(alpha_override, "alpha_override");
-ADD_PARAMETER(proto_efd, "proto_efd");
-ADD_PARAMETER(proto_efd_exp, "proto_efd_exp");
-END_FECORE_CLASS();

@@ -18,32 +18,33 @@
 
 
 //-----------------------------------------------------------------------------
+
 BEGIN_FECORE_CLASS(FEAngioMaterial, FEElasticMaterial)
-//ADD_PARAMETER(initial_segment_velocity, "initial_segment_velocity");
-ADD_PARAMETER(vessel_radius, "vessel_radius");
-END_FECORE_CLASS();
+	//ADD_PARAMETER(initial_segment_velocity, "initial_segment_velocity");
+	ADD_PARAMETER(vessel_radius, "vessel_radius");
+	ADD_PROPERTY(common_properties, "common_properties");
+	ADD_PROPERTY(matrix_material, "matrix");
+	ADD_PROPERTY(angio_stress_policy, "angio_stress_policy");
+	ADD_PROPERTY(proto_pdd_manager, "proto_pdd_manager");
+	ADD_PROPERTY(pdd_manager, "pdd_manager");
+	ADD_PROPERTY(proto_psc_manager, "proto_psc_manager");
+	ADD_PROPERTY(psc_manager, "psc_manager");
+	ADD_PROPERTY(proto_cm_manager, "proto_cm_manager");
+	ADD_PROPERTY(cm_manager, "cm_manager");
+	ADD_PROPERTY(mix_method, "mix_method");
+	ADD_PROPERTY(velocity_manager, "velocity_manager");
+	ADD_PROPERTY(im_manager, "im_manager", FEProperty::Optional);
+	ADD_PROPERTY(nodedata_interpolation_manager, "nodedata_interpolation_manager", FEProperty::Optional);
+	ADD_PROPERTY(branch_policy, "branch_policy", FEProperty::Optional);
+	ADD_PROPERTY(proto_branch_policy, "proto_branch_policy", FEProperty::Optional);
+	ADD_PROPERTY(cell_species_manager, "cell_species_manager", FEProperty::Optional);
+	ADD_PROPERTY(cell_reaction_manager, "cell_reaction_manager", FEProperty::Optional);
+END_FECORE_CLASS()
 
 //-----------------------------------------------------------------------------
 FEAngioMaterial::FEAngioMaterial(FEModel* pfem) : FEElasticMaterial(pfem)
 {
-	AddClassProperty(this, &common_properties, "common_properties");
-	AddClassProperty(this, &matrix_material, "matrix");
-	AddClassProperty(this, &angio_stress_policy, "angio_stress_policy");
 
-	AddClassProperty(this, &proto_pdd_manager, "proto_pdd_manager");
-	AddClassProperty(this, &pdd_manager, "pdd_manager");
-	AddClassProperty(this, &proto_psc_manager, "proto_psc_manager");
-	AddClassProperty(this, &psc_manager, "psc_manager");
-	AddClassProperty(this, &proto_cm_manager, "proto_cm_manager");
-	AddClassProperty(this, &cm_manager, "cm_manager");
-	AddClassProperty(this, &mix_method, "mix_method");
-	AddClassProperty(this, &velocity_manager, "velocity_manager");
-	AddClassProperty(this, &im_manager, "im_manager", FEProperty::Optional);
-	AddClassProperty(this, &nodedata_interpolation_manager, "nodedata_interpolation_manager", FEProperty::Optional);
-	AddClassProperty(this, &branch_policy, "branch_policy", FEProperty::Optional);
-	AddClassProperty(this, &proto_branch_policy, "proto_branch_policy", FEProperty::Optional);
-	AddClassProperty(this, &cell_species_manager, "cell_species_manager", FEProperty::Optional);
-	AddClassProperty(this, &cell_reaction_manager, "cell_reaction_manager", FEProperty::Optional);
 }
 
 FEAngioMaterial::~FEAngioMaterial()

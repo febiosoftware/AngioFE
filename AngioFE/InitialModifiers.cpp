@@ -6,6 +6,32 @@
 #include "angio3d.h"
 #include "FECore/FEDomainMap.h"
 
+#pragma region FECoreClassDefs
+BEGIN_FECORE_CLASS(InitialModifierManager,FEMaterialProperty)
+	ADD_PROPERTY(initial_modifiers, "initial_modifier", FEProperty::Optional);
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(DiscreteFiberEFDRandomizer, InitialModifier)
+	ADD_PARAMETER(m_SPD, "spd");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(EFDFiberInitializer, InitialModifier)
+	ADD_PARAMETER(m_SPD, "spd");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(RotEFDFiberInitializer, InitialModifier)
+	ADD_PARAMETER(m_SPD, "spd");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(DensityInitializer, InitialModifier)
+	ADD_PARAMETER(initial_density, "initial_density");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(RepulseInitializer, InitialModifier)
+	ADD_PARAMETER(initial_repulse_value, "initial_repulse_value");
+END_FECORE_CLASS()
+#pragma endregion FECoreClassDefs
+
 void InitialModifierManager::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
 	for(int i=0; i< initial_modifiers.size();i++)
@@ -52,10 +78,6 @@ void DiscreteFiberEFDRandomizer::ApplyModifier(AngioElement * angio_element, FEM
 	}
 }
 
-BEGIN_FECORE_CLASS(DiscreteFiberEFDRandomizer, InitialModifier)
-ADD_PARAMETER(m_SPD, "spd");
-END_FECORE_CLASS();
-
 void EFDFiberInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
 	FESolidElement* se = angio_element->_elem;
@@ -68,10 +90,6 @@ void EFDFiberInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * m
 		angio_pt->UpdateAngioFractionalAnisotropy();
 	}
 }
-
-BEGIN_FECORE_CLASS(EFDFiberInitializer, InitialModifier)
-ADD_PARAMETER(m_SPD, "spd");
-END_FECORE_CLASS();
 
 void RotEFDFiberInitializer::ApplyModifier(AngioElement* angio_element, FEMesh* mesh, FEAngio* feangio)
 {
@@ -95,10 +113,6 @@ void RotEFDFiberInitializer::ApplyModifier(AngioElement* angio_element, FEMesh* 
 	}
 }
 
-BEGIN_FECORE_CLASS(RotEFDFiberInitializer, InitialModifier)
-ADD_PARAMETER(m_SPD, "spd");
-END_FECORE_CLASS();
-
 void DensityInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
 	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
@@ -110,10 +124,6 @@ void DensityInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * me
 	}
 }
 
-BEGIN_FECORE_CLASS(DensityInitializer, InitialModifier)
-ADD_PARAMETER(initial_density, "initial_density");
-END_FECORE_CLASS();
-
 void RepulseInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
 	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
@@ -124,7 +134,3 @@ void RepulseInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * me
 		angio_pt->repulse_value = initial_repulse_value;
 	}
 }
-
-BEGIN_FECORE_CLASS(RepulseInitializer, InitialModifier)
-ADD_PARAMETER(initial_repulse_value, "initial_repulse_value");
-END_FECORE_CLASS();

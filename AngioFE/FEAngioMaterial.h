@@ -154,7 +154,7 @@ public:
 	CellSpeciesManager* cell_species_manager = nullptr;
 	CellReactionManager* cell_reaction_manager = nullptr;
 private:
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 	double initial_segment_velocity = 7.5;
 
 	double dt_safety_multiplier = 1.0;

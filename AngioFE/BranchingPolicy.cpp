@@ -8,6 +8,26 @@
 #include <FECore/mathalg.h>
 #include <unordered_map>
 
+#pragma region FECoreClassDefs
+BEGIN_FECORE_CLASS(BranchPolicy, FEMaterialProperty)
+	ADD_PROPERTY(azimuth_angle, "azimuth_angle");
+	ADD_PROPERTY(zenith_angle, "zenith_angle");
+	ADD_PROPERTY(interpolation_prop, "interpolation_prop");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(DelayedBranchingPolicyEFD, BranchPolicy)
+ADD_PROPERTY(t2e, "time_to_emerge");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(ZenithAngleProbabilityDistribution, ZenithAngle)
+ADD_PROPERTY(angle, "angle");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(AzimuthAngleProbabilityDistribution, AzimuthAngle)
+ADD_PROPERTY(angle, "angle");
+END_FECORE_CLASS()
+#pragma endregion FECoreClassDefs
+
 void BranchPolicy::AddBranchTipEFD(AngioElement* angio_element, vec3d local_pos, Segment* parent_seg, double start_time, int vessel_id, int buffer_index, FEMesh* mesh)
 {
 	Tip* branch = new Tip();
@@ -74,7 +94,6 @@ vec3d BranchPolicy::GetBranchDirectionEFD(vec3d local_pos, vec3d parent_directio
 
 	return azimuth_rotation.RotationMatrix() * zenith_rotation.RotationMatrix() * parent_direction;
 }
-
 
 void DelayedBranchingPolicyEFD::SetupBranchInfo(AngioElement* angio_elem)
 {

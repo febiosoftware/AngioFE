@@ -8,6 +8,31 @@
 #include <iostream>
 #include <FECore/mathalg.h>
 
+#pragma region FECoreClassDefs
+BEGIN_FECORE_CLASS(ContributionMixManager,FEMaterialProperty)
+	ADD_PROPERTY(cm_modifiers, "psc_modifier", FEProperty::Optional);
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(ProtoContributionMixManager,FEMaterialProperty)
+	ADD_PROPERTY(proto_cm_modifiers, "proto_psc_modifier", FEProperty::Optional); 
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(DensFAContributionMix, ContributionMix)
+	ADD_PARAMETER(a0, "a0");
+	ADD_PARAMETER(a_min, "a_min");
+	ADD_PARAMETER(b, "b");
+	ADD_PARAMETER(c, "c");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(PSCPDDContributionMix, ContributionMix)
+	ADD_PARAMETER(psc_weight, "psc_weight");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(ProtoPSCPDDContributionMix, ProtoContributionMix)
+	ADD_PARAMETER(proto_psc_weight, "proto_psc_weight");
+END_FECORE_CLASS()
+#pragma endregion FECoreClassDefs
+
 struct EigComp {
 	bool operator()(const std::pair<double, vec3d>& x, std::pair<double, vec3d>& y) const {
 		if ((x.first) > (y.first)) return true;
@@ -73,22 +98,11 @@ double DensFAContributionMix::ApplyModifiers(double dt, AngioElement* angio_elem
 	return alpha;
 }
 
-BEGIN_FECORE_CLASS(DensFAContributionMix, ContributionMix)
-ADD_PARAMETER(a0, "a0");
-ADD_PARAMETER(a_min, "a_min");
-ADD_PARAMETER(b, "b");
-ADD_PARAMETER(c, "c");
-END_FECORE_CLASS();
-
 // this is supposed to update the psc to a load curve? Probably also will allow it to be updated by fractional anisotropy, concentrations, gradients, etc.
 void DensFAContributionMix::Update(FEMesh* mesh)
 {
 	// TODO: Implement.
 }
-
-BEGIN_FECORE_CLASS(PSCPDDContributionMix, ContributionMix)
-ADD_PARAMETER(psc_weight, "psc_weight");
-END_FECORE_CLASS();
 
 double ContributionMixManager::ApplyModifiers(double prev, AngioElement* angio_element, vec3d local_pos, FEMesh* mesh)
 {
@@ -109,10 +123,6 @@ void ProtoPSCPDDContributionMix::Update(FEMesh * mesh)
 {
 	// TODO: Implement.
 }
-
-BEGIN_FECORE_CLASS(ProtoPSCPDDContributionMix, ProtoContributionMix)
-ADD_PARAMETER(proto_psc_weight, "proto_psc_weight");
-END_FECORE_CLASS();
 
 double ProtoContributionMixManager::ApplyModifiers(double prev, AngioElement* angio_element, vec3d local_pos, FEMesh* mesh)
 {

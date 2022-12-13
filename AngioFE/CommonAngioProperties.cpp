@@ -1,9 +1,13 @@
 #include "CommonAngioProperites.h"
 
+#pragma region FECoreClassDefs
+BEGIN_FECORE_CLASS(CommonAngioProperties, FEMaterialProperty)
+	ADD_PROPERTY(vessel_material, "vessel");
+	ADD_PROPERTY(fseeder, "fragment_seeder");
+END_FECORE_CLASS()
+#pragma endregion FECoreClassDefs
+
 CommonAngioProperties::CommonAngioProperties(FEModel * pfem) : FEMaterialProperty(pfem)
 {
-	AddClassProperty(this, &vessel_material, "vessel");
-	//AddProperty(&fiber_initializer, "fiber_initializer");
-	AddClassProperty(this, &fseeder, "fragment_seeder");
-	//AddProperty(&gdms, "grow_direction_modifiers");
+
 }

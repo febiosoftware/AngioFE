@@ -7,9 +7,72 @@
 #include <iostream>
 #include <algorithm>
 
+#pragma region FECoreClassDefs
 BEGIN_FECORE_CLASS(FEProbabilityDistribution, FEMaterialProperty)
-ADD_PARAMETER(max_retries, "max_retries");
-END_FECORE_CLASS();
+	ADD_PARAMETER(max_retries, "max_retries");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(FENormalDistribution, FEProbabilityDistribution)
+	ADD_PARAMETER(mean, "mean");
+	ADD_PARAMETER(stddev, "stddev");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(FEUniformDistribution, FEProbabilityDistribution)
+	ADD_PARAMETER(a, "a");
+	ADD_PARAMETER(b, "b");
+	ADD_PARAMETER(time_clamped, "time_clamped");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(FEExponentialDistribution, FEProbabilityDistribution)
+	ADD_PARAMETER(lambda, "lambda");
+	ADD_PARAMETER(mult, "mult");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(FECauchyDistribution, FEProbabilityDistribution)
+	ADD_PARAMETER(a, "a");
+	ADD_PARAMETER(b, "b");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(FEChiSquaredDistribution, FEProbabilityDistribution)
+	ADD_PARAMETER(dof, "dof");
+	ADD_PARAMETER(mult, "mult");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(FEWeibullDistribution, FEProbabilityDistribution)
+	ADD_PARAMETER(a, "a");
+	ADD_PARAMETER(b, "b");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(FEGammaDistribution, FEProbabilityDistribution)
+	ADD_PARAMETER(alpha, "alpha");
+	ADD_PARAMETER(beta, "beta");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(FEFixedDistribution, FEProbabilityDistribution)
+	ADD_PARAMETER(value, "value");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(FEEllipticalDistribution, FEProbabilityDistribution)
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(FEFisherDistribution, FEProbabilityDistribution)
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(FEPrescribedDistribution, FEProbabilityDistribution)
+	ADD_PARAMETER(distribution, "distribution");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(FERationalDistribution, FEProbabilityDistribution)
+	ADD_PARAMETER(p0, "p0");
+	ADD_PARAMETER(p1, "p1");
+	ADD_PARAMETER(q0, "q0");
+	ADD_PARAMETER(q1, "q1");
+	ADD_PARAMETER(max_initial_length, "max_initial_length");
+	ADD_PARAMETER(min_initial_length, "min_initial_length");
+	ADD_PARAMETER(points, "number_points");
+	ADD_PARAMETER(scale, "scale");
+END_FECORE_CLASS()
+#pragma endregion FECoreClassDefs
 
 void FEProbabilityDistribution::SetLoadCurveToStep(const char * param)
 {
@@ -74,11 +137,6 @@ void FENormalDistribution::TimeStepUpdate(double current_time)
 	nd = std::normal_distribution<double>(mean, stddev);
 }
 
-BEGIN_FECORE_CLASS(FENormalDistribution, FEProbabilityDistribution)
-ADD_PARAMETER(mean, "mean");
-ADD_PARAMETER(stddev, "stddev");
-END_FECORE_CLASS();
-
 double FEUniformDistribution::NextValue(angiofe_random_engine & re)
 {
 	for (int i = 0; i < max_retries; i++)
@@ -117,12 +175,6 @@ void FEUniformDistribution::TimeStepUpdate(double current_time)
 	}
 }
 
-BEGIN_FECORE_CLASS(FEUniformDistribution, FEProbabilityDistribution)
-ADD_PARAMETER(a, "a");
-ADD_PARAMETER(b, "b");
-ADD_PARAMETER(time_clamped, "time_clamped");
-END_FECORE_CLASS();
-
 //implemenations of FENormalDistribution
 double FEExponentialDistribution::NextValue(angiofe_random_engine & re)
 {
@@ -154,11 +206,6 @@ void FEExponentialDistribution::TimeStepUpdate(double current_time)
 	ed = std::exponential_distribution<double>(lambda);
 }
 
-BEGIN_FECORE_CLASS(FEExponentialDistribution, FEProbabilityDistribution)
-ADD_PARAMETER(lambda, "lambda");
-ADD_PARAMETER(mult, "mult");
-END_FECORE_CLASS();
-
 //implemenations of FENormalDistribution
 double FECauchyDistribution::NextValue(angiofe_random_engine & re)
 {
@@ -189,11 +236,6 @@ void FECauchyDistribution::TimeStepUpdate(double current_time)
 {
 	cd = std::cauchy_distribution<double>(a, b);
 }
-
-BEGIN_FECORE_CLASS(FECauchyDistribution, FEProbabilityDistribution)
-ADD_PARAMETER(a, "a");
-ADD_PARAMETER(b, "b");
-END_FECORE_CLASS();
 
 //implemenations of FENormalDistribution
 double FEChiSquaredDistribution::NextValue(angiofe_random_engine & re)
@@ -227,11 +269,6 @@ void FEChiSquaredDistribution::TimeStepUpdate(double current_time)
 	cd = std::chi_squared_distribution<double>(dof);
 }
 
-BEGIN_FECORE_CLASS(FEChiSquaredDistribution, FEProbabilityDistribution)
-ADD_PARAMETER(dof, "dof");
-ADD_PARAMETER(mult, "mult");
-END_FECORE_CLASS();
-
 //implemenations of FENormalDistribution
 double FEWeibullDistribution::NextValue(angiofe_random_engine & re)
 {
@@ -262,11 +299,6 @@ void FEWeibullDistribution::TimeStepUpdate(double current_time)
 {
 	wd = std::weibull_distribution<double>(a, b);
 }
-
-BEGIN_FECORE_CLASS(FEWeibullDistribution, FEProbabilityDistribution)
-ADD_PARAMETER(a, "a");
-ADD_PARAMETER(b, "b");
-END_FECORE_CLASS();
 
 //implemenations of FEGammaDistribution
 double FEGammaDistribution::NextValue(angiofe_random_engine & re)
@@ -300,11 +332,6 @@ void FEGammaDistribution::TimeStepUpdate(double current_time)
 	gd = std::gamma_distribution<double>(alpha, beta);
 }
 
-BEGIN_FECORE_CLASS(FEGammaDistribution, FEProbabilityDistribution)
-ADD_PARAMETER(alpha, "alpha");
-ADD_PARAMETER(beta, "beta");
-END_FECORE_CLASS();
-
 //implemenations of FENormalDistribution
 double FEFixedDistribution::NextValue(angiofe_random_engine & re)
 {
@@ -325,10 +352,6 @@ bool FEFixedDistribution::Init()
 {
 	return true;
 }
-
-BEGIN_FECORE_CLASS(FEFixedDistribution, FEProbabilityDistribution)
-ADD_PARAMETER(value, "value");
-END_FECORE_CLASS();
 
 //implemenations of FEEllipticalDistribution
 vec3d FEEllipticalDistribution::NextVec(angiofe_random_engine & re)
@@ -377,9 +400,6 @@ void FEEllipticalDistribution::TimeStepUpdate(double current_time)
 {
 
 }
-
-BEGIN_FECORE_CLASS(FEEllipticalDistribution, FEProbabilityDistribution)
-END_FECORE_CLASS();
 
 //implemenations of FEGammaDistribution
 vec3d FEFisherDistribution::NextVec(angiofe_random_engine & re)
@@ -446,9 +466,6 @@ void FEFisherDistribution::TimeStepUpdate(double current_time)
 
 }
 
-BEGIN_FECORE_CLASS(FEFisherDistribution, FEProbabilityDistribution)
-END_FECORE_CLASS();
-
 //implemenations of FENormalDistribution
 double FEPrescribedDistribution::NextValue(angiofe_random_engine & re)
 {
@@ -500,10 +517,6 @@ bool FEPrescribedDistribution::Init()
 	return true;
 }
 
-BEGIN_FECORE_CLASS(FEPrescribedDistribution, FEProbabilityDistribution)
-ADD_PARAMETER(distribution, "distribution");
-END_FECORE_CLASS();
-
 //implemenations of FERationalDistribution
 double FERationalDistribution::NextValue(angiofe_random_engine& re)
 {
@@ -551,14 +564,3 @@ void FERationalDistribution::TimeStepUpdate(double current_time)
 {
 
 }
-
-BEGIN_FECORE_CLASS(FERationalDistribution, FEProbabilityDistribution)
-ADD_PARAMETER(p0, "p0");
-ADD_PARAMETER(p1, "p1");
-ADD_PARAMETER(q0, "q0");
-ADD_PARAMETER(q1, "q1");
-ADD_PARAMETER(max_initial_length, "max_initial_length");
-ADD_PARAMETER(min_initial_length, "min_initial_length");
-ADD_PARAMETER(points, "number_points");
-ADD_PARAMETER(scale, "scale");
-END_FECORE_CLASS();

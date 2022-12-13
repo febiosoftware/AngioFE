@@ -5,19 +5,59 @@
 #include <iostream>
 #include <FECore/log.h>
 
+#pragma region FECoreClassDefs
+BEGIN_FECORE_CLASS(CellSpeciesManager, FEMaterialProperty)
+	ADD_PROPERTY(cell_solute_prop, "cell_solute_prop", FEProperty::Optional);
+	ADD_PROPERTY(cell_SBM_prop, "cell_SBM_prop", FEProperty::Optional);
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(CellReactionManager, FEMaterialProperty)
+	ADD_PROPERTY(cell_reaction, "cell_reaction", FEProperty::Optional);
+END_FECORE_CLASS()
+
 BEGIN_FECORE_CLASS(CellSBM, FEMaterialProperty)
-ADD_PARAMETER(SBM_ID, "SBM_ID");
-ADD_PARAMETER(c_SBM, "c_SBM");
-END_FECORE_CLASS();
+	ADD_PARAMETER(SBM_ID, "SBM_ID");
+	ADD_PARAMETER(c_SBM, "c_SBM");
+END_FECORE_CLASS()
 
 BEGIN_FECORE_CLASS(CellSolute, FEMaterialProperty)
-ADD_PARAMETER(Solute_ID, "Solute_ID");
-ADD_PARAMETER(c_Sol, "c_Sol");
-END_FECORE_CLASS();
+	ADD_PARAMETER(Solute_ID, "Solute_ID");
+	ADD_PARAMETER(c_Sol, "c_Sol");
+END_FECORE_CLASS()
 
 BEGIN_FECORE_CLASS(FECellReactionRateConst, FECellReactionRate)
-ADD_PARAMETER(m_k, FE_RANGE_GREATER_OR_EQUAL(0.0), "k");
-END_FECORE_CLASS();
+	ADD_PARAMETER(m_k, FE_RANGE_GREATER_OR_EQUAL(0.0), "k");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(FECellSecretionConstant, FECellChemicalReaction)
+ADD_PARAMETER(m_s, "s");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(FECellChemicalReaction, FECellReaction)
+	ADD_PROPERTY(m_pFwd, "forward_rate", FEProperty::Optional);
+	ADD_PROPERTY(m_pRev, "reverse_rate", FEProperty::Optional);
+	ADD_PARAMETER(m_Vbar, "Vbar");
+	ADD_PARAMETER(m_vRtmp, "vR");
+	ADD_PARAMETER(m_vPtmp, "vP");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(FECellMichaelisMenten, FECellChemicalReaction)
+	ADD_PARAMETER(m_Km, "Km");
+	ADD_PARAMETER(m_c0, "c0");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(FECellInternalization, FECellChemicalReaction)
+	ADD_PARAMETER(m_Ki, "Ki");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(FECellInternalizationConstant, FECellChemicalReaction)
+	ADD_PARAMETER(m_Ki, "Ki");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(FECellSecretion, FECellChemicalReaction)
+	ADD_PARAMETER(m_s, "s");
+END_FECORE_CLASS()
+#pragma endregion FECoreClassDefs
 
 FECellReaction::FECellReaction(FEModel* pfem) : FEMaterialProperty(pfem)
 {
@@ -33,17 +73,6 @@ bool CellReactionManager::Init() {
 
 	return true;
 }
-
-BEGIN_FECORE_CLASS(FECellChemicalReaction, FECellReaction)
-ADD_PARAMETER(m_Vbar, "Vbar");
-ADD_PARAMETER(m_vRtmp, "vR");
-ADD_PARAMETER(m_vPtmp, "vP");
-
-// set material properties
-ADD_PROPERTY(m_pFwd, "forward_rate", FEProperty::Optional);
-ADD_PROPERTY(m_pRev, "reverse_rate", FEProperty::Optional);
-
-END_FECORE_CLASS();
 
 FESBMData* CellSBM::FindSBMData(int nid) {
 	FEModel& fem = *GetFEModel();
@@ -541,12 +570,6 @@ double FECellMassActionReversibleEffective::ReactionSupply(FECell* cell)
 	return zhatF - zhatR;
 }
 
-// define the material parameters
-BEGIN_FECORE_CLASS(FECellMichaelisMenten, FECellChemicalReaction)
-ADD_PARAMETER(m_Km, "Km");
-ADD_PARAMETER(m_c0, "c0");
-END_FECORE_CLASS();
-
 //! data initialization and checking
 bool FECellMichaelisMenten::Init()
 {
@@ -678,10 +701,6 @@ double FECellInternalization::ReactionSupply(FECell* cell)
 	return zhat;
 }
 
-BEGIN_FECORE_CLASS(FECellInternalization, FECellChemicalReaction)
-ADD_PARAMETER(m_Ki, "Ki");
-END_FECORE_CLASS();
-
 //! data initialization and checking
 bool FECellInternalizationConstant::Init()
 {
@@ -735,10 +754,6 @@ double FECellInternalizationConstant::ReactionSupply(FECell* cell)
 	//! Add the species to the cell
 	return zhat;
 }
-
-BEGIN_FECORE_CLASS(FECellInternalizationConstant, FECellChemicalReaction)
-ADD_PARAMETER(m_Ki, "Ki");
-END_FECORE_CLASS();
 
 
 bool FECellSecretion::Init()
@@ -796,10 +811,6 @@ double FECellSecretion::ReactionSupply(FECell* cell)
 	return zhat;
 }
 
-BEGIN_FECORE_CLASS(FECellSecretion, FECellChemicalReaction)
-ADD_PARAMETER(m_s, "s");
-END_FECORE_CLASS();
-
 bool FECellSecretionConstant::Init()
 {
 	// Initialize base class
@@ -847,7 +858,3 @@ double FECellSecretionConstant::ReactionSupply(FECell* cell)
 
 	return zhat;
 }
-
-BEGIN_FECORE_CLASS(FECellSecretionConstant, FECellChemicalReaction)
-ADD_PARAMETER(m_s, "s");
-END_FECORE_CLASS();

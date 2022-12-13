@@ -46,14 +46,15 @@ class ZenithAngleProbabilityDistribution : public ZenithAngle
 {
 public:
 	//! constructor for class
-	ZenithAngleProbabilityDistribution(FEModel* pfem) : ZenithAngle(pfem) { AddClassProperty(this, &angle, "angle"); }
+	ZenithAngleProbabilityDistribution(FEModel* pfem) : ZenithAngle(pfem) { }
 	//! returns the zenith angle for a branch based on a probability distribution
 	double GetZenithAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element) override;
 	//! performs initialization
 	bool Init() override { return angle->Init(); }
 	//! Updates the zenith angle to the given time step(may ajust probabilities based on time)
 	void TimeStepUpdate(double current_time) override { angle->TimeStepUpdate(current_time); }
-
+protected:
+	DECLARE_FECORE_CLASS()
 private:
 	FEProbabilityDistribution* angle = nullptr;
 };
@@ -63,13 +64,15 @@ class AzimuthAngleProbabilityDistribution :public AzimuthAngle
 {
 public:
 	//! constructor for class
-	AzimuthAngleProbabilityDistribution(FEModel* pfem) : AzimuthAngle(pfem) { AddClassProperty(this, &angle, "angle", FEProperty::Required); }
+	AzimuthAngleProbabilityDistribution(FEModel* pfem) : AzimuthAngle(pfem) { }
 	//! Returns the azimuth angle based on a probability distribution
 	double GetAzimuthAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element) override;
 	//! performs initialization
 	bool Init() override {return angle->Init();}
 	//! Updates the zenith angle to the given time step(may ajust probabilities based on time)
 	void TimeStepUpdate(double current_time) override { angle->TimeStepUpdate(current_time); }
+protected:
+	DECLARE_FECORE_CLASS()
 private:
 	FEProbabilityDistribution* angle = nullptr;
 };
@@ -81,11 +84,7 @@ class BranchPolicy :public FEMaterialProperty
 
 public:
 	//! constructor for class
-	BranchPolicy(FEModel* pfem) : FEMaterialProperty(pfem) {
-		AddClassProperty(this, &azimuth_angle, "azimuth_angle"); 
-		AddClassProperty(this, &zenith_angle, "zenith_angle");
-		AddClassProperty(this, &interpolation_prop, "interpolation_prop");
-	}
+	BranchPolicy(FEModel* pfem) : FEMaterialProperty(pfem) {}
 	virtual ~BranchPolicy(){};
 	//! adds the branches for a given element
 	//! setup any data structures that are needed on a per element basis
@@ -98,6 +97,8 @@ public:
 	void AddBranchTipEFD(AngioElement * angio_element, vec3d local_pos, Segment* parent_seg, double start_time, int vessel_id, int buffer_index, FEMesh* mesh);
 	//! Return the direction of a branch
 	vec3d GetBranchDirectionEFD(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element, FEMesh* mesh);
+protected:
+	DECLARE_FECORE_CLASS()
 private:
 	//angles are in radians
 	AzimuthAngle* azimuth_angle = nullptr;
@@ -133,12 +134,9 @@ public:
 class DelayedBranchingPolicyEFD :public BranchPolicy
 {
 	FECORE_BASE_CLASS(DelayedBranchingPolicyEFD)
-
 public:
 	//! constructor for class
-	DelayedBranchingPolicyEFD(FEModel* pfem) : BranchPolicy(pfem) {
-		AddClassProperty(this, &l2b, "length_to_branch"); AddClassProperty(this, &t2e, "time_to_emerge");
-	}
+	DelayedBranchingPolicyEFD(FEModel* pfem) : BranchPolicy(pfem) {}
 	virtual ~DelayedBranchingPolicyEFD() {}
 	//! performs initialization
 	bool Init() override {
@@ -148,6 +146,8 @@ public:
 	void TimeStepUpdate(double current_time) override { BranchPolicy::TimeStepUpdate(current_time); l2b->TimeStepUpdate(current_time); t2e->TimeStepUpdate(current_time); }
 	//! do the per element setup
 	void SetupBranchInfo(AngioElement * angio_elem) override;
+protected:
+	DECLARE_FECORE_CLASS()
 private:
 	FEProbabilityDistribution* l2b = nullptr;//length to branch
 	FEProbabilityDistribution* t2e = nullptr;//time to emerge
@@ -161,7 +161,6 @@ private:
 		//only needed while creating the collection of branch points
 		double _start_time = 0.0;
 		double _end_time = 0.0;
-
 		double length = 0.0;
 		double processed = 0.0;
 		int discrete_sections = 0;

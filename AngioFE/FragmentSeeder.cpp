@@ -14,6 +14,7 @@
 int FragmentSeeder::initial_fragment_id_counter = 0;
 int FragmentSeeder::initial_cell_id_counter = 0;
 
+#pragma region FECoreClassDefs
 BEGIN_FECORE_CLASS(FragmentSeeder, FEMaterialProperty)
 	ADD_PROPERTY(initial_segment_length, "initial_segment_length");
 	ADD_PARAMETER(number_fragments, "number_fragments");
@@ -21,9 +22,14 @@ BEGIN_FECORE_CLASS(FragmentSeeder, FEMaterialProperty)
 	ADD_PARAMETER(cell_radius, "cell_radius");
 END_FECORE_CLASS()
 
+BEGIN_FECORE_CLASS(SingleCellSeeder, FragmentSeeder)
+	ADD_PARAMETER(initial_position, "initial_position");
+END_FECORE_CLASS()
+#pragma endregion FECoreClassDefs
+
 FragmentSeeder::FragmentSeeder(FEModel * model) : FEMaterialProperty(model)
 {
-	//AddClassProperty(this, &initial_segment_length, "initial_segment_length");
+
 }
 
 vec3d FragmentSeeder::GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(FEMesh* mesh, AngioElement* angio_element, angiofe_random_engine random_engine)
@@ -561,6 +567,3 @@ bool SingleCellSeeder::SeedFragments(std::vector<AngioElement*>& angio_elements,
 	}
 	return true;
 }
-BEGIN_FECORE_CLASS(SingleCellSeeder, FragmentSeeder)
-ADD_PARAMETER(initial_position, "initial_position");
-END_FECORE_CLASS();

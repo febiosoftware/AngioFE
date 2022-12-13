@@ -11,7 +11,6 @@ class Tip;
 class SegmentGrowthVelocity : public FEMaterialProperty
 {
 	FECORE_BASE_CLASS(SegmentGrowthVelocity)
-
 public:
 	//! constructor
 	explicit SegmentGrowthVelocity(FEModel* pfem) : FEMaterialProperty(pfem) {}
@@ -25,15 +24,16 @@ public:
 class SegmentGrowthVelocityManager : public FEMaterialProperty
 {
 	FECORE_BASE_CLASS(SegmentGrowthVelocityManager)
-
 public:
 	//!constructor
-	explicit SegmentGrowthVelocityManager(FEModel* pfem) : FEMaterialProperty(pfem) { AddClassProperty(this, &seg_vel_modifiers, "velocity_modifier", FEProperty::Optional); }
+	explicit SegmentGrowthVelocityManager(FEModel* pfem) : FEMaterialProperty(pfem) {}
 	virtual ~SegmentGrowthVelocityManager() {}
 	//! Apply all of the modifier to calculate the velocity at a location
 	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_elem, double time_shift, FEMesh* mesh);
 	std::vector<SegmentGrowthVelocity*>	seg_vel_modifiers;	//!< pointers to elastic materials
 	//SegmentGrowthVelocity* seg_vel_modifiers;	
+protected:
+	DECLARE_FECORE_CLASS()
 };
 
 //! a fixed or load curve value for velocity
@@ -48,8 +48,7 @@ public:
 	bool Init() override;
 	void UpdateScale() override;
 protected:
-	//! parameter list
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 private:
 	double segment_velocity_over_time = 1;
 };
@@ -59,15 +58,14 @@ class SegmentVelocityDensityScaleModifier : public SegmentGrowthVelocity
 {
 public:
 	//!constructor
-	explicit SegmentVelocityDensityScaleModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) { AddClassProperty(this, &interpolation_prop, "interpolation_prop"); }
+	explicit SegmentVelocityDensityScaleModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) {}
 	//! Scales the velocity based on the ecm density at the location
 	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh) override;
 	//! performs initialization
 	bool Init() override;
 	void UpdateScale() override;
 protected:
-	//! parameter list
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 private:
 	FEVariableInterpolation* interpolation_prop = nullptr;
 	vec3d m_density_scale_factor = vec3d(-0.016, 5.1605, 0.5112);
@@ -77,15 +75,14 @@ class SegmentVelocityRefDensityScaleModifier : public SegmentGrowthVelocity
 {
 public:
 	//!constructor
-	explicit SegmentVelocityRefDensityScaleModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) { AddClassProperty(this, &interpolation_prop, "interpolation_prop"); }
+	explicit SegmentVelocityRefDensityScaleModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) {}
 	//! Scales the velocity based on the ecm density at the location
 	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh) override;
 	//! performs initialization
 	bool Init() override;
 	void UpdateScale() override;
 protected:
-	//! parameter list
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 private:
 	FEVariableInterpolation* interpolation_prop = nullptr;
 	vec3d m_density_scale_factor = vec3d(-0.016, 5.1605, 0.5112);
@@ -96,15 +93,14 @@ class SegmentVelocityDensityFAScaleModifier : public SegmentGrowthVelocity
 {
 public:
 	//!constructor
-	explicit SegmentVelocityDensityFAScaleModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) { AddClassProperty(this, &interpolation_prop, "interpolation_prop"); }
+	explicit SegmentVelocityDensityFAScaleModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) {}
 	//! Scales the velocity based on the ecm density at the location
 	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh) override;
 	//! performs initialization
 	bool Init() override;
 	void UpdateScale() override;
 protected:
-	//! parameter list
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 private:
 	FEVariableInterpolation* interpolation_prop = nullptr;
 	double m_rFA_a = 3.413;
@@ -120,15 +116,14 @@ class SegmentVelocity3PModifier : public SegmentGrowthVelocity
 {
 public:
 	//!constructor
-	explicit SegmentVelocity3PModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) { AddClassProperty(this, &interpolation_prop, "interpolation_prop"); }
+	explicit SegmentVelocity3PModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) {}
 	//! Scales the velocity based on the ecm density at the location
 	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh) override;
 	//! performs initialization
 	bool Init() override;
 	void UpdateScale() override;
 protected:
-	//! parameter list
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 private:
 	FEVariableInterpolation* interpolation_prop = nullptr;
 	double scale = 1;
@@ -140,7 +135,7 @@ class SegmentVelocityFAModifier : public SegmentGrowthVelocity
 {
 public:
 	//!constructor
-	explicit SegmentVelocityFAModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) { AddClassProperty(this, &interpolation_prop, "interpolation_prop"); }
+	explicit SegmentVelocityFAModifier(FEModel* pfem) : SegmentGrowthVelocity(pfem) {}
 	//! Scales the velocity based on the ecm density at the location
 	double ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh) override;
 	//! performs initialization
@@ -148,8 +143,7 @@ public:
 	void UpdateScale() override;
 	vec3d m_density_scale_factor = vec3d(-0.016, 5.1605, 0.5112);
 protected:
-	//! parameter list
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 private:
 	FEVariableInterpolation* interpolation_prop = nullptr;
 	double scale = 1;
@@ -168,7 +162,7 @@ public:
 	void UpdateScale() override;
 protected:
 	//! parameter list
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 private:
 	double scale = 1;
 	double a = 100;
@@ -188,7 +182,7 @@ public:
 	void UpdateScale() override;
 protected:
 	//! parameter list
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 private:
 	double a = 50.0;
 	double b = 2.572;
@@ -208,7 +202,7 @@ public:
 	void UpdateScale() override;
 protected:
 	//! parameter list
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 private:
 	double scale = 1;
 	double a = 284;

@@ -7,7 +7,6 @@ class FEAngio;
 class InitialModifier : public FEMaterialProperty
 {
 	FECORE_BASE_CLASS(InitialModifier)
-
 public:
 	//! constructor
 	explicit InitialModifier(FEModel * pfem) :FEMaterialProperty(pfem){}
@@ -19,12 +18,13 @@ public:
 class InitialModifierManager: public FEMaterialProperty
 {
 	FECORE_BASE_CLASS(InitialModifierManager)
-
 public:
 	//! constructor
-	explicit InitialModifierManager(FEModel * pfem) :FEMaterialProperty(pfem) { AddClassProperty(this, &initial_modifiers, "initial_modifier", FEProperty::Optional); }
+	explicit InitialModifierManager(FEModel * pfem) :FEMaterialProperty(pfem) { }
 	//! apply all initial modifiers
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio);
+protected:
+	DECLARE_FECORE_CLASS()
 private:
 	std::vector<InitialModifier*>	initial_modifiers;	//!< pointers to initial modifiers
 };
@@ -48,9 +48,7 @@ public:
 	//! apply Isotropic EFD to each model
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
 protected:
-	//! parameter list
-
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 private:
 	FEParamMat3ds m_SPD;
 };
@@ -63,9 +61,7 @@ public:
 	//! apply Isotropic EFD to each mdoel
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
 protected:
-	//! parameter list
-
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 private:
 	FEParamMat3ds m_SPD;
 };
@@ -78,9 +74,7 @@ public:
 	//! apply Isotropic EFD to each mdoel
 	void ApplyModifier(AngioElement* angio_element, FEMesh* mesh, FEAngio* feangio) override;
 protected:
-	//! parameter list
-
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 private:
 	FEParamMat3ds m_SPD;
 };
@@ -94,9 +88,7 @@ public:
 	//! initialize all densities
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
 protected:
-	//! parameter list
-
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 private:
 	FEParamDouble initial_density;
 };
@@ -109,9 +101,7 @@ public:
 	//! initialize all densities
 	void ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio) override;
 protected:
-	//! parameter list
-
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 private:
 	double initial_repulse_value = 0.0;
 };

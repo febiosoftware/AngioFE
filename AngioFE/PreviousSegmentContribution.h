@@ -11,7 +11,6 @@ class Tip;
 class PreviousSegmentContribution : public FEMaterialProperty
 {
 	FECORE_BASE_CLASS(PreviousSegmentContribution)
-
 public:
 	//! constructor
 	explicit PreviousSegmentContribution(FEModel* pfem) : FEMaterialProperty(pfem) {}
@@ -26,15 +25,16 @@ public:
 class PreviousSegmentContributionManager : public FEMaterialProperty
 {
 	FECORE_BASE_CLASS(PreviousSegmentContributionManager)
-
 public:
 	//! constructor
-	explicit PreviousSegmentContributionManager(FEModel* pfem) : FEMaterialProperty(pfem) { AddClassProperty(this, &psc_modifiers, "psc_modifier", FEProperty::Optional); }
+	explicit PreviousSegmentContributionManager(FEModel* pfem) : FEMaterialProperty(pfem) {}
 	virtual ~PreviousSegmentContributionManager() {}
 	//! returns the combination contribution of all PSC modifiers
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, vec3d prev_direction, FEMesh* mesh);
 	//! may update this based on the timestep
 	void Update(FEMesh * mesh) {}
+protected:
+	DECLARE_FECORE_CLASS()
 private:
 	std::vector<PreviousSegmentContribution*>	psc_modifiers;	//!< pointers to elastic materials
 };
@@ -56,7 +56,6 @@ public:
 class ProtoPreviousSegmentContribution : public FEMaterialProperty
 {
 	FECORE_BASE_CLASS(ProtoPreviousSegmentContribution)
-
 public:
 	//! constructor
 	explicit ProtoPreviousSegmentContribution(FEModel* pfem) : FEMaterialProperty(pfem) {}
@@ -71,15 +70,16 @@ public:
 class ProtoPreviousSegmentContributionManager : public FEMaterialProperty
 {
 	FECORE_BASE_CLASS(ProtoPreviousSegmentContributionManager)
-
 public:
 	//! constructor
-	explicit ProtoPreviousSegmentContributionManager(FEModel* pfem) : FEMaterialProperty(pfem) { AddClassProperty(this, &proto_psc_modifiers, "proto_psc_modifier", FEProperty::Optional); }
+	explicit ProtoPreviousSegmentContributionManager(FEModel* pfem) : FEMaterialProperty(pfem) {}
 	virtual ~ProtoPreviousSegmentContributionManager() {}
 	//! returns the combination contribution of all PSC modifiers
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, vec3d prev_direction, FEMesh* mesh);
 	//! may update this based on the timestep
 	void Update(FEMesh * mesh) {}
+protected:
+	DECLARE_FECORE_CLASS()
 private:
 	std::vector<ProtoPreviousSegmentContribution*>	proto_psc_modifiers;	//!< pointers to elastic materials
 };

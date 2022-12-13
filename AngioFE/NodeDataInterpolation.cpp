@@ -3,10 +3,17 @@
 #include <FECore/FENodeDataMap.h>
 #include <iostream>
 
+#pragma region FECoreClassDefs
+BEGIN_FECORE_CLASS(NodeDataInterpolationManager, FEMaterialProperty)
+	ADD_PROPERTY(node_data_interpolation_vals, "node_interpolation_value", FEProperty::Optional);
+END_FECORE_CLASS()
+
 BEGIN_FECORE_CLASS(NodeDataInterpolation, FEMaterialProperty)
-ADD_PARAMETER(node_set_id, "node_set_id");
-ADD_PARAMETER(interpolation_mode, "interpolation_mode");
-END_FECORE_CLASS();
+	ADD_PARAMETER(node_set_id, "node_set_id");
+	ADD_PARAMETER(interpolation_mode, "interpolation_mode");
+END_FECORE_CLASS()
+#pragma endregion FECoreClassDefs
+
 double & DensityValuesNodeDataInterpolation::ValueReference(FEMaterialPoint * mp)
 {
 	return FEAngioMaterialPoint::FindAngioMaterialPoint(mp)->ref_ecm_density;

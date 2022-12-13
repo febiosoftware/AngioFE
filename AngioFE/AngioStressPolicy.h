@@ -44,8 +44,7 @@ public:
 	//! calculates the stress at the gauss point for a given element, this is scaled by a sigmoid which is used for legacy reasons
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
 protected:
-	//! parameter list
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 private:
 	double scale=0.027;
 	double y0= -0.004, x0 =2, a= 1.0081, b=0.5436;
@@ -70,8 +69,7 @@ public:
 	//! calculates the stress at the gauss point for a given element, this is scaled by a sigmoid which is used for legacy reasons
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
 protected:
-	//! parameter list
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 private:
 	double scale = 1.0;
 	double y0 = 1e-8, x0 = 7, a = 1.0, b = 0.5435;
@@ -96,8 +94,7 @@ public:
 	//! calculates the stress at the gauss point for a given element, this is scaled by a load curve and velocity
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
 protected:
-	//! parameter list
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 private:
 	double sprout_mag = 0.027;
 	double fan_exponential = 2;
@@ -120,8 +117,7 @@ public:
 	//! calculates the stress at the gauss point for a given element, this is scaled by a load curve
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
 protected:
-	//! parameter list
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 private:
 	double sprout_mag = 0.027;
 	double fan_exponential = 2;
@@ -143,8 +139,7 @@ public:
 	//! calculates the stress at the gauss point for a given element, this is scaled by a load curve
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
 protected:
-	//! parameter list
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 private:
 	double sprout_mag = 0.027;
 	double fan_exponential = 2;
@@ -166,8 +161,7 @@ public:
 	//! calculates the stress at the gauss point for a given element, this is scaled by a load curve
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
 protected:
-	//! parameter list
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 private:
 	double sprout_mag = 0.027;
 	double fan_exponential = 2;
@@ -190,8 +184,7 @@ public:
 	//! calculates the stress at the gauss point for a given element, this is scaled by a load curve and velocity, this is based on all tips not just active tips
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
 protected:
-	//! parameter list
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 private:
 	double sprout_mag = 0.027;
 	double fan_exponential = 2;
@@ -214,8 +207,7 @@ public:
 	//! calculates the stress at the gauss point for a given element, this is scaled by a load curve, this is based on all tips not just active tips
 	void AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh) override;
 protected:
-	//! parameter list
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 private:
 	double sprout_mag = 0.027;
 	double fan_exponential = 2;

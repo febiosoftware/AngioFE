@@ -8,6 +8,70 @@
 #include <iostream>
 #include <FECore/mathalg.h>
 
+#pragma region FECoreClassDefs
+BEGIN_FECORE_CLASS(SegmentGrowthVelocityManager, FEMaterialProperty)
+	ADD_PROPERTY(seg_vel_modifiers, "velocity_modifier", FEProperty::Optional);
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(SegmentVelocityModifier, SegmentGrowthVelocity)
+	ADD_PARAMETER(segment_velocity_over_time, "segment_velocity_over_time");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(SegmentVelocityDensityScaleModifier, SegmentGrowthVelocity)
+	ADD_PROPERTY(interpolation_prop, "interpolation_prop");
+	ADD_PARAMETER(m_density_scale_factor, "density_scale_factor");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(SegmentVelocityRefDensityScaleModifier, SegmentGrowthVelocity)
+	ADD_PROPERTY(interpolation_prop, "interpolation_prop");
+	ADD_PARAMETER(m_density_scale_factor, "density_scale_factor");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(SegmentVelocityDensityFAScaleModifier, SegmentGrowthVelocity)
+	ADD_PROPERTY(interpolation_prop, "interpolation_prop");
+	ADD_PARAMETER(m_rFA_a, "rFA_a");
+	ADD_PARAMETER(m_rFA_b, "rFA_b");
+	ADD_PARAMETER(m_rFA_c, "rFA_c");
+	ADD_PARAMETER(m_rFA_d, "rFA_d");
+	ADD_PARAMETER(m_rFA_r0, "rFA_r0");
+	ADD_PARAMETER(m_rFA_f0, "rFA_f0");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(SegmentVelocity3PModifier, SegmentGrowthVelocity)
+	ADD_PROPERTY(interpolation_prop, "interpolation_prop");
+	ADD_PARAMETER(scale, "scale");
+	ADD_PARAMETER(threshold, "threshold");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(SegmentVelocityFAModifier, SegmentGrowthVelocity)
+	ADD_PROPERTY(interpolation_prop, "interpolation_prop");
+	ADD_PARAMETER(scale, "scale");
+	ADD_PARAMETER(m_density_scale_factor, "density_scale_factor");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(SigmoidSegmentVelocity, SegmentGrowthVelocity)
+	ADD_PARAMETER(scale, "scale");
+	ADD_PARAMETER(a, "a");
+	ADD_PARAMETER(b, "b");
+	ADD_PARAMETER(c, "c");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(SigmoidAdjustedSegmentVelocity, SegmentGrowthVelocity)
+	ADD_PARAMETER(scale, "scale");
+	ADD_PARAMETER(a, "a");
+	ADD_PARAMETER(b, "b");
+	ADD_PARAMETER(c, "c");
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(GompertzSegmentVelocity, SegmentGrowthVelocity)
+	ADD_PARAMETER(scale, "scale");
+	ADD_PARAMETER(a, "a");
+	ADD_PARAMETER(b, "b");
+	ADD_PARAMETER(c, "c");
+	ADD_PARAMETER(d, "d");
+END_FECORE_CLASS()
+#pragma endregion FECoreClassDefs
+
 struct EigComp {
 	bool operator()(const std::pair<double, vec3d>& x, std::pair<double, vec3d>& y) const {
 		if ((x.first) > (y.first)) return true;
@@ -30,10 +94,6 @@ void SegmentVelocityModifier::UpdateScale()
 {
 
 }
-
-BEGIN_FECORE_CLASS(SegmentVelocityModifier, SegmentGrowthVelocity)
-ADD_PARAMETER(segment_velocity_over_time, "segment_velocity_over_time");
-END_FECORE_CLASS();
 
 double SegmentVelocityDensityScaleModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
@@ -64,10 +124,6 @@ void SegmentVelocityDensityScaleModifier::UpdateScale()
 
 }
 
-BEGIN_FECORE_CLASS(SegmentVelocityDensityScaleModifier, SegmentGrowthVelocity)
-ADD_PARAMETER(m_density_scale_factor, "density_scale_factor");
-END_FECORE_CLASS();
-
 // SL: Added so that growth is scaled only by the referential density
 double SegmentVelocityRefDensityScaleModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
@@ -97,10 +153,6 @@ void SegmentVelocityRefDensityScaleModifier::UpdateScale()
 {
 
 }
-
-BEGIN_FECORE_CLASS(SegmentVelocityRefDensityScaleModifier, SegmentGrowthVelocity)
-ADD_PARAMETER(m_density_scale_factor, "density_scale_factor");
-END_FECORE_CLASS();
 
 double SegmentVelocityDensityFAScaleModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
@@ -163,15 +215,6 @@ void SegmentVelocityDensityFAScaleModifier::UpdateScale()
 
 }
 
-BEGIN_FECORE_CLASS(SegmentVelocityDensityFAScaleModifier, SegmentGrowthVelocity)
-ADD_PARAMETER(m_rFA_a, "rFA_a");
-ADD_PARAMETER(m_rFA_b, "rFA_b");
-ADD_PARAMETER(m_rFA_c, "rFA_c");
-ADD_PARAMETER(m_rFA_d, "rFA_d");
-ADD_PARAMETER(m_rFA_r0, "rFA_r0");
-ADD_PARAMETER(m_rFA_f0, "rFA_f0");
-END_FECORE_CLASS();
-
 double SegmentVelocity3PModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
 	mat3ds E;
@@ -205,11 +248,6 @@ void SegmentVelocity3PModifier::UpdateScale()
 {
 
 }
-
-BEGIN_FECORE_CLASS(SegmentVelocity3PModifier, SegmentGrowthVelocity)
-ADD_PARAMETER(scale, "scale");
-ADD_PARAMETER(threshold, "threshold");
-END_FECORE_CLASS();
 
 double SegmentVelocityFAModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
@@ -276,11 +314,6 @@ void SegmentVelocityFAModifier::UpdateScale()
 
 }
 
-BEGIN_FECORE_CLASS(SegmentVelocityFAModifier, SegmentGrowthVelocity)
-ADD_PARAMETER(scale, "scale");
-ADD_PARAMETER(m_density_scale_factor, "density_scale_factor");
-END_FECORE_CLASS();
-
 double SigmoidSegmentVelocity::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
 	return scale*prev;
@@ -299,13 +332,6 @@ void SigmoidSegmentVelocity::UpdateScale()
 	// derivative of the sigmoid equation
 	scale = (a*exp(e_val)) / (b*pow((1 + exp(e_val)), 2));
 }
-
-BEGIN_FECORE_CLASS(SigmoidSegmentVelocity, SegmentGrowthVelocity)
-ADD_PARAMETER(scale, "scale");
-ADD_PARAMETER(a, "a");
-ADD_PARAMETER(b, "b");
-ADD_PARAMETER(c, "c");
-END_FECORE_CLASS();
 
 double SigmoidAdjustedSegmentVelocity::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
@@ -339,13 +365,6 @@ void SigmoidAdjustedSegmentVelocity::UpdateScale()
 	scale = (a / (1 + exp(-(time - c) / b)));
 }
 
-BEGIN_FECORE_CLASS(SigmoidAdjustedSegmentVelocity, SegmentGrowthVelocity)
-ADD_PARAMETER(scale, "scale");
-ADD_PARAMETER(a, "a");
-ADD_PARAMETER(b, "b");
-ADD_PARAMETER(c, "c");
-END_FECORE_CLASS();
-
 double GompertzSegmentVelocity::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
 	return scale * prev;
@@ -362,14 +381,6 @@ void GompertzSegmentVelocity::UpdateScale()
 	// derivative of Gompertz eqn
 	scale = a * b * c * exp(-b * exp(-c * (time - d)))*exp(-c * (time - d));
 }
-
-BEGIN_FECORE_CLASS(GompertzSegmentVelocity, SegmentGrowthVelocity)
-ADD_PARAMETER(scale, "scale");
-ADD_PARAMETER(a, "a");
-ADD_PARAMETER(b, "b");
-ADD_PARAMETER(c, "c");
-ADD_PARAMETER(d, "d");
-END_FECORE_CLASS();
 
 double SegmentGrowthVelocityManager::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_elem, double time_shift, FEMesh* mesh)
 {

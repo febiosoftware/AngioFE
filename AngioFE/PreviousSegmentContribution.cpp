@@ -6,6 +6,16 @@
 #include "FEAngioMaterialPoint.h"
 #include "FEAngio.h"
 
+#pragma region FECoreClassDefs
+BEGIN_FECORE_CLASS(PreviousSegmentContributionManager, FEMaterialProperty)
+	ADD_PROPERTY(psc_modifiers, "psc_modifier", FEProperty::Optional);
+END_FECORE_CLASS()
+
+BEGIN_FECORE_CLASS(ProtoPreviousSegmentContributionManager, FEMaterialProperty)
+	ADD_PROPERTY(proto_psc_modifiers, "proto_psc_modifier", FEProperty::Optional);
+END_FECORE_CLASS()
+#pragma endregion FECoreClassDefs
+
 vec3d PreviousSegmentPSC::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, vec3d prev_direction, FEMesh* mesh)
 {
 	return prev_direction;

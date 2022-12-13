@@ -11,7 +11,6 @@
 class FragmentSeeder : public FEMaterialProperty
 {
 	FECORE_BASE_CLASS(FragmentSeeder)
-
 public:
 	//! seed the fragments within the elements
 	virtual bool SeedFragments(std::vector<AngioElement*>& angio_elements, FEMesh* mesh, FEAngioMaterial* angio_mat, int buffer_index) = 0;
@@ -38,8 +37,7 @@ protected:
 	double cell_radius = 10e-6;
 	//! Probability Distribution
 	FEProbabilityDistribution* initial_segment_length = nullptr;
-
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 };
 
 //! seed fragments with all elements having equal probabilities of being choosen
@@ -101,9 +99,10 @@ public:
 	//! Seed the fragments
 	bool SeedFragments(std::vector<AngioElement*>& angio_elements, FEMesh* mesh, FEAngioMaterial* angio_mat, int buffer_index) override;
 	vec3d initial_position = vec3d(0, 0, 0);
+protected:
+	DECLARE_FECORE_CLASS()
 private:
 	FEOctreeSearch		m_search;
 	FESolidElement* m_el;
 	double				m_q[3];
-	DECLARE_FECORE_CLASS();
 };

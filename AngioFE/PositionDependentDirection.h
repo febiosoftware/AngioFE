@@ -11,7 +11,6 @@ class Tip;
 class PositionDependentDirection : public FEMaterialProperty
 {
 	FECORE_BASE_CLASS(PositionDependentDirection)
-
 public:
 	//! constructor
 	explicit PositionDependentDirection(FEModel* pfem) : FEMaterialProperty(pfem) {}
@@ -20,27 +19,26 @@ public:
 	virtual vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) = 0;
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	virtual void Update(FEMesh * mesh, FEAngio* angio) {} 
-	//! parameter list
-
-	DECLARE_FECORE_CLASS();
 protected:
 	//! how this modifier is mixed with the previous direction
 	double contribution = 1.0;
+	DECLARE_FECORE_CLASS()
 };
 
 //! Contain the collection of Position Dependent Direction modifiers
 class PositionDependentDirectionManager : public FEMaterialProperty
 {
 	FECORE_BASE_CLASS(PositionDependentDirectionManager)
-
 public:
 	//! constructor
-	explicit PositionDependentDirectionManager(FEModel* pfem) : FEMaterialProperty(pfem) { AddClassProperty(this, &pdd_modifiers, "pdd_modifier", FEProperty::Required); }
+	explicit PositionDependentDirectionManager(FEModel* pfem) : FEMaterialProperty(pfem) {}
 	virtual ~PositionDependentDirectionManager() {}
 	//! return the direction given by all direction modifiers
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int buffer, bool& continue_growth, vec3d& tip_dir, double& alpha, FEMesh* mesh, FEAngio* pangio);
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio); 
+protected:
+	DECLARE_FECORE_CLASS()
 private:
 	std::vector<PositionDependentDirection*>	pdd_modifiers;	//!< pointers to elastic materials
 };
@@ -50,14 +48,14 @@ class FiberPDD : public PositionDependentDirection
 {
 public:
 	//! constructor
-	explicit FiberPDD(FEModel* pfem) : PositionDependentDirection(pfem) { 
-		AddClassProperty(this, &interpolation_prop, "interpolation_prop"); 
-	}
+	explicit FiberPDD(FEModel* pfem) : PositionDependentDirection(pfem) {}
 	virtual ~FiberPDD() {}
 	//! return the direction given by the fibers at this location
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio) override;
+protected:
+	DECLARE_FECORE_CLASS()
 private:
 	FEVariableInterpolation* interpolation_prop = nullptr;
 };
@@ -73,7 +71,8 @@ public:
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio) override;
-	DECLARE_FECORE_CLASS();
+protected:
+	DECLARE_FECORE_CLASS()
 private:
 	bool alpha_override = false;// replace alpha with the override
 	double efd_exp = 1;
@@ -83,15 +82,14 @@ class LaGrangePStrainPDD : public PositionDependentDirection
 {
 public:
 	//! constructor
-	explicit LaGrangePStrainPDD(FEModel* pfem) : PositionDependentDirection(pfem) {
-		AddClassProperty(this, &interpolation_prop, "interpolation_prop");
-	}
+	explicit LaGrangePStrainPDD(FEModel* pfem) : PositionDependentDirection(pfem) {}
 	virtual ~LaGrangePStrainPDD() {}
 	//! return the direction given by the fibers at this location
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	//void Update(FEMesh * mesh, FEAngio* angio) override;
-	DECLARE_FECORE_CLASS();
+protected:
+	DECLARE_FECORE_CLASS()
 private:
 	FEVariableInterpolation* interpolation_prop = nullptr;
 	double beta = 0.5;
@@ -102,14 +100,15 @@ class ECMDensityGradientPDD : public PositionDependentDirection
 {
 public:
 	//! constructor
-	explicit ECMDensityGradientPDD(FEModel* pfem) : PositionDependentDirection(pfem) { AddClassProperty(this, &interpolation_prop, "interpolation_prop"); }
+	explicit ECMDensityGradientPDD(FEModel* pfem) : PositionDependentDirection(pfem) {}
 	virtual ~ECMDensityGradientPDD() {}
 	//! return the direction given by the ecm density gradient
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio) override {}
 	//! parameter list
-	DECLARE_FECORE_CLASS();
+protected:
+	DECLARE_FECORE_CLASS()
 private:
 	double threshold = 0.00001;//vessels will deflect if above threshold
 	bool alpha_override = false;//replace the alpha to have this take over
@@ -121,16 +120,14 @@ class RepulsePDD : public PositionDependentDirection
 {
 public:
 	//! constructor
-	explicit RepulsePDD(FEModel* pfem) : PositionDependentDirection(pfem) {
-		AddClassProperty(this, &interpolation_prop, "interpolation_prop"); 
-	}
+	explicit RepulsePDD(FEModel* pfem) : PositionDependentDirection(pfem){}
 	virtual ~RepulsePDD() {}
 	//! return the direction given by the repulse component
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio) override {}
-	//! parameter list
-	DECLARE_FECORE_CLASS();
+protected:
+	DECLARE_FECORE_CLASS()
 private:
 	double threshold = 1;//vessels will deflect if above threshold
 	bool alpha_override = true;//replace the alpha to have this take over
@@ -149,8 +146,8 @@ public:
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio) override {}
-	//! parameter list
-	DECLARE_FECORE_CLASS();
+protected:
+	DECLARE_FECORE_CLASS()
 private:
 	//! SL: will need to rethink this default
 	double threshold = 0.00001;//vessels will deflect if above threshold
@@ -170,8 +167,8 @@ public:
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio) override {}
-	//! parameter list
-	DECLARE_FECORE_CLASS();
+protected:
+	DECLARE_FECORE_CLASS()
 private:
 	//! SL: will need to rethink this default
 	double threshold = 0.00001;//vessels will deflect if above threshold
@@ -200,8 +197,7 @@ public:
 	//! return the distance squared between a tip and a local position
 	double distance2(FESolidElement * se, vec3d local_pos, Tip * tip, FEMesh* mesh);
 protected:
-	//! parameter list
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 private:
 	double anastamosis_radius = 100;//! Radius at which the tip starts to grow towards another tip
 	double fuse_radius = 30;
@@ -223,8 +219,8 @@ public:
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	virtual void Update(FEMesh * mesh, FEAngio* angio) {}
 	//! parameter list
-	DECLARE_FECORE_CLASS();
 protected:
+	DECLARE_FECORE_CLASS()
 	//! how this modifier is mixed with the previous direction
 	double proto_contribution = 1.0;
 };
@@ -236,12 +232,14 @@ class ProtoPositionDependentDirectionManager : public FEMaterialProperty
 
 public:
 	//! constructor
-	explicit ProtoPositionDependentDirectionManager(FEModel* pfem) : FEMaterialProperty(pfem) { AddClassProperty(this, &proto_pdd_modifiers, "proto_pdd_modifier", FEProperty::Required); }
+	explicit ProtoPositionDependentDirectionManager(FEModel* pfem) : FEMaterialProperty(pfem) {}
 	virtual ~ProtoPositionDependentDirectionManager() {}
 	//! return the direction given by all direction modifiers
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int buffer, bool& continue_growth, vec3d& tip_dir, double& alpha, FEMesh* mesh, FEAngio* pangio);
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio);
+protected:
+	DECLARE_FECORE_CLASS()
 private:
 	std::vector<ProtoPositionDependentDirection*>	proto_pdd_modifiers;	//!< pointers to elastic materials
 };
@@ -251,15 +249,14 @@ class ProtoFiberPDD : public ProtoPositionDependentDirection
 {
 public:
 	//! constructor
-	explicit ProtoFiberPDD(FEModel* pfem) : ProtoPositionDependentDirection(pfem) {
-		AddClassProperty(this, &interpolation_prop, "interpolation_prop");
-	}
+	explicit ProtoFiberPDD(FEModel* pfem) : ProtoPositionDependentDirection(pfem) {}
 	virtual ~ProtoFiberPDD() {}
 	//! return the direction given by the fibers at this location
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio) override;
-	DECLARE_FECORE_CLASS();
+protected:
+	DECLARE_FECORE_CLASS()
 private:
 	FEVariableInterpolation* interpolation_prop = nullptr;
 	double proto_alpha = 1.0;
@@ -276,7 +273,8 @@ public:
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio) override;
-	DECLARE_FECORE_CLASS();
+protected:
+	DECLARE_FECORE_CLASS()
 private:
 	FEVariableInterpolation* interpolation_prop = nullptr;
 	bool alpha_override = false;// replace alpha with the override
@@ -290,16 +288,14 @@ class ProtoRepulsePDD : public ProtoPositionDependentDirection
 {
 public:
 	//! constructor
-	explicit ProtoRepulsePDD(FEModel* pfem) : ProtoPositionDependentDirection(pfem) {
-		AddClassProperty(this, &interpolation_prop, "interpolation_prop");
-	}
+	explicit ProtoRepulsePDD(FEModel* pfem) : ProtoPositionDependentDirection(pfem) {}
 	virtual ~ProtoRepulsePDD() {}
 	//! return the direction given by the repulse component
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
 	//! may be used to get values from loadcurves that modify the behavior as a whole
 	void Update(FEMesh * mesh, FEAngio* angio) override {}
-	//! parameter list
-	DECLARE_FECORE_CLASS();
+protected:
+	DECLARE_FECORE_CLASS()
 private:
 	double threshold = 1;//vessels will deflect if above threshold
 	bool alpha_override = true;//replace the alpha to have this take over
@@ -327,8 +323,7 @@ public:
 	//! return the distance squared between a tip and a local position
 	double distance2(FESolidElement * se, vec3d local_pos, Tip * tip, FEMesh* mesh);
 protected:
-	//! parameter list
-	DECLARE_FECORE_CLASS();
+	DECLARE_FECORE_CLASS()
 private:
 	double anastamosis_radius = 100;//! Radius at which the tip starts to grow towards another tip
 	double fuse_radius = 30;

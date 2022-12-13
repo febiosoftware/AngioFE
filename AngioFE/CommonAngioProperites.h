@@ -10,14 +10,14 @@
 class CommonAngioProperties :public FEMaterialProperty
 {
 	FECORE_BASE_CLASS(CommonAngioProperties)
-
 public:
 	//! constructor
 	CommonAngioProperties(FEModel * pfem);
 	~CommonAngioProperties(){}
-
 	//! fragment seeder
 	FragmentSeeder* fseeder = nullptr;
 	//! vessel material
 	FEElasticMaterial* vessel_material = nullptr;
+protected:
+	DECLARE_FECORE_CLASS()
 };

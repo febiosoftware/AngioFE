@@ -177,7 +177,6 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS(FEPlotAngioFiberDirection, "angio fiber direction");
 
 	REGISTER_FECORE_CLASS(FEPlotMatrixElastic_m_Q, "matrix elastic mQ");
-
 	//REGISTER_FECORE_CLASS_EXPLICIT(TipDepositionBC, FEBC_ID, "tip_deposition_bc");
 
 }
