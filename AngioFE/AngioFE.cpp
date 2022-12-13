@@ -34,18 +34,18 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS(CommonAngioProperties, "angio_properties");
 
 	// Distribution Classes
-	REGISTER_FECORE_CLASS_EXPLICIT(FENormalDistribution, FEMATERIAL_ID, "normal_distribution");
-	REGISTER_FECORE_CLASS_EXPLICIT(FEUniformDistribution, FEMATERIAL_ID, "uniform_distribution");
-	REGISTER_FECORE_CLASS_EXPLICIT(FEExponentialDistribution, FEMATERIAL_ID, "exponential_distribution");
-	REGISTER_FECORE_CLASS_EXPLICIT(FECauchyDistribution, FEMATERIAL_ID, "cauchy_distribution");
-	REGISTER_FECORE_CLASS_EXPLICIT(FEChiSquaredDistribution, FEMATERIAL_ID, "chi_squared_distribution");
-	REGISTER_FECORE_CLASS_EXPLICIT(FEWeibullDistribution, FEMATERIAL_ID, "weibull_distribution");
-	REGISTER_FECORE_CLASS_EXPLICIT(FEGammaDistribution, FEMATERIAL_ID, "gamma_distribution");
-	REGISTER_FECORE_CLASS_EXPLICIT(FEFixedDistribution, FEMATERIAL_ID, "fixed_distribution");
-	REGISTER_FECORE_CLASS_EXPLICIT(FEEllipticalDistribution, FEMATERIAL_ID, "elliptical_distribution");
-	REGISTER_FECORE_CLASS_EXPLICIT(FEFisherDistribution, FEMATERIAL_ID, "fisher_distribution");
-	REGISTER_FECORE_CLASS_EXPLICIT(FEPrescribedDistribution, FEMATERIAL_ID, "prescribed_distribution");
-	REGISTER_FECORE_CLASS_EXPLICIT(FERationalDistribution, FEMATERIAL_ID, "rational_distribution");
+	REGISTER_FECORE_CLASS(FENormalDistribution, "normal_distribution");
+	REGISTER_FECORE_CLASS(FEUniformDistribution, "uniform_distribution");
+	REGISTER_FECORE_CLASS(FEExponentialDistribution, "exponential_distribution");
+	REGISTER_FECORE_CLASS(FECauchyDistribution, "cauchy_distribution");
+	REGISTER_FECORE_CLASS(FEChiSquaredDistribution, "chi_squared_distribution");
+	REGISTER_FECORE_CLASS(FEWeibullDistribution, "weibull_distribution");
+	REGISTER_FECORE_CLASS(FEGammaDistribution, "gamma_distribution");
+	REGISTER_FECORE_CLASS(FEFixedDistribution, "fixed_distribution");
+	REGISTER_FECORE_CLASS(FEEllipticalDistribution, "elliptical_distribution");
+	REGISTER_FECORE_CLASS(FEFisherDistribution, "fisher_distribution");
+	REGISTER_FECORE_CLASS(FEPrescribedDistribution, "prescribed_distribution");
+	REGISTER_FECORE_CLASS(FERationalDistribution, "rational_distribution");
 
 	// Stress Policy Classes
 	REGISTER_FECORE_CLASS(SigmoidAngioStressPolicy, "sigmoid_angio_stress_policy");
