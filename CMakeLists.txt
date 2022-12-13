@@ -115,24 +115,21 @@ set(OLD_SDK ${FEBio_SDK} CACHE INTERNAL "Old SDK path.")
 mark_as_advanced(OLD_SDK)
 
 #### Check if paths are valid and find libs ####
-function(findLib libName libDir libOut)
-    string(TOLOWER ${libName} lname)
-
-    find_library(TEMP 
-        NAMES ${libName} ${lname}
-        PATHS ${${libDir}} 
-        NO_DEFAULT_PATH)
-
+function(findLib libDir libOut libName)
+    # Optional arguments ARGV3-ARVG6 can be used as alernative names for the library
+    find_library(TEMP NAMES ${libName} ${ARGV3} ${ARGV4} ${ARGV5} ${ARGV6}
+        PATHS ${${libDir}} NO_DEFAULT_PATH)
+    
     if(TEMP)
         set(${libOut} ${TEMP} PARENT_SCOPE)
         unset(TEMP CACHE)
     else()
         if(WIN32)
-            message(SEND_ERROR "Could not find ${libName}.lib. Check ${libName}.")
+            message(SEND_ERROR "Could not find ${libName}.lib. Check ${libDir}.")
         elseif(APPLE)
-            message(SEND_ERROR "Could not find ${libName}.so, ${libName}.a, or ${libName}.dylib Check ${libDir}.")
+            message(SEND_ERROR "Could not find lib${libName}.so, lib${libName}.a, or lib${libName}.dylib Check ${libDir}.")
         else()
-            message(SEND_ERROR "Could not find ${libName}.so, or ${libName}.a. Check ${libDir}")
+            message(SEND_ERROR "Could not find lib${libName}.so, or lib${libName}.a. Check ${libDir}")
         endif()
         unset(TEMP CACHE)
     endif()
