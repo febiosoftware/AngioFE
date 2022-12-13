@@ -330,7 +330,7 @@ BEGIN_FECORE_CLASS(FEFixedDistribution, FEProbabilityDistribution)
 ADD_PARAMETER(value, "value");
 END_FECORE_CLASS();
 
-//implemenations of FEGammaDistribution
+//implemenations of FEEllipticalDistribution
 vec3d FEEllipticalDistribution::NextVec(angiofe_random_engine & re)
 {
 	bool found = false;
@@ -502,4 +502,63 @@ bool FEPrescribedDistribution::Init()
 
 BEGIN_FECORE_CLASS(FEPrescribedDistribution, FEProbabilityDistribution)
 ADD_PARAMETER(distribution, "distribution");
+END_FECORE_CLASS();
+
+//implemenations of FERationalDistribution
+double FERationalDistribution::NextValue(angiofe_random_engine& re)
+{
+	// get a random number
+	double rn = ud(re);
+	// find the rc_t value closest to the random number and get the position
+	int fi = std::distance(cdf.begin(), std::lower_bound(cdf.begin(), cdf.end(), rn));
+	return scale * bins.at(fi);
+}
+
+vec3d FERationalDistribution::NextVec(angiofe_random_engine& re)
+{
+	return vec3d(1, 0, 0);
+}
+
+bool FERationalDistribution::Init()
+{
+	//Create the cdf
+	double n = double(points);
+	bins.resize(n);
+	pdf.resize(n);
+	cdf; cdf.resize(n);
+	double bin_width = (max_initial_length - min_initial_length)/(n-1.0);
+	rational_distribution.resize(points);
+	double prior_val = 0.0;
+	for (int i = 0; i < points; i++) {
+		double x = min_initial_length + i * bin_width;
+		double PL = (p0 * x + p1) / (x * x + q0 * x + q1);
+		rational_distribution.at(i) = vec2d(x,PL);
+		bins.at(i) = rational_distribution.at(i).x();
+		pdf.at(i) = rational_distribution.at(i).y();
+		cdf.at(i) = rational_distribution.at(i).y() + prior_val;
+		prior_val = cdf.at(i);
+	}
+	
+	// get the cumulative sum
+	std::partial_sum(pdf.begin(), pdf.end(), cdf.begin());
+	// divide cumulative sum by sum
+	std::transform(cdf.begin(), cdf.end(), cdf.begin(),
+		std::bind(std::divides<double>(), std::placeholders::_1, cdf.at(n - 1)));
+	return true;
+}
+
+void FERationalDistribution::TimeStepUpdate(double current_time)
+{
+
+}
+
+BEGIN_FECORE_CLASS(FERationalDistribution, FEProbabilityDistribution)
+ADD_PARAMETER(p0, "p0");
+ADD_PARAMETER(p1, "p1");
+ADD_PARAMETER(q0, "q0");
+ADD_PARAMETER(q1, "q1");
+ADD_PARAMETER(max_initial_length, "max_initial_length");
+ADD_PARAMETER(min_initial_length, "min_initial_length");
+ADD_PARAMETER(points, "number_points");
+ADD_PARAMETER(scale, "scale");
 END_FECORE_CLASS();

@@ -23,27 +23,29 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 # Find FEBio SDK or git repo automatically
+# FEBio
+# Find FEBio SDK or git repo automatically
 if(WIN32)
 	set(TEMP_PATHS ${CMAKE_SOURCE_DIR}/.. ${CMAKE_SOURCE_DIR}/../.. $ENV{HOMEPATH}/ $ENV{HOMEPATH}/source/repos $ENV{HOMEPATH}/*)
 else()
     set(TEMP_PATHS ${CMAKE_SOURCE_DIR}/.. ${CMAKE_SOURCE_DIR}/../.. $ENV{HOME}/ $ENV{HOME}/*)
 endif()
     
-find_path(FEBio_SDK FECore/Archive.h
+find_path(FEBio_SDK FECore/stdafx.h
     PATHS ${TEMP_PATHS}
     PATH_SUFFIXES FEBio
     DOC "Path to the FEBio SDK, or git repo.")
     
 if(NOT FEBio_SDK)
     if(WIN32)
-        set(TEMP_PATHS $ENV{PROGRAMFILES}/* $ENV{HOMEPATH}/*)
+        set(TEMP_PATHS $ENV{PROGRAMFILES}/* ${CMAKE_SOURCE_DIR}/.. $ENV{HOMEPATH}/* )
     elseif(APPLE)
-        set(TEMP_PATHS /Applications/* $ENV{HOME}/*)
+        set(TEMP_PATHS /Applications/* ${CMAKE_SOURCE_DIR}/.. $ENV{HOME}/*)
     else()
-        set(TEMP_PATHS $ENV{HOME}/*)
+        set(TEMP_PATHS ${CMAKE_SOURCE_DIR}/.. $ENV{HOME}/*)
     endif() 
     
-    find_path(FEBio_SDK "include/FECore/Archive.h"
+    find_path(FEBio_SDK "include/FECore/stdafx.h"
         PATHS ${TEMP_PATHS}
         PATH_SUFFIXES sdk
         DOC "Path to the FEBio SDK, or git repo.")
@@ -58,6 +60,9 @@ endif()
 if(NOT OLD_SDK)
     set(NEWPATH TRUE)
 else()
+    #cmake_path(CONVERT ${OLD_SDK} TO_CMAKE_PATH_LIST STD_OLD_SDK)
+    #cmake_path(CONVERT ${FEBio_SDK} TO_CMAKE_PATH_LIST STD_FEBIO_SDK)
+    #string(COMPARE NOTEQUAL ${STD_FEBIO_SDK} ${STD_OLD_SDK} NEWPATH)
     string(COMPARE NOTEQUAL ${FEBio_SDK} ${OLD_SDK} NEWPATH)
 endif()
 
@@ -97,19 +102,16 @@ if(NEWPATH)
         get_filename_component(FECORE_TEMP ${FECORE} DIRECTORY)
         set(FEBio_LIB_DIR ${FECORE_TEMP} CACHE PATH "Path to the FEBio lib directory." FORCE)
         mark_as_advanced(FEBio_LIB_DIR)
-        set(FEBio_DBG_LIB_DIR ${FECORE_TEMP} CACHE PATH "Path to the DBG FEBio lib directory." FORCE)
-	mark_as_advanced(FEBio_DBG_LIB_DIR)
         unset(FECORE_TEMP)
         unset(FECORE CACHE)
     else()
         set(FEBio_LIB_DIR CACHE PATH "Path to the FEBio lib directory." FORCE)
-        set(FEBio_DBG_LIB_DIR CACHE PATH "Path to the FEBio debug lib directory." FORCE)
-	message(SEND_ERROR "Unable to find FEBio Library path automatically. Set FEBio_LIB_DIR.")
+        message(SEND_ERROR "Unable to find FEBio Library path automatically. Set FEBio_LIB_DIR.")
         unset(FECORE CACHE)
     endif()
 endif()
 
-set(OLD_SDK ${FEBio_SDK} CACHE PATH "Don't edit. Old SDK path used to automatically make changes." FORCE)
+set(OLD_SDK ${FEBio_SDK} CACHE INTERNAL "Old SDK path.")
 mark_as_advanced(OLD_SDK)
 
 #### Check if paths are valid and find libs ####

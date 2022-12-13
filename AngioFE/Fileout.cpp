@@ -88,8 +88,8 @@ void Fileout::printStatus(FEAngio& angio, double time)
 	std::vector <double> SL = getSegmentLength_pm(angio, time);
 	std::vector <int> BC = getBranchCount_pm(angio);
 	std::vector <int> TC = getTipCount_pm(angio);
-	for (size_t i = 0; i < angio.m_pmat.size(); i++) {
-		logstream << angio.GetFEModel()->GetTime().currentTime << "," << i << "," << SC[i] << "," << SL[i] << ",," << BC[i] << ",," << TC[i] << std::endl;
+	for (size_t i = 0; i < angio.m_fem->Materials(); i++) {
+		logstream << angio.GetFEModel()->GetTime().currentTime << "," << angio.m_fem->GetMaterial(i)->GetName() << "," << SC[i] << "," << SL[i] << ",," << BC[i] << ",," << TC[i] << std::endl;
 	}
 }
 
@@ -318,7 +318,8 @@ int Fileout::getBranchCount(FEAngio& angio)
 std::vector <int> Fileout::getBranchCount_pm(FEAngio& angio)
 {
 	std::vector <int> count;
-	for (int i = 0; i < angio.m_pmat_ids.size(); i++) {
+	//	for (int i = 0; i < angio.m_pmat_ids.size(); i++) {
+	for (int i = 0; i < angio.m_fem->Materials(); i++) {
 		count.emplace_back(0);
 	}
 	for (int i = 0; i < angio.angio_elements.size(); i++)
@@ -343,8 +344,9 @@ int Fileout::getSegmentCount(FEAngio& angio)
 std::vector <int> Fileout::getSegmentCount_pm(FEAngio& angio)
 {
 	std::vector <int> count;
-	for (int i = 0; i < angio.m_pmat_ids.size(); i++) {
-		count.emplace_back(0);
+//	for (int i = 0; i < angio.m_pmat_ids.size(); i++) {
+	for (int i = 0; i < angio.m_fem->Materials(); i++) {
+	count.emplace_back(0);
 	}
 	for (int i = 0; i < angio.angio_elements.size(); i++)
 	{
@@ -372,7 +374,8 @@ double Fileout::getSegmentLength(FEAngio& angio, double time)
 std::vector <double> Fileout::getSegmentLength_pm(FEAngio& angio, double time)
 {
 	std::vector <double> len;
-	for (int i = 0; i < angio.m_pmat_ids.size(); i++) {
+	//for (int i = 0; i < angio.m_pmat_ids.size(); i++) {
+		for (int i = 0; i < angio.m_fem->Materials(); i++) {
 		len.emplace_back(0);
 	}
 	FEMesh* mesh = angio.GetMesh();
@@ -403,7 +406,8 @@ int Fileout::getTipCount(FEAngio& angio)
 std::vector <int> Fileout::getTipCount_pm(FEAngio& angio)
 {
 	std::vector <int> count;
-	for (int i = 0; i < angio.m_pmat_ids.size(); i++) {
+	//	for (int i = 0; i < angio.m_pmat_ids.size(); i++) {
+	for (int i = 0; i < angio.m_fem->Materials(); i++) {
 		count.emplace_back(0);
 	}
 	for (int i = 0; i < angio.angio_elements.size(); i++)

@@ -781,9 +781,14 @@ void FEAngio::FillInAdjacencyInfo(FEMesh * mesh,FEElemElemList * eel, AngioEleme
 			{
 				angio_element->face_adjacency_list.push_back(ae_iter->second.first);
 			}
-			else
-			{
-				assert(false);
+			else {
+				// see if it is an angio material. If not then everything is ok.
+				FEMaterial* mat = mesh->GetFEModel()->GetMaterial(elem->GetMatID());
+				FEAngioMaterial* test_angmat = dynamic_cast<FEAngioMaterial*>(mat->ExtractProperty<FEElasticMaterial>());
+				if (test_angmat)
+				{
+					assert(false);
+				}
 			}
 		}
 	}
@@ -1292,7 +1297,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		bounds_tolerance = m_fem->GetGlobalConstant("bounds_tolerance");
 		max_angio_dt = m_fem->GetGlobalConstant("max_angio_dt"); if (max_angio_dt == 0) { max_angio_dt = 0.25; }
 		min_angio_dt = m_fem->GetGlobalConstant("min_angio_dt"); 
-		growth_substeps = int (m_fem->GetGlobalConstant("growth_substeps"));
+		growth_substeps = int(m_fem->GetGlobalConstant("growth_substeps")); if (growth_substeps == 0) { growth_substeps = 3; }
 		bounce = m_fem->GetGlobalConstant("bounce"); 
 		size_t angio_element_count = angio_elements.size();
 		FEMesh * mesh = GetMesh();

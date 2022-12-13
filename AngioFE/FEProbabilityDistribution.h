@@ -323,7 +323,7 @@ private:
 	DECLARE_FECORE_CLASS();
 };
 
-//! get random numbers from an elliptical distribution
+//! get random numbers from a Fisherdistribution
 class FEFisherDistribution : public FEProbabilityDistribution
 {
 public:
@@ -387,6 +387,50 @@ private:
 	std::vector<double> pdf; 
 	std::vector<double> cdf; 
 	std::vector<double> bins; 
+
+	DECLARE_FECORE_CLASS();
+};
+
+//! get random numbers from an rational distribution
+class FERationalDistribution : public FEProbabilityDistribution
+{
+public:
+	//! constructor
+	explicit FERationalDistribution(FEModel* pfem) : FEProbabilityDistribution(pfem) {}
+
+	//! generates the next value in the given sequence which fits a given distribution
+	//! this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
+	//! nan will be returned if the distribution fails to find a suitable number
+
+	double NextValue(angiofe_random_engine& re) override;
+
+	vec3d NextVec(angiofe_random_engine& re) override;
+
+	//! performs initialization
+	bool Init() override;
+
+	//! updates the distribution to a given time
+	void TimeStepUpdate(double current_time) override;
+
+private:
+	double scale = 1.0;
+	double p0 = 0.106;
+	double p1 = 0.6905;
+	double q0 = -89.14;
+	double q1 = 2369.0;
+	double max_initial_length = 800.0;
+	double min_initial_length = 50.0;
+	int points = 100;
+
+	double distribution = 1.0;
+	// construct uniform distribution
+	std::uniform_real_distribution<double> ud = std::uniform_real_distribution<double>(0.0, 1.0);
+	std::vector<vec2d> rational_distribution;
+	int n = -1;
+	std::vector<double> pdf;
+	std::vector<double> cdf;
+	std::vector<double> bins;
+
 
 	DECLARE_FECORE_CLASS();
 };
