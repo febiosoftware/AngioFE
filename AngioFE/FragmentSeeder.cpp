@@ -14,9 +14,16 @@
 int FragmentSeeder::initial_fragment_id_counter = 0;
 int FragmentSeeder::initial_cell_id_counter = 0;
 
+BEGIN_FECORE_CLASS(FragmentSeeder, FEMaterialProperty)
+	ADD_PROPERTY(initial_segment_length, "initial_segment_length");
+	ADD_PARAMETER(number_fragments, "number_fragments");
+	ADD_PARAMETER(proto_mat_cross, "proto_mat_cross");
+	ADD_PARAMETER(cell_radius, "cell_radius");
+END_FECORE_CLASS()
+
 FragmentSeeder::FragmentSeeder(FEModel * model) : FEMaterialProperty(model)
 {
-	AddClassProperty(this, &initial_segment_length, "initial_segment_length");
+	//AddClassProperty(this, &initial_segment_length, "initial_segment_length");
 }
 
 vec3d FragmentSeeder::GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(FEMesh* mesh, AngioElement* angio_element, angiofe_random_engine random_engine)
@@ -82,11 +89,6 @@ vec3d FragmentSeeder::GetRandomVectorPositionWithinNaturalCoordinateBoundsByElem
 int FragmentSeeder::IncrementCellCounter() {
 	return initial_cell_id_counter++;
 }
-BEGIN_FECORE_CLASS(FragmentSeeder, FEMaterialProperty)
-	ADD_PARAMETER(number_fragments, "number_fragments");
-	ADD_PARAMETER(proto_mat_cross, "proto_mat_cross");
-	ADD_PARAMETER(cell_radius, "cell_radius");
-END_FECORE_CLASS();
 
 ByElementFragmentSeeder::ByElementFragmentSeeder(FEModel* model) : FragmentSeeder(model)
 {
