@@ -138,25 +138,61 @@ function(findLib libName libDir libOut)
     endif()
 endfunction()
 
-if(FEBio_LIB_DIR)
-    findLib(FECore FEBio_LIB_DIR FECORE)
-    findLib(FEBioMech FEBio_LIB_DIR FEBIOMECH)
-    findLib(FEBioLib FEBio_LIB_DIR FEBIOLIB)
-    findLib(FEBioMix FEBio_LIB_DIR FEBIOMIX)
-    findLib(FEBioPlot FEBio_LIB_DIR FEBIOPLOT)
-    findLib(FEBioXML FEBio_LIB_DIR FEBIOXML)
-    findLib(FEBioRVE FEBio_LIB_DIR FEBIORVE)
+if (WIN32)
+    set(FEBio_DEBUG_LIBS "")
+    set(FEBio_RELEASE_LIBS "")
+
+    set(FEBio_LIB_NAMES fecore febiolib febiomech febiomix xml febioplot febiorve)
+
+    set(FEBio_DEBUG_DIR ${FEBio_LIB_DIR}Debug)
+    set(FEBio_RELEASE_DIR ${FEBio_LIB_DIR}Release)
+
+    foreach(name IN LISTS FEBio_LIB_NAMES)
+        findLib(FEBio_DEBUG_DIR FEBio_LIB ${name})
+        list(APPEND FEBio_DEBUG_LIBS ${FEBio_LIB})
+        unset(FEBio_LIB)
+    endforeach(name)
+
+    foreach(name IN LISTS FEBio_LIB_NAMES)
+        findLib(FEBio_RELEASE_DIR FEBio_LIB ${name})
+        list(APPEND FEBio_RELEASE_LIBS ${FEBio_LIB})
+        unset(FEBio_LIB)
+    endforeach(name)
+
+    unset(FEBio_LIB_NAMES)
+else()
+    set(FEBio_LIBS "")
+
+    set(FEBio_LIB_NAMES fecore febiolib febiomech xml febioplot)
+
+    foreach(name IN LISTS FEBio_LIB_NAMES)
+        findLib(FEBio_LIB_DIR FEBio_LIB ${name})
+        list(APPEND FEBio_LIBS ${FEBio_LIB})
+        unset(FEBio_LIB)
+    endforeach(name)
+
+    unset(FEBio_LIB_NAMES)
 endif()
 
-if(FEBio_DBG_LIB_DIR)
-    findLib(FECore FEBio_DBG_LIB_DIR FECORE_DBG)
-    findLib(FEBioMech FEBio_DBG_LIB_DIR FEBIOMECH_DBG)
-    findLib(FEBioLib FEBio_DBG_LIB_DIR FEBIOLIB_DBG)
-    findLib(FEBioMix FEBio_DBG_LIB_DIR FEBIOMIX_DBG)
-    findLib(FEBioPlot FEBio_DBG_LIB_DIR FEBIOPLOT_DBG)
-    findLib(FEBioXML FEBio_DBG_LIB_DIR FEBIOXML_DBG)
-    findLib(FEBioRVE FEBio_DBG_LIB_DIR FEBIORVE_DBG)
-endif()
+#~ if(FEBio_LIB_DIR)
+    #~ findLib(FECore FEBio_LIB_DIR FECORE)
+    #~ findLib(FEBioMech FEBio_LIB_DIR FEBIOMECH)
+    #~ findLib(FEBioLib FEBio_LIB_DIR FEBIOLIB)
+    #~ findLib(FEBioMix FEBio_LIB_DIR FEBIOMIX)
+    #~ findLib(FEBioPlot FEBio_LIB_DIR FEBIOPLOT)
+    #~ findLib(FEBioXML FEBio_LIB_DIR FEBIOXML)
+    #~ findLib(FEBioRVE FEBio_LIB_DIR FEBIORVE)
+#~ endif()
+
+#~ if(FEBio_DBG_LIB_DIR)
+    #~ findLib(FECore FEBio_DBG_LIB_DIR FECORE_DBG)
+    #~ findLib(FEBioMech FEBio_DBG_LIB_DIR FEBIOMECH_DBG)
+    #~ findLib(FEBioLib FEBio_DBG_LIB_DIR FEBIOLIB_DBG)
+    #~ findLib(FEBioMix FEBio_DBG_LIB_DIR FEBIOMIX_DBG)
+    #~ findLib(FEBioPlot FEBio_DBG_LIB_DIR FEBIOPLOT_DBG)
+    #~ findLib(FEBioXML FEBio_DBG_LIB_DIR FEBIOXML_DBG)
+    #~ findLib(FEBioRVE FEBio_DBG_LIB_DIR FEBIORVE_DBG)
+#~ endif()
 
 if(APPLE)
     # OpenMP
@@ -202,7 +238,20 @@ set_property(TARGET AngioFE PROPERTY AUTOGEN_BUILD_DIR ${CMAKE_BINARY_DIR}/CMake
 
 ##### Link Libraries #####
 
-target_link_libraries(AngioFE optimized ${FEBIOLIB} optimized ${FEBIOMIX} optimized ${FEBIOPLOT} optimized ${FEBIOXML} optimized ${FEBIORVE} optimized ${FEBIOMECH} optimized ${FECORE})
-if(FEBio_DBG_LIB_DIR)
-	target_link_libraries(AngioFE debug ${FEBIOLIB_DBG} debug ${FEBIOMIX_DBG} debug ${FEBIOPLOT_DBG} debug ${FEBIOXML_DBG} debug ${FEBIORVE_DBG} debug ${FEBIOMECH_DBG} debug ${FECORE_DBG})
+if (WIN32)
+
+    foreach(name IN LISTS FEBio_RELEASE_LIBS)
+        target_link_libraries(AngioFE optimized ${name})
+    endforeach()
+
+    foreach(name IN LISTS FEBio_DEBUG_LIBS)
+        target_link_libraries(AngioFE debug ${name})
+    endforeach()
+else()
+    target_link_libraries(AngioFE ${FEBio_LIBS})
 endif()
+
+#~ target_link_libraries(AngioFE optimized ${FEBIOLIB} optimized ${FEBIOMIX} optimized ${FEBIOPLOT} optimized ${FEBIOXML} optimized ${FEBIORVE} optimized ${FEBIOMECH} optimized ${FECORE})
+#~ if(FEBio_DBG_LIB_DIR)
+	#~ target_link_libraries(AngioFE debug ${FEBIOLIB_DBG} debug ${FEBIOMIX_DBG} debug ${FEBIOPLOT_DBG} debug ${FEBIOXML_DBG} debug ${FEBIORVE_DBG} debug ${FEBIOMECH_DBG} debug ${FECORE_DBG})
+#~ endif()
