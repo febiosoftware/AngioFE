@@ -27,7 +27,7 @@ BEGIN_FECORE_CLASS(FiberPDD,PositionDependentDirection)
 	ADD_PROPERTY(interpolation_prop, "interpolation_prop");
 END_FECORE_CLASS()
 
-BEGIN_FECORE_CLASS(LaGrangePStrainPDD, PositionDependentDirection)
+BEGIN_FECORE_CLASS(LagrangePStrainPDD, PositionDependentDirection)
 	ADD_PROPERTY(interpolation_prop, "interpolation_prop");
 	ADD_PARAMETER(beta, "beta");
 END_FECORE_CLASS()
@@ -129,7 +129,7 @@ struct EigComp {
 
 // PDD that determines the principal strain of least magnitude and mixes it with the previous direction
 // TODO: Determine contribution and direction based on ratio of each direction's magnitude. This can probably be adapted from the fractional anisotropy pdd.
-vec3d LaGrangePStrainPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) 
+vec3d LagrangePStrainPDD::ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) 
 {
 	mat3ds E;
 

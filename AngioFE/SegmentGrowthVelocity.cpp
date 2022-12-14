@@ -18,17 +18,17 @@ BEGIN_FECORE_CLASS(SegmentVelocityModifier, SegmentGrowthVelocity)
 END_FECORE_CLASS()
 
 BEGIN_FECORE_CLASS(SegmentVelocityDensityScaleModifier, SegmentGrowthVelocity)
-	ADD_PROPERTY(interpolation_prop, "interpolation_prop");
+	ADD_PROPERTY(interpolation_prop, "interpolation_prop", FEProperty::Required);
 	ADD_PARAMETER(m_density_scale_factor, "density_scale_factor");
 END_FECORE_CLASS()
 
 BEGIN_FECORE_CLASS(SegmentVelocityRefDensityScaleModifier, SegmentGrowthVelocity)
-	ADD_PROPERTY(interpolation_prop, "interpolation_prop");
+	ADD_PROPERTY(interpolation_prop, "interpolation_prop", FEProperty::Required);
 	ADD_PARAMETER(m_density_scale_factor, "density_scale_factor");
 END_FECORE_CLASS()
 
 BEGIN_FECORE_CLASS(SegmentVelocityDensityFAScaleModifier, SegmentGrowthVelocity)
-	ADD_PROPERTY(interpolation_prop, "interpolation_prop");
+	ADD_PROPERTY(interpolation_prop, "interpolation_prop", FEProperty::Required);
 	ADD_PARAMETER(m_rFA_a, "rFA_a");
 	ADD_PARAMETER(m_rFA_b, "rFA_b");
 	ADD_PARAMETER(m_rFA_c, "rFA_c");
@@ -38,13 +38,13 @@ BEGIN_FECORE_CLASS(SegmentVelocityDensityFAScaleModifier, SegmentGrowthVelocity)
 END_FECORE_CLASS()
 
 BEGIN_FECORE_CLASS(SegmentVelocity3PModifier, SegmentGrowthVelocity)
-	ADD_PROPERTY(interpolation_prop, "interpolation_prop");
+	ADD_PROPERTY(interpolation_prop, "interpolation_prop", FEProperty::Required);
 	ADD_PARAMETER(scale, "scale");
 	ADD_PARAMETER(threshold, "threshold");
 END_FECORE_CLASS()
 
 BEGIN_FECORE_CLASS(SegmentVelocityFAModifier, SegmentGrowthVelocity)
-	ADD_PROPERTY(interpolation_prop, "interpolation_prop");
+	ADD_PROPERTY(interpolation_prop, "interpolation_prop", FEProperty::Required);
 	ADD_PARAMETER(scale, "scale");
 	ADD_PARAMETER(m_density_scale_factor, "density_scale_factor");
 END_FECORE_CLASS()

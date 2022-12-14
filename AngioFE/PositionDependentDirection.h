@@ -78,12 +78,12 @@ private:
 	double efd_exp = 1;
 };
 
-class LaGrangePStrainPDD : public PositionDependentDirection
+class LagrangePStrainPDD : public PositionDependentDirection
 {
 public:
 	//! constructor
-	explicit LaGrangePStrainPDD(FEModel* pfem) : PositionDependentDirection(pfem) {}
-	virtual ~LaGrangePStrainPDD() {}
+	explicit LagrangePStrainPDD(FEModel* pfem) : PositionDependentDirection(pfem) {}
+	virtual ~LagrangePStrainPDD() {}
 	//! return the direction given by the fibers at this location
 	vec3d ApplyModifiers(vec3d prev, AngioElement* angio_element, vec3d local_pos, int initial_fragment_id, int current_buffer, double& alpha, bool& continue_growth, vec3d& tip_dir, FEMesh* mesh, FEAngio* pangio) override;
 	//! may be used to get values from loadcurves that modify the behavior as a whole
