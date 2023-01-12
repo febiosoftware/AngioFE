@@ -58,13 +58,13 @@ protected:
 	DECLARE_FECORE_CLASS()
 private:
 	int SBM_ID = -1;
-	// initial number of moles
-	double c_SBM = 0;			// SBM number/concentration
-	double SBMhatp = 0;			// Previous SBM reaction supply
-	double SBMhat = 0;			// New SBM reaction supply
-	double SBMPRhat = 0;		// SBM point source reaction supply
-	double m_M = 1;
-	double m_rhoT = 1;
+	
+	double c_SBM = 0.0;			// SBM number/concentration
+	double SBMhatp = 0.0;		// Previous SBM reaction supply
+	double SBMhat = 0.0;		// New SBM reaction supply
+	double SBMPRhat = 0.0;		// SBM point source reaction supply
+	double m_M = 1.0;
+	double m_rhoT = 1.0;
 	int m_z = 0;
 	double tol_scale = 1.0;
 };
@@ -112,12 +112,12 @@ protected:
 	DECLARE_FECORE_CLASS()
 private:
 	int Solute_ID = -1;
-	double c_Sol = 0;				// solute concentration/number
-	double Solhat = 0;				// Solute reaction supply
-	double Solhatp = 0;				// Previous solute reaction supply
-	double SolPRhat = 0;			// Solute point source reaction supply
-	double m_M = 0;
-	double m_rhoT = 1;
+	double c_Sol = 0.0;				// solute concentration/number
+	double Solhat = 0.0;			// Solute reaction supply
+	double Solhatp = 0.0;			// Previous solute reaction supply
+	double SolPRhat = 0.0;			// Solute point source reaction supply
+	double m_M = 0.0;
+	double m_rhoT = 1.0;
 	int m_z = 1;
 	double tol_scale = 1.0;
 };
@@ -157,9 +157,15 @@ public:
 	//! initialization
 	bool Init() override;
 	//! set stoichiometric coefficients
-	void SetStoichiometricCoefficient(intmap& RP, int id, int v) { RP.insert(std::pair<int, int>(id, v)); }
+	void SetStoichiometricCoefficient(intmap& RP, int id, int v) 
+	{ 
+		RP.insert(std::pair<int, int>(id, v)); 
+	}
 	//! set the cell
-	void SetCell(FECell* cell) { m_cell = cell; }
+	void SetCell(FECell* cell) 
+	{ 
+		m_cell = cell; 
+	}
 	FECell* m_cell;	//!< pointer to the cell where reaction occurs
 	FEModel* m_pfem;
 };
@@ -175,7 +181,10 @@ public:
 	bool Init() override;
 	//! reaction rate 
 	virtual double ReactionRate() = 0;
-	void SetCell(FECell* cell) { m_cell = cell; }
+	void SetCell(FECell* cell) 
+	{ 
+		m_cell = cell; 
+	}
 public:
 	FECellReaction* m_pReact;	//!< pointer to parent reaction
 	FECell* m_cell;				//!< cell containing this
@@ -318,7 +327,12 @@ class FECellMichaelisMenten : public FECellChemicalReaction
 {
 public:
 	//! constructor
-	FECellMichaelisMenten(FEModel* pfem) : FECellChemicalReaction(pfem) { m_Rid = m_Pid = -1; m_Km = m_c0 = 0; m_Rtype = false; }
+	FECellMichaelisMenten(FEModel* pfem) : FECellChemicalReaction(pfem) 
+	{ 
+		m_Rid = m_Pid = -1; 
+		m_Km = m_c0 = 0; 
+		m_Rtype = false; 
+	}
 	//! data initializatino and checking
 	bool Init() override;
 	//! molar supply

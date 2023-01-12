@@ -12,19 +12,21 @@ FEAngio* pfeangio = nullptr;
 //-----------------------------------------------------------------------------
 AngioFETask::AngioFETask(FEModel* pfem) : FECoreTask(pfem)
 {
+	//! Implementation blank
 }
 
 //-----------------------------------------------------------------------------
 AngioFETask::~AngioFETask(void)
 {
+	//! Implementation blank
 	//TODO:find where this is deleted
 	//delete m_pangio;
 }
 
 //-----------------------------------------------------------------------------
 // Task initialization.
-// This allocates the FEAngio object and read the angio input file. It also initializes the 
-// FEAngio object as well as the FE model.
+// This allocates the FEAngio object and read the angio input file. It also 
+// initializes the FEAngio object as well as the FE model.
 bool AngioFETask::Init(const char* inpfile)
 {
 	// Get the FE model
@@ -35,21 +37,19 @@ bool AngioFETask::Init(const char* inpfile)
 	// Create the FEAngio class
 	m_pangio = new FEAngio(fem);
 	pfeangio = m_pangio;
-
-	// Read the angio3d input file
-	//Filein filein;
-	//if (filein.Input(inpfile, *m_pangio) == false) return false;
 	
 	// initialize feangio object
-	if (m_pangio->Init() == false) return false;
+	if (m_pangio->Init() == false)
+	{
+		return false;
+	}
 
 	// all is well
 	return true;
 }
 
 //-----------------------------------------------------------------------------
-// This runs the actual simulation.
-// This just calls the FEModel::Run function.
+// This runs the actual simulation by calling FEModel::Run
 bool AngioFETask::Run()
 {
 	return GetFEModel()->Solve();

@@ -7,7 +7,8 @@ BEGIN_FECORE_CLASS(CommonAngioProperties, FEMaterialProperty)
 END_FECORE_CLASS()
 #pragma endregion FECoreClassDefs
 
-CommonAngioProperties::CommonAngioProperties(FEModel * pfem) : FEMaterialProperty(pfem)
+CommonAngioProperties::
+	CommonAngioProperties(FEModel * pfem) : FEMaterialProperty(pfem)
 {
 
 }

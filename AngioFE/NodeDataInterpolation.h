@@ -12,7 +12,7 @@ class NodeDataInterpolation :public FEMaterialProperty
 	FECORE_BASE_CLASS(NodeDataInterpolation)
 public:
 	//! constructor
-	NodeDataInterpolation(FEModel * pfem) :FEMaterialProperty(pfem) { }
+	NodeDataInterpolation(FEModel * pfem) :FEMaterialProperty(pfem) {}
 	//! returns the value from a material point
 	virtual double & ValueReference(FEMaterialPoint * mp) = 0;
 	//! the name to which the data is bound

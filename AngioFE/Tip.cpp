@@ -31,12 +31,13 @@ vec3d Tip::GetPosition(FEMesh* mesh) const
 	double arr[FESolidElement::MAX_NODES];
 	assert(angio_element);
 	assert(angio_element->_elem);
-	angio_element->_elem->shape_fnc(arr, local_pos.x, local_pos.y, local_pos.z);
+	auto se = angio_element->_elem;
+	se->shape_fnc(arr, local_pos.x, local_pos.y, local_pos.z);
 	vec3d rc(0, 0, 0);
 
-	for (int j = 0; j < angio_element->_elem->Nodes(); j++)
+	for (int j = 0; j < se->Nodes(); j++)
 	{
-		rc += mesh->Node(angio_element->_elem->m_node[j]).m_rt * arr[j];
+		rc += mesh->Node(se->m_node[j]).m_rt * arr[j];
 	}
 	return rc;
 }
@@ -46,12 +47,13 @@ vec3d Tip::GetRefPosition(FEMesh* mesh) const
 	double arr[FESolidElement::MAX_NODES];
 	assert(angio_element);
 	assert(angio_element->_elem);
-	angio_element->_elem->shape_fnc(arr, local_pos.x, local_pos.y, local_pos.z);
+	auto se = angio_element->_elem;
+	se->shape_fnc(arr, local_pos.x, local_pos.y, local_pos.z);
 	vec3d rc(0, 0, 0);
 
-	for (int j = 0; j < angio_element->_elem->Nodes(); j++)
+	for (int j = 0; j < se->Nodes(); j++)
 	{
-		rc += mesh->Node(angio_element->_elem->m_node[j]).m_r0 * arr[j];
+		rc += mesh->Node(se->m_node[j]).m_r0 * arr[j];
 	}
 	return rc;
 }
@@ -131,21 +133,61 @@ Tip::Tip(Tip* other, FEMesh* mesh)
 void Tip::SetLocalPosition(vec3d pos, FEMesh* mesh)
 {
 	assert(angio_element);
-	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (pos.x + pos.y + pos.z) < 1.01 : true);
-	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (pos.x < 1.01) && (pos.x >= -0.01) : true);
-	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (pos.y < 1.01) && (pos.y >= -0.01) : true);
-	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G4 ? (pos.z < 1.01) && (pos.z >= -0.01) : true);
+	auto se = angio_element->_elem;
+	assert(se->Type() 
+		== FE_Element_Type::FE_TET4G4 
+		? (pos.x + pos.y + pos.z) < 1.01 
+		: true);
+	assert(se->Type() 
+		== FE_Element_Type::FE_TET4G4 
+		? (pos.x < 1.01) && (pos.x >= -0.01) 
+		: true);
+	assert(se->Type() 
+		== FE_Element_Type::FE_TET4G4 
+		? (pos.y < 1.01) && (pos.y >= -0.01) 
+		: true);
+	assert(se->Type() 
+		== FE_Element_Type::FE_TET4G4 
+		? (pos.z < 1.01) && (pos.z >= -0.01) 
+		: true);
 
-	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (pos.x + pos.y + pos.z) < 1.01 : true);
-	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (pos.x < 1.01) && (pos.x >= -0.01) : true);
-	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (pos.y < 1.01) && (pos.y >= -0.01) : true);
-	assert(angio_element->_elem->Type() == FE_Element_Type::FE_TET4G1 ? (pos.z < 1.01) && (pos.z >= -0.01) : true);
+	assert(se->Type() 
+		== FE_Element_Type::FE_TET4G1 
+		? (pos.x + pos.y + pos.z) < 1.01 
+		: true);
+	assert(se->Type() 
+		== FE_Element_Type::FE_TET4G1 
+		? (pos.x < 1.01) && (pos.x >= -0.01) 
+		: true);
+	assert(se->Type() 
+		== FE_Element_Type::FE_TET4G1 
+		? (pos.y < 1.01) && (pos.y >= -0.01) 
+		: true);
+	assert(se->Type() 
+		== FE_Element_Type::FE_TET4G1 
+		? (pos.z < 1.01) && (pos.z >= -0.01) 
+		: true);
 
 	local_pos = pos;
-	local_pos.x = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound_r(angio_element->_elem->Type()), local_pos.x), FEAngio::NaturalCoordinatesLowerBound_r(angio_element->_elem->Type()));
-	local_pos.y = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound_s(angio_element->_elem->Type()), local_pos.y), FEAngio::NaturalCoordinatesLowerBound_s(angio_element->_elem->Type()));
-	local_pos.z = std::max(std::min(FEAngio::NaturalCoordinatesUpperBound_t(angio_element->_elem->Type()), local_pos.z), FEAngio::NaturalCoordinatesLowerBound_t(angio_element->_elem->Type()));
-	if (TipCell) { TipCell->SetLocalPosition(local_pos, mesh); }
+	local_pos.x 
+		= std::max(
+			std::min(	FEAngio::NaturalCoordinatesUpperBound_r(se->Type()), 
+						local_pos.x),
+			FEAngio::NaturalCoordinatesLowerBound_r(se->Type()));
+	local_pos.y 
+		= std::max(
+			std::min(	FEAngio::NaturalCoordinatesUpperBound_s(se->Type()), 
+						local_pos.y), 
+			FEAngio::NaturalCoordinatesLowerBound_s(se->Type()));
+	local_pos.z 
+		= std::max(
+			std::min(	FEAngio::NaturalCoordinatesUpperBound_t(se->Type()), 
+						local_pos.z), 
+			FEAngio::NaturalCoordinatesLowerBound_t(se->Type()));
+	if (TipCell) 
+	{ 
+		TipCell->SetLocalPosition(local_pos); 
+	}
 }
 
 vec3d Tip::GetLocalPosition() const
@@ -168,6 +210,7 @@ void Tip::SetProtoGrowthLength(double initial_length)
 	proto_growth_length = initial_length;
 }
 
-double Tip::GetProtoGrowthLength() {
+double Tip::GetProtoGrowthLength() 
+{
 	return proto_growth_length;
 }

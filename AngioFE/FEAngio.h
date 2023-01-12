@@ -118,15 +118,15 @@ public:
 	static double MinDistance(std::vector<vec3d>& element_bounds0, std::vector<vec3d>& element_bounds1);
 
 	//! grow the segments
-	void GrowSegments(double min_scale_factor, double bounds_tolerance, int growth_substeps);
+	void GrowSegments();
 
 	//! grow the segments before t=0
-	void ProtoGrowSegments(double min_scale_factor, double bounds_tolerance, int growth_substeps);
+	void ProtoGrowSegments();
 
 	//! get the final active tips in a radius, used in stress calculations
 	static void GetActiveFinalTipsInRadius(AngioElement* angio_element, double radius, FEAngio* pangio, std::vector<Tip*>& tips);
 	//! get the tips in a radius, used in stress calculations
-	static void GetActiveTipsInRadius(AngioElement* angio_element, double radius, int buffer, FEAngio* pangio, std::vector<Tip*>& tips, int excliude);
+	static void GetActiveTipsInRadius(AngioElement* angio_element, double radius, int buffer, FEAngio* pangio, std::vector<Tip*>& tips, int exclude);
 	//! get the tips in a radius, used in stress calculations
 	static void GetGrownTipsInRadius(AngioElement* angio_element, double radius, FEAngio* pangio, std::vector<Tip*>& tips);
 
@@ -159,7 +159,7 @@ private:
 	bool SeedFragments();
 
 	//! modify the step size taken by febio
-	void ApplydtToTimestepper(double dt, bool initial = false);
+	void ApplydtToTimestepper(double dt);
 
 	//! return the tip position in the reference frame
 	vec3d ReferenceCoordinates(Tip* tip) const;
@@ -171,7 +171,7 @@ private:
 	void Output();
 
 	//! returns the scale factor that would project this ray onto the unit cube, pt must be within the unit cube
-	bool ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d& dir, vec3d& pt, double& sf, double min_sf = 0.00001) const;
+	bool ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d& dir, vec3d& pt, double& sf) const;
 
 	//! returns whether or not a ray can be projected onto the surface of an element
 	bool ProjectToElement(FESolidElement& el, const vec3d& p, FEMesh* mesh, double r[3]);
@@ -245,7 +245,7 @@ private:
 	std::vector<FEAngioMaterial*> angio_materials;
 	int buffer_index = 0;
 
-	double next_time = -1;
+	double next_time = -1.0;
 
 	const double eps = 0.001;
 	static int fragment_id_counter;
@@ -254,7 +254,7 @@ private:
 	double bounds_tolerance = 1e-2;
 	int growth_substeps = 3;
 	double max_angio_dt = 0.25;
-	double min_angio_dt = -1;
+	double min_angio_dt = -1.0;
 	double min_segment_length = 5.0;
 	int auto_stepper_key = -1;
 	int bounce = 1;

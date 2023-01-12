@@ -140,9 +140,8 @@ if (WIN32)
     set(FEBio_RELEASE_LIBS "")
 
     set(FEBio_LIB_NAMES fecore febiolib febiomech febiomix xml febioplot febiorve)
-
-    set(FEBio_DEBUG_DIR ${FEBio_LIB_DIR}Debug)
-    set(FEBio_RELEASE_DIR ${FEBio_LIB_DIR}Release)
+    set(FEBio_DEBUG_DIR ${FEBio_LIB_DIR}/Debug)
+    set(FEBio_RELEASE_DIR ${FEBio_LIB_DIR}/Release)
 
     foreach(name IN LISTS FEBio_LIB_NAMES)
         findLib(FEBio_DEBUG_DIR FEBio_LIB ${name})

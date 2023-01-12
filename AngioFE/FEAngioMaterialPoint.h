@@ -8,7 +8,8 @@ class FEAngioMaterialPoint : public FEMaterialPointData
 {
 public:
 	//! constructor
-	explicit FEAngioMaterialPoint(FEMaterialPointData* pt, FEMaterialPointData* vesselPt, FEMaterialPointData* matrixPt);
+	explicit FEAngioMaterialPoint(FEMaterialPointData* pt, FEMaterialPointData* vesselPt, 
+									FEMaterialPointData* matrixPt);
 
 	//! The init function is used to intialize data
 	void Init() override;
@@ -56,7 +57,7 @@ public:
 	//! Angio fractional anisotropy
 	double angioFA;
 	//! Angio fiber direction
-	vec3d angio_fiber_dir = vec3d(1, 0, 0);
+	vec3d angio_fiber_dir = vec3d(1.0, 0.0, 0.0);
 
 public:
 	//! return the angio material point from a material point if it exists, return nullptr otherwise

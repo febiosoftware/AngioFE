@@ -139,7 +139,6 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS(FECellSecretion, "cell secretion");
 	REGISTER_FECORE_CLASS(FECellSecretionConstant, "cell secretion constant");
 
-
 	// Mix Methods
 	REGISTER_FECORE_CLASS(LinInterp, "LinInterp");
 	REGISTER_FECORE_CLASS(LinRot, "LinRot");
@@ -178,7 +177,6 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 
 	REGISTER_FECORE_CLASS(FEPlotMatrixElastic_m_Q, "matrix elastic mQ");
 	//REGISTER_FECORE_CLASS_EXPLICIT(TipDepositionBC, FEBC_ID, "tip_deposition_bc");
-
 }
 
 FECORE_EXPORT  void GetPluginVersion(int & major, int & minor, int & patch)
@@ -190,6 +188,6 @@ FECORE_EXPORT  void GetPluginVersion(int & major, int & minor, int & patch)
 
 FECORE_EXPORT  void PluginCleanup()
 {
-
+	// Implementation blank
 }
 

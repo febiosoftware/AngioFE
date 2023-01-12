@@ -50,7 +50,7 @@ public:
 protected:
 	DECLARE_FECORE_CLASS()
 private:
-	double segment_velocity_over_time = 1;
+	double segment_velocity_over_time = 1.0;
 };
 
 //! scales the segment velocity based on the ecm density
@@ -126,8 +126,8 @@ protected:
 	DECLARE_FECORE_CLASS()
 private:
 	FEVariableInterpolation* interpolation_prop = nullptr;
-	double scale = 1;
-	double threshold = 1;
+	double scale = 1.0;
+	double threshold = 1.0;
 };
 
 //! scales the segment velocity based on the fractional anisotropy
@@ -146,8 +146,8 @@ protected:
 	DECLARE_FECORE_CLASS()
 private:
 	FEVariableInterpolation* interpolation_prop = nullptr;
-	double scale = 1;
-	double threshold = 1;
+	double scale = 1.0;
+	double threshold = 1.0;
 };
 
 class SigmoidSegmentVelocity : public SegmentGrowthVelocity
@@ -164,10 +164,10 @@ protected:
 	//! parameter list
 	DECLARE_FECORE_CLASS()
 private:
-	double scale = 1;
-	double a = 100;
+	double scale = 1.0;
+	double a = 100.0;
 	double b = 1.3; 
-	double c = 5;
+	double c = 5.0;
 };
 
 class SigmoidAdjustedSegmentVelocity : public SegmentGrowthVelocity
@@ -187,7 +187,7 @@ private:
 	double a = 50.0;
 	double b = 2.572;
 	double c = 9.368;
-	double scale = 1;
+	double scale = 1.0;
 };
 
 class GompertzSegmentVelocity : public SegmentGrowthVelocity
@@ -204,9 +204,9 @@ protected:
 	//! parameter list
 	DECLARE_FECORE_CLASS()
 private:
-	double scale = 1;
-	double a = 284;
+	double scale = 1.0;
+	double a = 284.0;
 	double b = 0.5;
-	double c = 1;
-	double d = 5;
+	double c = 1.0;
+	double d = 5.0;
 };

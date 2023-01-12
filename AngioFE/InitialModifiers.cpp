@@ -32,23 +32,26 @@ BEGIN_FECORE_CLASS(RepulseInitializer, InitialModifier)
 END_FECORE_CLASS()
 #pragma endregion FECoreClassDefs
 
-void InitialModifierManager::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
+void InitialModifierManager::
+	ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
-	for(int i=0; i< initial_modifiers.size();i++)
+	for (int i = 0; i< initial_modifiers.size(); i++)
 	{
 		initial_modifiers[i]->ApplyModifier(angio_element, mesh, feangio);
 	}
 }
 
-// Rename this to AlignedFiberRandomizer or DiscreteFiberRandomizer
-// take a given angio element and give it a randomized discrete fiber direction
-void FiberRandomizer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
+//! Rename this to AlignedFiberRandomizer or DiscreteFiberRandomizer
+//! Take a given angio element and give it a randomized discrete fiber direction
+void FiberRandomizer::
+ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
+	auto se = angio_element->_elem;
 	// for each integration point in the element
-	for(int i=0; i < angio_element->_elem->GaussPoints();i++)
+	for (int i = 0; i < se->GaussPoints(); i++)
 	{
 		// get the material point of the integration point
-		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
+		FEMaterialPoint * mp = se->GetMaterialPoint(i);
 		// get the angio material point
 		FEAngioMaterialPoint * angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
 		// get the elastic material point
@@ -61,15 +64,18 @@ void FiberRandomizer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh,
 }
 
 // take a given angio element and give it a randomized discrete fiber direction based on user input spd
-void DiscreteFiberEFDRandomizer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
+void DiscreteFiberEFDRandomizer::
+	ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
+	auto se = angio_element->_elem;
 	// for each integration point in the element
-	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
+	for (int i = 0; i < se->GaussPoints(); i++)
 	{
 		// get the material point of the integration point
-		FEMaterialPoint * mp = angio_element->_elem->GetMaterialPoint(i);
+		FEMaterialPoint * mp = se->GetMaterialPoint(i);
 		// get the angio material point
-		FEAngioMaterialPoint * angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+		FEAngioMaterialPoint * angio_pt 
+			= FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
 		angio_pt->initial_angioSPD = m_SPD(*mp);
 		FEEllipticalDistribution E(this->GetFEModel());
 		E.spd = angio_pt->initial_angioSPD;
@@ -78,25 +84,28 @@ void DiscreteFiberEFDRandomizer::ApplyModifier(AngioElement * angio_element, FEM
 	}
 }
 
-void EFDFiberInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
+void EFDFiberInitializer::
+	ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
 	FESolidElement* se = angio_element->_elem;
 	for (auto i = 0; i < se->GaussPoints(); i++)
 	{
 		FEMaterialPoint* mp = se->GetMaterialPoint(i);
-		FEAngioMaterialPoint * angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+		FEAngioMaterialPoint * angio_pt 
+			= FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
 		angio_pt->initial_angioSPD = m_SPD(*mp);
 		angio_pt->angioSPD = m_SPD(*mp);
 		angio_pt->UpdateAngioFractionalAnisotropy();
 	}
 }
 
-void RotEFDFiberInitializer::ApplyModifier(AngioElement* angio_element, FEMesh* mesh, FEAngio* feangio)
+void RotEFDFiberInitializer::
+	ApplyModifier(AngioElement* angio_element, FEMesh* mesh, FEAngio* feangio)
 {
 	FESolidElement* se = angio_element->_elem;
-	auto zto2pi = std::uniform_real_distribution<double>(0, 2*PI);
+	auto zto2pi = std::uniform_real_distribution<double>(0.0, 2.0 * PI);
 	double alpha = zto2pi(angio_element->_rengine);
-	double beta = 0;// zto2pi(angio_element->_rengine);
+	double beta = 0.0;
 	double gamma = zto2pi(angio_element->_rengine);
 
 	mat3d RandMat = feangio->rotationMatrix(alpha,beta,gamma);
@@ -104,33 +113,39 @@ void RotEFDFiberInitializer::ApplyModifier(AngioElement* angio_element, FEMesh* 
 	for (auto i = 0; i < se->GaussPoints(); i++)
 	{
 		FEMaterialPoint* mp = se->GetMaterialPoint(i);
-		FEAngioMaterialPoint* angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+		FEAngioMaterialPoint* angio_pt 
+			= FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
 		
 		mat3d P = RandMat*m_SPD(*mp)*RandMat.transpose();
-		angio_pt->initial_angioSPD = mat3ds(P(0,0), P(1,1), P(2,2), P(0,1), P(1,2), P(0,2));
+		angio_pt->initial_angioSPD 
+			= mat3ds(P(0,0), P(1,1), P(2,2), P(0,1), P(1,2), P(0,2));
 		angio_pt->angioSPD = m_SPD(*mp);
 		angio_pt->UpdateAngioFractionalAnisotropy();
 	}
 }
 
-void DensityInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
+void DensityInitializer::
+ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
-	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
+	auto se = angio_element->_elem;
+	for (int i = 0; i < se->GaussPoints(); i++)
 	{
-		FEMaterialPoint *mp = angio_element->_elem->GetMaterialPoint(i);
-		FEAngioMaterialPoint *angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
-
+		FEMaterialPoint *mp = se->GetMaterialPoint(i);
+		FEAngioMaterialPoint *angio_pt 
+			= FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
 		angio_pt->ref_ecm_density = initial_density(*mp);
 	}
 }
 
-void RepulseInitializer::ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
+void RepulseInitializer::
+ApplyModifier(AngioElement * angio_element, FEMesh * mesh, FEAngio* feangio)
 {
-	for (int i = 0; i < angio_element->_elem->GaussPoints(); i++)
+	auto se = angio_element->_elem;
+	for (int i = 0; i < se->GaussPoints(); i++)
 	{
-		FEMaterialPoint *mp = angio_element->_elem->GetMaterialPoint(i);
-		FEAngioMaterialPoint *angio_pt = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
-
+		FEMaterialPoint *mp = se->GetMaterialPoint(i);
+		FEAngioMaterialPoint *angio_pt 
+			= FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
 		angio_pt->repulse_value = initial_repulse_value;
 	}
 }

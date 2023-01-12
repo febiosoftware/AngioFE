@@ -34,12 +34,12 @@ const char * RepulseValuesNodeDataInterpolation::GetDataName() const
 	return "repulse_value";
 }
 
-void NodeDataInterpolation::PrepValues(FEAngio* angio, FEMesh* mesh, FEAngioMaterial* angio_mat)
+void NodeDataInterpolation::
+	PrepValues(FEAngio* angio, FEMesh* mesh, FEAngioMaterial* angio_mat)
 {
 	// convert the node values (lids) to ids
-
 	// for each element in the angio material
-	for(int i=0;i < angio->elements_by_material[angio_mat].size();i++)
+	for (int i = 0; i < angio->elements_by_material[angio_mat].size(); i++)
 	{
 		//get the solid element
 		FESolidElement * se = angio->elements_by_material[angio_mat][i]->_elem;
@@ -48,21 +48,22 @@ void NodeDataInterpolation::PrepValues(FEAngio* angio, FEMesh* mesh, FEAngioMate
 		// store the values at the gauss points
 		std::vector<double> values_at_gauss_points;
 		// get the values from the solid element gauss points
-		for(int j=0; j < se->GaussPoints();j++)
+		for (int j = 0; j < se->GaussPoints(); j++)
 		{
-			values_at_gauss_points.push_back(ValueReference(se->GetMaterialPoint(j)));
+			values_at_gauss_points.push_back(
+				ValueReference(se->GetMaterialPoint(j)));
 		}
 		// project the solid element values to the nodes from the gauss points
 		se->project_to_nodes(&values_at_gauss_points[0], &nodal_values[0]);
 		// for each node in the solid elements 
-		for(int j=0; j < se->Nodes();j++)
+		for (int j = 0; j < se->Nodes(); j++)
 		{
 			node_id_to_values[se->m_node[j]] = nodal_values[j];
 		}
 		
 	}
+	
 	//replace the values using the nodeset and properties
-
 	// copy the nodeset from the id
 	FENodeSet * node_set = mesh->NodeSet(node_set_id);
 	assert(node_set);
@@ -86,44 +87,52 @@ void NodeDataInterpolation::PrepValues(FEAngio* angio, FEMesh* mesh, FEAngioMate
 	}
 
 	//now map the values back to the gauss points
-
-	for(int i=0; i < angio->elements_by_material[angio_mat].size();i++)
+	for (int i = 0; i < angio->elements_by_material[angio_mat].size(); i++)
 	{
 		AngioElement * angio_element = angio->elements_by_material[angio_mat][i];
+		auto se = angio_element->_elem;
 		switch (interpolation_mode)
 		{
-		case 0:
-			//get nodal values
-			double nodal_values[FESolidElement::MAX_NODES];
-			for(int j=0; j < angio_element->_elem->Nodes();j++)
+			case 0:
 			{
-				nodal_values[j] = node_id_to_values.at(angio_element->_elem->m_node[j]);
-			}
-			//set gauss values
-			for (int j = 0; j < angio_element->_elem->GaussPoints(); j++)
-			{
-				FEMaterialPoint *mp = angio_element->_elem->GetMaterialPoint(j);
-				double H[FESolidElement::MAX_NODES];
-				angio_element->_elem->shape_fnc(H, angio_element->_elem->gr(j), angio_element->_elem->gs(j), angio_element->_elem->gt(j));
-				double val = 0;
-				for(int k=0; k < angio_element->_elem->Nodes();k++)
+				//get nodal values
+				double nodal_values[FESolidElement::MAX_NODES];
+				for (int j = 0; j < se->Nodes(); j++)
 				{
-					val += H[k]*nodal_values[k];
+					nodal_values[j] = node_id_to_values.at(se->m_node[j]);
 				}
-				ValueReference(mp) = val;
+				//set gauss values
+				for (int j = 0; j < se->GaussPoints(); j++)
+				{
+					FEMaterialPoint* mp = se->GetMaterialPoint(j);
+					double H[FESolidElement::MAX_NODES];
+					se->shape_fnc(H, se->gr(j), se->gs(j), se->gt(j));
+					double val = 0.0;
+					for (int k = 0; k < se->Nodes(); k++)
+					{
+						val += H[k] * nodal_values[k];
+					}
+					ValueReference(mp) = val;
+				}
+				break;
 			}
-			break;
-		case 1:
-		default:
-			assert(false);
+			case 1:
+			{
+				//! No implementation
+			}
+			default:
+			{
+				assert(false);
+			}
 		}
 	}
 }
 
 
-void NodeDataInterpolationManager::DoInterpolations(FEAngio * angio, FEMesh* mesh, FEAngioMaterial* angio_mat)
+void NodeDataInterpolationManager::
+	DoInterpolations(FEAngio * angio, FEMesh* mesh, FEAngioMaterial* angio_mat)
 {
-	for(int i=0; i < node_data_interpolation_vals.size();i++)
+	for (int i = 0; i < node_data_interpolation_vals.size(); i++)
 	{
 		node_data_interpolation_vals[i]->PrepValues(angio, mesh, angio_mat);
 	}

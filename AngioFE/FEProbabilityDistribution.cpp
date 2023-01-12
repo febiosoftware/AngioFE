@@ -89,7 +89,8 @@ void FEProbabilityDistribution::SetLoadCurveToStep(const char * param)
 	}
 }
 
-bool FEProbabilityDistribution::ChangeInParam(const char * param, double time, double & prev, double & new_p)
+bool FEProbabilityDistribution::
+		ChangeInParam(const char * param, double time, double & prev, double & new_p)
 {
 	FEParam * m = FindParameter(ParamString(param));
 	assert(m);
@@ -122,7 +123,7 @@ double FENormalDistribution::NextValue(angiofe_random_engine & re)
 
 vec3d FENormalDistribution::NextVec(angiofe_random_engine & re)
 {
-	return vec3d(1, 0, 0);
+	return vec3d(1.0, 0.0, 0.0);
 }
 
 bool FENormalDistribution::Init()
@@ -150,7 +151,7 @@ double FEUniformDistribution::NextValue(angiofe_random_engine & re)
 
 vec3d FEUniformDistribution::NextVec(angiofe_random_engine & re)
 {
-	return vec3d(1, 0, 0);
+	return vec3d(1.0, 0.0, 0.0);
 }
 
 bool FEUniformDistribution::Init()
@@ -165,7 +166,7 @@ bool FEUniformDistribution::Init()
 
 void FEUniformDistribution::TimeStepUpdate(double current_time)
 {
-	if(time_clamped)
+	if (time_clamped)
 	{
 		rd = std::uniform_real_distribution<double>(a, b - current_time);
 	}
@@ -182,14 +183,17 @@ double FEExponentialDistribution::NextValue(angiofe_random_engine & re)
 	{
 		double val = ed(re);
 		if (val > 0.0)
-			return mult*val;
+		{
+			double next_val = mult * val;
+			return next_val;
+		}
 	}
 	return std::numeric_limits<double>::quiet_NaN();
 }
 
 vec3d FEExponentialDistribution::NextVec(angiofe_random_engine & re)
 {
-	return vec3d(1, 0, 0);
+	return vec3d(1.0, 0.0, 0.0);
 }
 
 bool FEExponentialDistribution::Init()
@@ -213,7 +217,9 @@ double FECauchyDistribution::NextValue(angiofe_random_engine & re)
 	{
 		double val = cd(re);
 		if (val > 0.0)
+		{
 			return val;
+		}
 	}
 	return std::numeric_limits<double>::quiet_NaN();
 }
@@ -244,14 +250,17 @@ double FEChiSquaredDistribution::NextValue(angiofe_random_engine & re)
 	{
 		double val = cd(re);
 		if (val > 0.0)
-			return mult*val;
+		{
+			double next_val = mult * val;
+			return next_val;
+		}
 	}
 	return std::numeric_limits<double>::quiet_NaN();
 }
 
 vec3d FEChiSquaredDistribution::NextVec(angiofe_random_engine & re)
 {
-	return vec3d(1, 0, 0);
+	return vec3d(1.0, 0.0, 0.0);
 }
 
 bool FEChiSquaredDistribution::Init()
@@ -276,14 +285,16 @@ double FEWeibullDistribution::NextValue(angiofe_random_engine & re)
 	{
 		double val = wd(re);
 		if (val > 0.0)
+		{
 			return val;
+		}
 	}
 	return std::numeric_limits<double>::quiet_NaN();
 }
 
 vec3d FEWeibullDistribution::NextVec(angiofe_random_engine & re)
 {
-	return vec3d(1, 0, 0);
+	return vec3d(1.0, 0.0, 0.0);
 }
 
 bool FEWeibullDistribution::Init()
@@ -307,14 +318,16 @@ double FEGammaDistribution::NextValue(angiofe_random_engine & re)
 	{
 		double val = gd(re);
 		if (val > 0.0)
+		{
 			return val;
+		}
 	}
 	return std::numeric_limits<double>::quiet_NaN();
 }
 
 vec3d FEGammaDistribution::NextVec(angiofe_random_engine & re)
 {
-	return vec3d(1, 0, 0);
+	return vec3d(1.0, 0.0, 0.0);
 }
 
 bool FEGammaDistribution::Init()
@@ -340,7 +353,7 @@ double FEFixedDistribution::NextValue(angiofe_random_engine & re)
 
 vec3d FEFixedDistribution::NextVec(angiofe_random_engine & re)
 {
-	return vec3d(1, 0, 0);
+	return vec3d(1.0, 0.0, 0.0);
 }
 
 void FEFixedDistribution::TimeStepUpdate(double current_time)
@@ -357,24 +370,33 @@ bool FEFixedDistribution::Init()
 vec3d FEEllipticalDistribution::NextVec(angiofe_random_engine & re)
 {
 	bool found = false;
-	while(!found)
+	while (!found)
 	{
-		std::uniform_real_distribution<double> rd = std::uniform_real_distribution<double> (-1,1);
+		std::uniform_real_distribution<double> rd 
+			= std::uniform_real_distribution<double> (-1.0,1.0);
 		vec3d rv;
 		// get the random direction with magnitude up to the value of r^efd_exp
-		double w = std::max(std::max(d[0], d[1]), d[2]);
-		rv.x = pow(w,efd_exp)*rd(re);
-		rv.y = pow(w,efd_exp)*rd(re);
-		rv.z = pow(w,efd_exp)*rd(re);
+		double w = std::max(
+						std::max(d[0], 
+							d[1]), 
+						d[2]);
+		rv.x = pow(w, efd_exp) * rd(re);
+		rv.y = pow(w, efd_exp) * rd(re);
+		rv.z = pow(w, efd_exp) * rd(re);
 		// Find the value of the standard ellipse equation
-		double ellipse_par_eq = (rv.x * rv.x) / (d[0] * d[0]) + (rv.y * rv.y) / (d[1] * d[1]) + (rv.z * rv.z) / (d[2] * d[2]);
+		double ellipse_par_eq 
+			= (rv.x * rv.x) / (d[0] * d[0]) 
+			+ (rv.y * rv.y) / (d[1] * d[1]) 
+			+ (rv.z * rv.z) / (d[2] * d[2]);
 		// Find the radius to the random vector point
 		double r = rv.norm();
 		// Find the max value which is equal to r^efd_exp for the given orientation.
-		double r_max = sqrt(1 / ellipse_par_eq) * r;
+		double r_max = sqrt(1.0 / ellipse_par_eq) * r;
 		// If the sampled point is within the power elliptical distribution
-		if (r < pow(r_max,efd_exp)) {
-			// rotate the random direction from the global basis into the EFD basis and normalize
+		if (r < pow(r_max,efd_exp)) 
+		{
+			//! rotate the random direction from the global basis into the EFD 
+			//! basis and normalize
 			rv = Q*rv;
 			rv = rv.normalized();
 			found = true;
@@ -385,14 +407,16 @@ vec3d FEEllipticalDistribution::NextVec(angiofe_random_engine & re)
 
 double FEEllipticalDistribution::NextValue(angiofe_random_engine & re)
 {
-	return 0;
+	return 0.0;
 }
 
 bool FEEllipticalDistribution::Init()
 {
 	spd.eigen(d, v);
 	// set the eigenvector matrix
-	Q.setCol(0, v[0]); Q.setCol(1, v[1]); Q.setCol(2, v[2]);
+	Q.setCol(0, v[0]); 
+	Q.setCol(1, v[1]); 
+	Q.setCol(2, v[2]);
 	return true;
 }
 
@@ -404,58 +428,63 @@ void FEEllipticalDistribution::TimeStepUpdate(double current_time)
 //implemenations of FEGammaDistribution
 vec3d FEFisherDistribution::NextVec(angiofe_random_engine & re)
 {
-	//cdf.resize(resolution);
 	ODF.resize(resolution);
-	//bins.resize(resolution);
 	double prior_val = 0.0;
 	// Create the cdf
-	for (int i = 0; i < resolution; i++) {
-		//bins.at(i) = i;
-		ODF.at(i) = AREAL[i]*(k / (2 * PI*(exp(k) - exp(-k))) * exp(k*(mu*dir[0])));
-		//cdf.at(i) = ODF.at(i) + prior_val;
-		//prior_val = cdf.at(i);
+	for (int i = 0; i < resolution; i++) 
+	{
+		ODF.at(i)
+			= AREAL[i] 
+			* k 
+			/ (2.0 * PI * (exp(k) - exp(-k))) 
+			* exp(k * (mu * dir[0]));
 	}
 	vec3d rand_pt;
 	double maxODF = *std::max_element(ODF.begin(), ODF.end());
 	bool found = false;
-	while (!found) {
+	while (!found) 
+	{
 		rand_pt.x = ud(re)*maxODF;
 		rand_pt.y = ud(re)*maxODF;
 		rand_pt.z = ud(re)*maxODF;
 		std::vector<double> dist;
-		for (int i = 0; i < resolution; i++) {
+		for (int i = 0; i < resolution; i++) 
+		{
 			dist.emplace_back(rand_pt*dir[i]);
 		}
-		//double rand_dir = *std::min_element(dist.begin(),dist.end());
-		int rand_pt_indx = std::min_element(dist.begin(), dist.end()) - dist.begin();
+		int rand_pt_indx = std::min_element(dist.begin(), 
+											dist.end()) - dist.begin();
 		double check = ODF[rand_pt_indx];
-		//if (rand_pt.norm() <= check) {
-		//	return rand_pt.unit();
-		//}
 	}
 
 	// get the cumulative sum
 	std::partial_sum(ODF.begin(), ODF.end(), cdf.begin());
 	// divide cumulative sum by sum
-	std::transform(cdf.begin(), cdf.end(), cdf.begin(),
-		std::bind(std::divides<double>(), std::placeholders::_1, cdf.at(resolution - 1)));
+	std::transform(	cdf.begin(), cdf.end(), cdf.begin(),	
+					std::bind(std::divides<double>(), 
+					std::placeholders::_1, 
+					cdf.at(resolution - 1)));
 	double rn = ud(re);
 	// find the value closest to the random number and get the position
-	int fi = std::distance(cdf.begin(), std::lower_bound(cdf.begin(), cdf.end(), rn));
+	int fi = std::distance(	cdf.begin(), 
+							std::lower_bound(cdf.begin(), cdf.end(), rn));
 	return dir[fi];
 
 }
 
 double FEFisherDistribution::NextValue(angiofe_random_engine & re)
 {
-	return 0;
+	return 0.0;
 }
 
 bool FEFisherDistribution::Init()
 {
 	ODF.reserve(resolution);
-	for (int i = 0; i < resolution; i++) {
-		dir[i].x = cos(PHIL[i])*sin(THETAL[i]);	dir[i].y = sin(PHIL[i])*sin(THETAL[i]);	dir[i].z = cos(THETAL[i]);
+	for (int i = 0; i < resolution; i++) 
+	{
+		dir[i].x = cos(PHIL[i])*sin(THETAL[i]);	
+		dir[i].y = sin(PHIL[i])*sin(THETAL[i]);	
+		dir[i].z = cos(THETAL[i]);
 		ODF[i] = 1.0/resolution;
 	}
 	return true;
@@ -463,7 +492,7 @@ bool FEFisherDistribution::Init()
 
 void FEFisherDistribution::TimeStepUpdate(double current_time)
 {
-
+	//! Empty implementation
 }
 
 //implemenations of FENormalDistribution
@@ -472,18 +501,19 @@ double FEPrescribedDistribution::NextValue(angiofe_random_engine & re)
 	// get a random number
 	double rn = ud(re);
 	// find the rc_t value closest to the random number and get the position
-	int fi = std::distance(cdf.begin(), std::lower_bound(cdf.begin(), cdf.end(), rn));
+	int fi = std::distance(cdf.begin(), 
+							std::lower_bound(cdf.begin(), cdf.end(), rn));
 	return bins.at(fi);
 }
 
 vec3d FEPrescribedDistribution::NextVec(angiofe_random_engine & re)
 {
-	return vec3d(1,0,0);
+	return vec3d(1.0,0.0,0.0);
 }
 
 void FEPrescribedDistribution::TimeStepUpdate(double current_time)
 {
-
+	//! Empty implementation
 }
 
 // gets the load curve, solves the cdf
@@ -512,8 +542,10 @@ bool FEPrescribedDistribution::Init()
 	// get the cumulative sum
 	std::partial_sum(pdf.begin(), pdf.end(), cdf.begin());
 	// divide cumulative sum by sum
-	std::transform(cdf.begin(), cdf.end(), cdf.begin(),
-		std::bind(std::divides<double>(), std::placeholders::_1, cdf.at(n - 1)));
+	std::transform(	cdf.begin(), cdf.end(), cdf.begin(),
+					std::bind(	std::divides<double>(), 
+								std::placeholders::_1, 
+								cdf.at(n - 1)));
 	return true;
 }
 
@@ -529,7 +561,7 @@ double FERationalDistribution::NextValue(angiofe_random_engine& re)
 
 vec3d FERationalDistribution::NextVec(angiofe_random_engine& re)
 {
-	return vec3d(1, 0, 0);
+	return vec3d(1.0, 0.0, 0.0);
 }
 
 bool FERationalDistribution::Init()
@@ -542,8 +574,9 @@ bool FERationalDistribution::Init()
 	double bin_width = (max_initial_length - min_initial_length)/(n-1.0);
 	rational_distribution.resize(points);
 	double prior_val = 0.0;
-	for (int i = 0; i < points; i++) {
-		double x = min_initial_length + i * bin_width;
+	for (int i = 0; i < points; i++) 
+	{
+		double x = min_initial_length + (i * bin_width);
 		double PL = (p0 * x + p1) / (x * x + q0 * x + q1);
 		rational_distribution.at(i) = vec2d(x,PL);
 		bins.at(i) = rational_distribution.at(i).x();
@@ -556,11 +589,13 @@ bool FERationalDistribution::Init()
 	std::partial_sum(pdf.begin(), pdf.end(), cdf.begin());
 	// divide cumulative sum by sum
 	std::transform(cdf.begin(), cdf.end(), cdf.begin(),
-		std::bind(std::divides<double>(), std::placeholders::_1, cdf.at(n - 1)));
+					std::bind(	std::divides<double>(), 
+								std::placeholders::_1, 
+								cdf.at(n - 1)));
 	return true;
 }
 
 void FERationalDistribution::TimeStepUpdate(double current_time)
 {
-
+	//! SL: No implementation. What do?
 }

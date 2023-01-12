@@ -9,7 +9,6 @@
 class Segment  
 {
 public:
-
 	//! Constructor
     Segment(){}
 	//! Returns the direction of the segment

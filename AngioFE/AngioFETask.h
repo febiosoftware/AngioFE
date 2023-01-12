@@ -13,7 +13,7 @@ public:
 	explicit AngioFETask(FEModel* pfem);
 	~AngioFETask(void);
 
-	//! initalize the task. There is no config file that is currently used. If possible all future additions should be in .feb files not a custom file type
+	//! initalize the task. 
 	bool Init(const char* szfile) override;
 
 	//! run the task
