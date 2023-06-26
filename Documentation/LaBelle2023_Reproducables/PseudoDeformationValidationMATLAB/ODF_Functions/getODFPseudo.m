@@ -1,28 +1,19 @@
-function [ ODF_Pseudo ] = getODFPseudo( Icos, d, v, RF, F )
-%UNTITLED3 Summary of this function goes here
-%   Icos is the Icosahedron mesh generated with IcosahedronMesh.
-%   d is the eigenvector matrix of the SPD defining the ellipsoid
-%   v is the eigenvector matrix of the SPD defining the ellipsoid
-%   R is the rotation matrix from the polar decomposition of the
-%   deformation gradient F.
-%   F is the deformation gradient
+%function [ ODF_Pseudo ] = getODFPseudo2( Icos, d, v, RF, F )
+function [ ODF_Pseudo ] = getODFPseudo( Icos, P, F )
 
-%   Differs from the other approach. Here we do Baroca's 1997 approach but
-%   use the sqrt of the stretch instead.
+%calculate the net deformation from a unit sphere
+Fn = F*P;
+[~, ~, Vn] = poldecomp(Fn);
 
-P = v*d*inv(v);
-Fapp = F;
-F = Fapp*P;
-B = F*transpose(F);
-[X, b] = eig(B);
-pp = X*sqrt(b)*inv(X); pp = pp * 3/trace(pp);
-A=zeros(size(Icos));
-dv=zeros(size(Icos));
-for i=1:length(Icos)
-    dv(i,:) = pp*Icos(i,:)';
-    A(i,:) = dv(i,:)/norm(dv(i,:));
-end
+%normalize values
+scale = 3/trace(P);
 
+%calculate the value for each face on the icosahedron
 ODF_Pseudo = zeros(length(Icos),1);
-ODF_Pseudo = MapToUnitSphere(Icos,A,60);
+    for i=1:length(Icos)
+        ODF_Pseudo(i) = scale*norm(Vn*Icos(i,:)');
+    end
+%normalize CDF to sum to 1
+ODF_Pseudo = ODF_Pseudo/sum(ODF_Pseudo); 
+
 end 

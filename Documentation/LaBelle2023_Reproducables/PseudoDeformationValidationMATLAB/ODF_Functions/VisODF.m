@@ -36,12 +36,7 @@ title(ax_tit,'FontSize',24,'FontWeight','bold');
 axis image;  colorbar; 
 c = colorbar;
 c.LineWidth=1; caxis([0.02 0.15]); c.Ticks=[0.02 0.085 0.15];
-%caxis([0.02 0.15]);
-% try
-%     caxis([min(ODF), max(ODF)]);
-% catch
-%     caxis([0,max(ODF)])
-% end
+
 grid off; set(gca, 'FontSize',20); box on;
 out = false;
 
