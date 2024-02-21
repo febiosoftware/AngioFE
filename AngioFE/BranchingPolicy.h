@@ -140,7 +140,7 @@ class DelayBranchInfo : public BranchInfo
 {
 public:
 	//! the length before a branch occurs
-	double length_to_branch = 0.0;
+	double length_to_branch = std::numeric_limits<double>::max();
 	//! all branches which may occur in the future
 	std::list<FutureBranch> future_branches;
 };

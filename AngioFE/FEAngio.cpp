@@ -1319,7 +1319,9 @@ void FEAngio::CalculateSegmentLengths(FEMesh* mesh)
 
 void FEAngio::AdjustMatrixVesselWeights(class FEMesh* mesh)
 {
-	std::cout << "Adjusting weights" << endl;
+#ifndef NDEBUG
+	std::cout << "Adjusting matrix vessel weights" << endl;
+#endif
 	double time = GetFEModel()->GetTime().currentTime;
 	int angio_elements_size = int (angio_elements.size());
 #pragma omp parallel for 
@@ -1448,7 +1450,8 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 	FEMesh * mesh = GetMesh();
 	if (nwhen == CB_INIT)
 	{
-		std::cout << "Initialization Time" << endl;
+		std::cout << "Initializing AngioFE" << endl;
+
 		SetupAngioElements();
 
 		SetSeeds();
@@ -1504,7 +1507,10 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 					(mat->ExtractProperty<FEElasticMaterial>());
 			if (test_angmat)
 			{
-				FEElementSet* elset = mesh->FindElementSet(test_dom.GetName());
+				FEElementSet* elset = &FEElementSet(pfem);
+				elset->Create(&test_dom);
+				//SL: This code automatically generated an element set from the domain associated with the Angio Material. Above code works for FEBio versions 4 and up.
+				//FEElementSet* elset = mesh->FindElementSet(test_dom.GetName());
 				FEDomainMap* map = new FEDomainMap(FE_MAT3D, FMT_MATPOINTS);
 				map->Create(elset);
 				map->fillValue(mat3d::identity());
@@ -1585,7 +1591,9 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 
 	if (nwhen == CB_UPDATE_TIME)
 	{
+#ifndef NDEBUG
 		std::cout << "Update Time" << endl;
+#endif
 		static int index = 0;
 		// grab the time information
 		
@@ -1637,28 +1645,36 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 	}
 	else if (nwhen == CB_MODEL_UPDATE) 
 	{
-		size_t cell_count = cells.size();
-		for (auto iter = cells.begin(); iter != cells.end(); iter++)
-		{
-			iter->second->UpdateSpecies();
-		}
-		bool positive_conc = CheckSpecies(mesh);
-		if (positive_conc)
-		{
-			std::cout << "All positive" << endl;
-		}
-		else
-		{
-			std::cout << "Negative detected" << endl;
-			//throw DoRunningRestart();
-		}
+//SL: FECell dev. Remove later.
+//		size_t cell_count = cells.size();
+//		for (auto iter = cells.begin(); iter != cells.end(); iter++)
+//		{
+//			iter->second->UpdateSpecies();
+//		}
+//		bool positive_conc = CheckSpecies(mesh);
+//		if (positive_conc)
+//		{
+//#ifndef NDEBUG
+//			std::cout << "All positive" << endl;
+//#endif
+//		}
+//		else
+//		{
+//#ifndef NDEBUG
+//			std::cout << "Negative detected" << endl;
+//#endif
+//			//throw DoRunningRestart();
+//		}
 	}
 	else if (nwhen == CB_MAJOR_ITERS)
 	{
+#ifndef NDEBUG
 		std::cout << "Major Iteration" << endl;
+#endif
 
 		fileout->save_vessel_state(*this);
-		fileout->save_final_cells_txt(*this);
+//SL: FECell dev. Remove later.
+//		fileout->save_final_cells_txt(*this);
 		fileout->save_feangio_stats(*this);
 		ResetTimers();
 		if (!m_fem->GetGlobalConstant("no_io"))
@@ -1679,7 +1695,9 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 	}
 	else if (nwhen == CB_SOLVED)
 	{
+#ifndef NDEBUG
 		std::cout << "Solved Time" << endl;
+#endif
 		// do the final output
 		if (!m_fem->GetGlobalConstant("no_io"))
 		{
@@ -1707,6 +1725,7 @@ void FEAngio::Output()
 {	
 	//write out the timeline of branchpoints
 	fileout->save_timeline(*this);
+	//SL: old winfiber outfile. Probably can be removed.
 	//fileout->save_winfiber(*this);
 	fileout->save_final_vessel_csv(*this);
 }

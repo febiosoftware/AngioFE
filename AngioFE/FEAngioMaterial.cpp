@@ -540,10 +540,11 @@ void FEAngioMaterial::
 	// if the vessel is going to stay in this element:
 	if ((possible_grow_length > grow_len) && proj_success)
 	{
-#ifndef NDEBUG
-#pragma omp critical
-		std::cout << "case 0: growth within element" << endl;
-#endif
+//#ifndef NDEBUG
+// 		SL: debugging for FECell dev. Remove eventually.
+//#pragma omp critical
+//		std::cout << "case 0: growth within element" << endl;
+//#endif
 		//determine the new natural coordinate position in this element. Not sure that this calculation needs to be this convoluted.
 		vec3d real_natc 
 			= local_pos 
@@ -619,10 +620,11 @@ void FEAngioMaterial::
 	else if (proj_success)
 	{
 		// first grow the segment onto the face
-#ifndef NDEBUG
-#pragma omp critical
-		std::cout << "case 1: face encountered" << endl;
-#endif
+//#ifndef NDEBUG
+//#pragma omp critical
+// 		SL: debugging for FECell dev. Remove eventually.
+//		std::cout << "case 1: face encountered" << endl;
+//#endif
 		//! the segment only grows for a portion of dt. This portion is the 
 		//! amount needed to hit the face.
 		vec3d next_natc = local_pos + (nat_dir * factor);
@@ -715,10 +717,11 @@ void FEAngioMaterial::
 									next, dt, buffer_index);
 			if (index != -1)
 			{
-#ifndef NDEBUG
-#pragma omp critical
-				std::cout << "case 1a: adjacent element found" << endl;
-#endif
+//#ifndef NDEBUG
+//#pragma omp critical
+// 		SL: debugging for FECell dev. Remove eventually.
+//				std::cout << "case 1a: adjacent element found" << endl;
+//#endif
 				vec3d real_natc_a = possible_local_coordinates[index];
 				next->angio_element = possible_locations[index];
 				AngioElement* ang_elem = next->angio_element;
@@ -749,10 +752,11 @@ void FEAngioMaterial::
 		// If the tip is near a geometric boundary:
 		else
 		{
-#ifndef NDEBUG
-#pragma omp critical
-			std::cout << "case 1b: no adjacent element" << endl;
-#endif
+//#ifndef NDEBUG
+//#pragma omp critical
+// 		SL: debugging for FECell dev. Remove eventually.
+//			std::cout << "case 1b: no adjacent element" << endl;
+//#endif
 			AngioElement* ang_elem = next->angio_element;
 			//! Todo: In future need to adapt this to work for any element type
 			vec3d upper_bounds = vec3d(1.0, 1.0, 1.0);
@@ -805,10 +809,11 @@ void FEAngioMaterial::
 
 	else 
 	{
-#ifndef NDEBUG
-#pragma omp critical
-		std::cout << "case 2: growth into next element, projected failure" << endl;
-#endif
+//#ifndef NDEBUG
+//#pragma omp critical
+// 		SL: debugging for FECell dev. Remove eventually.
+//		std::cout << "case 2: growth into next element, projected failure" << endl;
+//#endif
 		angio_element->final_active_tips.push_back(active_tip);
 		angio_element->next_tips.at(angio_element).push_back(active_tip);
 	}
@@ -892,10 +897,11 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip* active_tip,
 	// if the vessel is going to stay in this element (or hit the face) and a face to grow to was found:
 	if ((possible_grow_length >= grow_len) && proj_success)
 	{
-#ifndef NDEBUG
-#pragma omp critical
-		std::cout << "case 0: growth within element" << endl;
-#endif
+//#ifndef NDEBUG
+//#pragma omp critical
+// 		SL: debugging for FECell dev. Remove eventually.
+//		std::cout << "case 0: growth within element" << endl;
+//#endif
 		//determine the new natural coordinate position in this element. Not sure that this calculation needs to be this convoluted.
 		vec3d real_natc 
 			= local_pos 
@@ -939,10 +945,11 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip* active_tip,
 	else if (proj_success)
 	{
 		// first grow the segment onto the face
-#ifndef NDEBUG
-#pragma omp critical
-		std::cout << "case 1: face encountered" << endl;
-#endif
+//#ifndef NDEBUG
+//#pragma omp critical
+// 		SL: debugging for FECell dev. Remove eventually.
+//		std::cout << "case 1: face encountered" << endl;
+//#endif
 		//the segment only grows for a portion of dt. This portion is the amount needed to hit the face.
 		vec3d next_natc = local_pos + (nat_dir * factor);
 		Tip* next = new Tip(active_tip, mesh);
@@ -1013,10 +1020,11 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip* active_tip,
 								next, dt, buffer_index);
 			if (index != -1)
 			{
-#ifndef NDEBUG
-#pragma omp critical
-				std::cout << "case 1a: adjacent element found" << endl;
-#endif
+//#ifndef NDEBUG
+//#pragma omp critical
+// 		SL: debugging for FECell dev. Remove eventually.
+//				std::cout << "case 1a: adjacent element found" << endl;
+//#endif
 				vec3d real_natc_a = possible_local_coordinates[index];
 				next->angio_element = possible_locations[index];
 				AngioElement* ang_elem = next->angio_element;
@@ -1047,10 +1055,11 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip* active_tip,
 		// currently this just keeps the tip active.
 		else
 		{
-#ifndef NDEBUG
-#pragma omp critical
-			std::cout << "case 1b: no adjacent element" << endl;
-#endif
+//#ifndef NDEBUG
+//#pragma omp critical
+// 		SL: debugging for FECell dev. Remove eventually.
+//			std::cout << "case 1b: no adjacent element" << endl;
+//#endif
 			//! Find which face we are encountering
 			//! Todo: In future need to adapt this to work for any element type
 			vec3d upper_bounds = vec3d(1.0, 1.0, 1.0);
@@ -1103,10 +1112,11 @@ void FEAngioMaterial::ProtoGrowthInElement(double end_time, Tip* active_tip,
 	//! right on a vertex
 	else 
 	{
-#ifndef NDEBUG
-#pragma omp critical
-		std::cout << "case 2: growth into next element, projected failure" << endl;
-#endif
+//#ifndef NDEBUG
+//#pragma omp critical
+// 		SL: debugging for FECell dev. Remove eventually.
+//		std::cout << "case 2: growth into next element, projected failure" << endl;
+//#endif
 
 		angio_element->final_active_tips.push_back(active_tip);
 		angio_element->next_tips.at(angio_element).push_back(active_tip);
@@ -1122,10 +1132,11 @@ int FEAngioMaterial::
 					std::vector<vec3d>& possible_local_coordinates, 
 					Tip* tip, double dt, int buffer)
 {
-#ifndef NDEBUG
-#pragma omp critical
-	std::cout << "Selecting new tip" << endl;
-#endif
+//#ifndef NDEBUG
+// 		SL: debugging for FECell dev. Remove eventually.
+//#pragma omp critical
+//	std::cout << "Selecting new tip" << endl;
+//#endif
 	auto mesh = m_pangio->GetMesh();
 	double min_scale_factor = m_pangio->min_scale_factor;
 
