@@ -54,10 +54,11 @@ vec3d FECell::GetRefPosition() const
 void FECell::PrintCellInfo(std::string title) const
 {
 #ifndef NDEBUG
-	auto mesh = angio_element->_angio_mat->m_pangio->GetMesh();
-	assert(mesh);
-	std::cout << title << std::endl;
-	PrintCellInfo(mesh);
+	//SL: commenting out for now since this will be moved to a separate project.
+	//auto mesh = angio_element->_angio_mat->m_pangio->GetMesh();
+	//assert(mesh);
+	//std::cout << title << std::endl;
+	//PrintCellInfo(mesh);
 #endif
 }
 
