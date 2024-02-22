@@ -52,9 +52,6 @@ public:
 	//! updates the weighting between the matrix and vessel submaterials
 	void AdjustMatrixVesselWeights(FEMesh* mesh);
 
-	//! updates the weighting between the matrix and vessel submaterials
-	bool CheckSpecies(FEMesh* mesh);
-
 #ifdef WIN32
 	//! generate a rotation matrix in which all rotations are equally probable
 	mat3d unifromRandomRotationMatrix(angiofe_random_engine& rengine) const;
@@ -89,23 +86,18 @@ public:
 	friend class FEPlotRefSegmentLength;
 	friend class FEPlotPrimaryVesselDirection;
 	//the following friendships are bad and need removed eventually
-	//TODO: remove the freindship, creation in the old way requires this
-	//or consider making the node and element data public
+	//TODO: remove the freindship, creation in the old way requires this or consider making the node and element data public
 	friend class FEAngioMaterial;
 	friend class NodeDataInterpolationManager;
 	friend class NodeDataInterpolation;
 
 	//! Natural coordinate bounds based on the element type.
+	//! SL: Can probably vectorize
 	static double NaturalCoordinatesUpperBound_r(int et);
-	//! Natural coordinates bounds
 	static double NaturalCoordinatesUpperBound_s(int et);
-	//! Natural coordinates bounds
 	static double NaturalCoordinatesUpperBound_t(int et);
-	//! Natural coordinates bounds
 	static double NaturalCoordinatesLowerBound_r(int et);
-	//! Natural coordinates bounds
 	static double NaturalCoordinatesLowerBound_s(int et);
-	//! Natural coordinates bounds
 	static double NaturalCoordinatesLowerBound_t(int et);
 
 	//! clamp the vector to the natural coordinate system
@@ -214,17 +206,13 @@ public:	// parameters read directly from file
 	//! nodes to elements
 	std::unordered_map<FENode*, std::vector<FESolidElement*>> nodes_to_elements;
 	//! all node adjacent elements
-	std::unordered_map<AngioElement*, std::vector<AngioElement*>> angio_elements_to_all_adjacent_elements;//adjacent is shares a node with the element
+	std::unordered_map<AngioElement*, std::vector<AngioElement*>> angio_elements_to_all_adjacent_elements; //adjacent is shares a node with the element
 	//! elements by material
 	std::unordered_map < FEAngioMaterial*, std::vector<AngioElement*>> elements_by_material;
 
 	//! increment fragment number
 	int AddFragment();
 
-	//! increment cell number
-	int AddCell();
-
-	std::unordered_map<int, FECell*> cells;
 private:
 	//both nodes and elements id's go from 1 to n+1 for n items
 	//first element is padding so the id can be used to lookup the data for that node
@@ -249,14 +237,12 @@ private:
 
 	const double eps = 0.001;
 	static int fragment_id_counter;
-	static int cell_id_counter;
 	double min_scale_factor = 0.01;
-	double bounds_tolerance = 1e-2;
+	double bounds_tolerance = 1.0e-2;
 	int growth_substeps = 3;
 	double max_angio_dt = 0.25;
 	double min_angio_dt = -1.0;
 	double min_segment_length = 5.0;
 	int auto_stepper_key = -1;
-	int bounce = 1;
-	// determines whether vessels bounce or grow along a wall. Bounce condition is a symmetry condition.
+	int bounce = 1;	// determines whether vessels bounce or grow along a wall. Bounce condition is a symmetry condition.
 };

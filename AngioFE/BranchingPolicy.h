@@ -14,8 +14,7 @@ public:
 	virtual ~BranchInfo(){}
 };
 
-//! Implements a class that will return the zentih angle (angle between parent 
-//! and new segments)
+//! Implements a class that will return the zentih angle (angle between parent and new segments)
 class ZenithAngle : public FEMaterialProperty
 {
 	FECORE_BASE_CLASS(ZenithAngle)
@@ -28,8 +27,7 @@ public:
 	virtual void TimeStepUpdate(double current_time) = 0;
 };
 
-//! Implements a class that will return the azimuth angle (rotation about the 
-//! parent segment)
+//! Implements a class that will return the azimuth angle (rotation about the parent segment)
 class AzimuthAngle :public FEMaterialProperty
 {
 	FECORE_BASE_CLASS(AzimuthAngle)
@@ -42,8 +40,7 @@ public:
 	virtual void TimeStepUpdate(double current_time) = 0;
 };
 
-//! Implements a probability distribution to determine the zenith angle (angle 
-//! between parent and new segments)
+//! Implements a probability distribution to determine the zenith angle (angle between parent and new segments)
 class ZenithAngleProbabilityDistribution : public ZenithAngle
 {
 public:
@@ -53,8 +50,7 @@ public:
 	double GetZenithAngle(vec3d local_pos, vec3d parent_direction, AngioElement* angio_element) override;
 	//! performs initialization
 	bool Init() override { return angle->Init(); }
-	//! Updates the zenith angle to the given time step (may ajust probabilities 
-	//! based on time)
+	//! Updates the zenith angle to the given time step (may ajust probabilities based on time)
 	void TimeStepUpdate(double current_time) override 
 	{ 
 		angle->TimeStepUpdate(current_time); 

@@ -21,6 +21,7 @@ inline vec3d mix(vec3d & x, vec3d & y, double a)
 {
 	return x * (1.0 - a) + y * a;
 }
+
 //consider making this a template or using GLM
 inline double mix(double x, double y, double a)
 {
@@ -71,11 +72,11 @@ inline vec3d mix3d_t(vec3d & x, vec3d & y, double t)
 	rot_mat[0][1] = nx * ny*(1 - ct) - nz * st;	
 	rot_mat[0][2] = nx * nz*(1 - ct) + ny * st;
 	rot_mat[1][0] = ny * nx*(1 - ct) + nz * st;	
-	rot_mat[1][1] = ct + pow(ny, 2)*(1 - ct);	
+	rot_mat[1][1] = ct + pow(ny, 2) * (1 - ct);
 	rot_mat[1][2] = ny * nz*(1 - ct) - nx * st;
 	rot_mat[2][0] = nz * nx*(1 - ct) - ny * st;
 	rot_mat[2][1] = nz * ny*(1 - ct) + nx * st;
-	rot_mat[2][2] = ct + pow(nz, 2)*(1 - ct);
+	rot_mat[2][2] = ct + pow(nz, 2) * (1 - ct);
 
 	return rot_mat * x;
 }
@@ -95,11 +96,11 @@ inline mat3d mix3d_t_r(vec3d & x, vec3d & y, double t)
 	rot_mat[0][1] = nx * ny*(1 - ct) - nz * st;	
 	rot_mat[0][2] = nx * nz*(1 - ct) + ny * st;
 	rot_mat[1][0] = ny * nx*(1 - ct) + nz * st;	
-	rot_mat[1][1] = ct + pow(ny, 2)*(1 - ct);	
+	rot_mat[1][1] = ct + pow(ny, 2) * (1 - ct);
 	rot_mat[1][2] = ny * nz*(1 - ct) - nx * st;
 	rot_mat[2][0] = nz * nx*(1 - ct) - ny * st;	
 	rot_mat[2][1] = nz * ny*(1 - ct) + nx * st;	
-	rot_mat[2][2] = ct + pow(nz, 2)*(1 - ct);
+	rot_mat[2][2] = ct + pow(nz, 2) * (1 - ct);
 
 	return rot_mat;
 }
@@ -110,17 +111,11 @@ static size_t
 {
 	int mid = lo + (high - lo) / 2;
 	if (val < begin[mid]) 
-	{
 		return findElement(val, lo, mid - 1, begin, end);
-	} 
 	else if (val > end[mid]) 
-	{
 		return findElement(val, mid + 1, high, begin, end);
-	} 
 	else 
-	{
 		return mid;
-	}
 }
 
 inline bool sortinrev(const pair<double, int> &a, const pair<double, int> &b)

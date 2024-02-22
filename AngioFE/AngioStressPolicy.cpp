@@ -82,13 +82,10 @@ void AngioStressPolicy::UpdateToLoadCurve(const char* param_name, double& value)
 	FELoadCurve* mlc = dynamic_cast<FELoadCurve*>(model->GetLoadController(m));
 	assert(mlc);
 	if (mlc) 
-	{
 		value = mlc->GetValue(model->GetTime().currentTime);
-	}
 }
 
-double AngioStressPolicy::
-	GetDensScale(AngioElement* angio_element, Tip* tip, FEMesh* mesh, int is_ref) 
+double AngioStressPolicy::GetDensScale(AngioElement* angio_element, Tip* tip, FEMesh* mesh, int is_ref)
 {
 	std::vector<double> density_at_integration_points;
 	auto se = angio_element->_elem;
@@ -98,33 +95,22 @@ double AngioStressPolicy::
 	for (int i = 0; i < nint; i++)
 	{
 		FEMaterialPoint* gauss_point = se->GetMaterialPoint(i);
-		FEAngioMaterialPoint* angio_mp = 
-			FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
-		FEElasticMaterialPoint* elastic_mp = 
-			gauss_point->ExtractData<FEElasticMaterialPoint>();
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
+		FEElasticMaterialPoint* elastic_mp = gauss_point->ExtractData<FEElasticMaterialPoint>();
 		// determines whether to use the referential or current density
 		double m_J = pow(elastic_mp->m_J, is_ref);
-		density_at_integration_points.
-			push_back(angio_mp->ref_ecm_density * (1.0 / m_J));
+		density_at_integration_points.push_back(angio_mp->ref_ecm_density * (1.0 / m_J));
 	}
+
 	//Get interpolation method
 	FEModel* m_pfem = this->GetFEModel();
 	PerElementVI interp(m_pfem);
-	double density_at_point = 
-		interp.Interpolate(	se, density_at_integration_points, 
-							tip->GetLocalPosition(), mesh);
-	double density_scale 
-		= m_density_scale_factor.x 
-		+ (m_density_scale_factor.y 
-			* exp(-m_density_scale_factor.z * density_at_point));
+	double density_at_point = interp.Interpolate(se, density_at_integration_points, tip->GetLocalPosition(), mesh);
+	double density_scale = m_density_scale_factor.x + (m_density_scale_factor.y * exp(-m_density_scale_factor.z * density_at_point));
 	if (density_scale < 0) 
-	{ 
 		return 0; 
-	}
 	else 
-	{ 
 		return density_scale; 
-	}
 }
 
 bool SigmoidAngioStressPolicy::Init()
@@ -138,16 +124,13 @@ void SigmoidAngioStressPolicy::UpdateScale()
 	scale = y0 + a / (1.0 + exp(-(time - x0) / b));
 }
 
-void SigmoidAngioStressPolicy::
-	AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
+void SigmoidAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
 {
 	std::vector<Tip*> final_active_tips;
 	auto se = angio_element->_elem;
 	// Get active tips within a radius
 	double total_sprout_falloff = sprout_range * sprout_radius_multiplier;
-	FEAngio::
-		GetActiveFinalTipsInRadius(	angio_element, total_sprout_falloff, pangio, 
-									final_active_tips);
+	FEAngio::GetActiveFinalTipsInRadius(angio_element, total_sprout_falloff, pangio, final_active_tips);
 	// for each integration point
 	int nint = se->GaussPoints();
 	for (int i = 0; i < nint; i++)
@@ -155,8 +138,7 @@ void SigmoidAngioStressPolicy::
 		// get the material point of the gauss point
 		FEMaterialPoint* mp = se->GetMaterialPoint(i);
 		// get eh angio material point at the gauss point
-		FEAngioMaterialPoint* angio_mp = 
-			FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
 		// get the elastic material point at the gauss point
 		FEElasticMaterialPoint* emp = mp->ExtractData<FEElasticMaterialPoint>();
 		// assert that the material point and gauss point are in the same point
@@ -170,24 +152,18 @@ void SigmoidAngioStressPolicy::
 		for (int j = 0; j < ntips; j++)
 		{
 			Tip* tip = final_active_tips[j];
-			// get the tip position in the mesh
-			//consider moving this out and calling it less
+			// get the tip position in the mesh 
+			// consider moving this out and calling it less
 			vec3d x = tip->GetPosition(mesh); 
 			// determine vector from tip to integration point
 			vec3d r = y - x;
 			double l = r.unit();
-			// get the angle between the tip and the sprout direction
-			//consider moving this out and calling it less
+			// get the angle between the tip and the sprout direction 
+			// consider moving this out and calling it less
 			double theta = acos(tip->GetDirection(mesh) * r);
 
 			//sprout s mag replaced with giving correct coeficients for scale
-			double p
-				= scale * sprout_mag
-				* pow(cos(theta / 2.0), fan_exponential)
-				* exp(-l / sprout_range);
-			//std::cout << "sprout mag is " << sprout_mag << endl;
-			//std::cout << "p is " << p << endl;
-			// make a dyad times the pressure
+			double p = scale * sprout_mag * pow(cos(theta / 2.0), fan_exponential) * exp(-l / sprout_range);
 			angio_mp->m_as += dyad(r) * p;
 		}
 	}
@@ -211,9 +187,7 @@ void SigmoidDensAngioStressPolicy::
 	auto se = angio_element->_elem;
 	// Get active tips within a radius
 	double total_sprout_falloff = sprout_range * sprout_radius_multiplier;
-	FEAngio::
-		GetActiveFinalTipsInRadius(	angio_element, total_sprout_falloff, pangio, 
-									final_active_tips);
+	FEAngio::GetActiveFinalTipsInRadius(angio_element, total_sprout_falloff, pangio, final_active_tips);
 	// for each integration point
 	int nint = se->GaussPoints();
 	for (int i = 0; i < nint; i++)
@@ -221,8 +195,7 @@ void SigmoidDensAngioStressPolicy::
 		// get the material point of the gauss point
 		FEMaterialPoint* mp = se->GetMaterialPoint(i);
 		// get eh angio material point at the gauss point
-		FEAngioMaterialPoint* angio_mp = 
-			FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
 		// get the elastic material point at the gauss point
 		FEElasticMaterialPoint* emp = mp->ExtractData<FEElasticMaterialPoint>();
 		// get the density scale for the integration point
@@ -249,11 +222,7 @@ void SigmoidDensAngioStressPolicy::
 			//consider moving this out and calling it less
 			double theta = acos(tip->GetDirection(mesh) * r);
 			//sprout s mag replaced with giving correct coeficients for scale
-			double p 
-				= den_scale * scale * sprout_mag 
-				* pow(cos(theta / 2.0), fan_exponential) 
-				* exp(-l / sprout_range);
-			// make a dyad times the pressure
+			double p = den_scale * scale * sprout_mag * pow(cos(theta / 2.0), fan_exponential) * exp(-l / sprout_range);
 			angio_mp->m_as += dyad(r) * p;
 		}
 	}
@@ -269,16 +238,13 @@ void LoadCurveVelAngioStressPolicy::UpdateScale()
 	//! Implementation blank
 }
 
-void LoadCurveVelAngioStressPolicy::
-	AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
+void LoadCurveVelAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
 {
 	std::vector<Tip*> final_active_tips;
 	auto se = angio_element->_elem;
 	// get all tips within a radius
 	double total_sprout_falloff = sprout_range * sprout_radius_multiplier;
-	FEAngio::
-		GetActiveFinalTipsInRadius(	angio_element, total_sprout_falloff, pangio, 
-									final_active_tips);
+	FEAngio::GetActiveFinalTipsInRadius(angio_element, total_sprout_falloff, pangio, final_active_tips);
 	// for each gauss point in the element
 	int nint = se->GaussPoints();
 	for (int i = 0; i < nint; i++)
@@ -286,8 +252,7 @@ void LoadCurveVelAngioStressPolicy::
 		// get the material point
 		FEMaterialPoint* mp = se->GetMaterialPoint(i);
 		// get the angio material point
-		FEAngioMaterialPoint* angio_mp = 
-			FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
 		// get the elastic material point
 		FEElasticMaterialPoint* emp = mp->ExtractData<FEElasticMaterialPoint>();
 		assert(mp && angio_mp);
@@ -310,12 +275,8 @@ void LoadCurveVelAngioStressPolicy::
 			double theta = acos(tip->GetDirection(mesh) * r);
 
 			//sprout s mag replaced with giving correct coeficients for scale
-			//! this growth velocity may need to be a scaling term that is a 
-			//! function of velocity
-			double p 
-				= tip->growth_velocity * sprout_mag 
-				* pow(cos(theta / 2.0), fan_exponential) 
-				* exp(-l / sprout_range);
+			//! this growth velocity may need to be a scaling term that is a function of velocity
+			double p = tip->growth_velocity * sprout_mag * pow(cos(theta / 2.0), fan_exponential) * exp(-l / sprout_range);
 			angio_mp->m_as += dyad(r) * p;
 		}
 	}
@@ -331,22 +292,18 @@ void LoadCurveAngioStressPolicy::UpdateScale()
 	//! Implementation blank
 }
 
-void LoadCurveAngioStressPolicy::
-	AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
+void LoadCurveAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
 {
 	std::vector<Tip*> final_active_tips;
 	auto se = angio_element->_elem;
 	double total_sprout_falloff = sprout_range * sprout_radius_multiplier;
-	FEAngio::
-		GetActiveFinalTipsInRadius(	angio_element, total_sprout_falloff, pangio, 
-									final_active_tips);
+	FEAngio::GetActiveFinalTipsInRadius(angio_element, total_sprout_falloff, pangio, final_active_tips);
 
 	int nint = se->GaussPoints();
 	for (int i = 0; i < nint; i++)
 	{
 		FEMaterialPoint* mp = se->GetMaterialPoint(i);
-		FEAngioMaterialPoint* angio_mp = 
-			FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
 		FEElasticMaterialPoint* emp = mp->ExtractData<FEElasticMaterialPoint>();
 		assert(mp && angio_mp);
 		angio_mp->m_as.zero();
@@ -363,10 +320,7 @@ void LoadCurveAngioStressPolicy::
 			double theta = acos(tip->GetDirection(mesh) * r);
 
 			//sprout s mag replaced with giving correct coeficients for scale
-			double p 
-				= sprout_mag 
-				* pow(cos(theta / 2.0), fan_exponential) 
-				* exp(-l / sprout_range);
+			double p = sprout_mag * pow(cos(theta / 2.0), fan_exponential) * exp(-l / sprout_range);
 			angio_mp->m_as += dyad(r) * p;
 		}
 	}
@@ -382,22 +336,18 @@ void LoadCurveDenAngioStressPolicy::UpdateScale()
 	//! Implementation blank
 }
 
-void LoadCurveDenAngioStressPolicy::
-	AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
+void LoadCurveDenAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
 {
 	std::vector<Tip*> final_active_tips;
 	auto se = angio_element->_elem;
 	double total_sprout_falloff = sprout_range * sprout_radius_multiplier;
-	FEAngio::
-		GetActiveFinalTipsInRadius(	angio_element, total_sprout_falloff, pangio, 
-									final_active_tips);
+	FEAngio::GetActiveFinalTipsInRadius(angio_element, total_sprout_falloff, pangio, final_active_tips);
 
 	int nint = se->GaussPoints();
 	for (int i = 0; i < nint; i++)
 	{
 		FEMaterialPoint* mp = se->GetMaterialPoint(i);
-		FEAngioMaterialPoint* angio_mp = 
-			FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
 		FEElasticMaterialPoint* emp = mp->ExtractData<FEElasticMaterialPoint>();
 		assert(mp && angio_mp);
 		angio_mp->m_as.zero();
@@ -414,10 +364,8 @@ void LoadCurveDenAngioStressPolicy::
 			double theta = acos(tip->GetDirection(mesh) * r);
 
 			//sprout s mag replaced with giving correct coeficients for scale
-			double density_scale = 
-				this->GetDensScale(angio_element, tip, mesh, 1);
-			double p = density_scale * sprout_mag 
-				* pow(cos(theta / 2.0), fan_exponential) * exp(-l / sprout_range);
+			double density_scale = this->GetDensScale(angio_element, tip, mesh, 1);
+			double p = density_scale * sprout_mag * pow(cos(theta / 2.0), fan_exponential) * exp(-l / sprout_range);
 			angio_mp->m_as += dyad(r) * p;
 		}
 	}
@@ -433,27 +381,24 @@ void LoadCurveRefDenAngioStressPolicy::UpdateScale()
 	//! Implementation blank
 }
 
-void LoadCurveRefDenAngioStressPolicy::
-	AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
+void LoadCurveRefDenAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
 {
 	std::vector<Tip*> final_active_tips;
 	auto se = angio_element->_elem;
 	double total_sprout_falloff = sprout_range * sprout_radius_multiplier;
-	FEAngio::
-		GetActiveFinalTipsInRadius(	angio_element, total_sprout_falloff, pangio, 
-									final_active_tips);
+	FEAngio::GetActiveFinalTipsInRadius(angio_element, total_sprout_falloff, pangio, final_active_tips);
 
 	int nint = se->GaussPoints();
 	for (int i = 0; i < nint; i++)
 	{
 		FEMaterialPoint* mp = se->GetMaterialPoint(i);
-		FEAngioMaterialPoint* angio_mp = 
-			FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
 		FEElasticMaterialPoint* emp = mp->ExtractData<FEElasticMaterialPoint>();
 		assert(mp && angio_mp);
 		angio_mp->m_as.zero();
 		vec3d y = mp->m_rt;
 		int ntips = final_active_tips.size();
+
 		for (int j = 0; j < ntips; j++)
 		{
 			Tip* tip = final_active_tips[j];
@@ -465,12 +410,8 @@ void LoadCurveRefDenAngioStressPolicy::
 			double theta = acos(tip->GetDirection(mesh) * r);
 
 			//sprout s mag replaced with giving correct coeficients for scale
-			double density_scale = 
-				this->GetDensScale(angio_element, tip, mesh, 0);
-			double p 
-				= density_scale * sprout_mag 
-				* pow(cos(theta / 2.0), fan_exponential) 
-				* exp(-l / sprout_range);
+			double density_scale = this->GetDensScale(angio_element, tip, mesh, 0);
+			double p = density_scale * sprout_mag * pow(cos(theta / 2.0), fan_exponential) * exp(-l / sprout_range);
 			angio_mp->m_as += dyad(r) * p;
 		}
 	}
@@ -492,15 +433,12 @@ void GrownSegmentsAngioStressPolicy::
 	std::vector<Tip*> grown_tips;
 	auto se = angio_element->_elem;
 	double total_sprout_falloff = sprout_range * sprout_radius_multiplier;
-	FEAngio::
-		GetGrownTipsInRadius(	angio_element, total_sprout_falloff, pangio, 
-								grown_tips);
+	FEAngio::GetGrownTipsInRadius(angio_element, total_sprout_falloff, pangio, grown_tips);
 	int nint = se->GaussPoints();
 	for (int i = 0; i < nint; i++)
 	{
 		FEMaterialPoint* mp = se->GetMaterialPoint(i);
-		FEAngioMaterialPoint* angio_mp = 
-			FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
 		FEElasticMaterialPoint* emp = mp->ExtractData<FEElasticMaterialPoint>();
 		assert(mp && angio_mp);
 		angio_mp->m_as.zero();
@@ -514,10 +452,7 @@ void GrownSegmentsAngioStressPolicy::
 			double l = r.unit();
 			double theta = acos(tip->GetDirection(mesh) * r);
 			//consider moving this out and calling it less
-			double p 
-				= sprout_mag 
-				* pow(cos(theta / 2.0), fan_exponential) 
-				* exp(-l / sprout_range);
+			double p = sprout_mag * pow(cos(theta / 2.0), fan_exponential) * exp(-l / sprout_range);
 			angio_mp->m_as += dyad(r) * p;
 		}
 	}
@@ -534,22 +469,18 @@ void GrownSegmentsVelAngioStressPolicy::UpdateScale()
 	//! Implementation blank
 }
 
-void GrownSegmentsVelAngioStressPolicy::
-	AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
+void GrownSegmentsVelAngioStressPolicy::AngioStress(AngioElement* angio_element, FEAngio* pangio, FEMesh* mesh)
 {
 	std::vector<Tip*> grown_tips;
 	auto se = angio_element->_elem;
 	double total_sprout_falloff = sprout_range * sprout_radius_multiplier;
-	FEAngio::
-		GetGrownTipsInRadius(	angio_element, total_sprout_falloff, pangio, 
-								grown_tips);
+	FEAngio::GetGrownTipsInRadius(angio_element, total_sprout_falloff, pangio, grown_tips);
 	
 	int nint = se->GaussPoints();
 	for (int i = 0; i < nint; i++)
 	{
 		FEMaterialPoint* mp = se->GetMaterialPoint(i);
-		FEAngioMaterialPoint* angio_mp = 
-			FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(mp);
 		FEElasticMaterialPoint* emp = mp->ExtractData<FEElasticMaterialPoint>();
 		assert(mp && angio_mp);
 		angio_mp->m_as.zero();
@@ -563,10 +494,7 @@ void GrownSegmentsVelAngioStressPolicy::
 			double l = r.unit();
 			//consider moving this out and calling it less
 			double theta = acos(tip->GetDirection(mesh) * r);
-			double p 
-				= tip->growth_velocity * sprout_mag 
-				* pow(cos(theta / 2.0), fan_exponential) 
-				* exp(-l / sprout_range);
+			double p = tip->growth_velocity * sprout_mag * pow(cos(theta / 2.0), fan_exponential) * exp(-l / sprout_range);
 			angio_mp->m_as += dyad(r) * p;
 		}
 	}

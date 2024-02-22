@@ -24,7 +24,7 @@ public:
 	//! returns the length of a segment in the reference configuration of the mesh
 	double RefLength(FEMesh * mesh) const;//calculate length in reference frame
 	//! Length since last branch
-	double LengthSinceBranch = 0;
+	double LengthSinceBranch = 0.0;
 	//! front tip
 	Tip * front = nullptr;
 	//! back tip
@@ -35,7 +35,7 @@ public:
 	bool is_branch_base = false;
 	//! Used by the brancher to determine if branches can grow from this segment
 	bool processed = false;
-	double time_emerged = 0;
+	double time_emerged = 0.0;
 private:
 	
 };

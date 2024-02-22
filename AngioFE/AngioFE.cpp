@@ -63,7 +63,6 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS(ByElementSetFragmentSeederBiDirectional, "by_element_set_fragment_seeder_bidirectional");
 	REGISTER_FECORE_CLASS(ByVolumeFragmentSeeder, "by_volume_fragment_seeder");
 	REGISTER_FECORE_CLASS(ByVolumeFragmentSeederBiDirectional, "by_volume_fragment_seeder_bidirectional");
-	REGISTER_FECORE_CLASS(SingleCellSeeder, "single_cell_seeder");
 
 	//InitalModifiers any modifiers for angio_elements this will be run only once before much else happens
 	REGISTER_FECORE_CLASS(InitialModifierManager, "im_manager");
@@ -121,24 +120,6 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS(PSCPDDContributionMix, "psc_pdd_contribution_mix");
 	REGISTER_FECORE_CLASS(DensFAContributionMix, "density_FA_contribution_mix");
 
-	// Species Manager Classes
-	REGISTER_FECORE_CLASS(CellSpeciesManager, "species_manager");
-	REGISTER_FECORE_CLASS(CellSBM, "SBM");
-	REGISTER_FECORE_CLASS(CellSolute, "Solute");
-	REGISTER_FECORE_CLASS(CellReactionManager, "cell_reaction_manager");
-	REGISTER_FECORE_CLASS(FECellReaction, "cell_reaction");
-	REGISTER_FECORE_CLASS(FECellReactionRateConst, "cell constant reaction rate");
-	REGISTER_FECORE_CLASS(FECellMassActionForward, "cell mass-action-forward");
-	REGISTER_FECORE_CLASS(FECellMassActionForwardConstant, "cell mass-action-forward const");
-	REGISTER_FECORE_CLASS(FECellMassActionForwardEffective, "cell mass-action-forward-effective");
-	REGISTER_FECORE_CLASS(FECellMassActionReversible, "cell mass-action-reversible");
-	REGISTER_FECORE_CLASS(FECellMassActionReversibleEffective, "cell mass-action-reversible-effective");
-	REGISTER_FECORE_CLASS(FECellMichaelisMenten, "cell michaelis-menten");
-	REGISTER_FECORE_CLASS(FECellInternalization, "cell internalization");
-	REGISTER_FECORE_CLASS(FECellInternalizationConstant, "cell internalization constant");
-	REGISTER_FECORE_CLASS(FECellSecretion, "cell secretion");
-	REGISTER_FECORE_CLASS(FECellSecretionConstant, "cell secretion constant");
-
 	// Mix Methods
 	REGISTER_FECORE_CLASS(LinInterp, "LinInterp");
 	REGISTER_FECORE_CLASS(LinRot, "LinRot");
@@ -176,7 +157,6 @@ FECORE_EXPORT  void PluginInitialize(FECoreKernel& febio)
 	REGISTER_FECORE_CLASS(FEPlotAngioFiberDirection, "angio fiber direction");
 
 	REGISTER_FECORE_CLASS(FEPlotMatrixElastic_m_Q, "matrix elastic mQ");
-	//REGISTER_FECORE_CLASS_EXPLICIT(TipDepositionBC, FEBC_ID, "tip_deposition_bc");
 }
 
 FECORE_EXPORT  void GetPluginVersion(int & major, int & minor, int & patch)

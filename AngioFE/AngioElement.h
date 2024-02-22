@@ -16,7 +16,6 @@ class FEAngioMaterial;
 class Segment;
 class Tip;
 class BranchInfo;
-class FECell;
 
 // Base class
 class AngioElement
@@ -24,16 +23,13 @@ class AngioElement
 public:
 
 	//! constructor
-	AngioElement(	FESolidElement* elem, FEAngioMaterial* angio_mat, 
-					FEMaterial* mat, FEMesh* mesh) : _elem(elem), 
-					_angio_mat(angio_mat), _mat(mat){};
+	AngioElement(FESolidElement* elem, FEAngioMaterial* angio_mat, FEMaterial* mat, FEMesh* mesh) : _elem(elem), _angio_mat(angio_mat), _mat(mat) {};
 	
 	//! Functions
 	//! get the length of the segments within the element at a given time
 	double GetLengthAtTime(FEMesh* mesh, double time) const;
 	//! get the length of something curved
-	void GetNatLengths(double gr, double gs, double gt, 
-						vec3d& er, vec3d& es, vec3d& et) const;
+	void GetNatLengths(double gr, double gs, double gt, vec3d& er, vec3d& es, vec3d& et) const;
 	//! pointer to element  
 	FESolidElement* _elem = nullptr;
 	//! pointer to angio material
@@ -78,9 +74,6 @@ public:
 	std::vector<Tip*> current_tips;
 	//! to be used in stress calculations
 	std::vector<Tip*> final_active_tips;
-	//! to be used for I/O and looking at just the tip cells
-	//std::vector<FECell *> tip_cells;
-	std::unordered_map<int, FECell*> tip_cells;
 	//! pointer to any additional information for branching
 	BranchInfo* branch_info = nullptr;
 	//! segments containing branch points that have not been added

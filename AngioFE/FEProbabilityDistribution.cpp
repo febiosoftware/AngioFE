@@ -82,15 +82,11 @@ void FEProbabilityDistribution::SetLoadCurveToStep(const char * param)
 
 	FEModel * model = GetFEModel();
 	FELoadCurve* mlc = dynamic_cast<FELoadCurve*>(model->GetLoadController(m));
-	//assert(mlc);
 	if (mlc)
-	{
 		mlc->SetInterpolation(PointCurve::STEP);
-	}
 }
 
-bool FEProbabilityDistribution::
-		ChangeInParam(const char * param, double time, double & prev, double & new_p)
+bool FEProbabilityDistribution::ChangeInParam(const char * param, double time, double & prev, double & new_p)
 {
 	FEParam * m = FindParameter(ParamString(param));
 	assert(m);
@@ -102,9 +98,7 @@ bool FEProbabilityDistribution::
 	{
 		new_p = mlc->GetValue(time);
 		if (new_p != prev)
-		{
 			return true;
-		}
 	}
 	return false;
 }
@@ -129,7 +123,6 @@ vec3d FENormalDistribution::NextVec(angiofe_random_engine & re)
 bool FENormalDistribution::Init()
 {
 	nd = std::normal_distribution<double>(mean, stddev);
-
 	return true;
 }
 
@@ -167,13 +160,9 @@ bool FEUniformDistribution::Init()
 void FEUniformDistribution::TimeStepUpdate(double current_time)
 {
 	if (time_clamped)
-	{
 		rd = std::uniform_real_distribution<double>(a, b - current_time);
-	}
 	else
-	{
 		rd = std::uniform_real_distribution<double>(a, b);
-	}
 }
 
 //implemenations of FENormalDistribution
@@ -217,9 +206,7 @@ double FECauchyDistribution::NextValue(angiofe_random_engine & re)
 	{
 		double val = cd(re);
 		if (val > 0.0)
-		{
 			return val;
-		}
 	}
 	return std::numeric_limits<double>::quiet_NaN();
 }
@@ -238,6 +225,7 @@ bool FECauchyDistribution::Init()
 
 	return true;
 }
+
 void FECauchyDistribution::TimeStepUpdate(double current_time)
 {
 	cd = std::cauchy_distribution<double>(a, b);
@@ -285,9 +273,7 @@ double FEWeibullDistribution::NextValue(angiofe_random_engine & re)
 	{
 		double val = wd(re);
 		if (val > 0.0)
-		{
 			return val;
-		}
 	}
 	return std::numeric_limits<double>::quiet_NaN();
 }
@@ -318,9 +304,7 @@ double FEGammaDistribution::NextValue(angiofe_random_engine & re)
 	{
 		double val = gd(re);
 		if (val > 0.0)
-		{
 			return val;
-		}
 	}
 	return std::numeric_limits<double>::quiet_NaN();
 }
@@ -372,8 +356,7 @@ vec3d FEEllipticalDistribution::NextVec(angiofe_random_engine & re)
 	bool found = false;
 	while (!found)
 	{
-		std::uniform_real_distribution<double> rd 
-			= std::uniform_real_distribution<double> (-1.0,1.0);
+		std::uniform_real_distribution<double> rd = std::uniform_real_distribution<double> (-1.0,1.0);
 		vec3d rv;
 		// get the random direction with magnitude up to the value of r^efd_exp
 		double w = std::max(
@@ -393,11 +376,11 @@ vec3d FEEllipticalDistribution::NextVec(angiofe_random_engine & re)
 		// Find the max value which is equal to r^efd_exp for the given orientation.
 		double r_max = sqrt(1.0 / ellipse_par_eq) * r;
 		// If the sampled point is within the power elliptical distribution
-		if (r < pow(r_max,efd_exp)) 
+		if (r < pow(r_max, efd_exp))
 		{
 			//! rotate the random direction from the global basis into the EFD 
 			//! basis and normalize
-			rv = Q*rv;
+			rv = Q * rv;
 			rv = rv.normalized();
 			found = true;
 			return rv;
@@ -432,13 +415,8 @@ vec3d FEFisherDistribution::NextVec(angiofe_random_engine & re)
 	double prior_val = 0.0;
 	// Create the cdf
 	for (int i = 0; i < resolution; i++) 
-	{
-		ODF.at(i)
-			= AREAL[i] 
-			* k 
-			/ (2.0 * PI * (exp(k) - exp(-k))) 
-			* exp(k * (mu * dir[0]));
-	}
+		ODF.at(i) = AREAL[i] * k / (2.0 * PI * (exp(k) - exp(-k))) * exp(k * (mu * dir[0]));
+
 	vec3d rand_pt;
 	double maxODF = *std::max_element(ODF.begin(), ODF.end());
 	bool found = false;
@@ -449,25 +427,18 @@ vec3d FEFisherDistribution::NextVec(angiofe_random_engine & re)
 		rand_pt.z = ud(re)*maxODF;
 		std::vector<double> dist;
 		for (int i = 0; i < resolution; i++) 
-		{
 			dist.emplace_back(rand_pt*dir[i]);
-		}
-		int rand_pt_indx = std::min_element(dist.begin(), 
-											dist.end()) - dist.begin();
-		double check = ODF[rand_pt_indx];
+
+		int rand_pt_indx = std::min_element(dist.begin(), dist.end()) - dist.begin(); double check = ODF[rand_pt_indx];
 	}
 
 	// get the cumulative sum
 	std::partial_sum(ODF.begin(), ODF.end(), cdf.begin());
 	// divide cumulative sum by sum
-	std::transform(	cdf.begin(), cdf.end(), cdf.begin(),	
-					std::bind(std::divides<double>(), 
-					std::placeholders::_1, 
-					cdf.at(resolution - 1)));
+	std::transform(cdf.begin(), cdf.end(), cdf.begin(), std::bind(std::divides<double>(), std::placeholders::_1, cdf.at(resolution - 1)));
 	double rn = ud(re);
 	// find the value closest to the random number and get the position
-	int fi = std::distance(	cdf.begin(), 
-							std::lower_bound(cdf.begin(), cdf.end(), rn));
+	int fi = std::distance(	cdf.begin(), std::lower_bound(cdf.begin(), cdf.end(), rn));
 	return dir[fi];
 
 }
@@ -501,8 +472,7 @@ double FEPrescribedDistribution::NextValue(angiofe_random_engine & re)
 	// get a random number
 	double rn = ud(re);
 	// find the rc_t value closest to the random number and get the position
-	int fi = std::distance(cdf.begin(), 
-							std::lower_bound(cdf.begin(), cdf.end(), rn));
+	int fi = std::distance(cdf.begin(), std::lower_bound(cdf.begin(), cdf.end(), rn));
 	return bins.at(fi);
 }
 
@@ -542,10 +512,7 @@ bool FEPrescribedDistribution::Init()
 	// get the cumulative sum
 	std::partial_sum(pdf.begin(), pdf.end(), cdf.begin());
 	// divide cumulative sum by sum
-	std::transform(	cdf.begin(), cdf.end(), cdf.begin(),
-					std::bind(	std::divides<double>(), 
-								std::placeholders::_1, 
-								cdf.at(n - 1)));
+	std::transform(cdf.begin(), cdf.end(), cdf.begin(), std::bind(std::divides<double>(), std::placeholders::_1, cdf.at(n - 1)));
 	return true;
 }
 
@@ -571,7 +538,7 @@ bool FERationalDistribution::Init()
 	bins.resize(n);
 	pdf.resize(n);
 	cdf; cdf.resize(n);
-	double bin_width = (max_initial_length - min_initial_length)/(n-1.0);
+	double bin_width = (max_initial_length - min_initial_length) / (n - 1.0);
 	rational_distribution.resize(points);
 	double prior_val = 0.0;
 	for (int i = 0; i < points; i++) 
@@ -588,10 +555,7 @@ bool FERationalDistribution::Init()
 	// get the cumulative sum
 	std::partial_sum(pdf.begin(), pdf.end(), cdf.begin());
 	// divide cumulative sum by sum
-	std::transform(cdf.begin(), cdf.end(), cdf.begin(),
-					std::bind(	std::divides<double>(), 
-								std::placeholders::_1, 
-								cdf.at(n - 1)));
+	std::transform(cdf.begin(), cdf.end(), cdf.begin(), std::bind(std::divides<double>(), std::placeholders::_1, cdf.at(n - 1)));
 	return true;
 }
 

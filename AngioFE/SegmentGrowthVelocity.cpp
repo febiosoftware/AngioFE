@@ -74,22 +74,17 @@ END_FECORE_CLASS()
 
 struct EigComp 
 {
-	bool operator()(const std::pair<double, vec3d>& x, std::pair<double, vec3d>& y) const {
+	bool operator()(const std::pair<double, vec3d>& x, std::pair<double, vec3d>& y) const 
+	{
 		if ((x.first) > (y.first))
-		{
 			return true;
-		}
 		else
-		{
 			return false;
-		}
 	}
 };
 
 // scales prev (should be just value of 1 if this is placed first) by the constant growth length over time
-double SegmentVelocityModifier::
-	ApplyModifiers(	double prev, vec3d natural_coords, AngioElement* angio_element, 
-					double time_shift, FEMesh* mesh)
+double SegmentVelocityModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
 	return prev *= segment_velocity_over_time;
 }
@@ -104,9 +99,7 @@ void SegmentVelocityModifier::UpdateScale()
 
 }
 
-double SegmentVelocityDensityScaleModifier::
-	ApplyModifiers(	double prev, vec3d natural_coords, AngioElement* angio_element, 
-					double time_shift, FEMesh* mesh)
+double SegmentVelocityDensityScaleModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
 	std::vector<double> density_at_integration_points;
 	auto se = angio_element->_elem;
@@ -114,18 +107,13 @@ double SegmentVelocityDensityScaleModifier::
 	for (int i = 0; i < se->GaussPoints(); i++)
 	{
 		FEMaterialPoint* gauss_point = se->GetMaterialPoint(i);
-		FEAngioMaterialPoint* angio_mp 
-			= FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
-		FEElasticMaterialPoint* elastic_mp 
-			= gauss_point->ExtractData<FEElasticMaterialPoint>();
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
+		FEElasticMaterialPoint* elastic_mp = gauss_point->ExtractData<FEElasticMaterialPoint>();
 		double local_dens = angio_mp->ref_ecm_density * (1.0 / elastic_mp->m_J);
-
 		density_at_integration_points.push_back(local_dens);
 	}
 
-	double density_at_point 
-		= interpolation_prop->Interpolate(	se, density_at_integration_points, 
-											natural_coords, mesh);
+	double density_at_point = interpolation_prop->Interpolate(se, density_at_integration_points, natural_coords, mesh);
 	double density_scale 
 		= m_density_scale_factor.x 
 		+ (m_density_scale_factor.y 
@@ -145,30 +133,23 @@ void SegmentVelocityDensityScaleModifier::UpdateScale()
 }
 
 // SL: Added so that growth is scaled only by the referential density
-double SegmentVelocityRefDensityScaleModifier::
-	ApplyModifiers(	double prev, vec3d natural_coords, AngioElement* angio_element, 
-					double time_shift, FEMesh* mesh)
+double SegmentVelocityRefDensityScaleModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
 	std::vector<double> density_at_integration_points;
 	auto se = angio_element->_elem;
 	for (int i = 0; i < se->GaussPoints(); i++)
 	{
 		FEMaterialPoint* gauss_point = se->GetMaterialPoint(i);
-		FEAngioMaterialPoint* angio_mp 
-				= FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
-		FEElasticMaterialPoint* elastic_mp 
-			= gauss_point->ExtractData<FEElasticMaterialPoint>();
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
+		FEElasticMaterialPoint* elastic_mp = gauss_point->ExtractData<FEElasticMaterialPoint>();
 		double local_ref_dens = angio_mp->ref_ecm_density;
-
 		density_at_integration_points.push_back(local_ref_dens);
 	}
 
-	double density_at_point 
-		= interpolation_prop->Interpolate(	se,	density_at_integration_points, 
-											natural_coords, mesh);
-	double density_scale 
-		= m_density_scale_factor.x 
-		+ (m_density_scale_factor.y 
+	double density_at_point = interpolation_prop->Interpolate(se, density_at_integration_points, natural_coords, mesh);
+	double density_scale
+		= m_density_scale_factor.x
+		+ (m_density_scale_factor.y
 			* exp(-m_density_scale_factor.z * density_at_point));
 
 	return density_scale * prev;
@@ -184,9 +165,7 @@ void SegmentVelocityRefDensityScaleModifier::UpdateScale()
 
 }
 
-double SegmentVelocityDensityFAScaleModifier::
-	ApplyModifiers(	double prev, vec3d natural_coords, AngioElement* angio_element, 
-					double time_shift, FEMesh* mesh)
+double SegmentVelocityDensityFAScaleModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
 	std::vector<double> density_at_integration_points;
 	auto se = angio_element->_elem;
@@ -194,18 +173,13 @@ double SegmentVelocityDensityFAScaleModifier::
 	for (int i = 0; i < se->GaussPoints(); i++)
 	{
 		FEMaterialPoint* gauss_point = se->GetMaterialPoint(i);
-		FEAngioMaterialPoint* angio_mp 
-			= FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
-		FEElasticMaterialPoint* elastic_mp 
-			= gauss_point->ExtractData<FEElasticMaterialPoint>();
-		//! SL: is this supposed to be ref?
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
+		FEElasticMaterialPoint* elastic_mp = gauss_point->ExtractData<FEElasticMaterialPoint>();
 		double local_dens = angio_mp->ref_ecm_density * (1.0 / elastic_mp->m_J);
 		density_at_integration_points.push_back(local_dens);
 	}
 
-	double density_at_point 
-		= interpolation_prop->Interpolate(	se,	density_at_integration_points, 
-											natural_coords, mesh);
+	double density_at_point = interpolation_prop->Interpolate(se, density_at_integration_points, natural_coords, mesh);
 
 	// vector containing the SPD for each gauss point in the element
 	std::vector<mat3ds> SPDs_gausspts;
@@ -215,8 +189,7 @@ double SegmentVelocityDensityFAScaleModifier::
 	{
 		// get the angio point
 		FEMaterialPoint* gauss_point = se->GetMaterialPoint(i);
-		FEAngioMaterialPoint* angio_mp 
-			= FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
 		SPDs_gausspts.push_back(angio_mp->angioSPD);
 	}
 
@@ -242,6 +215,7 @@ double SegmentVelocityDensityFAScaleModifier::
 	std::sort(v.begin(), v.end(), EigComp());
 	double angioFA_int = 1.0 - (v[1].first / v[0].first);
 
+	//Lorentz fn
 	double L 
 		= m_rFA_a 
 		/ ((1.0 + pow(((density_at_point - m_rFA_r0) / m_rFA_b), 2.0)) 
@@ -261,19 +235,15 @@ void SegmentVelocityDensityFAScaleModifier::UpdateScale()
 	//! Empty implementation
 }
 
-double SegmentVelocity3PModifier::
-	ApplyModifiers(	double prev, vec3d natural_coords, AngioElement* angio_element, 
-					double time_shift, FEMesh* mesh)
+double SegmentVelocity3PModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
 	auto se = angio_element->_elem;
 	mat3ds E;
 	for (int i = 0; i < se->GaussPoints(); i++)
 	{
 		FEMaterialPoint* gauss_point = se->GetMaterialPoint(i);
-		FEAngioMaterialPoint* angio_mp 
-			= FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
-		FEElasticMaterialPoint* elastic_mp 
-			= gauss_point->ExtractData<FEElasticMaterialPoint>();
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
+		FEElasticMaterialPoint* elastic_mp = gauss_point->ExtractData<FEElasticMaterialPoint>();
 		E += elastic_mp->Strain();
 	}
 	E = E / (se->GaussPoints());
@@ -283,13 +253,9 @@ double SegmentVelocity3PModifier::
 	// Sort based on absolute value of eigenvalues
 	double c_strain = std::min(d[0], std::min(d[1], d[2]));
 	if (c_strain < threshold) 
-	{ 
 		return scale * prev; 
-	}
 	else 
-	{
 		return prev;
-	}
 }
 
 bool SegmentVelocity3PModifier::Init()
@@ -302,9 +268,7 @@ void SegmentVelocity3PModifier::UpdateScale()
 	//! Empty implementation
 }
 
-double SegmentVelocityFAModifier::
-	ApplyModifiers(	double prev, vec3d natural_coords, AngioElement* angio_element, 
-					double time_shift, FEMesh* mesh)
+double SegmentVelocityFAModifier::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
 	auto se = angio_element->_elem;
 	// vector containing the SPD for each gauss point in the element
@@ -315,8 +279,7 @@ double SegmentVelocityFAModifier::
 	{
 		// get the angio point
 		FEMaterialPoint* gauss_point = se->GetMaterialPoint(i);
-		FEAngioMaterialPoint* angio_mp 
-			= FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
 		SPDs_gausspts.push_back(angio_mp->angioSPD);
 	}
 	
@@ -328,11 +291,9 @@ double SegmentVelocityFAModifier::
 	// project the spds from integration points to the nodes
 	se->project_to_nodes(&SPDs_gausspts[0], SPDs_nodes);
 	// determine shape function value for the local position
-	se->
-		shape_fnc(H, natural_coords.x, natural_coords.y, natural_coords.z);
+	se->shape_fnc(H, natural_coords.x, natural_coords.y, natural_coords.z);
 	// Get the interpolated SPD from the shape function-weighted Average Structure Tensor
-	mat3ds SPD_int 
-		= weightedAverageStructureTensor(SPDs_nodes, H, se->Nodes());
+	mat3ds SPD_int = weightedAverageStructureTensor(SPDs_nodes, H, se->Nodes());
 	// get the vectors of the principal directions and sort in descending order
 	// the FA can be calculated as std/rms of the ODF. We can assume each direction is one sample and perform the calculation on the eigenvalues.
 	double d[3]; vec3d v[3];
@@ -344,11 +305,7 @@ double SegmentVelocityFAModifier::
 		+ (d[1] - mean) * (d[1] - mean) 
 		+ (d[2] - mean) * (d[2] - mean);
 	double stdev = sqrt(sq_sum / 2.0);
-	double rms 
-		= sqrt((d[0] * d[0] 
-				+ d[1] * d[1] 
-				+ d[2] * d[2]) 
-			/ 3.0);
+	double rms = sqrt((d[0] * d[0] + d[1] * d[1] + d[2] * d[2]) / 3.0);
 	double angioFA_int = stdev / rms;
 	
 	std::vector<double> density_at_integration_points;
@@ -356,28 +313,24 @@ double SegmentVelocityFAModifier::
 	for (int i = 0; i < se->GaussPoints(); i++)
 	{
 		FEMaterialPoint* gauss_point = se->GetMaterialPoint(i);
-		FEAngioMaterialPoint* angio_mp 
-			= FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
-		FEElasticMaterialPoint* elastic_mp 
-			= gauss_point->ExtractData<FEElasticMaterialPoint>();
-
+		FEAngioMaterialPoint* angio_mp = FEAngioMaterialPoint::FindAngioMaterialPoint(gauss_point);
+		FEElasticMaterialPoint* elastic_mp = gauss_point->ExtractData<FEElasticMaterialPoint>();
 		density_at_integration_points.push_back(angio_mp->ref_ecm_density);
 	}
 
-	double density_at_point 
-		= interpolation_prop->Interpolate(	se, density_at_integration_points, 
-											natural_coords, mesh);
+	double density_at_point = interpolation_prop->Interpolate(se, density_at_integration_points, natural_coords, mesh);
 	double density_scale 
 		= m_density_scale_factor.x 
 		+ (m_density_scale_factor.y 
 			* exp(-m_density_scale_factor.z * density_at_point));
+
 	double dens_point = std::min(std::max(0.5, density_at_point), 1.0);
 	scale 
 		= 1.0 
 		+ (-0.25 * density_at_point + 1.75) 
 		* (density_scale 
 			* (1.0 / (1.0 + exp((-1.0 * angioFA_int + 0.47) / 0.005))));
-	return prev*scale;
+	return prev * scale;
 }
 
 bool SegmentVelocityFAModifier::Init()
@@ -390,9 +343,7 @@ void SegmentVelocityFAModifier::UpdateScale()
 
 }
 
-double SigmoidSegmentVelocity::
-	ApplyModifiers(	double prev, vec3d natural_coords, AngioElement* angio_element, 
-					double time_shift, FEMesh* mesh)
+double SigmoidSegmentVelocity::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
 	return scale*prev;
 }
@@ -413,31 +364,21 @@ void SigmoidSegmentVelocity::UpdateScale()
 		/ (b * pow((1.0 + exp(e_val)), 2.0));
 }
 
-double SigmoidAdjustedSegmentVelocity::
-	ApplyModifiers(	double prev, vec3d natural_coords, AngioElement* angio_element, 
-					double time_shift, FEMesh* mesh)
+double SigmoidAdjustedSegmentVelocity::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
 	double time = GetFEModel()->GetTime().currentTime;
 	if (time_shift > 0.0) 
 	{
 		if (time > c) 
-		{
 			time = c - 2.0;
-		}
 		else 
-		{
 			time = time - time_shift;
-		}
 	}
 
-	scale
-		= a
-		/ (1.0 + exp(-(time - c) / b));
+	scale = a / (1.0 + exp(-(time - c) / b));
 	FESolidElement& se = *angio_element->_elem;
 	int nint = se.GaussPoints();
-	double sr = std::max(1.0,
-						angio_element->vessel_weight 
-						/ angio_element->_angio_mat->thresh_vess_weight);
+	double sr = std::max(1.0, angio_element->vessel_weight / angio_element->_angio_mat->thresh_vess_weight);
 	double scale_down = 11.92 * exp(-sr / 0.4) + 0.0215;
 	return scale * prev * scale_down;
 }
@@ -451,14 +392,10 @@ void SigmoidAdjustedSegmentVelocity::UpdateScale()
 {
 	double time = GetFEModel()->GetTime().currentTime;
 	// account for shift in curve due to the initial min angio dt
-	scale 
-		= a 
-		/ (1.0 + exp(-(time - c) / b));
+	scale = a / (1.0 + exp(-(time - c) / b));
 }
 
-double GompertzSegmentVelocity::
-	ApplyModifiers(	double prev, vec3d natural_coords, AngioElement* angio_element, 
-					double time_shift, FEMesh* mesh)
+double GompertzSegmentVelocity::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_element, double time_shift, FEMesh* mesh)
 {
 	return scale * prev;
 }
@@ -479,15 +416,9 @@ void GompertzSegmentVelocity::UpdateScale()
 		* exp(-c * (time - d));
 }
 
-double SegmentGrowthVelocityManager::
-	ApplyModifiers(	double prev, vec3d natural_coords, AngioElement* angio_elem, 
-					double time_shift, FEMesh* mesh)
+double SegmentGrowthVelocityManager::ApplyModifiers(double prev, vec3d natural_coords, AngioElement* angio_elem, double time_shift, FEMesh* mesh)
 {
 	for (int i = 0; i < seg_vel_modifiers.size(); i++)
-	{
-		prev = seg_vel_modifiers[i]->
-			ApplyModifiers(prev, natural_coords, angio_elem, time_shift, mesh);
-	}
+		prev = seg_vel_modifiers[i]->ApplyModifiers(prev, natural_coords, angio_elem, time_shift, mesh);
 	return prev;
 }
-

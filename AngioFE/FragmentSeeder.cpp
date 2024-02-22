@@ -5,25 +5,18 @@
 #include "FEProbabilityDistribution.h"
 #include <iostream>
 #include "Tip.h"
-#include "FECell.h"
 #include <FECore/FEOctreeSearch.h>
 #include <unordered_map>
 
 // Variable used to ensure that all initial Tips that are part of the same fragment
 // share an ID so that they do not anastamose with each other.
 int FragmentSeeder::initial_fragment_id_counter = 0;
-int FragmentSeeder::initial_cell_id_counter = 0;
 
 #pragma region FECoreClassDefs
 BEGIN_FECORE_CLASS(FragmentSeeder, FEMaterialProperty)
 	ADD_PROPERTY(initial_segment_length, "initial_segment_length");
 	ADD_PARAMETER(number_fragments, "number_fragments");
 	ADD_PARAMETER(proto_mat_cross, "proto_mat_cross");
-	ADD_PARAMETER(cell_radius, "cell_radius");
-END_FECORE_CLASS()
-
-BEGIN_FECORE_CLASS(SingleCellSeeder, FragmentSeeder)
-	ADD_PARAMETER(initial_position, "initial_position");
 END_FECORE_CLASS()
 #pragma endregion FECoreClassDefs
 
@@ -89,25 +82,13 @@ vec3d FragmentSeeder::GetRandomVectorPositionWithinNaturalCoordinateBoundsByElem
 		default:
 		{
 			// HEX and PENTA element Types
-			std::uniform_real_distribution<double>
-				r_dist(FEAngio::NaturalCoordinatesLowerBound_r(element_type),
-					FEAngio::NaturalCoordinatesUpperBound_r(element_type));
-			std::uniform_real_distribution<double>
-				s_dist(FEAngio::NaturalCoordinatesLowerBound_s(element_type),
-					FEAngio::NaturalCoordinatesUpperBound_s(element_type));
-			std::uniform_real_distribution<double>
-				t_dist(FEAngio::NaturalCoordinatesLowerBound_t(element_type),
-					FEAngio::NaturalCoordinatesUpperBound_t(element_type));
-			vec3d rand_pos = vec3d(	r_dist(random_engine), s_dist(random_engine), 
-									t_dist(random_engine));
+			std::uniform_real_distribution<double>	r_dist(FEAngio::NaturalCoordinatesLowerBound_r(element_type), FEAngio::NaturalCoordinatesUpperBound_r(element_type));
+			std::uniform_real_distribution<double>	s_dist(FEAngio::NaturalCoordinatesLowerBound_s(element_type), FEAngio::NaturalCoordinatesUpperBound_s(element_type));
+			std::uniform_real_distribution<double>	t_dist(FEAngio::NaturalCoordinatesLowerBound_t(element_type), FEAngio::NaturalCoordinatesUpperBound_t(element_type));
+			vec3d rand_pos = vec3d(r_dist(random_engine), s_dist(random_engine), t_dist(random_engine));
 			return rand_pos;
 		}
 	}
-}
-
-int FragmentSeeder::IncrementCellCounter() 
-{
-	return initial_cell_id_counter++;
 }
 
 ByElementFragmentSeeder::ByElementFragmentSeeder(FEModel* model) : FragmentSeeder(model)
@@ -115,42 +96,25 @@ ByElementFragmentSeeder::ByElementFragmentSeeder(FEModel* model) : FragmentSeede
 	//! Empty implementation
 }
 
-bool ByElementFragmentSeeder::
-	SeedFragments(	std::vector<AngioElement*>& angio_elements, FEMesh* mesh, 
-					FEAngioMaterial* angio_mat, int buffer_index)
+bool ByElementFragmentSeeder::SeedFragments(std::vector<AngioElement*>& angio_elements, FEMesh* mesh, FEAngioMaterial* angio_mat, int buffer_index)
 {
 	std::uniform_int_distribution<int> edist(0, int(angio_elements.size() - 1));
 
 	if (angio_elements.size() == 0)
-	{
 		return false;
-	}
 
 	for (int i = 0; i < number_fragments; ++i)
 	{
 		Tip* r0 = new Tip();
-		r0->TipCell = new FECell();
-		//r0->initial_fragment_id = initial_fragment_id_counter++;
 		r0->initial_fragment_id = angio_mat->m_pangio->AddFragment();
-		r0->TipCell->initial_cell_id = angio_mat->m_pangio->AddCell();
-		angio_mat->m_pangio->cells.emplace(r0->TipCell->initial_cell_id, r0->TipCell);
-		//r0->TipCell->initial_cell_id = initial_cell_id_counter++;
 		int elem_index = edist(angio_mat->m_pangio->rengine);
 		r0->angio_element = angio_elements[elem_index];
-		r0->angio_element->tip_cells.emplace(r0->TipCell->initial_cell_id, r0->TipCell);
-		vec3d local_pos 
-			= GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(
-				mesh, r0->angio_element, r0->angio_element->_rengine);
+		vec3d local_pos = GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(mesh, r0->angio_element, r0->angio_element->_rengine);
 		r0->SetLocalPosition(local_pos, mesh);
-		r0->TipCell->SetLocalPosition(local_pos);
-		r0->time = -1;
-		r0->TipCell->time = -1;
+		r0->time = -1.0;
 		r0->use_direction = true;
-		r0->direction 
-			= angio_mat->m_pangio->uniformRandomDirection(r0->angio_element->_rengine);
+		r0->direction = angio_mat->m_pangio->uniformRandomDirection(r0->angio_element->_rengine);
 		r0->face = r0->angio_element;
-		r0->TipCell->cell_radius = cell_radius;
-		r0->TipCell->cell_volume = pow(cell_radius, 3) * (4 / 3) * PI;
 		// Finally add this to the AngioElement.
 		r0->SetProtoGrowthLength(initial_segment_length);
 		r0->angio_element->next_tips.at(r0->angio_element).push_back(r0);
@@ -163,73 +127,40 @@ ByElementFragmentSeederBiDirectional::ByElementFragmentSeederBiDirectional(FEMod
 	//! Empty implementation
 }
 
-bool ByElementFragmentSeederBiDirectional::
-	SeedFragments(	std::vector<AngioElement*>& angio_elements, FEMesh* mesh, 
-					FEAngioMaterial* angio_mat, int buffer_index)
+bool ByElementFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElement*>& angio_elements, FEMesh* mesh, FEAngioMaterial* angio_mat, int buffer_index)
 {
 	std::uniform_int_distribution<int> edist(0, int(angio_elements.size() - 1));
 
 	if (angio_elements.size() == 0)
-	{
 		return false;
-	}
 
 	for (int i = 0; i < number_fragments; ++i)
 	{
 		Tip* r0 = new Tip();
-		r0->TipCell = new FECell();
-		//r0->initial_fragment_id = initial_fragment_id_counter++;
-		//r0->TipCell->initial_cell_id = initial_cell_id_counter++;
 		r0->initial_fragment_id = angio_mat->m_pangio->AddFragment();
-		r0->TipCell->initial_cell_id = angio_mat->m_pangio->AddCell();
-		angio_mat->m_pangio->cells.emplace(r0->TipCell->initial_cell_id, r0->TipCell);
 		int elem_index = edist(angio_mat->m_pangio->rengine);
 		r0->angio_element = angio_elements[elem_index];
-		r0->TipCell->angio_element = r0->angio_element;
-		r0->angio_element->tip_cells.emplace(r0->TipCell->initial_cell_id, r0->TipCell);
-		r0->TipCell->ParentTip = r0;
-		vec3d local_pos 
-			= GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(
-				mesh, r0->angio_element, r0->angio_element->_rengine);
+		vec3d local_pos = GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(mesh, r0->angio_element, r0->angio_element->_rengine);
 		r0->SetLocalPosition(local_pos, mesh);
-		r0->TipCell->SetLocalPosition(local_pos);
-		r0->time = -1;
-		r0->TipCell->time = -1;
+		r0->time = -1.0;
 		r0->use_direction = true;
-		r0->direction 
-			= angio_mat->m_pangio->uniformRandomDirection(r0->angio_element->_rengine);
+		r0->direction = angio_mat->m_pangio->uniformRandomDirection(r0->angio_element->_rengine);
 		r0->face = r0->angio_element;
-		r0->TipCell->cell_radius = cell_radius;
-		r0->TipCell->cell_volume = pow(cell_radius, 3) * (4 / 3) * PI;
 		r0->SetProtoGrowthLength(initial_segment_length);
 		FEModel* fem = GetFEModel();
-		r0->TipCell->InitSpecies();
 		// Finally add this to the AngioElement.
 		r0->angio_element->next_tips.at(r0->angio_element).push_back(r0);
 		// Now add an oppositely directed tip.
 		Tip* r1 = new Tip();
-		r1->TipCell = new FECell();
 		r1->angio_element = r0->angio_element;
-		r1->TipCell->angio_element = r1->angio_element;
-		r1->TipCell->ParentTip = r1;
 		r1->face = r0->face;
 		r1->time = r0->time;
-		r1->TipCell->time = r1->time;
 		r1->growth_velocity = r0->growth_velocity;
 		r1->SetLocalPosition(r0->GetLocalPosition(), mesh);
-		r1->TipCell->SetLocalPosition(r1->GetLocalPosition());
 		r1->SetProtoGrowthLength(r0);
-		//r1->initial_fragment_id = initial_fragment_id_counter++;
-		//r1->TipCell->initial_cell_id = initial_cell_id_counter++;
 		r1->initial_fragment_id = angio_mat->m_pangio->AddFragment();
-		r1->TipCell->initial_cell_id = angio_mat->m_pangio->AddCell();
-		angio_mat->m_pangio->cells.emplace(r1->TipCell->initial_cell_id, r1->TipCell);
-		r1->angio_element->tip_cells.emplace(r1->TipCell->initial_cell_id, r1->TipCell);
 		r1->use_direction = true;
 		r1->direction = -r0->direction; r1->direction.unit();
-		r1->TipCell->cell_radius = cell_radius;
-		r1->TipCell->cell_volume = pow(cell_radius, 3) * (4 / 3) * PI;
-		r1->TipCell->InitSpecies();
 		r1->angio_element->next_tips.at(r1->angio_element).push_back(r1);
 		Segment* seg = new Segment();
 		seg->front = r0;
@@ -246,72 +177,40 @@ ByElementSetFragmentSeederBiDirectional::ByElementSetFragmentSeederBiDirectional
 	//! Empty implementation
 }
 
-bool ByElementSetFragmentSeederBiDirectional::
-	SeedFragments(	std::vector<AngioElement*>& angio_elements, 
-					FEMesh* mesh, FEAngioMaterial* angio_mat, int buffer_index)
+bool ByElementSetFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElement*>& angio_elements, FEMesh* mesh, FEAngioMaterial* angio_mat, int buffer_index)
 {
 	std::uniform_int_distribution<int> edist(0, int(angio_elements.size() - 1));
 
 	if (angio_elements.size() == 0)
-	{
 		return false;
-	}
 
 	for (int i = 0; i < number_fragments; ++i)
 	{
 		Tip* r0 = new Tip();
-		r0->TipCell = new FECell();
-		//r0->initial_fragment_id = initial_fragment_id_counter++;
-		//r0->TipCell->initial_cell_id = initial_cell_id_counter++;
 		r0->initial_fragment_id = angio_mat->m_pangio->AddFragment();
-		r0->TipCell->initial_cell_id = angio_mat->m_pangio->AddCell();
-		angio_mat->m_pangio->cells.emplace(r0->TipCell->initial_cell_id, r0->TipCell);
 		int elem_index = edist(angio_mat->m_pangio->rengine);
 		r0->angio_element = angio_elements[elem_index];
-		r0->TipCell->angio_element = r0->angio_element;
-		r0->angio_element->tip_cells.emplace(r0->TipCell->initial_cell_id, r0->TipCell);
-		r0->TipCell->ParentTip = r0;
-		vec3d local_pos = GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(
-			mesh, r0->angio_element, r0->angio_element->_rengine);
+		vec3d local_pos = GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(mesh, r0->angio_element, r0->angio_element->_rengine);
 		r0->SetLocalPosition(local_pos, mesh);
-		r0->TipCell->SetLocalPosition(local_pos);
-		r0->time = -1;
-		r0->TipCell->time = -1;
+		r0->time = -1.0;
 		r0->use_direction = true;
-		r0->direction 
-			= angio_mat->m_pangio->uniformRandomDirection(r0->angio_element->_rengine);
+		r0->direction = angio_mat->m_pangio->uniformRandomDirection(r0->angio_element->_rengine);
 		r0->face = r0->angio_element;
-		r0->TipCell->cell_radius = cell_radius;
-		r0->TipCell->cell_volume = pow(cell_radius, 3) * (4 / 3) * PI;
 		r0->SetProtoGrowthLength(initial_segment_length);
 		FEModel* fem = GetFEModel();
-		r0->TipCell->InitSpecies();
 		// Finally add this to the AngioElement.
 		r0->angio_element->next_tips.at(r0->angio_element).push_back(r0);
 		// Now add an oppositely directed tip.
 		Tip* r1 = new Tip();
-		r1->TipCell = new FECell();
 		r1->angio_element = r0->angio_element;
-		r1->TipCell->angio_element = r1->angio_element;
-		r1->TipCell->ParentTip = r1;
 		r1->face = r0->face;
 		r1->time = r0->time;
-		r1->TipCell->time = r1->time;
 		r1->growth_velocity = r0->growth_velocity;
 		r1->SetLocalPosition(r0->GetLocalPosition(), mesh);
-		r1->TipCell->SetLocalPosition(r1->GetLocalPosition());
 		r1->SetProtoGrowthLength(r0);
-		//r1->initial_fragment_id = initial_fragment_id_counter++;
-		//r1->TipCell->initial_cell_id = initial_cell_id_counter++;
 		r1->initial_fragment_id = angio_mat->m_pangio->AddFragment();
-		r1->TipCell->initial_cell_id = angio_mat->m_pangio->AddCell();
-		angio_mat->m_pangio->cells.emplace(r1->TipCell->initial_cell_id, r1->TipCell);
-		r1->angio_element->tip_cells.emplace(r1->TipCell->initial_cell_id, r1->TipCell);
 		r1->use_direction = true;
 		r1->direction = -r0->direction; r1->direction.unit();
-		r1->TipCell->cell_radius = cell_radius;
-		r1->TipCell->cell_volume = pow(cell_radius, 3) * (4 / 3) * PI;
-		r1->TipCell->InitSpecies();
 		r1->angio_element->next_tips.at(r1->angio_element).push_back(r1);
 		Segment* seg = new Segment();
 		seg->front = r0;
@@ -328,14 +227,10 @@ ByVolumeFragmentSeeder::ByVolumeFragmentSeeder(FEModel* model) : FragmentSeeder(
 	//! Empty implementation
 }
 
-bool ByVolumeFragmentSeeder::
-	SeedFragments(	std::vector<AngioElement*>& angio_elements, 
-					FEMesh* mesh, FEAngioMaterial* angio_mat, int buffer_index)
+bool ByVolumeFragmentSeeder::SeedFragments(std::vector<AngioElement*>& angio_elements, FEMesh* mesh, FEAngioMaterial* angio_mat, int buffer_index)
 {
 	if (angio_elements.size() == 0)
-	{
 		return false;
-	}
 
 	// Random engine used to sample from distributions.
 	angiofe_random_engine& random_engine = angio_mat->m_pangio->rengine;
@@ -364,39 +259,21 @@ bool ByVolumeFragmentSeeder::
 		double volume_sample = vol_dist(random_engine);
 
 		// Perform a binary search of the pre-sorted parallel arrays (only requires one of them) to find the index of the element that will get the tip.
-		size_t element_index = findElement(	volume_sample, 0, 
-											int(angio_elements.size()), 
-											element_beginning_volume, 
-											element_ending_volume);
+		size_t element_index = findElement(volume_sample, 0, int(angio_elements.size()), element_beginning_volume, element_ending_volume);
 
 		// Build the fragment using a tip and build it in the proper element.
 		Tip* r0 = new Tip();
-		r0->TipCell = new FECell();
-		//r0->initial_fragment_id = initial_fragment_id_counter++;
-		//r0->TipCell->initial_cell_id = initial_cell_id_counter++;
 		r0->initial_fragment_id = angio_mat->m_pangio->AddFragment();
-		r0->TipCell->initial_cell_id = angio_mat->m_pangio->AddCell();
-		angio_mat->m_pangio->cells.emplace(r0->TipCell->initial_cell_id, r0->TipCell);
 		r0->angio_element = angio_elements[element_index];
-		r0->TipCell->angio_element = r0->angio_element;
-		r0->angio_element->tip_cells.emplace(r0->TipCell->initial_cell_id, r0->TipCell);
-		r0->TipCell->ParentTip = r0;
-		vec3d local_pos 
-			= GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(
-				mesh, r0->angio_element, r0->angio_element->_rengine);
+		vec3d local_pos = GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(mesh, r0->angio_element, r0->angio_element->_rengine);
 		r0->SetLocalPosition(local_pos, mesh);
-		r0->TipCell->SetLocalPosition(local_pos);
 		r0->SetProtoGrowthLength(initial_segment_length);
-		r0->time = -1;
-		r0->TipCell->time = -1;
+		r0->time = -1.0;
 		r0->use_direction = true;
 		r0->direction = angio_mat->m_pangio->uniformRandomDirection(r0->angio_element->_rengine);
 		r0->face = r0->angio_element;
-		r0->TipCell->cell_radius = cell_radius;
-		r0->TipCell->cell_volume = pow(cell_radius, 3) * (4 / 3) * PI;
 		r0->SetProtoGrowthLength(initial_segment_length);
 		FEModel* fem = GetFEModel();
-		r0->TipCell->InitSpecies();
 
 		// Finally add this to the AngioElement.
 		r0->angio_element->next_tips.at(r0->angio_element).push_back(r0);
@@ -416,9 +293,7 @@ ByVolumeFragmentSeederBiDirectional::ByVolumeFragmentSeederBiDirectional(FEModel
 bool ByVolumeFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElement*>& angio_elements, FEMesh* mesh, FEAngioMaterial* angio_mat, int buffer_index)
 {
 	if (angio_elements.size() == 0)
-	{
 		return false;
-	}
 
 	// Random engine used to sample from distributions.
 	angiofe_random_engine& random_engine = angio_mat->m_pangio->rengine;
@@ -447,67 +322,35 @@ bool ByVolumeFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElement
 		double volume_sample = vol_dist(random_engine);
 
 		// Perform a binary search of the pre-sorted parallel arrays (only requires one of them) to find the index of the element that will get the tip.
-		size_t element_index = findElement(	volume_sample, 0, 
-											int(angio_elements.size() - 1), 
-											element_beginning_volume, 
-											element_ending_volume);
+		size_t element_index = findElement(volume_sample, 0, int(angio_elements.size() - 1), element_beginning_volume, element_ending_volume);
 
 		// Build the fragment using a tip and build it in the element.
 		Tip* r0 = new Tip();
-		r0->TipCell = new FECell();
-		/*r0->initial_fragment_id = initial_fragment_id_counter++;
-		r0->TipCell->initial_cell_id = initial_cell_id_counter++;*/
 		r0->initial_fragment_id = angio_mat->m_pangio->AddFragment();
-		r0->TipCell->initial_cell_id = angio_mat->m_pangio->AddCell();
-		angio_mat->m_pangio->cells.emplace(r0->TipCell->initial_cell_id, r0->TipCell);
 		r0->angio_element = angio_elements[element_index];
-		r0->TipCell->angio_element = r0->angio_element;
-		r0->angio_element->tip_cells.emplace(r0->TipCell->initial_cell_id, r0->TipCell);
-		r0->TipCell->ParentTip = r0;
-		vec3d local_pos 
-			= GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(
-				mesh, r0->angio_element, angio_mat->m_pangio->rengine);
+		vec3d local_pos = GetRandomVectorPositionWithinNaturalCoordinateBoundsByElementType(mesh, r0->angio_element, angio_mat->m_pangio->rengine);
 		r0->SetLocalPosition(local_pos, mesh);
-		r0->TipCell->SetLocalPosition(local_pos);
-		r0->time = -1;
-		r0->TipCell->time = -1;
+		r0->time = -1.0;
 		r0->use_direction = true;
-		r0->direction 
-			= angio_mat->m_pangio->uniformRandomDirection(angio_mat->m_pangio->rengine);
+		r0->direction = angio_mat->m_pangio->uniformRandomDirection(angio_mat->m_pangio->rengine);
 		r0->face = r0->angio_element;
-		r0->TipCell->cell_radius = cell_radius;
-		r0->TipCell->cell_volume = pow(cell_radius, 3) * (4 / 3) * PI;
 		r0->SetProtoGrowthLength(initial_segment_length);
 		FEModel* fem = GetFEModel();
-		r0->TipCell->InitSpecies();
 
 		// Finally add this to the AngioElement.
 		r0->angio_element->next_tips.at(r0->angio_element).push_back(r0);
 
 		// Now add an oppositely directed tip.
 		Tip* r1 = new Tip();
-		r1->TipCell = new FECell();
 		r1->angio_element = r0->angio_element;
-		r1->TipCell->angio_element = r1->angio_element;
-		r1->TipCell->ParentTip = r1;
 		r1->face = r0->face;
 		r1->time = r0->time;
-		r1->TipCell->time = r1->time;
 		r1->growth_velocity = r0->growth_velocity;
 		r1->SetLocalPosition(r0->GetLocalPosition(), mesh);
-		r1->TipCell->SetLocalPosition(r1->GetLocalPosition());
 		r1->SetProtoGrowthLength(r0);
-		//r1->initial_fragment_id = initial_fragment_id_counter++;
-		//r1->TipCell->initial_cell_id = initial_cell_id_counter++;
 		r1->initial_fragment_id = angio_mat->m_pangio->AddFragment();
-		r1->TipCell->initial_cell_id = angio_mat->m_pangio->AddCell();
-		angio_mat->m_pangio->cells.emplace(r1->TipCell->initial_cell_id, r1->TipCell);
-		r1->angio_element->tip_cells.emplace(r1->TipCell->initial_cell_id, r1->TipCell);
 		r1->use_direction = true;
 		r1->direction = -r0->direction; r1->direction.unit();
-		r1->TipCell->cell_radius = cell_radius;
-		r1->TipCell->cell_volume = pow(cell_radius, 3) * (4 / 3) * PI;
-		r1->TipCell->InitSpecies();
 		r1->angio_element->next_tips.at(r1->angio_element).push_back(r1);
 		Segment* seg = new Segment();
 		seg->front = r0;
@@ -520,99 +363,5 @@ bool ByVolumeFragmentSeederBiDirectional::SeedFragments(std::vector<AngioElement
 	delete[] element_beginning_volume;
 	delete[] element_ending_volume;
 
-	return true;
-}
-
-SingleCellSeeder::SingleCellSeeder(FEModel* model) : FragmentSeeder(model), m_search(&model->GetMesh())
-{
-	//! Empty implementation
-}
-
-bool SingleCellSeeder::
-	SeedFragments(	std::vector<AngioElement*>& angio_elements, FEMesh* mesh, 
-					FEAngioMaterial* angio_mat, int buffer_index)
-{
-	std::uniform_int_distribution<int> edist(0, int(angio_elements.size() - 1));
-	if (m_search.Init() == false)
-	{
-		return false;
-	}
-
-	if (angio_elements.size() == 0)
-	{
-		return false;
-	}
-
-	for (int i = 0; i < number_fragments; ++i)
-	{
-		Tip* r0 = new Tip();
-		r0->TipCell = new FECell();
-		//r0->initial_fragment_id = initial_fragment_id_counter++;
-		//r0->TipCell->initial_cell_id = initial_cell_id_counter++;
-		r0->initial_fragment_id = angio_mat->m_pangio->AddFragment();
-		r0->TipCell->initial_cell_id = angio_mat->m_pangio->AddCell();
-		angio_mat->m_pangio->cells.emplace(r0->TipCell->initial_cell_id, r0->TipCell);
-		FESolidElement* m_el 
-			= dynamic_cast<FESolidElement*>(m_search.FindElement(initial_position, m_q));
-		if (m_el == nullptr) 
-		{
-			break;
-		}
-		int elem_index = m_el->GetID() - 1;
-		//int elem_index = edist(angio_mat->m_pangio->rengine);
-		r0->angio_element = angio_elements[elem_index];
-		r0->TipCell->angio_element = r0->angio_element;
-		r0->angio_element->tip_cells.emplace(r0->TipCell->initial_cell_id, r0->TipCell);
-		//r0->TipCell->Init();
-		r0->TipCell->ParentTip = r0;
-
-		// get the local position of the tip
-		double Gr[FESolidElement::MAX_NODES];
-		double Gs[FESolidElement::MAX_NODES];
-		double Gt[FESolidElement::MAX_NODES];
-		// get the shape function derivative values for the element type
-		r0->angio_element->_elem->shape_deriv(Gr, Gs, Gt, m_q[0], m_q[1], m_q[2]);
-		vec3d local_pos = vec3d(m_q[0], m_q[1], m_q[2]);
-		r0->SetLocalPosition(local_pos, mesh);
-		r0->TipCell->SetLocalPosition(local_pos);
-		r0->time = -1;
-		r0->TipCell->time = -1;
-		r0->use_direction = true;
-		r0->direction 
-			= angio_mat->m_pangio->uniformRandomDirection(r0->angio_element->_rengine);
-		r0->face = r0->angio_element;
-		r0->TipCell->cell_radius = cell_radius;
-		r0->TipCell->cell_volume = pow(cell_radius, 3) * (4 / 3) * PI;
-		r0->SetProtoGrowthLength(initial_segment_length);
-		FEModel* fem = GetFEModel();
-		r0->TipCell->InitSpecies();
-		// Finally add this to the AngioElement.
-		r0->angio_element->next_tips.at(r0->angio_element).push_back(r0);
-		// Now add an oppositely directed tip.
-		Tip* r1 = new Tip();
-		r1->TipCell = new FECell();
-		r1->angio_element = r0->angio_element;
-		r1->TipCell->angio_element = r1->angio_element;
-		r1->TipCell->ParentTip = r1;
-		r1->face = r0->face;
-		r1->time = r0->time;
-		r1->TipCell->time = r1->time;
-		r1->growth_velocity = r0->growth_velocity;
-		r1->SetLocalPosition(r0->GetLocalPosition(), mesh);
-		r1->TipCell->SetLocalPosition(r1->GetLocalPosition());
-		r1->SetProtoGrowthLength(r0);
-		r1->initial_fragment_id = angio_mat->m_pangio->AddFragment();
-		r1->TipCell->initial_cell_id = angio_mat->m_pangio->AddCell();
-		angio_mat->m_pangio->cells.emplace(r1->TipCell->initial_cell_id, r1->TipCell);
-		r1->angio_element->tip_cells.emplace(r1->TipCell->initial_cell_id, r1->TipCell);
-		//r1->initial_fragment_id = initial_fragment_id_counter++;
-		//r1->TipCell->initial_cell_id = initial_cell_id_counter++;
-		r1->use_direction = true;
-		r1->direction = -r0->direction; r1->direction.unit();
-		r1->TipCell->cell_radius = cell_radius;
-		r1->TipCell->cell_volume = pow(cell_radius, 3) * (4 / 3) * PI;
-		r1->TipCell->InitSpecies();
-		r1->angio_element->next_tips.at(r1->angio_element).push_back(r1);
-	}
 	return true;
 }

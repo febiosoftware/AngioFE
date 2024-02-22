@@ -54,8 +54,8 @@ public:
 protected:
 	DECLARE_FECORE_CLASS()
 private:
-	double mean = 1.0;//distribution's mean
-	double stddev = 1.0;//distribution's standard deviation
+	double mean = 1.0; //distribution's mean
+	double stddev = 1.0; //distribution's standard deviation
 	std::normal_distribution<double> nd;
 };
 
@@ -66,8 +66,7 @@ public:
 	//! constructor
 	explicit FEUniformDistribution(FEModel* pfem) : FEProbabilityDistribution(pfem) {}
 	//! generates the next value in the given sequence for a given distribution
-	//! this value cannot be zero or less if the value is zero or less the result 
-	//! will be redrawn up to max_retries
+	//! this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
 	//! nan will be returned if the distribution fails to find a suitable number
 	double NextValue(angiofe_random_engine & re) override;
 	vec3d NextVec(angiofe_random_engine & re) override;
@@ -78,8 +77,8 @@ public:
 protected:
 	DECLARE_FECORE_CLASS()
 private:
-	double a = 0.0;//distribution's mean
-	double b = 1.0;//distribution's standard deviation
+	double a = 0.0; //distribution's mean
+	double b = 1.0; //distribution's standard deviation
 	std::uniform_real_distribution<double> rd;
 	bool time_clamped = true;
 };
@@ -92,8 +91,7 @@ public:
 	//! constructor
 	explicit FEExponentialDistribution(FEModel* pfem) : FEProbabilityDistribution(pfem) {}
 	//! generates the next value in the given sequence for a given distribution
-	//! this value cannot be zero or less if the value is zero or less the result 
-	//! will be redrawn up to max_retries
+	//! this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
 	//! nan will be returned if the distribution fails to find a suitable number
 	double NextValue(angiofe_random_engine & re) override;
 	vec3d NextVec(angiofe_random_engine & re) override;
@@ -104,8 +102,8 @@ public:
 protected:
 	DECLARE_FECORE_CLASS()
 private:
-	double lambda = 1.0;//distribution's lambda
-	double mult = 1.0;//multiplier
+	double lambda = 1.0; //distribution's lambda
+	double mult = 1.0; //multiplier
 	std::exponential_distribution<double> ed;
 	double prev_lambda = 1.0;
 	double prev_mult = mult;
@@ -131,8 +129,8 @@ public:
 protected:
 	DECLARE_FECORE_CLASS()
 private:
-	double a = 1.0;//distribution's mean
-	double b = 1.0;//distribution's standard deviation
+	double a = 1.0; //distribution's mean
+	double b = 1.0; //distribution's standard deviation
 	std::cauchy_distribution<double> cd;
 	double prev_a = a;
 	double prev_b = b;
@@ -157,7 +155,7 @@ public:
 protected:
 	DECLARE_FECORE_CLASS()
 private:
-	double dof = 1.0;//distribution's x^2
+	double dof = 1.0; //distribution's x^2
 	double mult = 1.0;
 	std::chi_squared_distribution<double> cd;
 	double prev_dof = dof;
@@ -172,8 +170,7 @@ public:
 	//! constructor
 	explicit FEWeibullDistribution(FEModel* pfem) : FEProbabilityDistribution(pfem) {}
 	//! generates the next value in the given sequence for a given distribution
-	//! this value cannot be zero or less if the value is zero or less the result 
-	//! will be redrawn up to max_retries
+	//! this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
 	//! nan will be returned if the distribution fails to find a suitable number
 	double NextValue(angiofe_random_engine & re) override;
 	vec3d NextVec(angiofe_random_engine & re) override;
@@ -199,8 +196,7 @@ public:
 	//! constructor
 	explicit FEGammaDistribution(FEModel* pfem) : FEProbabilityDistribution(pfem) {}
 	//! generates the next value in the given sequence for a given distribution
-	//! this value cannot be zero or less if the value is zero or less the result 
-	//! will be redrawn up to max_retries
+	//! this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
 	//! nan will be returned if the distribution fails to find a suitable number
 	double NextValue(angiofe_random_engine & re) override;
 	vec3d NextVec(angiofe_random_engine & re) override;
@@ -225,8 +221,7 @@ public:
 	//! constructor
 	explicit FEFixedDistribution(FEModel* pfem) : FEProbabilityDistribution(pfem) {}
 	//! generates the next value in the given sequence for a given distribution
-	//! this value cannot be zero or less if the value is zero or less the result 
-	//! will be redrawn up to max_retries
+	//! this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
 	//! nan will be returned if the distribution fails to find a suitable number
 	double NextValue(angiofe_random_engine & re) override;
 	vec3d NextVec(angiofe_random_engine & re) override;
@@ -247,8 +242,7 @@ public:
 	//! constructor
 	explicit FEEllipticalDistribution(FEModel* pfem) : FEProbabilityDistribution(pfem) {}
 	//! generates the next value in the given sequence for a given distribution
-	//! this value cannot be zero or less if the value is zero or less the result 
-	//! will be redrawn up to max_retries
+	//! this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
 	//! nan will be returned if the distribution fails to find a suitable number
 	vec3d NextVec(angiofe_random_engine & re) override;
 	double NextValue(angiofe_random_engine & re) override;
@@ -257,7 +251,7 @@ public:
 	//! updates the distribution to a given time
 	void TimeStepUpdate(double current_time) override;
 	mat3ds spd = mat3ds();
-	double efd_exp = 1;
+	double efd_exp = 1.0;
 protected:
 	DECLARE_FECORE_CLASS()
 private:
@@ -274,8 +268,7 @@ public:
 	//! constructor
 	explicit FEFisherDistribution(FEModel* pfem) : FEProbabilityDistribution(pfem) {}
 	//! generates the next value in the given sequence for a given distribution
-	//! this value cannot be zero or less if the value is zero or less the result 
-	//! will be redrawn up to max_retries
+	//! this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
 	//! nan will be returned if the distribution fails to find a suitable number
 	vec3d NextVec(angiofe_random_engine & re) override;
 	double NextValue(angiofe_random_engine & re) override;
@@ -296,8 +289,7 @@ private:
 	std::vector<double> ODF;
 	std::vector<double> cdf;
 	std::vector<double> bins;
-	std::uniform_real_distribution<double> ud 
-		= std::uniform_real_distribution<double>(-1.0, 1.0);
+	std::uniform_real_distribution<double> ud = std::uniform_real_distribution<double>(-1.0, 1.0);
 };
 
 //! return a given value. Can be used to set data to a load curve as well?
@@ -307,8 +299,7 @@ public:
 	//! constructor
 	explicit FEPrescribedDistribution(FEModel* pfem) : FEProbabilityDistribution(pfem) {}
 	//! generates the next value in the given sequence for a given distribution
-	//! this value cannot be zero or less if the value is zero or less the result 
-	//! will be redrawn up to max_retries
+	//! this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
 	//! nan will be returned if the distribution fails to find a suitable number
 	double NextValue(angiofe_random_engine & re) override;
 	vec3d NextVec(angiofe_random_engine & re) override;
@@ -321,13 +312,12 @@ protected:
 private:
 	double distribution = 1.0;
 	// construct uniform distribution
-	std::uniform_real_distribution<double> ud 
-		= std::uniform_real_distribution<double>(0.0, 1.0);
+	std::uniform_real_distribution<double> ud = std::uniform_real_distribution<double>(0.0, 1.0);
 	std::vector<vec2d> prescribed_distribution;
 	int n = -1;
-	std::vector<double> pdf; 
-	std::vector<double> cdf; 
-	std::vector<double> bins; 
+	std::vector<double> pdf;
+	std::vector<double> cdf;
+	std::vector<double> bins;
 };
 
 //! get random numbers from an rational distribution
@@ -337,8 +327,7 @@ public:
 	//! constructor
 	explicit FERationalDistribution(FEModel* pfem) : FEProbabilityDistribution(pfem) {}
 	//! generates the next value in the given sequence for a given distribution
-	//! this value cannot be zero or less if the value is zero or less the result 
-	//! will be redrawn up to max_retries
+	//! this value cannot be zero or less if the value is zero or less the result will be redrawn up to max_retries
 	//! nan will be returned if the distribution fails to find a suitable number
 	double NextValue(angiofe_random_engine& re) override;
 	vec3d NextVec(angiofe_random_engine& re) override;
@@ -359,8 +348,7 @@ private:
 	int points = 100;
 	double distribution = 1.0;
 	// construct uniform distribution
-	std::uniform_real_distribution<double> ud 
-		= std::uniform_real_distribution<double>(0.0, 1.0);
+	std::uniform_real_distribution<double> ud = std::uniform_real_distribution<double>(0.0, 1.0);
 	std::vector<vec2d> rational_distribution;
 	int n = -1;
 	std::vector<double> pdf;

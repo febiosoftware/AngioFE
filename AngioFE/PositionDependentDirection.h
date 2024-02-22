@@ -75,7 +75,7 @@ protected:
 	DECLARE_FECORE_CLASS()
 private:
 	bool alpha_override = false;// replace alpha with the override
-	double efd_exp = 1;
+	double efd_exp = 1.0;
 };
 
 class LagrangePStrainPDD : public PositionDependentDirection
@@ -110,8 +110,8 @@ public:
 protected:
 	DECLARE_FECORE_CLASS()
 private:
-	double threshold = 0.00001;//vessels will deflect if above threshold
-	bool alpha_override = false;//replace the alpha to have this take over
+	double threshold = 1.0e-5; //vessels will deflect if above threshold
+	bool alpha_override = false; //replace the alpha to have this take over
 	FEVariableInterpolation* interpolation_prop = nullptr;
 };
 
@@ -129,13 +129,14 @@ public:
 protected:
 	DECLARE_FECORE_CLASS()
 private:
-	double threshold = 1;//vessels will deflect if above threshold
-	bool alpha_override = true;//replace the alpha to have this take over
-	bool grad_threshold = false;//use a gradient to detect areas where repulsion should occur.
+	double threshold = 1.0; //vessels will deflect if above threshold
+	bool alpha_override = true; //replace the alpha to have this take over
+	bool grad_threshold = false; //use a gradient to detect areas where repulsion should occur.
 	FEVariableInterpolation* interpolation_prop = nullptr;
 };
 
 //! Implements a chemical concentration based position direction modifier
+//! SL: Currently experimental; not thoroughly tested.
 class ConcentrationGradientPDD : public PositionDependentDirection
 {
 public:
@@ -150,13 +151,14 @@ protected:
 	DECLARE_FECORE_CLASS()
 private:
 	//! SL: will need to rethink this default
-	double threshold = 0.00001;//vessels will deflect if above threshold
-	bool alpha_override = false;//replace the alpha to have this take over
+	double threshold = 1.0e-5; //vessels will deflect if above threshold
+	bool alpha_override = false; //replace the alpha to have this take over
 	int sol_id = 0;
 	FEVariableInterpolation* interpolation_prop = nullptr;
 };
 
 //! Implements a chemical concentration based position direction modifier
+//! SL: Currently experimental; not thoroughly tested.
 class FisherConcentrationGradientPDD : public PositionDependentDirection
 {
 public:
@@ -171,8 +173,8 @@ protected:
 	DECLARE_FECORE_CLASS()
 private:
 	//! SL: will need to rethink this default
-	double threshold = 0.00001;//vessels will deflect if above threshold
-	bool alpha_override = false;//replace the alpha to have this take over
+	double threshold = 1.0e-5; //vessels will deflect if above threshold
+	bool alpha_override = false; //replace the alpha to have this take over
 	int sol_id = 0;
 	FEVariableInterpolation* interpolation_prop = nullptr;
 };
@@ -199,10 +201,10 @@ public:
 protected:
 	DECLARE_FECORE_CLASS()
 private:
-	double anastamosis_radius = 100;//! Radius at which the tip starts to grow towards another tip
-	double fuse_radius = 30;
+	double anastamosis_radius = 100.0; //! Radius at which the tip starts to grow towards another tip
+	double fuse_radius = 30.0;
 	double fuse_angle = 0.25;
-	bool alpha_override = true;//! Replace the alpha to have this take over
+	bool alpha_override = true; //! Replace the alpha to have this take over
 };
 
 //! The component of vessel growth that is dependent on position within the mesh
@@ -279,7 +281,7 @@ private:
 	FEVariableInterpolation* interpolation_prop = nullptr;
 	bool alpha_override = false;// replace alpha with the override
 	double proto_alpha = 1.0;
-	mat3ds proto_efd = mat3ds(1, 1, 1, 0, 0, 0);
+	mat3ds proto_efd = mat3ds(1.0, 1.0, 1.0, 0.0, 0.0, 0.0);
 	double proto_efd_exp = 1.0;
 };
 
@@ -297,9 +299,9 @@ public:
 protected:
 	DECLARE_FECORE_CLASS()
 private:
-	double threshold = 1;//vessels will deflect if above threshold
-	bool alpha_override = true;//replace the alpha to have this take over
-	bool grad_threshold = false;//use a gradient to detect areas where repulsion should occur.
+	double threshold = 1.0; //vessels will deflect if above threshold
+	bool alpha_override = true; //replace the alpha to have this take over
+	bool grad_threshold = false; //use a gradient to detect areas where repulsion should occur.
 	FEVariableInterpolation* interpolation_prop = nullptr;
 };
 
@@ -325,8 +327,8 @@ public:
 protected:
 	DECLARE_FECORE_CLASS()
 private:
-	double anastamosis_radius = 100;//! Radius at which the tip starts to grow towards another tip
-	double fuse_radius = 30;
+	double anastamosis_radius = 100.0; //! Radius at which the tip starts to grow towards another tip
+	double fuse_radius = 30.0;
 	double fuse_angle = 0.25;
-	bool alpha_override = true;//! Replace the alpha to have this take over
+	bool alpha_override = true; //! Replace the alpha to have this take over
 };

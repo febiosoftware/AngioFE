@@ -8,10 +8,7 @@
 #include "angio3d.h"
 
 //-----------------------------------------------------------------------------
-FEAngioMaterialPoint::
-	FEAngioMaterialPoint(	FEMaterialPointData* pt, FEMaterialPointData* vesselPt, 
-							FEMaterialPointData* matrixPt) 
-	: FEMaterialPointData(pt)
+FEAngioMaterialPoint::FEAngioMaterialPoint(FEMaterialPointData* pt, FEMaterialPointData* vesselPt, FEMaterialPointData* matrixPt) : FEMaterialPointData(pt)
 {
 	vessPt = new FEMaterialPoint(vesselPt);
 	matPt = new FEMaterialPoint(matrixPt);
@@ -42,7 +39,9 @@ void FEAngioMaterialPoint::Update(const FETimeInfo& timeInfo)
 FEMaterialPointData* FEAngioMaterialPoint::Copy()
 {
 	FEAngioMaterialPoint* pt = new FEAngioMaterialPoint(*this);
-	if (m_pNext) pt->m_pNext = m_pNext->Copy();
+	if (m_pNext) 
+		pt->m_pNext = m_pNext->Copy();
+
 	return pt;
 }
 
@@ -53,8 +52,7 @@ void FEAngioMaterialPoint::Serialize(DumpStream& dmp)
 	FEMaterialPointData::Serialize(dmp);
 }
 
-FEAngioMaterialPoint* FEAngioMaterialPoint::
-	FindAngioMaterialPoint(FEMaterialPoint* mp)
+FEAngioMaterialPoint* FEAngioMaterialPoint::FindAngioMaterialPoint(FEMaterialPoint* mp)
 {
 	return mp->ExtractData<FEAngioMaterialPoint>();
 }
@@ -65,8 +63,7 @@ void FEAngioMaterialPoint::UpdateAngioFractionalAnisotropy()
 	std::vector<pair<double, int>> v;
 	double d[3]; vec3d r[3];
 	angioSPD.eigen2(d, r);
-	//! the FA can be calculated as std/rms of the ODF. We can assume each 
-	//! direction is one sample and perform the calculation on the eigenvalues.
+	//! the FA can be calculated as std/rms of the ODF. We can assume each direction is one sample and perform the calculation on the eigenvalues.
 	double sum = d[0] + d[1] + d[2];
 	double mean = sum / 3.0;
 	double sq_sum 
@@ -74,12 +71,7 @@ void FEAngioMaterialPoint::UpdateAngioFractionalAnisotropy()
 		+ (d[1] - mean) * (d[1] - mean) 
 		+ (d[2] - mean) * (d[2] - mean);
 	double stdev = sqrt(sq_sum / 2.0);
-	double rms 
-		= sqrt((
-			(d[0] * d[0])
-			+ (d[1] * d[1]) 
-			+ (d[2] * d[2])) 
-		/ 3.0);
+	double rms = sqrt(((d[0] * d[0]) + (d[1] * d[1]) + (d[2] * d[2])) / 3.0);
 	angioFA = stdev / rms;
 }
 
@@ -92,8 +84,7 @@ void FEAngioMaterialPoint::UpdateSPD()
 	mat3d Fnet = emp->m_F*initial_angioSPD; 
 	// get the Left cauchy-green deformation tensor
 	mat3d Bh = Fnet * Fnet.transpose();
-	mat3ds B 
-		= mat3ds(Bh[0][0], Bh[1][1], Bh[2][2], Bh[0][1], Bh[1][2], Bh[0][2]);
+	mat3ds B = mat3ds(Bh[0][0], Bh[1][1], Bh[2][2], Bh[0][1], Bh[1][2], Bh[0][2]);
 	// get the ellipsoid associated with B
 	double l2[3];
 	vec3d v[3];

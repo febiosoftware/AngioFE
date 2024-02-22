@@ -10,9 +10,8 @@ vec3d Segment::Direction(FEMesh * mesh) const
 	vec3d p1 = back->GetPosition(mesh);
 	vec3d r = p0 - p1;
 	if (r.norm() < 0.001) 
-	{
 		r = front->direction;
-	}
+
 	r.unit();
 
 	return r;
@@ -44,17 +43,12 @@ double Segment::LengthAtTime(FEMesh * mesh, double time)const
 {
 	double contrib = 0.0;
 	if (back->time > time)
-	{
 		contrib = 0.0;
-	}
 	else if ((back->time <= time) && (front->time <= time))
-	{
 		contrib = 1.0;
-	}
 	else
-	{
 		contrib = (time - back->time) / (front->time - back->time);
-	}
+
 	assert(contrib >= -0.001 && contrib <= 1.001);
 	double length_at_time = (front->GetPosition(mesh) - back->GetPosition(mesh)).norm() * contrib;
 
@@ -63,8 +57,7 @@ double Segment::LengthAtTime(FEMesh * mesh, double time)const
 
 double Segment::RefLength(FEMesh * mesh)const
 {
-	double reference_length 
-		= (front->GetRefPosition(mesh) - back->GetRefPosition(mesh)).norm();
+	double reference_length = (front->GetRefPosition(mesh) - back->GetRefPosition(mesh)).norm();
 
 	return reference_length;
 }

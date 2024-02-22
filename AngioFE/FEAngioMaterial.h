@@ -17,10 +17,8 @@
 #include "AngioStressPolicy.h"
 #include "InitialModifiers.h"
 #include "NodeDataInterpolation.h"
-#include "CellSpecies.h"
 
 class AngioElement;
-class FECell;
 
 //! the material that allows vascular growth within it
 class FEAngioMaterial : public FEElasticMaterial
@@ -44,7 +42,6 @@ public:
 	//! set the seed for a given element
 	void SetSeeds(AngioElement* angio_elem);
 
-
 	//should be const and threadsafe
 	//! the smallest safe step an elment can take
 	double GetMin_dt(AngioElement* angio_elem, FEMesh* mesh);
@@ -56,22 +53,16 @@ public:
 	void GrowSegments(AngioElement * angio_elem, double end_time, int buffer_index);
 
 	//! performs vascular growth within an element
-	void GrowthInElement(double end_time, Tip * active_tip, int source_index, 
-							int buffer_index);
+	void GrowthInElement(double end_time, Tip* active_tip, int source_index, int buffer_index);
 
 	//! performs vascular growth within an element before time = 0
-	void ProtoGrowthInElement(double end_time, Tip * active_tip, int source_index, 
-								int buffer_index);
+	void ProtoGrowthInElement(double end_time, Tip* active_tip, int source_index, int buffer_index);
 
-	//! returns the index of the element in which the tip will grow next, this 
-	//! resolves when a tip can grow in multiple elements
-	int SelectNextTip(	std::vector<AngioElement*> & possible_locations, 
-						std::vector<vec3d> & possible_local_coordinates, 
-						Tip* tip, double dt, int buffer);
+	//! returns the index of the element in which the tip will grow next, this resolves when a tip can grow in multiple elements
+	int SelectNextTip(std::vector<AngioElement*>& possible_locations, std::vector<vec3d>& possible_local_coordinates, Tip* tip, double dt, int buffer);
 
 	//should be const and threadsafe
-	//! sets buffers to the correct state and perfom branching as needed, run 
-	//! after each growth substep
+	//! sets buffers to the correct state and perfom branching as needed, run after each growth substep
 	void PostGrowthUpdate(AngioElement* angio_elem, int buffer_index);
 
 	//! sets buffers to the correct state and perfom branching as needed
@@ -81,8 +72,7 @@ public:
 	void Cleanup(AngioElement* angio_elem, double end_time, int buffer_index);
 
 	//! prep the buffers before each growth substep
-	static void PrepBuffers(AngioElement* angio_elem, double end_time, 
-		int buffer_index);
+	static void PrepBuffers(AngioElement* angio_elem, double end_time, int buffer_index);
 
 	//! seed the fragments within the given elements
 	bool SeedFragments(std::vector<AngioElement *>& angio_elements, FEMesh* mesh);
@@ -102,11 +92,10 @@ public:
 	//! gets the febio id of the angio material
 	int GetID_ang() 
 	{ 
-		FECoreBase  * base = GetParent();
+		FECoreBase* base = GetParent();
 		if (base)
-		{
 			return base->GetID();
-		}
+
 		return FEElasticMaterial::GetID(); 
 	};
 
@@ -124,8 +113,7 @@ public:
 
 	//! Angio material functions
 	//! //! returns the segment velocity at a given location
-	double GetSegmentVelocity(AngioElement* angio_element, vec3d local_pos,
-		double time_shift);
+	double GetSegmentVelocity(AngioElement* angio_element, vec3d local_pos, double time_shift);
 	//! prevent vessels from getting stuck on faces
 	vec3d CheckFaceProximity(vec3d pos, vec3d dir);
 	//! find the possible places to move to when the tip is stuck on an exterior face/corner
@@ -139,10 +127,6 @@ public:
 	BranchPolicy* proto_branch_policy = nullptr;
 	NodeDataInterpolationManager* nodedata_interpolation_manager = nullptr;
 	SegmentGrowthVelocityManager* velocity_manager = nullptr;
-	//CellSBMManager* cell_SBM_manager = nullptr;
-	//CellSoluteManager* cell_Solute_manager = nullptr;
-	CellSpeciesManager* cell_species_manager = nullptr;
-	CellReactionManager* cell_reaction_manager = nullptr;
 
 	//! Properties
 	double vessel_radius = 6.3;
@@ -162,7 +146,6 @@ private:
 	PreviousSegmentContributionManager* psc_manager = nullptr;
 	ProtoPositionDependentDirectionManager* proto_pdd_manager = nullptr;
 	PositionDependentDirectionManager* pdd_manager = nullptr;
-	/*CellSpecies* tip_species = nullptr;*/
 	ProtoContributionMixManager* proto_cm_manager = nullptr;
 	ContributionMixManager* cm_manager = nullptr;
 	CommonAngioProperties* common_properties = nullptr;

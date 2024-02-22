@@ -31,8 +31,7 @@ Fileout::Fileout(FEAngio& angio)
 
 	logstream.open(m_sfile + "_log.csv");
 	//write the headers
-	logstream	<< "Time,Material,Segments,Total Length,Vessels,Branches,Anastamoses,Active Tips" 
-				<< endl;
+	logstream << "Time,Material,Segments,Total Length,Vessels,Branches,Anastamoses,Active Tips" << endl;
 
 	// write the line file
 	vessel_state_stream = fopen((m_sfile + ".ang2").c_str(), "wb");
@@ -53,24 +52,20 @@ Fileout::Fileout(FEAngio& angio)
 		{
 			int index = i + (j * 32);
 			if (index == angio.m_fem->Materials())
-			{
 				break;
-			}
+
 			FEMaterial* mat = angio.m_fem->GetMaterial(index);
 			FEAngioMaterial* angio_mat = angio.GetAngioComponent(mat);
 			if (angio_mat)
-			{
 				c_bitmask |= place_holder;
-			}
+
 			place_holder = place_holder << 1;
 		}
 		fwrite(&c_bitmask, sizeof(unsigned int), 1, vessel_state_stream);
 	}
 
 	feangio_state_stream = fopen((m_sfile + "_time_stats.csv").c_str(), "wt");
-	fprintf(feangio_state_stream, "%-64s,%-64s,%-64s,%-64s\n",
-		"Timestep", "Growth Process", "Branch Policy Update", "Update Stress");
-	cell_state_stream = fopen((m_sfile + "_cells.txt").c_str(), "wt"); // cells
+	fprintf(feangio_state_stream, "%-64s,%-64s,%-64s,%-64s\n", "Timestep", "Growth Process", "Branch Policy Update", "Update Stress");
 }
 
 //-----------------------------------------------------------------------------
@@ -78,7 +73,6 @@ Fileout::~Fileout()
 {
 	logstream.close();
 	fclose(vessel_state_stream);
-	fclose(cell_state_stream);
 	fclose(feangio_state_stream);
 }
 
@@ -86,7 +80,6 @@ Fileout::~Fileout()
 void Fileout::printStatus(FEAngio& angio, double time)
 {
 	//just store the status in a csv
-	//logstream << "Time,Segments,Total Length,Vessels,Branchs,Anastamoses,Active Tips" << endl;
 	std::vector <int> SegC = getSegmentCount_pm(angio);
 	std::vector <double> SegL = getSegmentLength_pm(angio, time);
 	std::vector <int> BranchC = getBranchCount_pm(angio);
@@ -95,8 +88,7 @@ void Fileout::printStatus(FEAngio& angio, double time)
 	{
 		double ctime = angio.GetFEModel()->GetTime().currentTime;
 		const std::string mname = angio.m_fem->GetMaterial(i)->GetName();
-		logstream	<< ctime << "," << mname << "," << SegC[i] << "," << SegL[i] 
-					<< ",," << BranchC[i] << ",," << TipC[i] << std::endl;
+		logstream << ctime << "," << mname << "," << SegC[i] << "," << SegL[i] << ",," << BranchC[i] << ",," << TipC[i] << std::endl;
 	}
 }
 
@@ -114,9 +106,7 @@ void Fileout::save_vessel_state(FEAngio& angio)
 {
 	unsigned int new_seg_count = 0;
 	for (int i = 0; i < angio.angio_elements.size(); i++)
-	{
 		new_seg_count += angio.angio_elements[i]->recent_segments.size();
-	}
 
 	//write segcount and time
 	fwrite(&new_seg_count, sizeof(unsigned int), 1, vessel_state_stream);
@@ -161,9 +151,7 @@ void Fileout::bulk_save_vessel_state(FEAngio& angio)
 {
 	unsigned int new_seg_count = 0;
 	for (int i = 0; i < angio.angio_elements.size(); i++)
-	{
 		new_seg_count += angio.angio_elements[i]->grown_segments.size();
-	}
 
 	//write segcount and time
 	fwrite(&new_seg_count, sizeof(unsigned int), 1, vessel_state_stream);
@@ -230,91 +218,14 @@ void Fileout::save_final_vessel_csv(FEAngio& angio)
 			auto seg = *(angio.angio_elements[i]->grown_segments[j]);
 			vec3d p0 = seg.front->GetPosition(mesh);
 			vec3d p1 = seg.back->GetPosition(mesh);
-			fprintf(final_vessel_file, 
-				"%-12.7f,%-12.7f,%-12.7f,%-12.7f,%-12.7f,%-12.7f,%-12.7f\n", 
-				p0.x, p0.y, p0.z, p1.x, p1.y, p1.z, seg.back->time);
+			fprintf(final_vessel_file, "%-12.7f,%-12.7f,%-12.7f,%-12.7f,%-12.7f,%-12.7f,%-12.7f\n", p0.x, p0.y, p0.z, p1.x, p1.y, p1.z, seg.back->time);
 		}
-
 	}
+
 	fclose(final_vessel_file);
 }
 
-void Fileout::save_final_cells_txt(FEAngio& angio)
-{
-	FILE* final_cell_file = fopen((m_sfile + "_cells.txt").c_str(), "at");
-	assert(final_cell_file);
-	FEMesh* mesh = angio.GetMesh();
-	for (auto iter = angio.cells.begin(); iter != angio.cells.end(); iter++) 
-	{
-		auto cell = iter->second;
-		vec3d p = cell->GetPosition();
-		int time = angio.GetFEModel()->GetCurrentStep()->m_ntimesteps;
-		fprintf(final_cell_file, "%d,%d,%-12.5e,%-12.5e,%-12.5e", 
-				time, cell->initial_cell_id, p.x, p.y, p.z);
-		
-		//! Print solute values
-		for (int isol = 0; isol < cell->Solutes.size(); isol++) 
-		{
-			fprintf(final_cell_file, ",%-12.5e", cell->Solutes[isol]->GetInt());
-		}
 
-		//! Print SBM values
-		for (int isbm = 0; isbm < cell->SBMs.size(); isbm++) 
-		{
-			fprintf(final_cell_file, ",%-12.5e", cell->SBMs[isbm]->GetInt());
-		}
-		fprintf(final_cell_file, "\n");
-	}
-	fclose(final_cell_file);
-}
-
-void Fileout::save_initial_cells_txt(FEAngio& angio)
-{
-	FILE* final_cell_file = fopen((m_sfile + "_cells.txt").c_str(), "at");
-	assert(final_cell_file);
-	FEMesh* mesh = angio.GetMesh();
-	fprintf(final_cell_file, "*timestep,cell id,X Pos,Y Pos,Z Pos");
-	CellSpeciesManager* m_species 
-		= angio.angio_elements[0]->_angio_mat->cell_species_manager;
-
-	if (m_species) 
-	{
-		for (int isol = 0; isol < m_species->cell_solute_prop.size(); isol++) 
-		{
-			int sol_id = m_species->cell_solute_prop[isol]->GetSoluteID();
-			fprintf(final_cell_file, ",Sol %d", sol_id);
-		}
-		//! assign the properties to each SBM. Initialize body loads and add to 
-		//! the SBMs container.
-		for (int isbm = 0; isbm < m_species->cell_SBM_prop.size(); isbm++)
-		{
-			int sbm_id = m_species->cell_SBM_prop[isbm]->GetSBMID();
-			fprintf(final_cell_file, ",SBM %d", sbm_id);
-		}
-	}
-	fprintf(final_cell_file, "\n");
-
-	for (auto iter = angio.cells.begin(); iter != angio.cells.end(); iter++)
-	{
-		auto cell = iter->second;
-		vec3d p = cell->GetPosition();
-		fprintf(final_cell_file, 
-				"%d,%d,%-12.5e,%-12.5e,%-12.5e", 
-				0, cell->initial_cell_id, p.x, p.y, p.z);
-		//! Print solute values
-		for (int isol = 0; isol < cell->Solutes.size(); isol++) 
-		{
-			fprintf(final_cell_file, ",%-12.5e", cell->Solutes[isol]->GetInt());
-		}
-		//! Print SBM values
-		for (int isbm = 0; isbm < cell->SBMs.size(); isbm++) 
-		{
-			fprintf(final_cell_file, ",%-12.5e", cell->SBMs[isbm]->GetInt());
-		}
-		fprintf(final_cell_file, "\n");
-	}
-	fclose(final_cell_file);
-}
 
 void Fileout::save_feangio_stats(FEAngio& angio)
 {
@@ -326,9 +237,7 @@ void Fileout::save_feangio_stats(FEAngio& angio)
 	angio.grow_timer.time_str(grow_time);
 	angio.update_branch_policy_timestep_timer.time_str(update_branch_policy);
 	angio.update_angio_stress_timer.time_str(update_stress);
-	fprintf(feangio_state_stream, 
-			"%-12.7f,%-64s,%-64s,%-64s\n",
-			ti.currentTime, grow_time, update_branch_policy, update_stress);
+	fprintf(feangio_state_stream, "%-12.7f,%-64s,%-64s,%-64s\n", ti.currentTime, grow_time, update_branch_policy, update_stress);
 	fflush(feangio_state_stream);
 }
 
@@ -336,9 +245,8 @@ int Fileout::getBranchCount(FEAngio& angio)
 {
 	int count = 0;
 	for (int i = 0; i < angio.angio_elements.size(); i++)
-	{
 		count += angio.angio_elements[i]->branch_count;
-	}
+	
 	return count;
 }
 
@@ -346,15 +254,15 @@ std::vector <int> Fileout::getBranchCount_pm(FEAngio& angio)
 {
 	std::vector <int> count;
 	for (int i = 0; i < angio.m_fem->Materials(); i++) 
-	{
 		count.emplace_back(0);
-	}
+
 	for (int i = 0; i < angio.angio_elements.size(); i++)
 	{
 		FESolidElement* se = angio.angio_elements[i]->_elem;
 		int mat_id = se->GetMatID();
 		count[mat_id] += angio.angio_elements[i]->branch_count;
 	}
+
 	return count;
 }
 
@@ -362,9 +270,8 @@ int Fileout::getSegmentCount(FEAngio& angio)
 {
 	int count = 0;
 	for (int i = 0; i < angio.angio_elements.size(); i++)
-	{
 		count += int(angio.angio_elements[i]->grown_segments.size());
-	}
+
 	return count;
 }
 
@@ -372,15 +279,15 @@ std::vector <int> Fileout::getSegmentCount_pm(FEAngio& angio)
 {
 	std::vector <int> count;
 	for (int i = 0; i < angio.m_fem->Materials(); i++) 
-	{
-	count.emplace_back(0);
-	}
+		count.emplace_back(0);
+	
 	for (int i = 0; i < angio.angio_elements.size(); i++)
 	{
 		FESolidElement* se = angio.angio_elements[i]->_elem;
 		int mat_id = se->GetMatID();
 		count[mat_id] += angio.angio_elements[i]->grown_segments.size();
 	}
+	
 	return count;
 }
 
@@ -388,6 +295,7 @@ double Fileout::getSegmentLength(FEAngio& angio, double time)
 {
 	FEMesh* mesh = angio.GetMesh();
 	double len = 0.0;
+
 #pragma omp parallel for
 	for (int i = 0; i < angio.angio_elements.size(); i++)
 	{
@@ -395,6 +303,7 @@ double Fileout::getSegmentLength(FEAngio& angio, double time)
 #pragma omp critical
 		len += temp;
 	}
+	
 	return len;
 }
 
@@ -402,9 +311,8 @@ std::vector <double> Fileout::getSegmentLength_pm(FEAngio& angio, double time)
 {
 	std::vector <double> len;
 	for (int i = 0; i < angio.m_fem->Materials(); i++) 
-	{
 		len.emplace_back(0);
-	}
+
 	FEMesh* mesh = angio.GetMesh();
 	for (int i = 0; i < angio.angio_elements.size(); i++)
 	{
@@ -414,6 +322,7 @@ std::vector <double> Fileout::getSegmentLength_pm(FEAngio& angio, double time)
 #pragma omp critical
 		len[mat_id] += temp;
 	}
+
 	return len;
 }
 
@@ -421,35 +330,23 @@ int Fileout::getTipCount(FEAngio& angio)
 {
 	int count = 0;
 	for (int i = 0; i < angio.angio_elements.size(); i++)
-	{
-		for (auto iter = angio.angio_elements[i]->next_tips.begin(); 
-			iter != angio.angio_elements[i]->next_tips.end(); 
-			++iter)
-		{
+		for (auto iter = angio.angio_elements[i]->next_tips.begin(); iter != angio.angio_elements[i]->next_tips.end(); ++iter)
 			count += int(iter->second.size());
-		}
-	}
+
 	return count;
 }
 
 std::vector <int> Fileout::getTipCount_pm(FEAngio& angio)
 {
 	std::vector <int> count;
-	//	for (int i = 0; i < angio.m_pmat_ids.size(); i++) {
 	for (int i = 0; i < angio.m_fem->Materials(); i++) 
-	{
 		count.emplace_back(0);
-	}
 	for (int i = 0; i < angio.angio_elements.size(); i++)
 	{
 		FESolidElement* se = angio.angio_elements[i]->_elem;
 		int mat_id = se->GetMatID();
-		for (auto iter = angio.angio_elements[i]->next_tips.begin(); 
-			iter != angio.angio_elements[i]->next_tips.end(); 
-			++iter)
-		{
+		for (auto iter = angio.angio_elements[i]->next_tips.begin(); iter != angio.angio_elements[i]->next_tips.end(); ++iter)
 			count[mat_id] += int(iter->second.size());
-		}
 	}
 	return count;
 }

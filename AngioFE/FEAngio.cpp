@@ -9,7 +9,6 @@
 #include "FECore/FELoadCurve.h"
 #include "FEBioMech/FEElasticMaterial.h"
 #include "FEBioMech/FEElasticMixture.h"
-#include "FEBioMix/FESolute.h"
 #include "FEBioMix/FEMultiphasic.h"
 #include "FEBioLib/FEBioModel.h"
 #include <FECore/log.h>
@@ -34,43 +33,32 @@
 #include "FECore/FEDomainMap.h"
 
 int FEAngio::fragment_id_counter = 0;
-int FEAngio::cell_id_counter = 0;
 
 //-----------------------------------------------------------------------------
 // create a map of fiber vectors based on the material's orientatin
 bool CreateFiberMap(vector<vec3d>& fiber, FEMaterial* pmat);
 
 // create a density map based on material point density
-bool CreateDensityMap(	vector<double>& density, vector<double>& anisotropy, 
-						FEMaterial* pmat);
+bool CreateDensityMap(	vector<double>& density, vector<double>& anisotropy, FEMaterial* pmat);
 
 // need to rename from vegfID to solute id
-bool CreateConcentrationMap(vector<double>& concentration, FEMaterial* pmat, 
-							int vegfID);
+bool CreateConcentrationMap(vector<double>& concentration, FEMaterial* pmat, int vegfID);
 
 void FEAngio::SetSeeds()
 {
 	// gets seed for random engine
 	rengine.seed(int (m_fem->GetGlobalConstant("seed")));
 	// for each angio element
-	for (int i = 0; i <angio_elements.size(); i++)
-	{
-		// call set seeds for the element
+	for (int i = 0; i <angio_elements.size(); i++) 
 		angio_elements[i]->_angio_mat->SetSeeds(angio_elements[i]);
-	}
 }
 
 bool FEAngio::SeedFragments()
 {
 	bool rv = true;
 	// for each angio element across materials
-	for (auto	iter = elements_by_material.begin(); 
-				iter != elements_by_material.end(); 
-				++iter)
-	{
-		// Call seed fragments for the element
+	for (auto iter = elements_by_material.begin(); iter != elements_by_material.end(); ++iter)
 		rv &= iter->first->SeedFragments(iter->second, GetMesh());
-	}
 	return rv;
 }
 
@@ -78,12 +66,9 @@ bool FEAngio::SeedFragments()
 void FEAngio::ApplydtToTimestepper(double dt)
 {
 	FEAnalysis * fea = m_fem->GetCurrentStep();
-	// if the FE step is bigger than the angio step
+	// if the FE step is bigger than the angio step then set the fe step to the angio step
 	if (fea->m_dt > dt)
-	{
-		//set the fe step to the angio step
 		fea->m_dt = dt;
-	}
 }
 
 // 
@@ -97,7 +82,6 @@ void FEAngio::GrowSegments()
 	static double min_dt;
 	
 	size_t angio_element_count = angio_elements.size();
-	
 
 	// Is it valid for this to run more than once? only 
 	// if the current time is greater than the next time
@@ -110,66 +94,52 @@ void FEAngio::GrowSegments()
 		// for each angio element
 		for (int i = 0; i < angio_element_count; ++i)
 		{
-			//! determines the minimum timestep for each angio element to allow 
-			//! growth safely
-			double temp_dt = angio_elements[i]->_angio_mat->
-				GetMin_dt(angio_elements[i], mesh);
-			//! this part must be executed one thread at a time to prevent 
-			//! overwriting
+			//! determines the minimum timestep for each angio element to allow growth safely
+			double temp_dt = angio_elements[i]->_angio_mat->GetMin_dt(angio_elements[i], mesh);
+			//! this part must be executed one thread at a time to prevent overwriting
 			#pragma omp critical
 			{
 				// change min_dt to the lesser of min_dt and temp dt
-				min_dt = std::min(std::min(min_dt, temp_dt), fea->m_dt);
+				min_dt = std::min(
+									std::min(min_dt, temp_dt), 
+									fea->m_dt);
 			}
 		}
 		// check that the max_angio time is not greater than the angio dt max.
 		if (min_dt > max_angio_dt) 
-		{ 
 			min_dt = max_angio_dt; 
-		}
 		// check that the step is not too small
 		if ((min_angio_dt != -1) && (min_dt < min_angio_dt)) 
-		{ 
 			min_dt = min_angio_dt; 
-		}
 				
 		// current time is next time plus min_dt
 		double ctime = next_time + min_dt;
 		// allow 16 iterations to be run on each thread as they become available
 		#pragma omp parallel for 
-		// for each angio element
+		// for each angio element prep the buffers
 		for (int j = 0; j < angio_element_count; j++)
-		{
-			// prep the buffers
-			angio_elements[j]->_angio_mat->
-				PrepBuffers(angio_elements[j], next_time, buffer_index);
-		}
+			angio_elements[j]->_angio_mat->PrepBuffers(angio_elements[j], next_time, buffer_index);
 		// for each growth substep
-		for (int i = 0; i <growth_substeps; i++)
+		for (int i = 0; i < growth_substeps; i++)
 		{
+			//SL:
 			// for 16 iteration chunks
 			// causes a bug on linux. Jobs occasionally fail.
 			//#pragma omp parallel for 
-			// for each angio element
+			// for each angio element grow the segments
 			for (int j = 0; j < angio_element_count; j++)
-			{
-				// Grow segments
-				angio_elements.at(j)->_angio_mat->
-					GrowSegments(angio_elements.at(j), ctime, buffer_index);
-			}
+				angio_elements.at(j)->_angio_mat->GrowSegments(angio_elements.at(j), ctime, buffer_index);
 
 			#pragma omp parallel for
-			// for each angio element 
+			// for each angio element do the post growth updates
 			for (int j = 0; j < angio_element_count; j++)
-			{
-				// Post growth update for each element
-				angio_elements[j]->_angio_mat->
-					PostGrowthUpdate(angio_elements[j], buffer_index);
-			}
+				angio_elements[j]->_angio_mat->PostGrowthUpdate(angio_elements[j], buffer_index);
+			
 			// update the buffer index
 			buffer_index = (buffer_index + 1) % 2;
 		}
 	}
+
 	ApplydtToTimestepper(min_dt);
 
 	if (time_info.currentTime >= next_time)
@@ -199,8 +169,7 @@ void FEAngio::ProtoGrowSegments()
 			for (int i = 0; i < angio_element_count; ++i)
 			{
 				// get min dt for all element
-				double temp_dt = angio_elements[i]->_angio_mat->
-					GetMin_dt(angio_elements[i], mesh);
+				double temp_dt = angio_elements[i]->_angio_mat->GetMin_dt(angio_elements[i], mesh);
 				// only one thread can perform this at a time
 				#pragma omp critical
 				{
@@ -209,10 +178,12 @@ void FEAngio::ProtoGrowSegments()
 				}
 			}
 
+			// for proto growth ~9 steps achieves a realistic result
 			min_dt = 1.0 / (9.0);
 
 			// update current time
 			double ctime = next_time + min_dt;
+
 			//clamp the dt to hit zero
 			if (ctime > 0.0)
 			{
@@ -223,62 +194,52 @@ void FEAngio::ProtoGrowSegments()
 			// prepare buffers for each angio element
 			#pragma omp parallel for 
 			for (int j = 0; j < angio_element_count; j++)
-			{
-				angio_elements[j]->_angio_mat->
-					PrepBuffers(angio_elements[j], next_time, buffer_index);
-			}
+				angio_elements[j]->_angio_mat->PrepBuffers(angio_elements[j], next_time, buffer_index);
+
 			int n = growth_substeps;
-			//				int n = 3;
+
 			for (int i = 0; i < n; i++)
 			{
+				//SL:
 				// causes a bug on linux. Jobs occasionally fail.
 				//#pragma omp parallel for 
-				// for each element
+				// for each element grow the segments
 				for (int j = 0; j < angio_element_count; j++)
-				{
-					// grow the segments
-					angio_elements.at(j)->_angio_mat->
-						ProtoGrowSegments(angio_elements.at(j), ctime, buffer_index);
-				}
+					angio_elements.at(j)->_angio_mat->ProtoGrowSegments(angio_elements.at(j), ctime, buffer_index);
 
 				#pragma omp parallel for 
-				// for each angio element
+				// for each angio element update the elements
 				for (int j = 0; j < angio_element_count; j++)
-				{
-					// update the elements
-					angio_elements[j]->_angio_mat->
-						ProtoPostGrowthUpdate(	angio_elements[j], buffer_index);
-				}
+					angio_elements[j]->_angio_mat->ProtoPostGrowthUpdate(angio_elements[j], buffer_index);
+				
+				// update buffers
 				buffer_index = (buffer_index + 1) % 2;
 			}
 		}
+
 		//do the cleanup if needed
 		if (time_info.currentTime >= next_time)
 		{
 			next_time += min_dt;
-			//printf("\nproto angio dt chosen is: %lg next angio time\n", min_dt);
 			#pragma omp parallel for 
 			for (int j = 0; j < angio_element_count; j++)
-			{
-				angio_elements[j]->_angio_mat->
-					Cleanup(angio_elements[j], next_time, buffer_index);
-			}
+				angio_elements[j]->_angio_mat->Cleanup(angio_elements[j], next_time, buffer_index);
+			
+			// update buffers
 			buffer_index = (buffer_index + 1) % 2;
 		}
 	}
+
 	//this may be a bit conservative for a first step but should produce good results
 	ApplydtToTimestepper(min_dt);
 	//do the output, this will output all of the segments
 	fileout->bulk_save_vessel_state(*this);
-	fileout->save_initial_cells_txt(*this);
 }
 
 //! takes a given element then first counts the tips in that element then adds 
 //! all adjacent elements to an inspection list and keep adding tips and 
 //! adjacent elements until they are out of bounds. 
-void FEAngio::
-	GetActiveFinalTipsInRadius(	AngioElement* angio_element, double radius, 
-								FEAngio* pangio, std::vector<Tip *> & tips)
+void FEAngio::GetActiveFinalTipsInRadius(AngioElement* angio_element, double radius, FEAngio* pangio, std::vector<Tip *> & tips)
 {
 	std::unordered_set<AngioElement *> visited;
 	std::set<AngioElement *> next;
@@ -288,12 +249,12 @@ void FEAngio::
 	pangio->ExtremaInElement(angio_element->_elem, element_bounds);
 	// add element to be inspected
 	next.insert(angio_element);
-	// while there are still elements in next
+	// while there are still elements to be evaluated in next
 	while (next.size())
 	{
 		// get angio element
 		AngioElement * cur = *next.begin();
-		// remove it from the buffer
+		// remove it from the next buffer
 		next.erase(next.begin());
 		// add it to the visited buffer
 		visited.insert(cur);
@@ -308,25 +269,18 @@ void FEAngio::
 		{
 			//add the tips and the add all unvisited adjacent elements to next
 			for (int i = 0; i < cur->final_active_tips.size(); i++)
-			{
 				tips.push_back(cur->final_active_tips[i]);
-			}
 
 			for (int i = 0; i < cur->face_adjacency_list.size(); i++)
 			{
 				if (!visited.count(cur->face_adjacency_list[i]))
-				{
 					next.insert(cur->face_adjacency_list[i]);
-				}
 			}
 		}
 	}
 }
 
-void FEAngio::
-	GetActiveTipsInRadius(	AngioElement* angio_element, double radius, 
-							int buffer, FEAngio* pangio, 
-							std::vector<Tip *> & tips, int exclude)
+void FEAngio::GetActiveTipsInRadius(AngioElement* angio_element, double radius, int buffer, FEAngio* pangio, std::vector<Tip *> & tips, int exclude)
 {
 	std::unordered_set<AngioElement *> visited;
 	std::set<AngioElement *> next;
@@ -336,9 +290,8 @@ void FEAngio::
 	pangio->ExtremaInElement(angio_element->_elem, element_bounds);
 
 	for (int i = 0; i < angio_element->face_adjacency_list.size(); i++)
-	{
 		next.insert(angio_element->face_adjacency_list[i]);
-	}
+	
 	visited.insert(angio_element);
 	while (next.size())
 	{
@@ -348,37 +301,30 @@ void FEAngio::
 		std::vector<vec3d> cur_element_bounds;
 		pangio->ExtremaInElement(cur->_elem, cur_element_bounds);
 		double cdist = FEAngio::MinDistance(element_bounds, cur_element_bounds); 
-		//std::cout << cdist << endl;
+
 		if (cdist <= radius)
 		{
-			for (auto	iter = cur->active_tips[buffer].begin(); 
-						iter != cur->active_tips[buffer].end(); 
-						++iter)
+			for (auto iter = cur->active_tips[buffer].begin(); iter != cur->active_tips[buffer].end(); ++iter)
 			{
 				//add the tips and unvisited adjacent elements to next
 				for (int i = 0; i < iter->second.size(); i++)
 				{
 					Tip * tip = iter->second[i];
 					if (tip->initial_fragment_id != exclude)
-					{
 						tips.push_back(tip);
-					}
 				}
 			}
+
 			for (int i = 0; i < cur->face_adjacency_list.size(); i++)
 			{
 				if (!visited.count(cur->face_adjacency_list[i]))
-				{
 					next.insert(cur->face_adjacency_list[i]);
-				}
 			}
 		}
 	}
 }
 
-void FEAngio::
-	GetGrownTipsInRadius(	AngioElement* angio_element, double radius, 
-							FEAngio* pangio, std::vector<Tip *> & tips)
+void FEAngio::GetGrownTipsInRadius(AngioElement* angio_element, double radius, FEAngio* pangio, std::vector<Tip *> & tips)
 {
 	std::unordered_set<AngioElement *> visited;
 	std::set<AngioElement *> next;
@@ -388,9 +334,8 @@ void FEAngio::
 	pangio->ExtremaInElement(angio_element->_elem, element_bounds);
 
 	for (int i = 0; i < angio_element->face_adjacency_list.size(); i++)
-	{
 		next.insert(angio_element->face_adjacency_list[i]);
-	}
+	
 	visited.insert(angio_element);
 	while (next.size())
 	{
@@ -402,8 +347,7 @@ void FEAngio::
 		double cdist = FEAngio::MinDistance(element_bounds, cur_element_bounds);
 		if (cdist <= radius)
 		{
-			for (	auto iter = cur->grown_segments.begin(); 
-					iter != cur->grown_segments.end(); ++iter)
+			for (auto iter = cur->grown_segments.begin(); iter != cur->grown_segments.end(); ++iter)
 			{
 				tips.push_back((*iter)->front);
 				tips.push_back((*iter)->back);
@@ -412,9 +356,7 @@ void FEAngio::
 			for (int i = 0; i < cur->face_adjacency_list.size(); i++)
 			{
 				if (!visited.count(cur->face_adjacency_list[i]))
-				{
 					next.insert(cur->face_adjacency_list[i]);
-				}
 			}
 		}
 	}
@@ -423,25 +365,24 @@ void FEAngio::
 
 vec3d FEAngio::ReferenceCoordinates(Tip * tip) const
 {
-	vec3d r(0, 0, 0);
+	vec3d r(0.0, 0.0, 0.0);
 	FEMesh & mesh = m_fem->GetMesh();
 	//Point has already been positioned
-	FESolidElement * se= tip->angio_element->_elem;
+	FESolidElement* se = tip->angio_element->_elem;
 
 	double arr[FESolidElement::MAX_NODES];
 	// get tip local coordinates
 	vec3d local_pos = tip->GetLocalPosition();
 	se->shape_fnc(arr, local_pos.x, local_pos.y, local_pos.z);
-	// for each node in the element
+	
+	// for each node in the element add the initial global position
 	for (int j = 0; j < se->Nodes(); j++)
-	{
-		// add the initial global position
 		r += mesh.Node(se->m_node[j]).m_r0* arr[j];
-	}
 
 	return r;
 }
 
+//SL: Something similar probably lives in FEBio...
 double FEAngio::NaturalCoordinatesUpperBound_r(int et)
 {
 	switch(et)
@@ -452,9 +393,7 @@ double FEAngio::NaturalCoordinatesUpperBound_r(int et)
 		case FE_HEX20G8:
 		case FE_HEX27G27:
 		case FE_HEX8RI:
-		{
 			return 1.0;
-		}
 		case FE_TET4G1:
 		case FE_TET4G4:
 		case FE_TET10G1:
@@ -469,19 +408,13 @@ double FEAngio::NaturalCoordinatesUpperBound_r(int et)
 		case FE_TET15G15:
 		case FE_TET15G15RI4:
 		case FE_TET20G15:
-		{
 			return 1.0;
-		}
 		case FE_PENTA15G21:
 		case FE_PENTA15G8:
 		case FE_PENTA6G6:
-		{
 			return 1.0;
-		}
 		default:
-		{
 			assert(false);
-		}
 	}
 	return std::numeric_limits<double>::max();
 }
@@ -496,9 +429,7 @@ double FEAngio::NaturalCoordinatesUpperBound_s(int et)
 		case FE_HEX20G8:
 		case FE_HEX27G27:
 		case FE_HEX8RI:
-		{
 			return 1.0;
-		}
 		case FE_TET4G1:
 		case FE_TET4G4:
 		case FE_TET10G1:
@@ -513,19 +444,13 @@ double FEAngio::NaturalCoordinatesUpperBound_s(int et)
 		case FE_TET15G15:
 		case FE_TET15G15RI4:
 		case FE_TET20G15:
-		{
 			return 1.0;
-		}
 		case FE_PENTA15G21:
 		case FE_PENTA15G8:
 		case FE_PENTA6G6:
-		{
 			return 1.0;
-		}
 		default:
-		{
 			assert(false);
-		}
 	}
 	return std::numeric_limits<double>::max();
 }
@@ -540,9 +465,7 @@ double FEAngio::NaturalCoordinatesUpperBound_t(int et)
 		case FE_HEX20G8:
 		case FE_HEX27G27:
 		case FE_HEX8RI:
-		{
 			return 1.0;
-		}
 		case FE_TET4G1:
 		case FE_TET4G4:
 		case FE_TET10G1:
@@ -557,15 +480,11 @@ double FEAngio::NaturalCoordinatesUpperBound_t(int et)
 		case FE_TET15G15:
 		case FE_TET15G15RI4:
 		case FE_TET20G15:
-		{
 			return 1.0;
-		}
 		case FE_PENTA15G21:
 		case FE_PENTA15G8:
 		case FE_PENTA6G6:
-		{
 			return 1.0;
-		}
 		default:
 			assert(false);
 	}
@@ -582,9 +501,7 @@ double FEAngio::NaturalCoordinatesLowerBound_r(int et)
 		case FE_HEX20G8:
 		case FE_HEX27G27:
 		case FE_HEX8RI:
-		{
 			return -1.0;
-		}
 		case FE_TET4G1:
 		case FE_TET4G4:
 		case FE_TET10G1:
@@ -599,19 +516,13 @@ double FEAngio::NaturalCoordinatesLowerBound_r(int et)
 		case FE_TET15G15:
 		case FE_TET15G15RI4:
 		case FE_TET20G15:
-		{
 			return 0.0;
-		}
 		case FE_PENTA15G21:
 		case FE_PENTA15G8:
 		case FE_PENTA6G6:
-		{
 			return 0.0;
-		}
 		default:
-		{
 			assert(false);
-		}
 	}
 	return std::numeric_limits<double>::max();
 }
@@ -626,9 +537,7 @@ double FEAngio::NaturalCoordinatesLowerBound_s(int et)
 		case FE_HEX20G8:
 		case FE_HEX27G27:
 		case FE_HEX8RI:
-		{
 			return -1.0;
-		}
 		case FE_TET4G1:
 		case FE_TET4G4:
 		case FE_TET10G1:
@@ -643,19 +552,13 @@ double FEAngio::NaturalCoordinatesLowerBound_s(int et)
 		case FE_TET15G15:
 		case FE_TET15G15RI4:
 		case FE_TET20G15:
-		{
 			return 0.0;
-		}
 		case FE_PENTA15G21:
 		case FE_PENTA15G8:
 		case FE_PENTA6G6:
-		{
 			return 0.0;
-		}
 		default:
-		{
 			assert(false);
-		}
 	}
 	return std::numeric_limits<double>::max();
 }
@@ -670,9 +573,7 @@ double FEAngio::NaturalCoordinatesLowerBound_t(int et)
 		case FE_HEX20G8:
 		case FE_HEX27G27:
 		case FE_HEX8RI:
-		{
 			return -1.0;
-		}
 		case FE_TET4G1:
 		case FE_TET4G4:
 		case FE_TET10G1:
@@ -687,19 +588,13 @@ double FEAngio::NaturalCoordinatesLowerBound_t(int et)
 		case FE_TET15G15:
 		case FE_TET15G15RI4:
 		case FE_TET20G15:
-		{
 			return 0.0;
-		}
 		case FE_PENTA15G21:
 		case FE_PENTA15G8:
 		case FE_PENTA6G6:
-		{
 			return -1.0;
-		}
 		default:
-		{
 			assert(false);
-		}
 	}
 	return std::numeric_limits<double>::max();
 }
@@ -724,8 +619,8 @@ vec3d FEAngio::clamp_natc(int et, vec3d natc)
 							NaturalCoordinatesUpperBound_t(et), 
 							natc.z),
 						NaturalCoordinatesLowerBound_t(et));
+	
 	vec3d clamped_vec = vec3d(etx, ety, etz);
-
 	return clamped_vec;
 }
 
@@ -786,13 +681,10 @@ std::pair<int, int> FEAngio::GetMinMaxElementIDs() const
 			int eid = el.GetID();
 
 			if ((eid < m_minID) || (m_minID == -1))
-			{
 				m_minID = eid;
-			}
+
 			if ((eid > m_maxID) || (m_maxID == -1))
-			{
 				m_maxID = eid;
-			}
 		}
 	}
 	return { m_minID, m_maxID };
@@ -807,13 +699,10 @@ bool FEAngio::Init()
 	// Init all the FE stuff
 	//must be done first initializes material
 	if (InitFEM() == false)
-	{
 		return false;
-	}
+
 	if (m_fem->Init() == false)
-	{
 		return false;
-	}
 
 	// start timer
 	time(&m_start);
@@ -844,30 +733,26 @@ bool FEAngio::InitFEM()
 			m_pmat.emplace_back(cmat);
 			// add the current angio material's id to the ids
 			m_pmat_ids.emplace_back(id);
-			//TODO: check that material parameters are set here
+			//SL: TODO: check that material parameters are set here
 			//cmat->ApplySym();
 			cmat->SetFEAngio(this);
 		}
 	}
-	//assert(m_pmat.size());
-	feLog(	"%d Angio materials found. Stress approach will be used.", 
-			m_pmat.size());
+	feLog("%d Angio materials found. Stress approach will be used.", m_pmat.size());
 
 	// register the angio callback
 
-	m_fem->
-		AddCallback(FEAngio::feangio_callback, 
-					CB_UPDATE_TIME | CB_MAJOR_ITERS | CB_SOLVED | 
-					CB_STEP_ACTIVE | CB_INIT | CB_MODEL_UPDATE, 
-					this, CallbackHandler::CB_ADD_FRONT
-					);
+	m_fem->AddCallback(FEAngio::feangio_callback, 
+						CB_UPDATE_TIME | CB_MAJOR_ITERS | CB_SOLVED | 
+						CB_STEP_ACTIVE | CB_INIT | CB_MODEL_UPDATE, 
+						this, CallbackHandler::CB_ADD_FRONT
+						);
 
 	return true;
 }
+
 //fills in the adjacnecy information 
-void FEAngio::
-	FillInAdjacencyInfo(FEMesh * mesh,FEElemElemList * eel, 
-		AngioElement *angio_element, int elem_index)
+void FEAngio::FillInAdjacencyInfo(FEMesh * mesh,FEElemElemList * eel, AngioElement *angio_element, int elem_index)
 {
 	//one element of adjaceny per face
 	FESolidElement * se = angio_element->_elem;
@@ -883,21 +768,14 @@ void FEAngio::
 			//look to see if there is an angio element that uses this element
 			auto ae_iter = se_to_angio_elem.find(nse);
 			if (ae_iter != se_to_angio_elem.end())
-			{
-				angio_element->
-					face_adjacency_list.push_back(ae_iter->second.first);
-			}
+				angio_element->face_adjacency_list.push_back(ae_iter->second.first);
 			else 
 			{
 				// see if it is an angio material. If not then everything is ok.
-				FEMaterial* mat 
-					= mesh->GetFEModel()->GetMaterial(elem->GetMatID());
-				FEAngioMaterial* test_angmat = dynamic_cast<FEAngioMaterial*>
-						(mat->ExtractProperty<FEElasticMaterial>());
+				FEMaterial* mat = mesh->GetFEModel()->GetMaterial(elem->GetMatID());
+				FEAngioMaterial* test_angmat = dynamic_cast<FEAngioMaterial*>(mat->ExtractProperty<FEElasticMaterial>());
 				if (test_angmat)
-				{
 					assert(false);
-				}
 			}
 		}
 	}
@@ -905,8 +783,7 @@ void FEAngio::
 
 void FEAngio::FillInFaces(FEMesh * mesh, AngioElement * angio_element)
 {
-	angio_element->adjacency_list = 
-		angio_elements_to_all_adjacent_elements[angio_element];
+	angio_element->adjacency_list = angio_elements_to_all_adjacent_elements[angio_element];
 }
 
 void FEAngio::SetupAngioElements()
@@ -914,10 +791,11 @@ void FEAngio::SetupAngioElements()
 	//setup the element access data structure
 	auto min_max = GetMinMaxElementIDs();
 	auto min_elementID = std::get<0>(min_max);
-	//initiialize the FEAngioElementData Structures
 
+	//initiialize the FEAngioElementData Structures
 	FEMesh * mesh = GetMesh();
 	FEModel * model = GetFEModel();
+
 	//this stores the element adjacency information
 	FEElemElemList eel;
 	eel.Create(mesh);
@@ -925,13 +803,12 @@ void FEAngio::SetupAngioElements()
 	SetupNodesToElement(min_elementID);
 
 	//we are using the lut in FEMesh so the speed should be good
-	//the table now contains only angio elements
-	// for each element 
+	//the table now contains only angio elements for each element 
 	for (int i = 0; i < mesh->Elements(); i++)
 	{
 		// get the solid element
-		FESolidElement * elem = dynamic_cast<FESolidElement*>
-								(mesh->FindElementFromID(min_elementID + i));
+		FESolidElement * elem = dynamic_cast<FESolidElement*>(mesh->FindElementFromID(min_elementID + i));
+		
 		if (elem)
 		{
 			// get the material and angio part of the material
@@ -945,19 +822,14 @@ void FEAngio::SetupAngioElements()
 				angio_elements.push_back(angio_element);
 				//! if this is the last element create a pointer for the angio 
 				//! element vector and an array for the elements by material
-				if (elements_by_material.find(angio_mat) 
-					== elements_by_material.end())
+				if (elements_by_material.find(angio_mat) == elements_by_material.end())
 				{
 					std::vector<AngioElement *> ang_elem;
 					elements_by_material[angio_mat] = ang_elem;
 				}
-				//! if this is the last angio material append it to the angio 
-				//! material container
-				if (std::find(angio_materials.begin(), angio_materials.end(),angio_mat) 
-					== angio_materials.end())
-				{
+				//! if this is the last angio material append it to the angio material container
+				if (std::find(angio_materials.begin(), angio_materials.end(),angio_mat) == angio_materials.end())
 					angio_materials.push_back(angio_mat);
-				}
 				// add the element to the elements by material
 				elements_by_material[angio_mat].push_back(angio_element);
 				// copy the solid element information
@@ -969,59 +841,51 @@ void FEAngio::SetupAngioElements()
 	}
 	// for each angio element fill in the adjacency info
 	for (int i = 0; i < angio_elements.size(); i++)
-	{
-		FillInAdjacencyInfo(mesh, &eel,  angio_elements[i], 
-							se_to_angio_elem[angio_elements[i]->_elem].second);
-	}
+		FillInAdjacencyInfo(mesh, &eel,  angio_elements[i], se_to_angio_elem[angio_elements[i]->_elem].second);
+
 	// for each angio element copy the solid element information
 	for (int i = 0; i < angio_elements.size(); i++)
-	{
 		se_to_angio_element[angio_elements[i]->_elem] = angio_elements[i];
-	}
+
+	//SL: Too far nested. Clean up later.
 	// for each angio element copy the nodal solid element data.
 	for (int i = 0; i < angio_elements.size(); i++)
 	{
 		for (int j = 0; j < angio_elements[i]->_elem->Nodes(); j++)
 		{
 			FENode & node = mesh->Node(angio_elements[i]->_elem->m_node[j]);
-			std::vector<FESolidElement *> & adj_elements = 
-				nodes_to_elements[&node];
+			std::vector<FESolidElement *> & adj_elements = nodes_to_elements[&node];
+			
 			for (int k = 0; k < adj_elements.size(); k++)
 			{
 				auto iter = se_to_angio_element.find(adj_elements[k]);
-				if (iter != se_to_angio_element.end() 
-					&& (iter->second != angio_elements[i]))
+				if (iter != se_to_angio_element.end() && (iter->second != angio_elements[i]))
 				{
-					std::vector<AngioElement*> & ang_elems = 
-						angio_elements_to_all_adjacent_elements[angio_elements[i]];
-					if (std::find(	ang_elems.begin(), ang_elems.end(), 
-									iter->second) 
-						== ang_elems.end())
-					{
+					std::vector<AngioElement*> & ang_elems = angio_elements_to_all_adjacent_elements[angio_elements[i]];
+					if (std::find(ang_elems.begin(), ang_elems.end(), iter->second) == ang_elems.end())
 						ang_elems.push_back(iter->second);
-					}
 				}	
 			}
 		}
 	}
 	// for each angio element fill in face info
 	for (int i = 0; i < angio_elements.size(); i++)
-	{
 		FillInFaces(mesh, angio_elements[i]);
-	}
-	//make sure that no maps are inserted into during multithreaded code
+
+	// make sure that no maps are inserted into during multithreaded code
 	// for each angio element fill in the tip information
 	for (int i = 0; i < angio_elements.size(); i++)
 	{
-		std::vector<AngioElement*> & adj_list = 
-			angio_elements_to_all_adjacent_elements[angio_elements[i]];
+		std::vector<AngioElement*> & adj_list = angio_elements_to_all_adjacent_elements[angio_elements[i]];
 		std::vector<Tip*> tips;
+
 		for (int j = 0; j < adj_list.size(); j++)
 		{
 			angio_elements[i]->active_tips[0][adj_list[j]] = tips;
 			angio_elements[i]->active_tips[1][adj_list[j]] = tips;
 			angio_elements[i]->next_tips[adj_list[j]] = tips;
 		}
+		
 		angio_elements[i]->active_tips[0][angio_elements[i]] = tips;
 		angio_elements[i]->active_tips[1][angio_elements[i]] = tips;
 		angio_elements[i]->next_tips[angio_elements[i]] = tips;
@@ -1035,6 +899,7 @@ double FEAngio::GetDoubleFromDataStore(int record, int elem_id, int item)
 	return record_val;
 }
 
+//SL: Shouldn't a lot of these math functions be defined in FEBio somewhere? Replace later.
 #ifdef WIN32
 mat3d FEAngio::unifromRandomRotationMatrix(angiofe_random_engine & rengine) const
 {
@@ -1269,9 +1134,7 @@ FEAngioMaterial * FEAngio::GetAngioComponent(FEMaterial * mat)
 		//! if it is a multiphasic material then get the solid component of the 
 		//! multiphasic material and cast it to the angio material
 		if (mmat)
-		{
 			angm = dynamic_cast<FEAngioMaterial*>(mmat->GetSolid());
-		}
 	}
 	// if it wasn't an angio or multiphasic material see if it was triphasic
 	if (!angm)
@@ -1279,9 +1142,7 @@ FEAngioMaterial * FEAngio::GetAngioComponent(FEMaterial * mat)
 		FETriphasic * mmat = dynamic_cast<FETriphasic*>(mat);
 		// if a triphasic material is found cast the solid to an angio material.
 		if (mmat)
-		{
 			angm = dynamic_cast<FEAngioMaterial*>(mmat->GetSolid());
-		}
 	}
 	return angm;
 }
@@ -1295,9 +1156,8 @@ vec3d FEAngio::Position(FESolidElement * se, vec3d local) const
 
 	auto mesh = GetMesh();
 	for (int j = 0; j < se->Nodes(); j++)
-	{
 		rc += mesh->Node(se->m_node[j]).m_rt* arr[j];
-	}
+
 	return rc;
 }
 
@@ -1308,12 +1168,9 @@ void FEAngio::CalculateSegmentLengths(FEMesh* mesh)
 	for (int i = 0; i < angio_elements_size; i++)
 	{
 		AngioElement * angio_element = angio_elements[i];
-		angio_element->global_segment_length = 0.0;//reset this
+		angio_element->global_segment_length = 0.0;
 		for (int j = 0; j < angio_element->grown_segments.size(); j++)
-		{
-			angio_element->global_segment_length 
-				+= angio_element->grown_segments[j]->Length(mesh);
-		}
+			angio_element->global_segment_length += angio_element->grown_segments[j]->Length(mesh);
 	}
 }
 
@@ -1335,112 +1192,30 @@ void FEAngio::AdjustMatrixVesselWeights(class FEMesh* mesh)
 
 		double vessel_volume = PI * vessel_radius * vessel_radius * seg_length;
 		double element_volume = mesh->CurrentElementVolume(*se);
-		/*double vessel_weight = vessel_volume/element_volume;*/
 		angio_element->vessel_weight = vessel_volume / element_volume;
 		double matrix_weight = 1.0 - angio_element->vessel_weight;
+
 		// get vascular density in mm/mm3
 		double vascular_density = (seg_length * 1e-3) / (element_volume * 1e-9);
 		double FA = 0.0;
 		for (int j = 0; j < nint; j++)
 		{
-			FEAngioMaterialPoint* angioPt = 
-				FEAngioMaterialPoint::FindAngioMaterialPoint(se->GetMaterialPoint(j));
+			FEAngioMaterialPoint* angioPt = FEAngioMaterialPoint::FindAngioMaterialPoint(se->GetMaterialPoint(j));
 			FA += angioPt->angioFA;
 		}
 		FA = FA / static_cast<double>(nint);
 		double v_thresh_w = angio_element->_angio_mat->thresh_vess_weight;
-		if ((angio_element->vessel_weight*(1.0) > v_thresh_w) 
-			&& (angio_element->vasc_thresh_time < 0.0)
-			) 
-		{
+		if ((angio_element->vessel_weight*(1.0) > v_thresh_w) && (angio_element->vasc_thresh_time < 0.0)) 
 			angio_element->vasc_thresh_time = time;
-		}
 
 		for (int j = 0; j < nint; j++)
 		{
-			FEAngioMaterialPoint * angioPt 
-				= FEAngioMaterialPoint
-				::FindAngioMaterialPoint(se->GetMaterialPoint(j));
+			FEAngioMaterialPoint * angioPt = FEAngioMaterialPoint::FindAngioMaterialPoint(se->GetMaterialPoint(j));
 			angioPt->vessel_weight = angio_element->vessel_weight;
 			angioPt->matrix_weight = matrix_weight;
 			angioPt->vascular_density = vascular_density;
 		}
 	}
-}
-
-bool FEAngio::CheckSpecies(FEMesh* mesh)
-{
-	bool r_val = true;
-	int nange = angio_elements.size();
-	for (int i = 0; i < nange; i++)
-	{
-		AngioElement* angio_element = angio_elements[i];
-		auto se = angio_element->_elem;
-		FEDomain* dom = dynamic_cast<FEDomain*>(se->GetMeshPartition());
-		FEMultiphasic* mat = 
-			dynamic_cast<FEMultiphasic*>(dom->GetMaterial());
-		if (mat == nullptr)
-		{
-			break;
-		}
-		int n_sol = mat->Solutes();
-		int n_sbm = mat->SBMs();
-		int n_nodes = se->Nodes();
-		int n_mp = se->GaussPoints();
-		//! scale down solute rates as needed
-		for (int j = 0; j < n_sol; j++)
-		{
-			int m_dofC = GetFEModel()->GetDOFIndex("concentration", j);
-			for (int l = 0; l < n_nodes; l++)
-			{
-				double c;
-				c = mesh->Node(se->m_node[l]).get(m_dofC);
-				if (c < 0.0) 
-				{
-					r_val = false;
-					int n_cells = angio_element->tip_cells.size();
-					for (auto iter = angio_element->tip_cells.begin(); 
-						iter != angio_element->tip_cells.end(); 
-						iter++)
-					{
-						std::cout << "initial tolscale is " 
-							<< iter->second->Solutes[j]->GetTolScale() << endl;
-						iter->second->Solutes[j]->ScaleTolScale(0.1);
-						std::cout << "new tolscale is " 
-							<< iter->second->Solutes[j]->GetTolScale() << endl;
-					}
-					break;
-				}
-			}
-		}
-
-		//! scale down SBM rates as needed
-		for (int j = 0; j < n_sbm; j++)
-		{
-			for (int l = 0; l < n_mp; l++)
-			{
-				FEMaterialPoint& mp = 
-					*se->GetMaterialPoint(l);
-				FESolutesMaterialPoint& pd 
-					= *(mp.ExtractData<FESolutesMaterialPoint>());
-				if (pd.m_sbmr[j] < 0.0)
-				{
-					r_val = false;
-					int n_cells = angio_element->tip_cells.size();
-					for (auto iter = angio_element->tip_cells.begin(); 
-						iter != angio_element->tip_cells.end(); 
-						iter++)
-					{
-						iter->second->SBMs[j]->ScaleTolScale(0.1);
-					}
-					break;
-				}
-			}
-		}
-
-	}
-
-	return r_val;
 }
 
 //-----------------------------------------------------------------------------
@@ -1456,11 +1231,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 
 		SetSeeds();
 
-		// only output to the logfile (not to the screen)
-		//felog.SetMode(Logfile::LOG_FILE);
-
-		//! currently the destructors are not called for classes created by 
-		//! FEBio this allows destructors to be called
+		//! currently the destructors are not called for classes created by FEBio. This allows destructors to be called
 		fileout = new Fileout(*this);
 
 		//do the seeding of the tips/segments
@@ -1469,55 +1240,43 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 			printf("fragment seeding failed\n");
 			throw;
 		}
+
 		// --- Output initial state of model ---
 		if (!m_fem->GetGlobalConstant("no_io"))
-		{
-			// Output initial microvessel state
-
-			// save active tips
 			fileout->save_active_tips(*this);
-		}
 
 		//start the protogrowth phase
 		min_scale_factor = m_fem->GetGlobalConstant("min_scale_factor");
 		bounds_tolerance = m_fem->GetGlobalConstant("bounds_tolerance");
 		max_angio_dt = m_fem->GetGlobalConstant("max_angio_dt"); 
-		if (max_angio_dt == 0) 
-		{ 
+		if (max_angio_dt == 0.0) 
 			max_angio_dt = 0.25; 
-		}
+
 		min_angio_dt = m_fem->GetGlobalConstant("min_angio_dt"); 
 		growth_substeps = int(m_fem->GetGlobalConstant("growth_substeps")); 
 		if (growth_substeps == 0) 
-		{ 
 			growth_substeps = 3; 
-		}
+
 		bounce = m_fem->GetGlobalConstant("bounce"); 
 		size_t nange = angio_elements.size();
 		FEMesh * mesh = GetMesh();
-		// Do angio material initialization for the mat_axis
-		// Need to loop over all angio domains assigned
+		// Do angio material initialization for the mat_axis need to loop over all angio domains assigned
 		for (int i = 0; i < mesh->Domains(); i++)
 		{
 			FEDomain &test_dom = mesh->Domain(i);
 			// see if it is an angio domain
 			FEMaterial* mat = test_dom.GetMaterial();
-			FEAngioMaterial* test_angmat = 
-				dynamic_cast<FEAngioMaterial*>
-					(mat->ExtractProperty<FEElasticMaterial>());
+			FEAngioMaterial* test_angmat = dynamic_cast<FEAngioMaterial*>(mat->ExtractProperty<FEElasticMaterial>());
 			if (test_angmat)
 			{
 				FEElementSet* elset = &FEElementSet(pfem);
 				elset->Create(&test_dom);
-				//SL: This code automatically generated an element set from the domain associated with the Angio Material. Above code works for FEBio versions 4 and up.
-				//FEElementSet* elset = mesh->FindElementSet(test_dom.GetName());
 				FEDomainMap* map = new FEDomainMap(FE_MAT3D, FMT_MATPOINTS);
 				map->Create(elset);
 				map->fillValue(mat3d::identity());
 
 				// create evaluator
-				FEMappedValueMat3d* val = 
-					fecore_alloc(FEMappedValueMat3d, GetFEModel());
+				FEMappedValueMat3d* val = fecore_alloc(FEMappedValueMat3d, GetFEModel());
 				val->setDataMap(map);
 
 				// set the material axis
@@ -1529,38 +1288,25 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		for (int i = 0; i < nange; i++)
 		{
 			if (angio_elements[i]->_angio_mat->im_manager)
-			{
-				angio_elements[i]->_angio_mat->im_manager->
-					ApplyModifier(angio_elements[i], mesh, this);
-			}
+				angio_elements[i]->_angio_mat->im_manager->ApplyModifier(angio_elements[i], mesh, this);
 		}
-		//now override any specific information that needs it
-		// for each element by material do the node interpolations
-		for (auto	iter = elements_by_material.begin(); 
-					iter != elements_by_material.end(); 
-					++iter)
+		//now override any specific information that needs it for each element by material do the node interpolations
+		for (auto iter = elements_by_material.begin(); iter != elements_by_material.end(); ++iter)
 		{
 			if (iter->first->nodedata_interpolation_manager)
-			{
-				iter->first->nodedata_interpolation_manager->
-					DoInterpolations(this, mesh, iter->first);
-			}
+				iter->first->nodedata_interpolation_manager->DoInterpolations(this, mesh, iter->first);
 		}
 
 		//setup the branch info before doing any growth
 		for (int i = 0; i < nange; i++)
 		{
 			if (angio_elements[i]->_angio_mat->proto_branch_policy)
-			{
-				angio_elements[i]->_angio_mat->proto_branch_policy->
-					SetupBranchInfo(angio_elements[i]);
-			}
+				angio_elements[i]->_angio_mat->proto_branch_policy->SetupBranchInfo(angio_elements[i]);
+			
 			else if (angio_elements[i]->_angio_mat->branch_policy)
-			{
-				angio_elements[i]->_angio_mat->branch_policy->
-					SetupBranchInfo(angio_elements[i]);
-			}
+				angio_elements[i]->_angio_mat->branch_policy->SetupBranchInfo(angio_elements[i]);
 		}
+
 		// start the growth timer
 		grow_timer.start();
 		// grow segments
@@ -1572,28 +1318,17 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 
 		update_angio_stress_timer.start();
 		for (int i = 0; i < angio_materials.size(); i++)
-		{
 			angio_materials[i]->angio_stress_policy->UpdateScale();
-		}
+
 #pragma omp parallel for 
 		for (int i = 0; i < nange; i++)
-		{
-			angio_elements[i]->_angio_mat->angio_stress_policy->
-				AngioStress(angio_elements[i], this, mesh);
-		}
-		update_angio_stress_timer.stop();
+			angio_elements[i]->_angio_mat->angio_stress_policy->AngioStress(angio_elements[i], this, mesh);
 
-		for (auto iter = cells.begin(); iter != cells.end(); iter++)
-		{
-			iter->second->ProtoUpdateSpecies();
-		}
+		update_angio_stress_timer.stop();
 	}
 
 	if (nwhen == CB_UPDATE_TIME)
 	{
-#ifndef NDEBUG
-		std::cout << "Update Time" << endl;
-#endif
 		static int index = 0;
 		// grab the time information
 		
@@ -1603,21 +1338,15 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		for (size_t i = 0; i < m_pmat.size(); i++)
 		{	
 			if (m_pmat[i]->branch_policy)
-			{
 				m_pmat[i]->branch_policy->TimeStepUpdate(ti.currentTime);
-			}
 		}
 		update_branch_policy_timestep_timer.stop();
 
 		// update velocity scales
 		for (size_t i = 0; i < m_pmat.size(); i++)
 		{
-			for (int j = 0; 
-				j < m_pmat[i]->velocity_manager->seg_vel_modifiers.size(); 
-				j++)
-			{
+			for (int j = 0; j < m_pmat[i]->velocity_manager->seg_vel_modifiers.size(); j++)
 				m_pmat[i]->velocity_manager->seg_vel_modifiers[j]->UpdateScale();
-			}
 		}
 
 		//new function to find the start time grow time and if this is the final iteration this timestep
@@ -1627,9 +1356,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		
 		update_angio_stress_timer.start();
 		for (int i = 0; i < angio_materials.size(); i++)
-		{
 			angio_materials[i]->angio_stress_policy->UpdateScale();
-		}
 
 		AdjustMatrixVesselWeights(mesh);
 		CalculateSegmentLengths(mesh);
@@ -1637,44 +1364,14 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 		size_t angio_element_count = angio_elements.size();
 #pragma omp parallel for 
 		for (int i = 0; i < angio_element_count; i++)
-		{
-			angio_elements[i]->_angio_mat->angio_stress_policy->
-				AngioStress(angio_elements[i], this,mesh);
-		}
+			angio_elements[i]->_angio_mat->angio_stress_policy->AngioStress(angio_elements[i], this,mesh);
+		
 		update_angio_stress_timer.stop();
 	}
-	else if (nwhen == CB_MODEL_UPDATE) 
-	{
-//SL: FECell dev. Remove later.
-//		size_t cell_count = cells.size();
-//		for (auto iter = cells.begin(); iter != cells.end(); iter++)
-//		{
-//			iter->second->UpdateSpecies();
-//		}
-//		bool positive_conc = CheckSpecies(mesh);
-//		if (positive_conc)
-//		{
-//#ifndef NDEBUG
-//			std::cout << "All positive" << endl;
-//#endif
-//		}
-//		else
-//		{
-//#ifndef NDEBUG
-//			std::cout << "Negative detected" << endl;
-//#endif
-//			//throw DoRunningRestart();
-//		}
-	}
+	else if (nwhen == CB_MODEL_UPDATE) {}
 	else if (nwhen == CB_MAJOR_ITERS)
 	{
-#ifndef NDEBUG
-		std::cout << "Major Iteration" << endl;
-#endif
-
 		fileout->save_vessel_state(*this);
-//SL: FECell dev. Remove later.
-//		fileout->save_final_cells_txt(*this);
 		fileout->save_feangio_stats(*this);
 		ResetTimers();
 		if (!m_fem->GetGlobalConstant("no_io"))
@@ -1684,25 +1381,20 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 			// Print the status of angio3d to the user    
 			fileout->printStatus(*this, fem.GetTime().currentTime);
 		}
+
 		// cleanup
 #pragma omp parallel for 
 		for (int j = 0; j < angio_elements.size(); j++)
-		{
-			angio_elements[j]->_angio_mat->
-				Cleanup(angio_elements[j], next_time, buffer_index);
-		}
+			angio_elements[j]->_angio_mat->Cleanup(angio_elements[j], next_time, buffer_index);
+
 		buffer_index = (buffer_index + 1) % 2;
 	}
 	else if (nwhen == CB_SOLVED)
 	{
-#ifndef NDEBUG
-		std::cout << "Solved Time" << endl;
-#endif
 		// do the final output
 		if (!m_fem->GetGlobalConstant("no_io"))
-		{
 			Output();
-		}
+
 		//force any destructors to be called that need it
 		delete fileout;
 		fileout = nullptr;
@@ -1719,25 +1411,18 @@ void FEAngio::ResetTimers()
 
 //-----------------------------------------------------------------------------
 // Generate output. This is called at the end of Run().
-// Note that some output is not written here. E.g. the vessel state is written
-// after each successful FE run.
+// Note that some output is not written here. E.g. the vessel state is written after each successful FE run.
 void FEAngio::Output()
 {	
 	//write out the timeline of branchpoints
 	fileout->save_timeline(*this);
-	//SL: old winfiber outfile. Probably can be removed.
-	//fileout->save_winfiber(*this);
 	fileout->save_final_vessel_csv(*this);
 }
 
-//! returns the scale factor needed to scale the ray to grow to the boundary of 
-//! the natural coordinates
-bool FEAngio::
-	ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d & dir, 
-											vec3d & pt, double & sf) const
+//! returns the scale factor needed to scale the ray to grow to the boundary of the natural coordinates
+bool FEAngio::ScaleFactorToProjectToNaturalCoordinates(FESolidElement* se, vec3d & dir, vec3d & pt, double & sf) const
 {
 	// TODO: Expose min_sf to the user.
-
 	std::vector<double> possible_values;
 	double min_sf = min_scale_factor;
 
@@ -1753,8 +1438,7 @@ bool FEAngio::
 						);
 
 	//! Determine the limiting direction from the current position to a face 
-	//! based on the element type. Store it in the memory allocated as the 
-	//! factor/sf.
+	//! based on the element type. Store it in the memory allocated as the factor/sf.
 	switch (se->Type())
 	{
 		case FE_Element_Type::FE_HEX8G1:
@@ -1768,103 +1452,84 @@ bool FEAngio::
 			{
 				double temp = (upper_bounds.x - pt.x) / dir.x;
 				if (temp > 0.0)
-				{
 					possible_values.push_back(temp);
-				}
+				
 				else if (temp == 0.0)
-				{
-					possible_values.push_back(1e-2);
-				}
+					possible_values.push_back(1.0e-2);
 			}
 			else if (dir.x < 0.0)
 			{
 				double temp = (lower_bounds.x - pt.x) / dir.x;
 				if (temp > 0.0)
-				{
 					possible_values.push_back(temp);
-				}
+
 				else if (temp == 0.0)
-				{
-					possible_values.push_back(1e-2);
-				}
+					possible_values.push_back(1.0e-2);
 			}
 			if (dir.y > 0.0)
 			{
 				double temp = (upper_bounds.y - pt.y) / dir.y;
 				if (temp > 0.0)
-				{
 					possible_values.push_back(temp);
-				}
+
 				else if (temp == 0.0)
-				{
-					possible_values.push_back(1e-2);
-				}
+					possible_values.push_back(1.0e-2);
 			}
+
 			else if (dir.y < 0.0)
 			{
 				double temp = (lower_bounds.y - pt.y) / dir.y;
 				if (temp > 0.0)
-				{
 					possible_values.push_back(temp);
-				}
+
 				else if (temp == 0.0)
-				{
-					possible_values.push_back(1e-2);
-				}
+					possible_values.push_back(1.0e-2);
 			}
 
 			if (dir.z > 0.0)
 			{
 				double temp = (upper_bounds.z - pt.z) / dir.z;
 				if (temp > 0.0)
-				{
 					possible_values.push_back(temp);
-				}
+
 				else if (temp == 0.0)
-				{
 					possible_values.push_back(1e-2);
-				}
 			}
+
 			else if (dir.z < 0.0)
 			{
 				double temp = (lower_bounds.z - pt.z) / dir.z;
 				if (temp > 0.0)
-				{
 					possible_values.push_back(temp);
-				}
+
 				else if (temp == 0.0)
-				{
-					possible_values.push_back(1e-2);
-				}
+					possible_values.push_back(1.0e-2);
 			}
+
 			if (possible_values.size())
 			{
-				auto double_it = 
-					std::min_element(possible_values.begin(), 
-									possible_values.end());
+				auto double_it = std::min_element(possible_values.begin(), possible_values.end());
 				sf = *double_it;
 
-				//! if the scale factor is under the min scale factor remove it 
-				//! from the possible locations
+				//! if the scale factor is under the min scale factor remove it from the possible locations
 				while (sf < min_sf)
 				{
 					possible_values.erase(double_it);
 
 					// if all possible factors are too small return false
 					if (possible_values.size() == 0)
-					{
 						return false;
-					}
 
 					// update sf to the next smallest value
-					double_it = 
-						std::min_element(possible_values.begin(), 
-										possible_values.end());
+					double_it = std::min_element(possible_values.begin(), possible_values.end());
 					sf = *double_it;
 				}
+
 				return true;
 			}
+
 			break;
+
 		}
 		case FE_Element_Type::FE_TET4G1:
 		case FE_Element_Type::FE_TET4G4:
@@ -2039,35 +1704,30 @@ double FEAngio::InElementLength(FESolidElement * se, vec3d pt0, vec3d pt1) const
 	se->shape_fnc(H, pt0.x, pt0.y, pt0.z);
 	// For each node get the current position of tip 1's shape function scale
 	for (int j = 0; j < se->Nodes(); j++)
-	{
 		g_pt0 += mesh->Node(se->m_node[j]).m_rt* H[j];
-	}
+
 	// For each node get the current position of tip 2's shape function scale
 	se->shape_fnc(H, pt1.x, pt1.y, pt1.z);
 	for (int j = 0; j < se->Nodes(); j++)
-	{
 		g_pt1 += mesh->Node(se->m_node[j]).m_rt* H[j];
-	}
+
 	// Return the L2 norm (length) of this within the element itself.
 	return (g_pt0 - g_pt1).norm();
 }
 
-double FEAngio::
-	GetConcentration(FEMaterial* mat, FEMaterialPoint * mp, int sol_id)
+double FEAngio::GetConcentration(FEMaterial* mat, FEMaterialPoint * mp, int sol_id)
 {
 	FEMultiphasic * multiph = dynamic_cast<FEMultiphasic*>(mat);
 	if (multiph)
-	{
 		 return multiph->Concentration(*mp, sol_id);
-	}
+
 	else
 	{
 		FETriphasic * tri = dynamic_cast<FETriphasic*>(mat);
 		if (tri)
-		{
 			return tri->Concentration(*mp, sol_id);
-		}
 	}
+
 	assert(false);
 	return -1.0;
 }
@@ -2077,9 +1737,7 @@ void FEAngio::SetupNodesToElement(int min_element_id)
 	auto mesh = GetMesh();
 	for (int i = 0; i < mesh->Elements(); i++)
 	{
-		FESolidElement * elem = 
-			dynamic_cast<FESolidElement*>
-			(mesh->FindElementFromID(min_element_id + i));
+		FESolidElement * elem = dynamic_cast<FESolidElement*>(mesh->FindElementFromID(min_element_id + i));
 		if (elem)
 		{
 			for (int j = 0; j < elem->Nodes(); j++)
@@ -2091,8 +1749,7 @@ void FEAngio::SetupNodesToElement(int min_element_id)
 	}
 }
 
-bool FEAngio::
-	ProjectToElement(FESolidElement& el, const vec3d& p, FEMesh* mesh, double r[3])
+bool FEAngio::ProjectToElement(FESolidElement& el, const vec3d& p, FEMesh* mesh, double r[3])
 {
 	const int MN = FESolidElement::MAX_NODES;
 	vec3d rt[MN];
@@ -2100,9 +1757,7 @@ bool FEAngio::
 	// get the element nodal coordinates
 	int ne = el.Nodes();
 	for (int i = 0; i < ne; ++i)
-	{
 		rt[i] = mesh->Node(el.m_node[i]).m_rt;
-	}
 
 	r[0] = r[1] = r[2] = 0.0;
 	const double tol = 1e-5;
@@ -2152,9 +1807,7 @@ bool FEAngio::
 	return norm <= tol;
 }
 
-void FEAngio::
-	GetElementsContainingNode(	FENode * node, 
-								std::vector<FESolidElement*> & elements)
+void FEAngio::GetElementsContainingNode(FENode * node, std::vector<FESolidElement*> & elements)
 {
 	elements = nodes_to_elements[node];
 }
@@ -2174,27 +1827,26 @@ bool FEAngio::IsInBounds(FESolidElement* se, double r[3], double eps)
 		case FE_Element_Type::FE_TET10GL11:
 		{
 			bool in_bounds = ( 
-					(r[0] <= NaturalCoordinatesUpperBound_r(se->Type()) + eps) 
-				&&	(r[0] >= NaturalCoordinatesLowerBound_r(se->Type()) - eps) 
-				&&	(r[1] <= NaturalCoordinatesUpperBound_s(se->Type()) + eps) 
-				&&	(r[1] >= NaturalCoordinatesLowerBound_s(se->Type()) - eps) 
-				&&	(r[2] <= NaturalCoordinatesUpperBound_t(se->Type()) + eps) 
-				&&	(r[2] >= NaturalCoordinatesLowerBound_t(se->Type()) - eps)
-				&&	((nat_pos.x + nat_pos.y + nat_pos.z) <= 1 + eps)
-				);
+									(r[0] <= NaturalCoordinatesUpperBound_r(se->Type()) + eps) 
+								&&	(r[0] >= NaturalCoordinatesLowerBound_r(se->Type()) - eps) 
+								&&	(r[1] <= NaturalCoordinatesUpperBound_s(se->Type()) + eps) 
+								&&	(r[1] >= NaturalCoordinatesLowerBound_s(se->Type()) - eps) 
+								&&	(r[2] <= NaturalCoordinatesUpperBound_t(se->Type()) + eps) 
+								&&	(r[2] >= NaturalCoordinatesLowerBound_t(se->Type()) - eps)
+								&&	((nat_pos.x + nat_pos.y + nat_pos.z) <= 1 + eps)
+								);
 			return in_bounds;
 		}
 	}
 	//! SL: Check this. Is this default case? Or always applied?
-	//consider doing this with tolerances
 	bool in_bound = (
-			(r[0] <= NaturalCoordinatesUpperBound_r(se->Type()) + eps) 
-		&&	(r[0] >= NaturalCoordinatesLowerBound_r(se->Type()) - eps) 
-		&&	(r[1] <= NaturalCoordinatesUpperBound_s(se->Type()) + eps) 
-		&&	(r[1] >= NaturalCoordinatesLowerBound_s(se->Type()) - eps) 
-		&&	(r[2] <= NaturalCoordinatesUpperBound_t(se->Type()) + eps) 
-		&&	(r[2] >= NaturalCoordinatesLowerBound_t(se->Type()) - eps)
-		);
+									(r[0] <= NaturalCoordinatesUpperBound_r(se->Type()) + eps) 
+								&&	(r[0] >= NaturalCoordinatesLowerBound_r(se->Type()) - eps) 
+								&&	(r[1] <= NaturalCoordinatesUpperBound_s(se->Type()) + eps) 
+								&&	(r[1] >= NaturalCoordinatesLowerBound_s(se->Type()) - eps) 
+								&&	(r[2] <= NaturalCoordinatesUpperBound_t(se->Type()) + eps) 
+								&&	(r[2] >= NaturalCoordinatesLowerBound_t(se->Type()) - eps)
+								);
 	return in_bound;
 }
 
@@ -2220,24 +1872,17 @@ void FEAngio::ExtremaInElement(FESolidElement * se, std::vector<vec3d> & extrema
 		case FE_HEX20G8:
 		case FE_HEX27G27:
 		{
-			// for each node in the element
+			// for each node in the element add the current global position to extrema
 			for (int j = 0; j < se->Nodes(); j++)
-			{
-				// add the current global position to extrema
 				extrema.push_back(mesh->Node(se->m_node[j]).m_rt);
-			}
 			break;
 		}
 		default:
-		{
 			assert(false);
-		}
 	}
 }
 
-double FEAngio::
-	MinDistance(std::vector<vec3d> & element_bounds0, 
-				std::vector<vec3d>  & element_bounds1)
+double FEAngio::MinDistance(std::vector<vec3d> & element_bounds0, std::vector<vec3d>  & element_bounds1)
 {
 	assert(element_bounds0.size());
 	assert(element_bounds1.size());
@@ -2249,9 +1894,7 @@ double FEAngio::
 		{
 			double dist = (element_bounds0[i] - element_bounds1[j]).norm2();
 			if (dist < min_dist)
-			{
 				min_dist = dist;
-			}
 		}
 	}
 	return sqrt(min_dist);
@@ -2287,22 +1930,18 @@ bool CreateFiberMap(vector<vec3d>& fiber, FEMaterial* pmat)
 			{
 				// generate a coordinate transformation at this integration point
 				FEMaterialPoint* mpoint = el.GetMaterialPoint(n);
-				FEElasticMaterialPoint& pt = 
-					*mpoint->ExtractData<FEElasticMaterialPoint>();
+				FEElasticMaterialPoint& pt = *mpoint->ExtractData<FEElasticMaterialPoint>();
 
-				//Ask Steve about this
+				//SL: Ask Steve about this
 				FEMesh* mesh = dom.GetMesh();
 				FEElementSet* elset = mesh->FindElementSet(dom.GetName());
 				int local_index = elset->GetLocalIndex(el);
 
-				FEMaterial* Mat_a = 
-					dom.GetMaterial()->ExtractProperty<FEElasticMaterial>();
-				//! assumes that materials mat_axis is already mapped which 
-				//! we'll need to do somewhere else.
+				FEMaterial* Mat_a = dom.GetMaterial()->ExtractProperty<FEElasticMaterial>();
+				//! assumes that materials mat_axis is already mapped which we'll need to do somewhere else.
 				FEParam* matax = Mat_a->FindParameter("mat_axis");
 				FEParamMat3d& p = matax->value<FEParamMat3d>();
-				FEMappedValueMat3d* val = 
-					dynamic_cast<FEMappedValueMat3d*>(p.valuator());
+				FEMappedValueMat3d* val = dynamic_cast<FEMappedValueMat3d*>(p.valuator());
 				FEDomainMap* map = dynamic_cast<FEDomainMap*>(val->dataMap());
 				mat3d m_Q = map->valueMat3d(*mpoint);
 
@@ -2315,8 +1954,7 @@ bool CreateFiberMap(vector<vec3d>& fiber, FEMaterial* pmat)
 				fz[n] = m[2][0];
 			}
 
-			// now that we have the values at the integration points
-			// we need to map it to the nodes
+			// now that we have the values at the integration points we need to map it to the nodes
 			vector<double> gx(neln), gy(neln), gz(neln);
 			el.project_to_nodes(&fx[0], &gx[0]);
 			el.project_to_nodes(&fy[0], &gy[0]);
@@ -2334,11 +1972,8 @@ bool CreateFiberMap(vector<vec3d>& fiber, FEMaterial* pmat)
 
 	// normalize the fibers
 	for (int i = 0; i < N; ++i)
-	{
 		fiber[i].unit();
-	}
 
-	// If we get here, all is well.
 	return true;
 }
 
@@ -2375,12 +2010,10 @@ bool CreateDensityMap(	vector<double>& density, vector<double>& anisotropy,
 			{
 				// generate a coordinate transformation at this integration point
 				FEMaterialPoint* mpoint = el.GetMaterialPoint(n);
-				FEAngioMaterialPoint* angioPt = 
-					FEAngioMaterialPoint::FindAngioMaterialPoint(mpoint);
+				FEAngioMaterialPoint* angioPt = FEAngioMaterialPoint::FindAngioMaterialPoint(mpoint);
 			}
 
-			// now that we have the values at the integration points
-			// we need to map it to the nodes
+			// now that we have the values at the integration points we need to map it to the nodes
 			vector<double> gx(neln);
 			vector<double> fx(neln);
 			el.project_to_nodes(&den[0], &gx[0]);
@@ -2392,21 +2025,17 @@ bool CreateDensityMap(	vector<double>& density, vector<double>& anisotropy,
 				int ni = el.m_node[i];
 				density[ni] = gx[i];
 				if (fx[i] > anisotropy[ni])
-				{
 					anisotropy[ni] = fx[i];
-				}
 			}
 		}
 	}
 
-	// If we get here, all is well.
 	return true;
 }
 
 //-----------------------------------------------------------------------------
-// create a density map based on material density parameter per point
-bool CreateConcentrationMap(vector<double>& concentration, FEMaterial* pmat, 
-							int vegfID)
+// create a density map based on parameter per point
+bool CreateConcentrationMap(vector<double>& concentration, FEMaterial* pmat, int vegfID)
 {
 	// get the mesh
 	FEMesh& mesh = pmat->GetFEModel()->GetMesh();
@@ -2434,13 +2063,11 @@ bool CreateConcentrationMap(vector<double>& concentration, FEMaterial* pmat,
 			{
 				// generate a coordinate transformation at this integration point
 				FEMaterialPoint* mpoint = el.GetMaterialPoint(n);
-				FESolutesMaterialPoint& spt = 
-					*mpoint->ExtractData<FESolutesMaterialPoint>();
+				FESolutesMaterialPoint& spt = *mpoint->ExtractData<FESolutesMaterialPoint>();
 				con[n]=spt.m_c[vegfID];
 			}
 
-			// now that we have the values at the integration points
-			// we need to map it to the nodes
+			// now that we have the values at the integration points we need to map it to the nodes
 			vector<double> gx(neln);
 			el.project_to_nodes(&con[0], &gx[0]);
 
@@ -2460,9 +2087,4 @@ bool CreateConcentrationMap(vector<double>& concentration, FEMaterial* pmat,
 int FEAngio::AddFragment() 
 {
 	return fragment_id_counter++;
-}
-
-int FEAngio::AddCell() 
-{
-	return cell_id_counter++;
 }

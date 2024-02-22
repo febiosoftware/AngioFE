@@ -40,9 +40,7 @@ bool AngioFETask::Init(const char* inpfile)
 	
 	// initialize feangio object
 	if (m_pangio->Init() == false)
-	{
 		return false;
-	}
 
 	// all is well
 	return true;

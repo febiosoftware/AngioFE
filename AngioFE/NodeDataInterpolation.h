@@ -44,7 +44,6 @@ protected:
 	DECLARE_FECORE_CLASS()
 private:
 	std::vector<NodeDataInterpolation*>	node_data_interpolation_vals;	//!< pointers to elastic materials
-	//NodeDataInterpolation* node_data_interpolation_vals;
 };
 
 //! set ecm density values on a per node basis

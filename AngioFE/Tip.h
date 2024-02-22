@@ -3,7 +3,6 @@
 #include "AngioElement.h"
 #include <FEBioMix/FESBMPointSource.h>
 #include "FEProbabilityDistribution.h"
-#include "FECell.h"
 
 class Segment;
 class FEAngio;
@@ -52,7 +51,6 @@ public:
 	void PrintTipInfo(FEMesh *mesh) const;
 	//! Prints information about the tip to the console
 	void PrintTipInfo(FEMesh *mesh, std::string title) const;
-	FECell * TipCell = nullptr;
 	void SetProtoGrowthLength(FEProbabilityDistribution* dist);
 	void SetProtoGrowthLength(Tip* tip);
 	void SetProtoGrowthLength(double initial_length);
