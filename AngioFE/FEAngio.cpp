@@ -1269,7 +1269,7 @@ bool FEAngio::OnCallback(FEModel* pfem, unsigned int nwhen)
 			FEAngioMaterial* test_angmat = dynamic_cast<FEAngioMaterial*>(mat->ExtractProperty<FEElasticMaterial>());
 			if (test_angmat)
 			{
-				FEElementSet* elset = &FEElementSet(pfem);
+				FEElementSet* elset = new FEElementSet(pfem);
 				elset->Create(&test_dom);
 				FEDomainMap* map = new FEDomainMap(FE_MAT3D, FMT_MATPOINTS);
 				map->Create(elset);

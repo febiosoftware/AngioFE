@@ -15,18 +15,26 @@ The subdirectories are detailed below:
 # Reproducing AngioFE Simulations
 Model inputs are provided as .feb files in the relevant directories.
 #### FEBio and AngioFE distributions
-Windows builds of FEBio and AngioFE are included in the FEBio_AngioFE_Binaries directory. To run a model file, use the syntax:
+Windows builds of FEBio and AngioFE are included in the FEBio_AngioFE_Binaries directory. Currently, AngioFE is compatible with FEBio 4.5 or FEBio 3. To run a model file, use the syntax:
+
+`.\febio4.exe -noconfig -import .\AngioFE.dll -task=angio -i=[inputfile.feb]`
 
 `.\febio3.exe -noconfig -import .\AngioFE.dll -task=angio -i=[inputfile.feb]`
 
 #### Other distributions
-Other distributions may be built from the appropriate FEBio and AngioFE commits. The models were originally run with FEBio ver 3.7.c050b9169 and AngioFE ver 3.0.99e3b77. These can be built from:
+Other distributions may be built from the appropriate FEBio and AngioFE commits. Input files are provided for AngioFE with FEBio 4.5. 
+For the purpose of reproducibility, FEBio3 compatible versions are provided as well. The models for this publication were originally run with FEBio ver 3.7.c050b9169 and AngioFE ver 3.0.99e3b77 which can be built from:
 
 https://github.com/febiosoftware/FEBio/commit/c050b9169
 
 https://github.com/febiosoftware/AngioFE/commit/99e3b77
 
+
 The syntax to run models from linux machines is:
+
+`./febio4 -noconfig -import ./AngioFE.so -task=angio -i=[inputfile.feb]`
+
+OR
 
 `./febio3 -noconfig -import ./AngioFE.so -task=angio -i=[inputfile.feb]`
 
